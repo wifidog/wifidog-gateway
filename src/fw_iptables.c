@@ -34,6 +34,9 @@
 #include <errno.h>
 #include <string.h>
 #include <pthread.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "common.h"
 
@@ -350,6 +353,7 @@ iptables_fw_counters_update(void)
         rc;
     unsigned long int counter;
     t_client *p1;
+	 struct in_addr tempaddr;
 
     /* Look for outgoing traffic */
     asprintf(&script, "%s %s", "iptables", "-v -n -x -t mangle -L " TABLE_WIFIDOG_OUTGOING);
@@ -367,6 +371,11 @@ iptables_fw_counters_update(void)
     while (output && !(feof(output))) {
         rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %s %*s %*s %*s %*s %*s 0x%*u", &counter, ip);
         if (2 == rc && EOF != rc) {
+			  /* Sanity*/
+			  if (!inet_aton(ip, &tempaddr)) {
+				  debug(LOG_WARNING, "I was supposed to read an IP address but instead got [%s] - ignoring it", ip);
+				  continue;
+			  }
             debug(LOG_DEBUG, "Outgoing %s Bytes=%ld", ip, counter);
 	    LOCK_CLIENT_LIST();
             if ((p1 = client_list_find_by_ip(ip))) {
@@ -399,6 +408,11 @@ iptables_fw_counters_update(void)
     while (output && !(feof(output))) {
         rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %s %*s", &counter, ip);
         if (2 == rc && EOF != rc) {
+			  /* Sanity*/
+			  if (!inet_aton(ip, &tempaddr)) {
+				  debug(LOG_WARNING, "I was supposed to read an IP address but instead got [%s] - ignoring it", ip);
+				  continue;
+			  }
             debug(LOG_DEBUG, "WIFI2FW %s Bytes=%ld", ip, counter);
 	    LOCK_CLIENT_LIST();
             if ((p1 = client_list_find_by_ip(ip))) {
@@ -431,6 +445,11 @@ iptables_fw_counters_update(void)
     while (output && !(feof(output))) {
         rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %*s %s", &counter, ip);
         if (2 == rc && EOF != rc) {
+			  /* Sanity*/
+			  if (!inet_aton(ip, &tempaddr)) {
+				  debug(LOG_WARNING, "I was supposed to read an IP address but instead got [%s] - ignoring it", ip);
+				  continue;
+			  }
             debug(LOG_DEBUG, "Incoming %s Bytes=%ld", ip, counter);
 	    LOCK_CLIENT_LIST();
             if ((p1 = client_list_find_by_ip(ip))) {

@@ -1,4 +1,9 @@
 # $Header$
+
+2005-02-12 Mina Naguib <mina@ilesansfil.org>
+	* fw_iptables.c: Extra sanity checking the ip we read from the iptables
+	output
+
 2005-02-11 Philippe April <philippe@ilesansfil.org>
 	* Tagged v1_1_0_beta1
 
