@@ -6,6 +6,7 @@
 	* Optional GatewayAddress (we discover it. finally.)
 	* We check for the traffic from the clients to the firewall, to catch the
 	traffic the icmp ping is generating
+	* Fixed bug where we were doing the opposite of what desired when checking if authentication server was alive
 	* Bumped to alpha7
 
 2005-01-23 Philippe April <isf_lists@philippeapril.com>
