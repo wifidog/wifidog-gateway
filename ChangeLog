@@ -1,5 +1,14 @@
 # $Header$
 
+2004-03-13  Philippe April <papril777@yahoo.com>
+    * Modified the way firewall scripts are called so we can configure
+    them in the config file (a bit more modular than it was)
+    * Added simple linked list to keep track of clients and to
+    keep a counter of the utilization and send it to the auth
+    server
+    * Fixed CRLF/formatting in phpauth/auth/index.php
+    * Hacked phpauth/auth/index.php to handle very basic utilization tracking
+
 2004-03-12  Philippe April <papril777@yahoo.com>
     * Changed all perror()s into debug()s and added
     errno.h to common.h

@@ -27,6 +27,14 @@
 #ifndef _FIREWALL_H_
 #define _FIREWALL_H_
 
+typedef struct {
+    void *next;
+    char ip[16];
+    char mac[32];
+    char token[33];
+    long int counter;
+} t_node;
+
 int fw_init(void);
 int fw_destroy(void);
 int fw_allow(char *ip, char *mac, int profile);
@@ -34,5 +42,10 @@ int fw_deny(char *ip, char *mac, int profile);
 void fw_counter(void);
 int execute(char **argv);
 char *arp_get(char *req_ip);
+
+void node_init(void);
+t_node *node_add(char *ip, char *mac, char *token, long int counter);
+t_node *node_find_by_ip(char *ip);
+t_node *node_find_by_token(char *token);
 
 #endif /* _FIREWALL_H_ */

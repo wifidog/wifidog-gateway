@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
@@ -51,5 +52,10 @@
 #include "http.h"
 
 #define MAX_BUF 4096
+
+#define SCRIPT_FWINIT       "fw.init"
+#define SCRIPT_FWACCESS     "fw.access"
+#define SCRIPT_FWDESTROY    "fw.destroy"
+#define SCRIPT_FWCOUNTERS   "fw.counters"
 
 #endif /* _COMMON_H_ */

@@ -50,6 +50,8 @@ typedef struct {
     int httpdmaxconn;
     int clienttimeout;
     int checkinterval;
+    char *fwscripts_path;
+    char *fwtype;
 } s_config;
 
 #endif /* _CONFIG_H_ */

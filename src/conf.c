@@ -35,6 +35,8 @@
 #define DEFAULT_HTTPDNAME "WiFiDog"
 #define DEFAULT_CLIENTTIMEOUT 5
 #define DEFAULT_CHECKINTERVAL 5
+#define DEFAULT_FWSCRIPTS_PATH "."
+#define DEFAULT_FWTYPE "."
 
 s_config config;
 int missing_parms;
@@ -55,6 +57,8 @@ typedef enum {
     oHTTPDName,
     oClientTimeout,
     oCheckInterval,
+    oFWScriptsPath,
+    oFWType,
 } OpCodes;
 
 struct {
@@ -76,6 +80,8 @@ struct {
 	{ "httpdname",          oHTTPDName },
 	{ "clienttimeout",      oClientTimeout },
     { "checkinterval",      oCheckInterval },
+    { "fwscriptspath",      oFWScriptsPath },
+    { "fwtype",             oFWType },
     { NULL,                 oBadOption },
 };
 
@@ -99,6 +105,8 @@ config_init(void)
     config.httpdname = NULL;
     config.clienttimeout = DEFAULT_CLIENTTIMEOUT;
     config.checkinterval = DEFAULT_CHECKINTERVAL;
+    config.fwscripts_path = DEFAULT_FWSCRIPTS_PATH;
+    config.fwtype = DEFAULT_FWTYPE;
 }
 
 OpCodes

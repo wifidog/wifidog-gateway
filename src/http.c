@@ -94,6 +94,12 @@ http_request(int sockfd, struct sockaddr_in their_addr)
                 } else {
                     if ((rc = fw_allow(ip, mac, profile)) == 0) {
                         http_body(body, "You %s at %s, have been granted profile %d!", ip, mac, profile);
+
+                        /* Add client's IP and token into a linked list so we can keep
+                         * track of it on the auth server, only if he's not there already */
+                        if (!node_find_by_ip(ip)) {
+                            node_add(ip, mac, token, 0);
+                        }
                     } else {
                         http_body(body, "Authentication was succesful, but the firewall could not be modified, I got return code %d, please contact the systems administrators");
                     }
@@ -212,13 +218,17 @@ auth(char *ip, char *mac, char *token, long int stats)
         their_addr.sin_addr = *((struct in_addr *)he->h_addr);
         memset(&(their_addr.sin_zero), '\0', 8);
 
+        debug(D_LOG_DEBUG, "Connecting to auth server %s on port %d", config.authserv_hostname, config.authserv_port);
+
         if (connect(sockfd, (struct sockaddr *)&their_addr, sizeof(struct sockaddr)) == -1) {
             debug(D_LOG_ERR, "connect(): %s", strerror(errno));
             exit(1);
         }
 
-        sprintf(buf, "GET %s?ip=%s&mac=%s&token=%s&stats=%ld\n\n", config.authserv_path, ip, mac, token, stats);
+        sprintf(buf, "GET %s?ip=%s&mac=%s&token=%s&stats=%ld HTTP/1.1\nHost: %s\n\n", config.authserv_path, ip, mac, token, stats, config.authserv_hostname);
         sock_send(sockfd, buf);
+
+        debug(D_LOG_DEBUG, "Sending HTTP request:\n#####\n%s\n#####", buf);
         
         if ((numbytes = recv(sockfd, buf, MAX_BUF - 1, 0)) == -1) {
             debug(D_LOG_ERR, "recv(): %s", strerror(errno));
@@ -231,8 +241,10 @@ auth(char *ip, char *mac, char *token, long int stats)
 
         if ((p1 = strstr(buf, "Profile: "))) {
             if (sscanf(p1, "Profile: %d", &profile) == 1) {
+                debug(D_LOG_DEBUG, "Auth server returned profile %d", profile);
                 return(profile);
             } else {
+                debug(D_LOG_DEBUG, "Auth server did not return expected information");
                 return(-1);
             }
         } else {

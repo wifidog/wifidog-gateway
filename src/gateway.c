@@ -41,6 +41,9 @@ void main_loop(void)
     time_t last_checked;
     int fdmax, i, cnt_last_check;
 
+    /* Initialize the linked list */
+    node_init();
+
     FD_ZERO(&master);
     FD_ZERO(&read_fds);
 
@@ -109,10 +112,11 @@ void main_loop(void)
     }
 
     fw_init();
-    tv.tv_sec = config.checkinterval;
     last_checked = time(NULL);
 
     while(1) {
+        tv.tv_sec = config.checkinterval;
+        tv.tv_usec = 0;
         read_fds = master;
         if (select(fdmax + 1, &read_fds, NULL, NULL, &tv) == -1) {
             debug(D_LOG_ERR, "select(): %s", strerror(errno));

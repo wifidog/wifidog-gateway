@@ -29,13 +29,25 @@
 
 extern s_config config;
 
+t_node list;
+t_node *firstnode;
+t_node *curnode;
+
 int
 fw_allow(char *ip, char *mac, int profile)
 {
-    char buf[MAX_BUF];
-    char *command[] = {"./fw.access", "allow", ip, mac, buf, NULL};
+    char s_profile[16];
+    char script[MAX_BUF];
+    struct stat st;
+    char *command[] = {script, "allow", ip, mac, s_profile, NULL};
 
-    sprintf(buf, "%d", profile);
+    sprintf(s_profile, "%-10d", profile);
+    sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, SCRIPT_FWACCESS);
+
+    if (-1 == (stat(script, &st))) {
+        debug(D_LOG_ERR, "Could not find %s: %s", script, strerror(errno));
+        return(1);
+    }
 
     return(execute(command));
 }
@@ -43,10 +55,18 @@ fw_allow(char *ip, char *mac, int profile)
 int
 fw_deny(char *ip, char *mac, int profile)
 {
-    char buf[MAX_BUF];
-    char *command[] = {"./fw.access", "deny", ip, mac, buf, NULL};
+    char s_profile[16];
+    char script[MAX_BUF];
+    struct stat st;
+    char *command[] = {script, "deny", ip, mac, s_profile, NULL};
 
-    sprintf(buf, "%d", profile);
+    sprintf(s_profile, "%-10d", profile);
+    sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, SCRIPT_FWACCESS);
+
+    if (-1 == (stat(script, &st))) {
+        debug(D_LOG_ERR, "Could not find %s: %s", script, strerror(errno));
+        return(1);
+    }
 
     return(execute(command));
 }
@@ -103,31 +123,48 @@ arp_get(char *req_ip)
 int
 fw_init(void)
 {
-    char port[255];
-    char *command[] = {"./fw.init", config.gw_interface, config.gw_address, port, config.authserv_hostname, NULL};
+    char port[16];
+    char script[MAX_BUF];
+    int rc;
+    struct stat st;
+    char *command[] = {script, config.gw_interface, config.gw_address, port, config.authserv_hostname, NULL};
 
-    sprintf(port, "%d", config.gw_port);
+    sprintf(port, "%-5d", config.gw_port);
+    sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, SCRIPT_FWINIT);
 
+    if (-1 == (stat(script, &st))) {
+        debug(D_LOG_ERR, "Could not find %s: %s", script, strerror(errno));
+        debug(D_LOG_ERR, "Exiting...");
+        exit(1);
+    }
 
     debug(D_LOG_INFO, "Setting firewall rules");
 
-    if (execute(command) != 0) {
+    if ((rc = execute(command)) != 0) {
         debug(D_LOG_ERR, "Could not setup firewall, exiting...");
         exit(1);
     }
 
-    return(0);
+    return(rc);
 }
 
 int
 fw_destroy(void)
 {
-    char *command[] = {"./fw.destroy", NULL};
+    char script[MAX_BUF];
+    struct stat st;
+    char *command[] = {script, NULL};
+
+    sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, SCRIPT_FWDESTROY);
+
+    if (-1 == (stat(script, &st))) {
+        debug(D_LOG_ERR, "Could not find %s: %s", script, strerror(errno));
+        return(1);
+    }
 
     debug(D_LOG_INFO, "Flushing firewall rules");
-    execute(command);
 
-    return(0);
+    return(execute(command));
 }
 
 void
@@ -137,23 +174,92 @@ fw_counter(void)
     long int counter;
     int profile, rc;
     char ip[255], mac[255];
+    char script[MAX_BUF];
+    t_node *p1;
 
-    if (!(output = popen("./fw.counters", "r"))) {
+    sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, SCRIPT_FWCOUNTERS);
+
+    if (!(output = popen(script, "r"))) {
         debug(D_LOG_ERR, "popen(): %s", strerror(errno));
-    }
-    while (!(feof(output)) && output) {
-        rc = fscanf(output, "%ld %s %s %d", &counter, ip, mac, &profile);
-        if (rc == 4 && rc != EOF) {
+    } else {
+        while (!(feof(output)) && output) {
+            rc = fscanf(output, "%ld %s %s %d", &counter, ip, mac, &profile);
+            if (rc == 4 && rc != EOF) {
 
-            /* TODO Update the counter onthe auth server */
-            /* but to do that we will need to keep track of the */
-            /* token to associate it with the session */
-            
-            /* TODO If the client is not active for x seconds */
-            /* timeout the client and destroy token */
-            debug(D_LOG_DEBUG, "Counter for %s: %ld bytes", ip, counter);
+                /* TODO If the client is not active for x seconds
+                 * timeout the client and destroy token.
+                 * Maybe this should be done on the auth server*/
+
+                p1 = node_find_by_ip(ip);
+                if (!(p1)) {
+                    debug(D_LOG_DEBUG, "Client %s not found in linked list", ip);
+                } else {
+                    p1->counter = counter;
+                    if ((profile = auth(p1->ip, p1->mac, p1->token, p1->counter)) == -1) {
+                        /* User has to be kicked out */
+                    }
+                    debug(D_LOG_DEBUG, "Updated client %s counter to %ld bytes", ip, counter);
+                }
+            }
         }
+        pclose(output);
     }
-    pclose(output);
+}
+
+void
+node_init(void)
+{
+    firstnode = curnode = &list;
+    firstnode->next = NULL;
+}
+
+t_node *
+node_add(char *ip, char *mac, char *token, long int counter)
+{
+    void *ptr;
+
+    ptr = curnode;
+
+    strcpy(curnode->ip, ip);
+    strcpy(curnode->mac, mac);
+    strcpy(curnode->token, token);
+    curnode->counter = 0;
+
+    curnode->next = (t_node *)malloc(sizeof(t_node));
+    curnode = curnode->next;
+
+    debug(D_LOG_DEBUG, "Added a new node to linked list: IP: %s Token: %s", ip, token);
+
+    return ptr;
+}
+
+t_node *
+node_find_by_ip(char *ip)
+{
+    t_node *ptr;
+
+    ptr = firstnode;
+    while (NULL != ptr->next) {
+        if (0 == strcmp(ptr->ip, ip))
+            return ptr;
+        ptr = ptr->next;
+    } 
+
+    return NULL;
+}
+
+t_node *
+node_find_by_token(char *token)
+{
+    t_node *ptr;
+
+    ptr = firstnode;
+    while (NULL != ptr->next) {
+        if (0 == strcmp(ptr->token, token))
+            return ptr;
+        ptr = ptr->next;
+    } 
+
+    return NULL;
 }
 
