@@ -1,5 +1,13 @@
 # $Header$
 
+2005-03-11 Mina Naguib <mina@ilesansfil.org>
+	* If external interface was unspecified in the conf file, try to determine
+	it from the default route
+	* If external interface is known, specify it in the trigger rule in
+	nat.PREROUTING to prevent the rule from matching traffic inbound to the
+	router itself.  This should fix the issue raised by Philippe and Pascal on
+	the mailing list
+
 2005-03-07 Mina Naguib <mina@ilesansfil.org>
 	* auth.c: Got rid of legacy _http_output and _http_redirect - replaced them
 	with libhttpd functions and http_wifidog_header/http_wifidog_footer

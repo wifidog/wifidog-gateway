@@ -48,6 +48,7 @@
 #include <pthread.h>
 #include <netdb.h>
 
+#include "common.h"
 #include "client_list.h"
 #include "safe.h"
 #include "util.h"
@@ -134,6 +135,38 @@ wd_gethostbyname(const char *name)
 	UNLOCK_GHBN();
 
 	return h_addr;
+}
+
+/*
+ * @return Interface name or NULL if it cannot be determined - must be free()ed by caller when no longer needed
+ */
+char * get_default_iface() {
+	FILE * fh;
+	char * retval = NULL;
+	char buffer[MAX_BUF];
+	char ifname[MAX_BUF];
+	char mask[MAX_BUF];
+	debug(LOG_INFO, "Trying to determine the default interface");
+
+	if ((fh = fopen("/proc/net/route", "r"))) {
+		while (!feof(fh) && fgets(buffer, sizeof(buffer), fh)) {
+			if (sscanf(buffer, "%s %s", ifname, mask) == 2 && strcmp(mask, "00000000") == 0) {
+				/* Found it */
+				retval = safe_strdup(ifname);
+				debug(LOG_INFO, "Determined default interface [%s]", retval);
+				break;
+			}
+		}
+		fclose(fh);
+	}
+	else {
+		debug(LOG_ERR, "Failed to open /proc/net/route");
+	}
+
+	if (!retval)
+		debug(LOG_ERR, "Failed to determine default interface");
+
+	return retval;
 }
 
 char *get_iface_ip(char *ifname) {

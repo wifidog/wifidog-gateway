@@ -178,6 +178,14 @@ main_loop(void)
         }
         debug(LOG_DEBUG, "%s = %s", config->gw_interface, config->gw_address);
     }
+	 /* If we don't have the external interface, try to get it */
+	 if (!config->external_interface) {
+		 config->external_interface = get_default_iface();
+		 if (!config->external_interface) {
+			 debug(LOG_CRIT, "Failed to determine external interface.  The firewall rules will not be up to par");
+		 }
+	 }
+
 
 	/* Initializes the web server */
 	debug(LOG_NOTICE, "Creating web server on %s:%d", 

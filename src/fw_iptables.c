@@ -182,6 +182,7 @@ iptables_fw_init(void)
 {
     s_config *config;
 	 char * gw_interface = NULL;
+	 char * external_interface = NULL;
 	 int gw_port = 0;
    
     fw_quiet = 0;
@@ -190,6 +191,8 @@ iptables_fw_init(void)
     config = config_get_config();
 	 gw_interface = safe_strdup(config->gw_interface);
 	 gw_port = config->gw_port;
+	 if (config->external_interface)
+		 external_interface = safe_strdup(config->external_interface);
 	 UNLOCK_CONFIG();
     
 	 /*
@@ -218,7 +221,10 @@ iptables_fw_init(void)
 			iptables_do_command("-t nat -N " TABLE_WIFIDOG_UNKNOWN);
 
 			/* Assign links and rules to these new chains */
-			iptables_do_command("-t nat -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_WIFI_TO_INTERNET, gw_interface);
+			if (external_interface)
+				iptables_do_command("-t nat -I PREROUTING 1 -i %s -o %s -j " TABLE_WIFIDOG_WIFI_TO_INTERNET, gw_interface, external_interface);
+			else
+				iptables_do_command("-t nat -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_WIFI_TO_INTERNET, gw_interface);
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j RETURN", FW_MARK_KNOWN);
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j RETURN", FW_MARK_PROBATION);
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_UNKNOWN);
@@ -263,6 +269,8 @@ iptables_fw_init(void)
 			iptables_do_command("-t filter -A " TABLE_WIFIDOG_UNKNOWN " -j REJECT --reject-with icmp-port-unreachable");
 
 	free(gw_interface);
+	if (external_interface)
+		free(external_interface);
 
     return 1;
 }
