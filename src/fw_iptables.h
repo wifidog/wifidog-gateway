@@ -33,6 +33,7 @@
 /**Iptable table names used by WifiDog */
 #define TABLE_WIFIDOG_OUTGOING  "WiFiDog_Outgoing"
 #define TABLE_WIFIDOG_WIFI_TO_INTERNET "WiFiDog_WIFI2Internet"
+#define TABLE_WIFIDOG_WIFI_TO_ROUTER "WiFiDog_WIFI2Router"
 #define TABLE_WIFIDOG_INCOMING  "WiFiDog_Incoming"
 #define TABLE_WIFIDOG_AUTHSERVERS "WiFiDog_AuthServers"
 #define TABLE_WIFIDOG_GLOBAL  "WiFiDog_Global"

@@ -7,6 +7,11 @@
 	nat.PREROUTING to prevent the rule from matching traffic inbound to the
 	router itself.  This should fix the issue raised by Philippe and Pascal on
 	the mailing list
+	* Bugfix: UNDO ABOVE 2 ITEMS. Aparently you cannot use the "-o" iptables
+	option in nat.PREROUTING which makes knowing external_interface useless
+	* Added new chain in nat.PREROUTING that explicitly allows all traffic to
+	the router's internal IP from the internal interface, effectively
+	addressing the same above problem
 
 2005-03-07 Mina Naguib <mina@ilesansfil.org>
 	* auth.c: Got rid of legacy _http_output and _http_redirect - replaced them
