@@ -1,3 +1,8 @@
+# $Header$
+
+2004-04-16  Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Updated documentation in firewall.c
+
 2004-04-17  Philippe April <papril777@yahoo.com>
 	* Fixed path returning to gateway in phpauth/login/index.php
 
@@ -5,9 +10,9 @@
 	* Merged in libhttpd into the source tree
 
 2004-04-16  Philippe April <papril777@yahoo.com>
-    * Fixed CRLF/formatting in phpauth/login/index.php
-    * Added some documentation for firewall.c, commandline.c
-    * Removed an unnecessary line dist_sysconf_DATA from Makefile.am
+	* Fixed CRLF/formatting in phpauth/login/index.php
+	* Added some documentation for firewall.c, commandline.c
+	* Removed an unnecessary line dist_sysconf_DATA from Makefile.am
 
 2004-04-15  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Changed the locking mechanism, now all access to t_node * structs
@@ -66,32 +71,30 @@
 	incorporate_libhttpd branch
 
 2004-03-13  Philippe April <papril777@yahoo.com>
-    * Modified the way firewall scripts are called so we can configure
-    them in the config file (a bit more modular than it was)
-    * Added simple linked list to keep track of clients and to
-    keep a counter of the utilization and send it to the auth
-    server
-    * Fixed CRLF/formatting in phpauth/auth/index.php
-    * Hacked phpauth/auth/index.php to handle very basic utilization tracking
+	* Modified the way firewall scripts are called so we can configure
+	them in the config file (a bit more modular than it was)
+	* Added simple linked list to keep track of clients and to
+	keep a counter of the utilization and send it to the auth server
+	* Fixed CRLF/formatting in phpauth/auth/index.php
+	* Hacked phpauth/auth/index.php to handle very basic utilization tracking
 
 2004-03-12  Philippe April <papril777@yahoo.com>
-    * Changed all perror()s into debug()s and added
-    errno.h to common.h
+	* Changed all perror()s into debug()s and added errno.h to common.h
 
 2004-03-10  Philippe April <papril777@yahoo.com>
-    * Small fix to firewall.c so we don't define variables after
-    the function has started (so it builds on gcc-2.95)
+	* Small fix to firewall.c so we don't define variables after
+	the function has started (so it builds on gcc-2.95)
 
 2004-03-09  Philippe April <papril777@yahoo.com>
-    * Major changes: not forking anymore for new connections, now using
-    select() instead. It will allow us to efficiently use a linked list to track
-    users and other things. It introduces some bugs and design issues but will
-    be better in the end.
+	* Major changes, not forking anymore for new connections, now using
+	select() instead. It will allow us to efficiently use a linked list to track
+	users and other things. It introduces some bugs and design issues but will
+	be better in the end.
 
 2004-03-09  Philippe April <papril777@yahoo.com>
-    * Small fix in the default.php login page
-    * exit() where the program was supposed to exit but wasn't when the
-    firewall could not be setup
+	* Small fix in the default.php login page
+	* exit() where the program was supposed to exit but wasn't when the
+	firewall could not be setup
 
 2004-03-09  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Tiny change to increase cross-platform compatibility. It can now build on OS X and it comes close to building on my old BSD box.

@@ -241,16 +241,12 @@ fw_counter(void)
 					mac, &profile);
 			if (rc == 4 && rc != EOF) {
 
-				/* TODO If the client is not active for x
-				 * seconds timeout the client and destroy token.
-				 * Maybe this should be done on the auth
-				 * server */
-			
 				pthread_mutex_lock(&nodes_mutex);
 
 				p1 = node_find_by_ip(ip);
 
 				if (p1->counter == counter) {
+					/* expire clients for inactivity */
 					debug(D_LOG_DEBUG, "Client %s was "
 						"inactive", ip);
 					fw_deny(p1->ip, p1->mac,
@@ -312,6 +308,9 @@ fw_counter(void)
 	}
 }
 
+/**
+ * @brief Initializes the list of connected clients (node)
+ */
 void
 node_init(void)
 {
@@ -319,6 +318,12 @@ node_init(void)
 	firstnode = NULL;
 }
 
+/**
+ * @brief Adds a new node to the connections list
+ *
+ * Based on the parameters it receives, this function creates a new entry
+ * in the connections list. All the memory allocation is done here.
+ */
 t_node *
 node_add(char *ip, char *mac, char *token, long int counter, int active)
 {
@@ -360,6 +365,9 @@ node_add(char *ip, char *mac, char *token, long int counter, int active)
 	return curnode;
 }
 
+/**
+ * @brief Finds a specific node by its IP
+ */
 t_node *
 node_find_by_ip(char *ip)
 {
@@ -375,6 +383,9 @@ node_find_by_ip(char *ip)
 	return NULL;
 }
 
+/**
+ * @brief Finds a specific node by its token
+ */
 t_node *
 node_find_by_token(char *token)
 {
@@ -390,6 +401,13 @@ node_find_by_token(char *token)
 	return NULL;
 }
 
+/**
+ * @brief Frees the memory used by a t_node structure
+ *
+ * This function frees the memory used by the t_node structure in the
+ * proper order. It also calls the free_userrights() function to free
+ * the memory used by the rights structure for the node.
+ */
 void
 free_node(t_node *node)
 {
@@ -409,6 +427,12 @@ free_node(t_node *node)
 	free(node);
 }
 
+/**
+ * @brief Deletes a node from the connections list
+ *
+ * Removes the specified node from the connections list and then calls
+ * the function to free the memory used by the node.
+ */
 void
 node_delete(t_node *node)
 {
@@ -429,6 +453,13 @@ node_delete(t_node *node)
 	}
 }
 
+/**
+ * @brief Check the rights for a client
+ *
+ * This function validates that a client hasn't met one of the conditions
+ * for the termination of his connection. Right now, we only check to see
+ * for a time-out. More checks could be added here.
+ */
 int
 check_userrights(t_node *node)
 {
