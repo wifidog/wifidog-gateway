@@ -87,12 +87,14 @@ auth_thread(void *ptr)
 		"%d validated", node->ip, node->mac, profile);
 	
 	tmp_uc = find_userclasses(profile);
-
+	
 	if (tmp_uc == NULL) {
 		debug(D_LOG_DEBUG, "Profile %d undefined", profile);
 		_http_output(node->fd, "User Class not defined");
 		node->fd = 0;
 		return;
+	} else {
+		debug(D_LOG_DEBUG, "Profile %d UserClasses retrieved", profile);
 	}
 	
 	if (tmp_uc->active) {

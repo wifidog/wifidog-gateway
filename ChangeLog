@@ -1,5 +1,9 @@
 # $Header$
 2004-04-14  Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Major retooling of insert_userclass(), fixed seg fault.
+	* The program now works as advertised.
+
+2004-04-14  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Switched to threads. Alpha quality build, at best
 
 2004-04-12  Alexandre Carmel-Veilleux <acv@acv.ca>

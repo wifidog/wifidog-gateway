@@ -61,12 +61,11 @@ authenticate(char *ip, char *mac, char *token, long int stats)
 	if (connect(sockfd, (struct sockaddr *)&their_addr,
 				sizeof(struct sockaddr)) == -1) {
 		debug(D_LOG_ERR, "connect(): %s", strerror(errno));
-		exit(1);
+		return(-1); /* non-fatal */
 	}
-
-	sprintf(buf, "GET %s?ip=%s&mac=%s&token=%s&stats=%ld HTTP/1.1\nHost: "
-		"%s\n\n", config.authserv_path, ip, mac, token, stats,
-		config.authserv_hostname);
+	sprintf(buf, "GET %s?ip=%s&mac=%s&token=%s&stats=%ld HTTP/1.1"
+		"\nHost: %s\n\n", config.authserv_path, ip, mac, token,
+		stats, config.authserv_hostname);
 	send(sockfd, buf, strlen(buf), 0);
 
 	debug(D_LOG_DEBUG, "Sending HTTP request:\n#####\n%s\n#####", buf);

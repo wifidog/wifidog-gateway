@@ -86,37 +86,56 @@ insert_userclasses(UserClasses *class)
 
 	tmp_uc = class_list;
 
-	if (tmp_uc == NULL) {
+	/* first */
+	if (class_list == NULL) {
 		class_list = class;
-	} else {
-		/* Skip to our place in the ordered list, or the end */
-		while (tmp_uc->profile < class->profile
-				&& tmp_uc->next != NULL)
-			tmp_uc = tmp_uc->next;
+		return;
+	}
 
-		if (tmp_uc->profile == class->profile) {
-			/* swap in place */
-			if (tmp_uc->prev != NULL)
-				tmp_uc->prev->next = class;
-
+	/* duplicate */
+	if ((tmp_uc = find_userclasses(class->profile)) != NULL) {
+		if (tmp_uc == class_list) {
+			class_list = class;
+			class->next = tmp_uc->next;
+		} else {
+			class->next = tmp_uc->next;
+			class->prev = tmp_uc->prev;
 			if (tmp_uc->next != NULL)
 				tmp_uc->next->prev = class;
-			
-			class->prev = tmp_uc->prev;
-			class->next = tmp_uc->next;
-			free_userclasses(tmp_uc);
-		} else if (tmp_uc->next == NULL) {
-			/* last item */
-			tmp_uc->next = class;
-			class->prev = tmp_uc;
-		} else {
-			/* in between two elements */
-			class->next = tmp_uc->next;
-			class->prev = tmp_uc;
-			tmp_uc->next = class;
-			class->next->prev = class;
+			tmp_uc->prev->next = class;
 		}
+		return;
 	}
+	
+	/* new */
+	tmp_uc = class_list;
+
+	/* new first item */
+	if (tmp_uc->profile > class->profile) {
+		class_list = class;
+		class->next = tmp_uc;
+		tmp_uc->prev = class;
+		return;
+	}
+
+	/* seek previous record */
+	while (tmp_uc->next != NULL && tmp_uc->profile < class->profile)
+		tmp_uc = tmp_uc->next;
+	
+	/* new last record */
+	if (tmp_uc->next == NULL) {
+		tmp_uc->next = class;
+		class->prev = tmp_uc;
+		return;
+	}
+
+	/* just a normal insertion */
+	class->next = tmp_uc->next;
+	class->prev = tmp_uc;
+	tmp_uc->next = class;
+	class->next->prev = class;
+	
+	return;
 }
 
 UserClasses *
@@ -133,7 +152,7 @@ find_userclasses(int profile)
 	/* not in list */
 	if (tmp_uc == NULL)
 		return NULL;
-
+	
 	return tmp_uc;
 }
 
