@@ -36,7 +36,7 @@ build: build-wifidog build-iptables build-ipkg-utils
 
 build-wifidog: build-wifidog-stamp
 build-wifidog-stamp:
-	test -f autogen.sh && ./autogen.sh
+	-test -f autogen.sh && ./autogen.sh
 	-$(MAKE) distclean
 	CC=$(CC) LD=$(LD) AR=$(AR) RANLIB=$(RANLIB) ./configure --prefix=/usr  --host=$(ARCH) --target=$(ARCH)
 	$(MAKE)
