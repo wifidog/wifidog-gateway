@@ -182,17 +182,13 @@ iptables_fw_init(void)
 {
     s_config *config;
 	 char * gw_interface = NULL;
-	 char * external_interface = NULL;
 	 int gw_port = 0;
    
     fw_quiet = 0;
 
     config = config_get_config();
 	 LOCK_CONFIG();
-	 if (config->gw_interface)
-		 gw_interface = strdup(config->gw_interface);
-	 if (config->external_interface)
-		 external_interface = strdup(config->external_interface);
+	 gw_interface = strdup(config->gw_interface);
 	 gw_port = config->gw_port;
 	 UNLOCK_CONFIG();
     
@@ -208,13 +204,7 @@ iptables_fw_init(void)
 
 			/* Assign links and rules to these new chains */
 			iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_OUTGOING, gw_interface);
-
-			if (external_interface) {
-				iptables_do_command("-t mangle -I FORWARD 1 -i %s -j " TABLE_WIFIDOG_INCOMING, external_interface);
-			}
-			else {
-				iptables_do_command("-t mangle -I FORWARD 1 -j " TABLE_WIFIDOG_INCOMING);
-			}
+			iptables_do_command("-t mangle -I POSTROUTING 1 -o %s -j " TABLE_WIFIDOG_INCOMING, gw_interface);
 
 
 	 /*
@@ -228,16 +218,11 @@ iptables_fw_init(void)
 			iptables_do_command("-t nat -N " TABLE_WIFIDOG_UNKNOWN);
 
 			/* Assign links and rules to these new chains */
-			if (external_interface) {
-				iptables_do_command("-t nat -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_WIFI_TO_INTERNET, gw_interface);
-			}
-			else {
-				iptables_do_command("-t nat -I PREROUTING 1 -j " TABLE_WIFIDOG_WIFI_TO_INTERNET);
-			}
-
+			iptables_do_command("-t nat -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_WIFI_TO_INTERNET, gw_interface);
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j RETURN", FW_MARK_KNOWN);
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j RETURN", FW_MARK_PROBATION);
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_UNKNOWN);
+
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 80 -j REDIRECT --to-ports %d", gw_port);
 
 
@@ -248,7 +233,6 @@ iptables_fw_init(void)
 	  */
 
 	 		/* Create new chains */
-			iptables_do_command("-t filter -N " TABLE_WIFIDOG_WIFI_TO_GW);
 			iptables_do_command("-t filter -N " TABLE_WIFIDOG_WIFI_TO_INTERNET);
 			iptables_do_command("-t filter -N " TABLE_WIFIDOG_AUTHSERVERS);
 			iptables_do_command("-t filter -N " TABLE_WIFIDOG_LOCKED);
@@ -258,15 +242,7 @@ iptables_fw_init(void)
 			iptables_do_command("-t filter -N " TABLE_WIFIDOG_UNKNOWN);
 
 			/* Assign links and rules to these new chains */
-			iptables_do_command("-t filter -I INPUT 1 -i %s -j " TABLE_WIFIDOG_WIFI_TO_GW, gw_interface);
-
-			if (external_interface) {
-				iptables_do_command("-t filter -I FORWARD 1 -i %s -j " TABLE_WIFIDOG_WIFI_TO_INTERNET, gw_interface);
-			}
-			else {
-				iptables_do_command("-t filter -I FORWARD 1 -j " TABLE_WIFIDOG_WIFI_TO_INTERNET);
-			}
-
+			iptables_do_command("-t filter -I FORWARD 1 -i %s -j " TABLE_WIFIDOG_WIFI_TO_INTERNET, gw_interface);
 			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_AUTHSERVERS);
 			iptables_fw_set_authservers();
 
@@ -286,10 +262,7 @@ iptables_fw_init(void)
 			iptables_load_ruleset("unknown-users", TABLE_WIFIDOG_UNKNOWN);
 			iptables_do_command("-t filter -A " TABLE_WIFIDOG_UNKNOWN " -j REJECT --reject-with icmp-port-unreachable");
 
-	if (gw_interface)
-		free(gw_interface);
-	if (external_interface)
-		free(external_interface);
+	free(gw_interface);
 
     return 1;
 }
@@ -309,7 +282,7 @@ iptables_fw_destroy(void)
 	  *
 	  */
 	 iptables_fw_destroy_mention("mangle", "PREROUTING", TABLE_WIFIDOG_OUTGOING);
-	 iptables_fw_destroy_mention("mangle", "FORWARD", TABLE_WIFIDOG_INCOMING);
+	 iptables_fw_destroy_mention("mangle", "POSTROUTING", TABLE_WIFIDOG_INCOMING);
     iptables_do_command("-t mangle -F " TABLE_WIFIDOG_OUTGOING);
     iptables_do_command("-t mangle -F " TABLE_WIFIDOG_INCOMING);
     iptables_do_command("-t mangle -X " TABLE_WIFIDOG_OUTGOING);
@@ -331,9 +304,7 @@ iptables_fw_destroy(void)
 	  * Everything in the FILTER table
 	  *
 	  */
-	 iptables_fw_destroy_mention("filter", "INPUT", TABLE_WIFIDOG_WIFI_TO_GW);
 	 iptables_fw_destroy_mention("filter", "FORWARD", TABLE_WIFIDOG_WIFI_TO_INTERNET);
-	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_WIFI_TO_GW);
 	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_WIFI_TO_INTERNET);
 	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_AUTHSERVERS);
 	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_LOCKED);
@@ -341,7 +312,6 @@ iptables_fw_destroy(void)
 	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_VALIDATE);
 	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_KNOWN);
 	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_UNKNOWN);
-	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_WIFI_TO_GW);
 	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_WIFI_TO_INTERNET);
 	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_AUTHSERVERS);
 	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_LOCKED);
@@ -417,12 +387,10 @@ iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag)
 
     switch(type) {
         case FW_ACCESS_ALLOW:
-            iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_GW " -s %s -j ACCEPT", ip);
             iptables_do_command("-t mangle -A " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
             rc = iptables_do_command("-t mangle -A " TABLE_WIFIDOG_INCOMING " -d %s -j ACCEPT", ip);
             break;
         case FW_ACCESS_DENY:
-            iptables_do_command("-t filter -D " TABLE_WIFIDOG_WIFI_TO_GW " -s %s -j ACCEPT", ip);
             iptables_do_command("-t mangle -D " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
             rc = iptables_do_command("-t mangle -D " TABLE_WIFIDOG_INCOMING " -d %s -j ACCEPT", ip);
             break;
@@ -474,43 +442,6 @@ iptables_fw_counters_update(void)
                     p1->counters.outgoing = counter;
                     p1->counters.last_updated = time(NULL);
                     debug(LOG_DEBUG, "%s - Updated outgoing counter to %ld bytes from outgoing chain", ip, counter);
-                }
-            } else {
-                debug(LOG_ERR, "Could not find %s in client list", ip);
-            }
-	    UNLOCK_CLIENT_LIST();
-        }
-    }
-    pclose(output);
-
-    /* Look for wifi-to-firewall traffic */
-    asprintf(&script, "%s %s", "iptables", "-v -n -x -t filter -L " TABLE_WIFIDOG_WIFI_TO_GW);
-    if (!(output = popen(script, "r"))) {
-        debug(LOG_ERR, "popen(): %s", strerror(errno));
-        return -1;
-    }
-    free(script);
-
-    /* skip the first two lines */
-    while (('\n' != fgetc(output)) && !feof(output))
-        ;
-    while (('\n' != fgetc(output)) && !feof(output))
-        ;
-    while (output && !(feof(output))) {
-        rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %15[0-9.] %*s", &counter, ip);
-        if (2 == rc && EOF != rc) {
-			  /* Sanity*/
-			  if (!inet_aton(ip, &tempaddr)) {
-				  debug(LOG_WARNING, "I was supposed to read an IP address but instead got [%s] - ignoring it", ip);
-				  continue;
-			  }
-            debug(LOG_DEBUG, "WIFI2FW %s Bytes=%ld", ip, counter);
-	    LOCK_CLIENT_LIST();
-            if ((p1 = client_list_find_by_ip(ip))) {
-                if (p1->counters.togateway < counter) {
-                    p1->counters.togateway = counter;
-                    p1->counters.last_updated = time(NULL);
-                    debug(LOG_DEBUG, "%s - Updated togateway counter to %ld bytes from wifi2fw chain", ip, counter);
                 }
             } else {
                 debug(LOG_ERR, "Could not find %s in client list", ip);
