@@ -44,14 +44,14 @@ main_loop(void)
 	node_init();
 
 	// Initialize the web server
-	debug(D_LOG_NOTICE, "Creating web server on %s:%d", 
+	debug(LOG_NOTICE, "Creating web server on %s:%d", 
 			config.gw_address, config.gw_port);
 	webserver = httpdCreate(config.gw_address, config.gw_port);
 	if (webserver == NULL) {
-		debug(D_LOG_ERR, "Could not create web server");
+		debug(LOG_ERR, "Could not create web server");
 		exit(1);
 	}
-	debug(D_LOG_DEBUG, "Assigning callbacks to web server");
+	debug(LOG_DEBUG, "Assigning callbacks to web server");
 	httpdAddCContent(webserver, "/wifidog", "about", 0, NULL,
 			http_callback_about);
 	httpdAddCContent(webserver, "/wifidog", "auth", 0, NULL,
@@ -68,7 +68,7 @@ main_loop(void)
 	pthread_create(&tid, NULL, (void *)cleanup_thread, NULL);
 	pthread_detach(tid);
 	
-	debug(D_LOG_NOTICE, "Waiting for connections");
+	debug(LOG_NOTICE, "Waiting for connections");
 	while(1) {
 		tv.tv_sec = config.checkinterval;
 		tv.tv_usec = 0;
@@ -82,7 +82,7 @@ main_loop(void)
 			 * An error occurred - should we abort?
 			 * reboot the device ?
 			 */
-			debug(D_LOG_ERR, "httpdGetConnection returned %d",
+			debug(LOG_ERR, "httpdGetConnection returned %d",
 				result);
 			fw_destroy();
 			exit(1);
@@ -90,21 +90,21 @@ main_loop(void)
 			/*
 			 * We got a connection
 			 */
-			debug(D_LOG_INFO, "Received connection from %s",
+			debug(LOG_INFO, "Received connection from %s",
 				webserver->clientAddr);
 			if (httpdReadRequest(webserver) >=0) {
 				/*
 				 * We read the request fine
 				 */
-				debug(D_LOG_DEBUG, "Processing request from "
+				debug(LOG_DEBUG, "Processing request from "
 					"%s", webserver->clientAddr);
 				httpdProcessRequest(webserver);
 			}
 			else {
-				debug(D_LOG_ERR, "No valid request received "
+				debug(LOG_ERR, "No valid request received "
 					"from %s", webserver->clientAddr);
 			}
-			debug(D_LOG_DEBUG, "Closing connection with %s",
+			debug(LOG_DEBUG, "Closing connection with %s",
 				webserver->clientAddr);
 			httpdEndRequest(webserver);
 		}
@@ -128,11 +128,11 @@ main(int argc, char **argv)
 	if (config.daemon) {
 		int childPid;
 
-		debug(D_LOG_INFO, "Forking into background");
+		debug(LOG_INFO, "Forking into background");
 
 		switch((childPid = fork())) {
 		case -1: /* error */
-			debug(D_LOG_ERR, "fork(): %s", strerror(errno));
+			debug(LOG_ERR, "fork(): %s", strerror(errno));
 			exit(1);
 			break;
 
@@ -168,7 +168,7 @@ termination_handler(int s)
 	
 	fw_destroy();
 
-	debug(D_LOG_WARNING, "Exiting...");
+	debug(LOG_WARNING, "Exiting...");
 	exit(0);
 }
 
@@ -177,13 +177,13 @@ init_signals(void)
 {
 	struct sigaction sa;
 
-	debug(D_LOG_DEBUG, "Initializing signal handlers");
+	debug(LOG_DEBUG, "Initializing signal handlers");
 	
 	sa.sa_handler = sigchld_handler;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART;
 	if (sigaction(SIGCHLD, &sa, NULL) == -1) {
-		debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
+		debug(LOG_ERR, "sigaction(): %s", strerror(errno));
 		exit(1);
 	}
 
@@ -193,19 +193,19 @@ init_signals(void)
 
 	/* Trap SIGTERM */
 	if (sigaction(SIGTERM, &sa, NULL) == -1) {
-		debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
+		debug(LOG_ERR, "sigaction(): %s", strerror(errno));
 		exit(1);
 	}
 
 	/* Trap SIGQUIT */
 	if (sigaction(SIGQUIT, &sa, NULL) == -1) {
-		debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
+		debug(LOG_ERR, "sigaction(): %s", strerror(errno));
 		exit(1);
 	}
 
 	/* Trap SIGINT */
 	if (sigaction(SIGINT, &sa, NULL) == -1) {
-		debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
+		debug(LOG_ERR, "sigaction(): %s", strerror(errno));
 		exit(1);
 	}
 }

@@ -44,6 +44,7 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include <syslog.h>
 #include <pthread.h>
 
 #include "config.h"

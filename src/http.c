@@ -40,7 +40,7 @@ http_callback_404(httpd * webserver)
 			"gw_id=%s", config.authserv_loginurl, 
 			config.gw_address, config.gw_port, 
 			config.gw_id) == -1) {
-		debug(D_LOG_ERR, "Failed to asprintf newlocation");
+		debug(LOG_ERR, "Failed to asprintf newlocation");
 		httpdOutput(webserver, "Internal error occurred");
 	} else {
 		// Re-direct them to auth server
@@ -51,7 +51,7 @@ http_callback_404(httpd * webserver)
 				"&gw_id=%s'>click here</a> to login", 
 				config.authserv_loginurl, config.gw_address, 
 				config.gw_port, config.gw_id);
-		debug(D_LOG_INFO, "Captured %s and re-directed them to login "
+		debug(LOG_INFO, "Captured %s and re-directed them to login "
 			"page", webserver->clientAddr);
 		free(newlocation);
 	}
@@ -85,7 +85,7 @@ http_callback_auth(httpd * webserver)
 		// They supplied variable "token"
 		if (!(mac = arp_get(webserver->clientAddr))) {
 			// We could not get their MAC address
-			debug(D_LOG_ERR, "Failed to retrieve MAC address for "
+			debug(LOG_ERR, "Failed to retrieve MAC address for "
 				"ip %s", webserver->clientAddr);
 			httpdOutput(webserver, "Failed to retrieve your MAC "
 					"address");
@@ -96,16 +96,16 @@ http_callback_auth(httpd * webserver)
 			
 			if ((node = node_find_by_ip(webserver->clientAddr))
 					== NULL) {
-				debug(D_LOG_DEBUG, "New node for %s",
+				debug(LOG_DEBUG, "New node for %s",
 					webserver->clientAddr);
 				node_add(webserver->clientAddr, mac,
 					token->value, 0, 0);
 			} else {
-				debug(D_LOG_DEBUG, "Node for %s already "
+				debug(LOG_DEBUG, "Node for %s already "
 					"exists", node->ip);
 				if (node->rights != NULL) {
 					/* log off if logged in */
-					debug(D_LOG_DEBUG, "Logging off %s "
+					debug(LOG_DEBUG, "Logging off %s "
 						"because they tried a new "
 						"token", node->ip);
 					fw_deny(node->ip, node->mac,

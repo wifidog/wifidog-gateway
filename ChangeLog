@@ -1,5 +1,9 @@
 # $Header$
 2004-04-19  Philippe April <papril777@yahoo.com>
+    * A lot of changes regarding debugging facilities and added logging
+    to syslog
+
+2004-04-19  Philippe April <papril777@yahoo.com>
     * Changed some debugging severity
 
 2004-04-19  Benoit Grégoire  <bock@step.polymtl.ca>

@@ -104,7 +104,7 @@ auth_thread(void *ptr)
 
 	if (profile == -1) {
 		// Error talking to central server
-		debug(D_LOG_ERR, "Got %d from central server authenticating "
+		debug(LOG_ERR, "Got %d from central server authenticating "
 			"token %s from %s at %s", profile, node->token,
 			node->ip, node->mac);
 		_http_output(node->fd, "Access denied: We did not get a valid "
@@ -123,19 +123,19 @@ auth_thread(void *ptr)
 
 	/* If we get here, we've got a profile > 0 */
 	
-	debug(D_LOG_INFO, "Node %s with mac %s and profile "
+	debug(LOG_INFO, "Node %s with mac %s and profile "
 		"%d validated", node->ip, node->mac, profile);
 	
 	tmp_uc = find_userclasses(profile);
 	
 	if (tmp_uc == NULL) {
-		debug(D_LOG_WARNING, "Profile %d undefined", profile);
+		debug(LOG_WARNING, "Profile %d undefined", profile);
 		_http_output(node->fd, "User Class not defined");
 		node->fd = 0;
 		pthread_mutex_unlock(&nodes_mutex);
 		return;
 	} else {
-		debug(D_LOG_INFO, "Profile %d UserClasses retrieved", profile);
+		debug(LOG_INFO, "Profile %d UserClasses retrieved", profile);
 	}
 	
 	if (tmp_uc->active) {

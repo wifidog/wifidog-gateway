@@ -40,13 +40,13 @@ authenticate(char *ip, char *mac, char *token, long int stats)
 	char *p1;
 
 	if ((he = gethostbyname(config.authserv_hostname)) == NULL) {
-		debug(D_LOG_ERR, "Failed to resolve %s via gethostbyname(): "
+		debug(LOG_ERR, "Failed to resolve %s via gethostbyname(): "
 			"%s", config.authserv_hostname, strerror(errno));
 		return(-1);
 	}
 
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		debug(D_LOG_ERR, "socket(): %s", strerror(errno));
+		debug(LOG_ERR, "socket(): %s", strerror(errno));
 		exit(1);
 	}
 
@@ -55,12 +55,12 @@ authenticate(char *ip, char *mac, char *token, long int stats)
 	their_addr.sin_addr = *((struct in_addr *)he->h_addr);
 	memset(&(their_addr.sin_zero), '\0', 8);
 
-	debug(D_LOG_INFO, "Connecting to auth server %s on port %d", 
+	debug(LOG_INFO, "Connecting to auth server %s on port %d", 
 		config.authserv_hostname, config.authserv_port);
 
 	if (connect(sockfd, (struct sockaddr *)&their_addr,
 				sizeof(struct sockaddr)) == -1) {
-		debug(D_LOG_ERR, "connect(): %s", strerror(errno));
+		debug(LOG_ERR, "connect(): %s", strerror(errno));
 		return(-1); /* non-fatal */
 	}
 	sprintf(buf, "GET %s?ip=%s&mac=%s&token=%s&stats=%ld HTTP/1.1"
@@ -68,10 +68,10 @@ authenticate(char *ip, char *mac, char *token, long int stats)
 		stats, config.authserv_hostname);
 	send(sockfd, buf, strlen(buf), 0);
 
-	debug(D_LOG_DEBUG, "Sending HTTP request:\n#####\n%s\n#####", buf);
+	debug(LOG_DEBUG, "Sending HTTP request:\n#####\n%s\n#####", buf);
 
 	if ((numbytes = recv(sockfd, buf, MAX_BUF - 1, 0)) == -1) {
-		debug(D_LOG_ERR, "recv(): %s", strerror(errno));
+		debug(LOG_ERR, "recv(): %s", strerror(errno));
 		exit(1);
 	}
 
@@ -81,11 +81,11 @@ authenticate(char *ip, char *mac, char *token, long int stats)
 
 	if ((p1 = strstr(buf, "Profile: "))) {
 		if (sscanf(p1, "Profile: %d", &profile) == 1) {
-			debug(D_LOG_INFO, "Auth server returned profile %d",
+			debug(LOG_INFO, "Auth server returned profile %d",
 				profile);
 			return(profile);
 		} else {
-			debug(D_LOG_WARNING, "Auth server did not return "
+			debug(LOG_WARNING, "Auth server did not return "
 				"expected information");
 			return(-1);
 		}

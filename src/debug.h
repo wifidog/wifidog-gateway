@@ -27,12 +27,6 @@
 #ifndef _DEBUG_H_
 #define _DEBUG_H_
 
-#define	D_LOG_ERR		0
-#define	D_LOG_WARNING	1
-#define	D_LOG_NOTICE	2
-#define	D_LOG_INFO	    3
-#define	D_LOG_DEBUG	    4
-
 void debug(int level, char *format, ...);
 
 #endif /* _DEBUG_H_ */

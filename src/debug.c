@@ -25,21 +25,38 @@
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
 */
 
+#define SYSLOG_NAMES
 #include "common.h"
 
 extern s_config config;
+//extern CODE prioritynames[];
 
 void
 debug(int level, char *format, ...)
 {
+    int i;
     va_list vlist;
 
     if (config.debuglevel >= level) {
         va_start(vlist, format);
-        fprintf(stderr, "[debug %d] ", level);
-        vfprintf(stderr, format, vlist);
-        fputc('\n', stderr);
-        fflush(stderr);
+
+        if (level <= LOG_WARNING) {
+            fprintf(stderr, "[debug %d] ", level);
+            vfprintf(stderr, format, vlist);
+            fputc('\n', stderr);
+            fflush(stderr);
+        } else if (!config.daemon) {
+            fprintf(stdout, "[debug %d] ", level);
+            vfprintf(stdout, format, vlist);
+            fputc('\n', stdout);
+            fflush(stdout);
+        }
+
+        if (config.log_syslog) {
+            openlog("wifidog", LOG_PID, config.syslog_facility);
+            vsyslog(level, format, vlist);
+            closelog();
+        }
     }
 }
 

@@ -27,7 +27,8 @@
 #include "common.h"
 
 #define DEFAULT_CONFIGFILE "/etc/wifidog.conf"
-#define DEFAULT_DEBUGLEVEL D_LOG_DEBUG
+#define DEFAULT_DAEMON 1
+#define DEFAULT_DEBUGLEVEL LOG_INFO
 #define DEFAULT_HTTPDMAXCONN 10
 #define DEFAULT_GATEWAYID "default"
 #define DEFAULT_GATEWAYPORT 2060
@@ -37,6 +38,8 @@
 #define DEFAULT_CHECKINTERVAL 5
 #define DEFAULT_FWSCRIPTS_PATH "."
 #define DEFAULT_FWTYPE "."
+#define DEFAULT_LOG_SYSLOG 0
+#define DEFAULT_SYSLOG_FACILITY LOG_DAEMON
 
 s_config config;
 int missing_parms;
@@ -60,6 +63,7 @@ typedef enum {
 	oFWScriptsPath,
 	oFWType,
 	oUserClass,
+    oSyslogFacility,
 } OpCodes;
 
 struct {
@@ -83,17 +87,17 @@ struct {
 	{ "checkinterval",      oCheckInterval },
 	{ "fwscriptspath",      oFWScriptsPath },
 	{ "fwtype",             oFWType },
-	{ "userclass",		oUserClass },
+	{ "userclass",  		oUserClass },
+	{ "syslogfacility", 	oSyslogFacility },
 	{ NULL,                 oBadOption },
 };
 
 void
 config_init(void)
 {
-	debug(D_LOG_DEBUG, "Setting default config parameters");
+	debug(LOG_DEBUG, "Setting default config parameters");
 	config.configfile = (char *)malloc(255);
 	strcpy(config.configfile, DEFAULT_CONFIGFILE);
-	config.daemon = 1;
 	config.debuglevel = DEFAULT_DEBUGLEVEL;
 	config.httpdmaxconn = DEFAULT_HTTPDMAXCONN;
 	config.gw_id = DEFAULT_GATEWAYID;
@@ -111,6 +115,22 @@ config_init(void)
 	config.fwtype = DEFAULT_FWTYPE;
 	config.userclasses = (char **)malloc(sizeof(char *) * 256);
 	memset(config.userclasses, 0, sizeof(char *) * 256);
+	config.syslog_facility = DEFAULT_SYSLOG_FACILITY;
+    config.daemon = -1;
+    config.log_syslog = DEFAULT_LOG_SYSLOG;
+}
+
+/**
+ * @brief Initialize the variables we override with the command line
+ *
+ *
+ * Initialize the variables we override with the command line after the config has been read
+ * if they haven't been initialized by the configuration file
+ */
+void
+config_init_override(void)
+{
+    if (!config.daemon) config.daemon = DEFAULT_DAEMON;
 }
 
 OpCodes
@@ -122,7 +142,7 @@ parse_token(const char *cp, const char *filename, int linenum)
 		if (strcasecmp(cp, keywords[i].name) == 0)
 			return keywords[i].opcode;
 
-	debug(D_LOG_ERR, "%s: line %d: Bad configuration option: %s", 
+	debug(LOG_ERR, "%s: line %d: Bad configuration option: %s", 
 			filename, linenum, cp);
 	return oBadOption;
 }
@@ -134,10 +154,10 @@ config_read(char *filename)
 	char line[MAX_BUF], *s, *p1, *p2;
 	int linenum = 0, opcode, value;
 
-	debug(D_LOG_INFO, "Reading configuration file '%s'", filename);
+	debug(LOG_INFO, "Reading configuration file '%s'", filename);
 
 	if (!(fd = fopen(filename, "r"))) {
-		debug(D_LOG_ERR, "Could not open configuration file '%s', "
+		debug(LOG_ERR, "Could not open configuration file '%s', "
 				"exiting...", filename);
 		exit(1);
 	}
@@ -171,7 +191,7 @@ config_read(char *filename)
 			/* Strip tailing spaces */
 
 			if ((strncmp(s, "#", 1)) != 0) {
-				debug(D_LOG_DEBUG, "Parsing token: %s, "
+				debug(LOG_DEBUG, "Parsing token: %s, "
 						"value: %s", s, p1);
 				opcode = parse_token(s, filename, linenum);
 
@@ -181,7 +201,7 @@ config_read(char *filename)
 							++p2);
 					break;
 				case oDaemon:
-					if (((value = parse_value(p1)) != -1)) {
+					if (config.daemon == -1 && ((value = parse_value(p1)) != -1)) {
 						config.daemon = value;
 					}
 					break;
@@ -215,6 +235,7 @@ config_read(char *filename)
 						get_string(p1);
 					break;
 				case oBadOption:
+                    debug(LOG_ERR, "Exiting...");
 					exit(-1);
 					break;
 				case oCheckInterval:
@@ -228,6 +249,9 @@ config_read(char *filename)
 					break;
                 case oFWType:
 					config.fwtype = get_string(p1);
+					break;
+                case oSyslogFacility:
+					sscanf(p1, "%d", &config.syslog_facility);
 					break;
 				}
 			}
@@ -294,7 +318,7 @@ config_validate(void)
 	config_notnull(config.authserv_loginurl, "AuthservLoginUrl");
 
 	if (missing_parms) {
-		debug(D_LOG_ERR, "Configuration is not complete, exiting...");
+		debug(LOG_ERR, "Configuration is not complete, exiting...");
 		exit(-1);
 	}
 }
@@ -303,7 +327,7 @@ void
 config_notnull(void *parm, char *parmname)
 {
 	if (parm == NULL) {
-		debug(D_LOG_ERR, "%s is not set", parmname);
+		debug(LOG_ERR, "%s is not set", parmname);
 		missing_parms = 1;
 	}
 }

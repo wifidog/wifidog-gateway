@@ -54,7 +54,7 @@ fw_allow(char *ip, char *mac, int profile)
 		SCRIPT_FWACCESS);
 
 	if (-1 == (stat(script, &st))) {
-		debug(D_LOG_ERR, "Could not find %s: %s", script,
+		debug(LOG_ERR, "Could not find %s: %s", script,
 			strerror(errno));
 		return(1);
 	}
@@ -82,7 +82,7 @@ fw_deny(char *ip, char *mac, int profile)
 		SCRIPT_FWACCESS);
 
 	if (-1 == (stat(script, &st))) {
-		debug(D_LOG_ERR, "Could not find %s: %s", script, 
+		debug(LOG_ERR, "Could not find %s: %s", script, 
 			strerror(errno));
 		return(1);
 	}
@@ -101,14 +101,14 @@ execute(char **argv)
 {
 	int pid, status, rc;
 
-	debug(D_LOG_DEBUG, "Executing '%s'", argv[0]);
+	debug(LOG_DEBUG, "Executing '%s'", argv[0]);
 
 	if ((pid = fork()) < 0) {     /* fork a child process           */
-		debug(D_LOG_ERR, "fork(): %s", strerror(errno));
+		debug(LOG_ERR, "fork(): %s", strerror(errno));
 		exit(1);
 	} else if (pid == 0) {          /* for the child process:         */
 		if (execvp(*argv, argv) < 0) {     /* execute the command  */
-			debug(D_LOG_ERR, "fork(): %s", strerror(errno));
+			debug(LOG_ERR, "fork(): %s", strerror(errno));
 			exit(1);
 		}
 	} else {                                  /* for the parent:      */
@@ -174,16 +174,16 @@ fw_init(void)
 		SCRIPT_FWINIT);
 
 	if (-1 == (stat(script, &st))) {
-		debug(D_LOG_ERR, "Could not find %s: %s", script, 
+		debug(LOG_ERR, "Could not find %s: %s", script, 
 			strerror(errno));
-		debug(D_LOG_ERR, "Exiting...");
+		debug(LOG_ERR, "Exiting...");
 		exit(1);
 	}
 
-	debug(D_LOG_NOTICE, "Setting firewall rules");
+	debug(LOG_NOTICE, "Setting firewall rules");
 
 	if ((rc = execute(command)) != 0) {
-		debug(D_LOG_ERR, "Could not setup firewall, exiting...");
+		debug(LOG_ERR, "Could not setup firewall, exiting...");
 		exit(1);
 	}
 
@@ -207,12 +207,12 @@ fw_destroy(void)
 		SCRIPT_FWDESTROY);
 
 	if (-1 == (stat(script, &st))) {
-		debug(D_LOG_ERR, "Could not find %s: %s", script, 
+		debug(LOG_ERR, "Could not find %s: %s", script, 
 			strerror(errno));
 		return(1);
 	}
 
-	debug(D_LOG_NOTICE, "Flushing firewall rules");
+	debug(LOG_NOTICE, "Flushing firewall rules");
 
 	return(execute(command));
 }
@@ -234,7 +234,7 @@ fw_counter(void)
 		SCRIPT_FWCOUNTERS);
 
 	if (!(output = popen(script, "r"))) {
-		debug(D_LOG_ERR, "popen(): %s", strerror(errno));
+		debug(LOG_ERR, "popen(): %s", strerror(errno));
 	} else {
 		while (!(feof(output)) && output) {
 			rc = fscanf(output, "%ld %s %s %d", &counter, ip, 
@@ -247,7 +247,7 @@ fw_counter(void)
 
 				if (p1->counter == counter) {
 					/* expire clients for inactivity */
-					debug(D_LOG_INFO, "Client %s was "
+					debug(LOG_INFO, "Client %s was "
 						"inactive", ip);
 					fw_deny(p1->ip, p1->mac,
 						p1->rights->profile);
@@ -276,12 +276,12 @@ fw_counter(void)
 					p1 = node_find_by_ip(ip);
 
 					if (p1 == NULL) {	
-						debug(D_LOG_DEBUG, "Node was "
+						debug(LOG_DEBUG, "Node was "
 							"freed while being "
 							"re-validated!");
 					} else if (profile <= 0) {
 						/* failed */
-						debug(D_LOG_NOTICE, "Auth "
+						debug(LOG_NOTICE, "Auth "
 							"failed for client %s",
 							ip);
 						fw_deny(p1->ip, p1->mac,
@@ -289,7 +289,7 @@ fw_counter(void)
 						node_delete(p1);
 					} else {
 						/* successful */
-						debug(D_LOG_INFO, "Updated "
+						debug(LOG_INFO, "Updated "
 							"client %s counter to "
 							"%ld bytes", ip,
 							counter);
@@ -341,7 +341,7 @@ node_add(char *ip, char *mac, char *token, long int counter, int active)
 	curnode = (t_node *)malloc(sizeof(t_node));
 
 	if (curnode == NULL) {
-		debug(D_LOG_ERR, "Out of memory");
+		debug(LOG_ERR, "Out of memory");
 		exit(-1);
 	}
 
@@ -359,7 +359,7 @@ node_add(char *ip, char *mac, char *token, long int counter, int active)
 		prevnode->next = curnode;
 	}
 
-	debug(D_LOG_INFO, "Added a new node to linked list: IP: %s Token: %s",
+	debug(LOG_INFO, "Added a new node to linked list: IP: %s Token: %s",
 		ip, token);
 	
 	return curnode;
@@ -464,7 +464,7 @@ int
 check_userrights(t_node *node)
 {
 	if (node->rights->end_time <= time(NULL)) {
-		debug(D_LOG_INFO, "Connection %s has expired", node->ip);
+		debug(LOG_INFO, "Connection %s has expired", node->ip);
 		return 0;
 	}
 

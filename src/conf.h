@@ -28,6 +28,7 @@
 #define _CONFIG_H_
 
 void config_init(void);
+void config_init_override(void);
 void config_read(char *filename);
 void config_validate(void);
 void config_notnull(void *parm, char *parmname);
@@ -54,6 +55,8 @@ typedef struct {
     char *fwscripts_path;
     char *fwtype;
     char **userclasses;
+    int log_syslog;
+    int syslog_facility;
 } s_config;
 
 #endif /* _CONFIG_H_ */

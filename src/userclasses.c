@@ -251,7 +251,7 @@ init_userclasses(int remote_allowed)
 			tmp_uc->active = active;
 			insert_userclasses(tmp_uc);
 
-			debug(D_LOG_DEBUG, "Rule #%d: timeout %d active %d",
+			debug(LOG_DEBUG, "Rule #%d: timeout %d active %d",
 					i, timeout, active);
 		}
 	}
