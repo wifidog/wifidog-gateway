@@ -40,9 +40,7 @@ t_node         *firstnode = NULL;
  * @brief Allow a user through the firewall
  *
  * Add a rule in the firewall to MARK the user's packets with the proper
- * rule by providing his IP and MAC address. This is done by
- * executing the firewall script "fw.access" like this:
- * fw.access allow <ip> <mac> <tag>
+ * rule by providing his IP and MAC address
  * @param ip IP address to allow
  * @param mac MAC address to allow
  * @tag tag Tag
@@ -60,8 +58,6 @@ fw_allow(char *ip, char *mac, int tag)
  * @brief Deny a user through the firewall
  *
  * Remove the rule in the firewall that was tagging the user's traffic
- * by executing the firewall script "fw.access" this way:
- * fw.access deny <ip> <mac> <profile>
  * @param ip IP address to deny
  * @param mac MAC address to deny
  * @tag tag Tag
@@ -163,7 +159,7 @@ fw_init(void)
 /**
  * @brief Destroy the firewall
  *
- * Remove the firewall rules by executing the 'fw.destroy' script.
+ * Remove the firewall rules
  * This is used when we do a clean shutdown of WiFiDog.
  * @return Return code of the fw.destroy script
  */
