@@ -67,7 +67,8 @@ iptables_do_command(char *format, ...)
     va_start(vlist, format);
     vasprintf(&fmt_cmd, format, vlist);
     asprintf(&cmd, "iptables %s", fmt_cmd);
-
+    debug(LOG_DEBUG, "Executing command: %s", cmd);
+	
     rc = execute(cmd, fw_quiet);
 
     free(fmt_cmd);

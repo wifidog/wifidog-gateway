@@ -1,4 +1,7 @@
 # $Header$
+2004-12-16 Benoit Grégoire  <bock@step.polymtl.ca>
+	* src/fw_iptables.c: Display iptables command that is run in debug mode.
+	
 2004-12-07 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/firewall.c: Fix reversed incoming and outgoing connections in statistics code
 	* bump version to alpha3
