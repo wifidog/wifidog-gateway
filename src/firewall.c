@@ -53,11 +53,11 @@ fw_allow(char *ip, char *mac, int tag)
 	struct stat st;
 	char *command[] = {script, "allow", ip, mac, s_tag, NULL};
 
-    debug(LOG_DEBUG, "Allowing ip %s mac %s with MARK %s", ip, mac, s_tag);
-
 	sprintf(s_tag, "%-10d", tag);
 	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, 
 		SCRIPT_FWACCESS);
+
+    debug(LOG_DEBUG, "Allowing ip %s mac %s with MARK %s", ip, mac, s_tag);
 
 	if (-1 == (stat(script, &st))) {
 		debug(LOG_ERR, "Could not find %s: %s", script,
@@ -87,11 +87,11 @@ fw_deny(char *ip, char *mac, int tag)
 	struct stat st;
 	char *command[] = {script, "deny", ip, mac, s_tag, NULL};
 
-    debug(LOG_DEBUG, "Denying ip %s mac %s with MARK %s", ip, mac, s_tag);
-
 	sprintf(s_tag, "%-10d", tag);
 	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype,
 		SCRIPT_FWACCESS);
+
+    debug(LOG_DEBUG, "Denying ip %s mac %s with MARK %s", ip, mac, s_tag);
 
 	if (-1 == (stat(script, &st))) {
 		debug(LOG_ERR, "Could not find %s: %s", script, 
