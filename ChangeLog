@@ -3,6 +3,7 @@
 	* WiFiDog now can read multiple auth servers in its config file.
 	* Added functions to handle the auth servers list.
 	* WiFiDog can failover between servers for its internal requests.
+	* Firewall sets rules for all auth servers.
 
 2004-08-06 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* AuthservPath no longer mandatory in config file.

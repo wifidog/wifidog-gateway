@@ -45,10 +45,10 @@
  * Holds the current configuration of the gateway */
 static s_config config;
 
-/** @internal
+/**
  * Mutex for the configuration file, used by the auth_servers related
  * functions. */
-static pthread_mutex_t config_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t config_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /** @internal
  * A flag.  If set to 1, there are missing or empty mandatory parameters in the config

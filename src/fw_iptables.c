@@ -45,6 +45,7 @@
 static int iptables_do_command(char *format, ...);
 
 extern pthread_mutex_t	client_list_mutex;
+extern pthread_mutex_t	config_mutex;
 
 /**
 Used to supress the error output of the firewall during destruction */ 
@@ -76,11 +77,24 @@ iptables_do_command(char *format, ...)
 int
 iptables_fw_init(void)
 {
-  s_config *config = config_get_config();
+    s_config *config;
+    t_auth_serv *auth_server;
+   
+    config = config_get_config();
     fw_quiet = 0;
+    
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_VALIDATE);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", config->gw_address);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", config->auth_servers->authserv_hostname);
+
+    pthread_mutex_lock(&config_mutex);
+    
+    for (auth_server = config->auth_servers; auth_server != NULL;
+		    auth_server = auth_server->next) {
+        iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", auth_server->authserv_hostname);
+    }
+    
+    pthread_mutex_unlock(&config_mutex);
+    
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p udp --dport 67 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p tcp --dport 67 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p udp --dport 53 -j ACCEPT");
@@ -96,7 +110,16 @@ iptables_fw_init(void)
 
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_UNKNOWN);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", config->gw_address);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", config->auth_servers->authserv_hostname);
+
+    pthread_mutex_lock(&config_mutex);
+    
+    for (auth_server = config->auth_servers; auth_server != NULL;
+		    auth_server = auth_server->next) {
+        iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", auth_server->authserv_hostname);
+    }
+
+    pthread_mutex_unlock(&config_mutex);
+
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p udp --dport 67 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 67 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p udp --dport 53 -j ACCEPT");
