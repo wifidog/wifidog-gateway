@@ -67,9 +67,9 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	char *tmp;
 	s_config *config = config_get_config();
 
-	if ((he = gethostbyname(config->authserv_hostname)) == NULL) {
+	if ((he = gethostbyname(config->auth_servers->authserv_hostname)) == NULL) {
 		debug(LOG_ERR, "Failed to resolve %s via gethostbyname(): "
-			"%s", config->authserv_hostname, strerror(errno));
+			"%s", config->auth_servers->authserv_hostname, strerror(errno));
 		return(-1);
 	}
 
@@ -79,12 +79,13 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	}
 
 	their_addr.sin_family = AF_INET;
-	their_addr.sin_port = htons(config->authserv_port);
+	their_addr.sin_port = htons(config->auth_servers->authserv_port);
 	their_addr.sin_addr = *((struct in_addr *)he->h_addr);
 	memset(&(their_addr.sin_zero), '\0', sizeof(their_addr.sin_zero));
 
 	debug(LOG_INFO, "Connecting to auth server %s on port %d", 
-		config->authserv_hostname, config->authserv_port);
+		config->auth_servers->authserv_hostname, 
+		config->auth_servers->authserv_port);
 
 	if (connect(sockfd, (struct sockaddr *)&their_addr,
 				sizeof(struct sockaddr)) == -1) {
@@ -99,7 +100,9 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
                 "User-Agent: WiFiDog %s\n"
                 "Host: %s\n"
                 "\n",
-            config->authserv_path, request_type, ip, mac, token, incoming, outgoing, VERSION, config->authserv_hostname);
+            config->authserv_path, request_type, ip, mac, 
+	    token, incoming, outgoing, VERSION, 
+	    config->auth_servers->authserv_hostname);
 	send(sockfd, buf, strlen(buf), 0);
 
 	debug(LOG_DEBUG, "Sending HTTP request to auth server: %s\n", buf);

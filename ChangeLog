@@ -1,4 +1,8 @@
 # $Header$
+2004-08-09 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* WiFiDog now can read multiple auth servers (only uses the first one
+however.)
+
 2004-08-06 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* AuthservPath no longer mandatory in config file.
 

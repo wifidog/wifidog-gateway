@@ -45,6 +45,12 @@
 #define DEFAULT_AUTHSERVPATH "/wifidog/auth"
 /*@}*/ 
 
+typedef struct _auth_serv_t {
+    char *authserv_hostname;	/**< @brief Hostname of the central server */
+    int authserv_port;	    /**< @brief Port the central server listens on */
+    struct _auth_serv_t *next;
+} t_auth_serv;
+
 /**
  * Configuration structure
  */
@@ -61,8 +67,8 @@ typedef struct {
     char *gw_address;		/**< @brief Internal IP address for our web
 				     server */
     int gw_port;		/**< @brief Port the webserver will run on */
-    char *authserv_hostname;	/**< @brief Hostname of the central server */
-    int authserv_port;		/**< @brief Port the central server listens on */
+
+    t_auth_serv	*auth_servers;	/**< @brief Auth servers list */
     char *authserv_path;	/**< @brief Path to the authentication script on
 				     the central server */
     char *authserv_loginurl;	/**< @brief Full URL to the login page */

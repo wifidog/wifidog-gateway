@@ -80,7 +80,7 @@ iptables_fw_init(void)
     fw_quiet = 0;
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_VALIDATE);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", config->gw_address);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", config->authserv_hostname);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", config->auth_servers->authserv_hostname);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p udp --dport 67 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p tcp --dport 67 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p udp --dport 53 -j ACCEPT");
@@ -96,7 +96,7 @@ iptables_fw_init(void)
 
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_UNKNOWN);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", config->gw_address);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", config->authserv_hostname);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", config->auth_servers->authserv_hostname);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p udp --dport 67 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 67 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p udp --dport 53 -j ACCEPT");

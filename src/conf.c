@@ -59,8 +59,7 @@ typedef enum {
 	oGatewayInterface,
 	oGatewayAddress,
 	oGatewayPort,
-	oAuthservHostname,
-	oAuthservPort,
+	oAuthServer,
 	oAuthservPath,
 	oAuthservLoginUrl,
 	oHTTPDMaxConn,
@@ -85,8 +84,7 @@ static const struct {
 	{ "gatewayinterface",   oGatewayInterface },
 	{ "gatewayaddress",     oGatewayAddress },
 	{ "gatewayport",        oGatewayPort },
-	{ "authservhostname",   oAuthservHostname },
-	{ "authservport",       oAuthservPort },
+	{ "authserver",         oAuthServer },
 	{ "authservpath",       oAuthservPath },
 	{ "authservloginurl",   oAuthservLoginUrl },
 	{ "httpdmaxconn",       oHTTPDMaxConn },
@@ -98,8 +96,10 @@ static const struct {
 	{ NULL,                 oBadOption },
 };
 
+static OpCodes config_parse_token(const char *cp, const char *filename, int linenum);
 static void config_notnull(void *parm, char *parmname);
 static int parse_boolean_value(char *);
+static void new_auth_server(char *, int);
 
 /** Accessor for the current gateway configuration
 @return:  A pointer to the current config.  The pointer isn't opaque, but should be treated as READ-ONLY
@@ -123,8 +123,7 @@ config_init(void)
 	config.gw_interface = NULL;
 	config.gw_address = NULL;
 	config.gw_port = DEFAULT_GATEWAYPORT;
-	config.authserv_hostname = NULL;
-	config.authserv_port = DEFAULT_AUTHSERVPORT;
+	config.auth_servers = NULL;
 	config.authserv_path = strdup(DEFAULT_AUTHSERVPATH);
 	config.authserv_loginurl = NULL;
 	config.httpdname = NULL;
@@ -234,9 +233,16 @@ config_read(char *filename)
 				case oGatewayPort:
 					sscanf(p1, "%d", &config.gw_port);
 					break;
-				case oAuthservHostname:
-					config.authserv_hostname = 
-						strdup(p1);
+				case oAuthServer:
+					/* Check for the presence of more then
+					 * one argument. */
+					if (p2 != NULL && (*(p2 + 1) != '\n')
+						       && (*(p2 + 1) != '\0')) {
+						p2++;
+						new_auth_server(p1, atoi(p2));
+					} else {
+						new_auth_server(p1, DEFAULT_AUTHSERVPORT);
+					}
 					break;
 				case oHTTPDName:
 					config.httpdname = strdup(p1);
@@ -306,7 +312,7 @@ config_validate(void)
 	config_notnull(config.gw_id, "GatewayID");
 	config_notnull(config.gw_interface, "GatewayInterface");
 	config_notnull(config.gw_address, "GatewayAddress");
-	config_notnull(config.authserv_hostname, "AuthservHostname");
+	config_notnull(config.auth_servers, "AuthServer");
 	config_notnull(config.authserv_loginurl, "AuthservLoginUrl");
 
 	if (missing_parms) {
@@ -327,3 +333,37 @@ config_notnull(void *parm, char *parmname)
 	}
 }
 
+/** @internal
+    Register a new auth server.
+*/
+static void
+new_auth_server(char *host, int port)
+{
+	t_auth_serv	*new, *tmp;
+
+	debug(LOG_DEBUG, "Adding %s:%d to the auth server list", host, port);
+
+	/* Allocate memory */
+	new = (t_auth_serv *)malloc(sizeof(t_auth_serv));
+	if (new == NULL) {
+		debug(LOG_ERR, "Could not allocate memory for auth server "
+				"configuration");
+		exit(1);
+	}
+	
+	/* Fill in struct */
+	new->authserv_hostname = strdup(host);
+	new->authserv_port = port;
+	new->next = NULL;
+	
+	/* If it's the first, add to config, else append to last server */
+	if (config.auth_servers == NULL) {
+		config.auth_servers = new;
+	} else {
+		for (tmp = config.auth_servers; tmp->next != NULL;
+				tmp = tmp->next);
+		tmp->next = new;
+	}
+	
+	debug(LOG_DEBUG, "Auth server added");
+}
