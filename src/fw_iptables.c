@@ -94,6 +94,8 @@ iptables_fw_init(void)
     }
     
     pthread_mutex_unlock(&config_mutex);
+
+    /** Insert global rules BEFORE the "defaults" */
     
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p udp --dport 67 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p tcp --dport 67 -j ACCEPT");
@@ -120,6 +122,8 @@ iptables_fw_init(void)
 
     pthread_mutex_unlock(&config_mutex);
 
+    /** Insert global rules BEFORE the "defaults" */
+
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p udp --dport 67 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 67 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p udp --dport 53 -j ACCEPT");
@@ -127,6 +131,9 @@ iptables_fw_init(void)
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j DROP");
 
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_KNOWN);
+
+    /** Insert global rules BEFORE the "defaults" */
+
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_KNOWN " -j ACCEPT");
 
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_LOCKED);

@@ -107,7 +107,7 @@ ping(void)
 	debug(LOG_DEBUG, "Using auth server %s",
 			auth_server->authserv_hostname);
 	
-	if ((h_addr = wd_gethostbyname(auth_server->authserv_hostname)) == NULL) {
+	if ((h_addr = (struct in_addr *)wd_gethostbyname(auth_server->authserv_hostname)) == NULL) {
 		debug(LOG_ERR, "Failed to resolve %s via gethostbyname"
 				"(): %s", auth_server->authserv_hostname, 
 				strerror(errno));

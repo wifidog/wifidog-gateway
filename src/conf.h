@@ -48,7 +48,6 @@
 /** Note:  The path must NOT be prefixed by /, and must be suffixed /.  Leave empty for the server root.*/
 #define DEFAULT_AUTHSERVPATH "wifidog/"
 #define DEFAULT_AUTHSERVMAXTRIES 1
-
 /*@}*/ 
 
 /**
@@ -64,6 +63,17 @@ typedef struct _auth_serv_t {
     int authserv_use_ssl;	/**< @brief Use SSL or not */
     struct _auth_serv_t *next;
 } t_auth_serv;
+
+/**
+ * Firewall rules
+ */
+typedef struct _firewall_rule_t {
+    int block_allow;		/**< @brief 1 = Allow rule, 0 = Block rule */
+    char *protocol;		/**< @brief tcp, udp, etc ... */
+    char *port;			/**< @brief Port to block/allow */
+    char *mask;			/**< @brief Mask for the rule *destination* */
+    struct _firewall_rule_t *next;
+} t_firewall_rule;
 
 /**
  * Configuration structure
@@ -96,6 +106,7 @@ typedef struct {
     int log_syslog;		/**< @brief boolean, wether to log to syslog */
     int syslog_facility;	/**< @brief facility to use when using syslog for
 				     logging */
+    t_firewall_rule	*rules;	/**< @brief firewall rules */
 } s_config;
 
 /** @brief Get the current gateway configuration */

@@ -1,6 +1,12 @@
 # $Header$
+2004-10-28 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* multiple files: Implemented a FirewallRule config command, it
+	  doesn't actually do anything yet.
+	* libhttpd: #if 0'd out lots of request parsing code
+
 2004-10-27 Philippe April <philippe@philippeapril.com>
 	* ipkg/rules: removed --build=mipsel from ./configure
+
 2004-10-26 Philippe April <philippe@philippeapril.com>
 	* ipkg/rules: sed -i is not standard, did a workaround.
 	* ipkg/rules: openwrt's buildroot has changed, modified ipkg

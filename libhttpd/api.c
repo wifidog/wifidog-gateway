@@ -457,6 +457,7 @@ int httpdReadRequest(server)
 				inHeaders = 0;
 				break;
 			}
+#if 0
             /**
              * Philippe commenting this out, it crashed with a
              * particular pattern sent from the browser
@@ -481,7 +482,9 @@ int httpdReadRequest(server)
 					var = end;
 				}
 			}
-            */
+			*/
+#endif
+#if 0
 			if (strncasecmp(buf,"Authorization: ",15) == 0)
 			{
 				cp = index(buf,':') + 2;
@@ -509,6 +512,8 @@ int httpdReadRequest(server)
 						authBuf, HTTP_MAX_AUTH);
 				}
 			}
+#endif
+#if 0
 			if (strncasecmp(buf,"Referer: ",9) == 0)
 			{
 				cp = index(buf,':') + 2;
@@ -518,6 +523,7 @@ int httpdReadRequest(server)
 						HTTP_MAX_URL);
 				}
 			}
+#endif
 			/* acv@acv.ca/wifidog: Added decoding of host: if
 			 * present. */
 			if (strncasecmp(buf,"Host: ",6) == 0)
@@ -530,6 +536,7 @@ int httpdReadRequest(server)
 				}
 			}
 			/* End modification */
+#if 0
 			if (strncasecmp(buf,"If-Modified-Since: ",19) == 0)
 			{
 				cp = index(buf,':') + 2;
@@ -558,6 +565,7 @@ int httpdReadRequest(server)
 				if(cp)
 					server->request.contentLength=atoi(cp);
 			}
+#endif
 			continue;
 		}
 	}
@@ -565,6 +573,7 @@ int httpdReadRequest(server)
 	/*
 	** Process and POST data
 	*/
+#if 0
 	if (server->request.contentLength > 0)
 	{
 		bzero(buf, HTTP_MAX_LEN);
@@ -572,7 +581,8 @@ int httpdReadRequest(server)
 		_httpd_storeData(server, buf);
 		
 	}
-
+#endif
+	
 	/*
 	** Process any URL data
 	*/

@@ -79,7 +79,8 @@ typedef enum {
 	oClientTimeout,
 	oCheckInterval,
 	oWdctlSocket,
-	oSyslogFacility
+	oSyslogFacility,
+	oFirewallRule
 } OpCodes;
 
 /** @internal
@@ -109,6 +110,7 @@ static const struct {
 	{ "sslport",		oAuthServSSLPort },
 	{ "httpport",		oAuthServHTTPPort },
 	{ "path",		oAuthServPath },
+	{ "firewallrule",	oFirewallRule },
 	{ NULL,                 oBadOption },
 };
 
@@ -116,6 +118,7 @@ static OpCodes config_parse_token(const char *cp, const char *filename, int line
 static void config_notnull(void *parm, char *parmname);
 static int parse_boolean_value(char *);
 static void parse_auth_server(FILE *, char *, int *);
+static int parse_firewall_rule(char *token, char *leftover);
 
 /** Accessor for the current gateway configuration
 @return:  A pointer to the current config.  The pointer isn't opaque, but should be treated as READ-ONLY
@@ -148,6 +151,7 @@ config_init(void)
 	config.daemon = -1;
 	config.log_syslog = DEFAULT_LOG_SYSLOG;
 	config.wdctl_sock = strdup(DEFAULT_WDCTL_SOCK);
+	config.rules = NULL;
 }
 
 /**
@@ -309,6 +313,139 @@ parse_auth_server(FILE *file, char *filename, int *linenum)
 }
 
 /**
+@param token first keyword
+@param leftover rest of the line
+*/
+#define TO_NEXT_WORD(s, e) do { \
+	while (*s != '\0' && !isblank(*s)) { \
+		s++; \
+	} \
+	if (*s != '\0') { \
+		*s = '\0'; \
+		s++; \
+		while (isblank(*s)) \
+			s++; \
+	} else { \
+		e = 1; \
+	} \
+} while (0)
+
+static int
+parse_firewall_rule(char *token, char *leftover)
+{
+	int i;
+	int block_allow = 0; /**< 0 == block, 1 == allow */
+	int all_nums = 1; /**< If 0, port contained non-numerics */
+	int finished = 0; /**< reached end of line */
+	char *port = NULL; /**< port to open/block */
+	char *protocol = NULL; /**< protocol to block, tcp/udp/icmp */
+	char *mask = NULL; /**< Netmask */
+	char *other_kw = NULL; /**< other key word */
+	t_firewall_rule *tmp;
+	t_firewall_rule *tmp2;
+
+	debug(LOG_DEBUG, "leftover: %s", ++leftover);
+	debug(LOG_DEBUG, "token: %s", token);
+	
+	/* lower case */
+	for (i = 0; *(leftover + i) != '\0'
+			&& (*(leftover + i) = tolower(*(leftover + i))); i++);
+	
+	/* Parse token */
+	if (!strcasecmp(token, "block")) {
+		block_allow = 0;
+	} else if (!strcasecmp(token, "allow")) {
+		block_allow = 1;
+	} else {
+		debug(LOG_ERR, "Invalid rule type %s, expecting "
+				"\"block\" or \"allow\"", token);
+		return -1;
+	}
+
+	/* Parse the remainder */
+	/* Get the protocol */
+	protocol = leftover;
+	TO_NEXT_WORD(leftover, finished);
+	if (strcmp(protocol, "tcp") && strcmp(protocol, "udp")
+			&& strcmp(protocol, "icmp") || finished) {
+		debug(LOG_ERR, "Invalid protocol %s in FirewallRule",
+				protocol);
+		return -1; /*< Fail */
+	}
+
+	/* should be exactly "port" */
+	other_kw = leftover;
+	TO_NEXT_WORD(leftover, finished);
+	if (strcmp(other_kw, "port") || finished) {
+		debug(LOG_ERR, "Invalid or unexpected keyword %s, "
+				"expecting \"port\"", other_kw);
+		return -2; /*< Fail */
+	}
+
+	/* Get port now */
+	port = leftover;
+	TO_NEXT_WORD(leftover, finished);
+	for (i = 0; *(port + i) != '\0'; i++)
+		if (!isdigit(*(port + i)))
+			all_nums = 0; /*< No longer only digits */
+	if (!all_nums) {
+		debug(LOG_ERR, "Invalid port %s", port);
+		return -3; /*< Fail */
+	}
+
+	/* Now, further stuff is optional */
+	if (!finished) {
+		/* should be exactly "to" */
+		other_kw = leftover;
+		TO_NEXT_WORD(leftover, finished);
+		if (strcmp(other_kw, "to") || finished) {
+			debug(LOG_ERR, "Invalid or unexpected keyword %s, "
+					"expecting \"to\"", other_kw);
+			return -4; /*< Fail */
+		}
+
+		/* Get port now */
+		mask = leftover;
+		TO_NEXT_WORD(leftover, finished);
+		all_nums = 1;
+		for (i = 0; *(mask + i) != '\0'; i++)
+			if (!isdigit(*(mask + i)) && (*(mask + i) != '.')
+					&& (*(mask + i) != '/'))
+				all_nums = 0; /*< No longer only digits */
+		if (!all_nums) {
+			debug(LOG_ERR, "Invalid mask %s", mask);
+			return -3; /*< Fail */
+		}
+	}
+
+	/* Generate rule record */
+	tmp = (t_firewall_rule *)malloc(sizeof(t_firewall_rule));
+	memset((void *)tmp, 0, sizeof(t_firewall_rule));
+	tmp->block_allow = block_allow;
+	tmp->protocol = strdup(protocol);
+	tmp->port = strdup(port);
+	if (mask == NULL)
+		tmp->mask = strdup("0.0.0.0/0");
+	else
+		tmp->mask = strdup(mask);
+
+	debug(LOG_DEBUG, "Adding Firewall Rule %s %s port %s to %s",
+			token, tmp->protocol, tmp->port, tmp->mask);
+	
+	/* Append the rule record */
+	if (config.rules == NULL) {
+		config.rules = tmp;
+	} else {
+		tmp2 = config.rules;
+		while (tmp2->next != NULL)
+			tmp2 = tmp2->next;
+		tmp2->next = tmp;
+	}
+	
+	return 1;
+}
+
+/**
 @param filename Full path of the configuration file to be read 
 */
 void
@@ -385,6 +522,9 @@ config_read(char *filename)
 					parse_auth_server(fd, filename,
 							&linenum);
 					break;
+				case oFirewallRule:
+					parse_firewall_rule(p1, p2);
+					break;
 				case oHTTPDName:
 					config.httpdname = strdup(p1);
 					break;
@@ -411,7 +551,7 @@ config_read(char *filename)
 				case oClientTimeout:
 					sscanf(p1, "%d", &config.clienttimeout);
 					break;
-                case oSyslogFacility:
+				case oSyslogFacility:
 					sscanf(p1, "%d", &config.syslog_facility);
 					break;
 				}
