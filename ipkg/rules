@@ -1,4 +1,4 @@
-#!/usr/bin/make -f 
+#!/usr/bin/make -f
 
 ifndef BUILDROOT
 	ERR := $(error Please set BUILDROOT to OpenWRT's buildroot)
@@ -41,6 +41,7 @@ build-wifidog-stamp:
 
 build-iptables: build-iptables-stamp
 build-iptables-stamp:
+	sed -i "s/PF_EXT_SLIB:=icmp/PF_EXT_SLIB:=mac icmp/" $(IPTABLES_DIR)/extensions/Makefile
 	CC=$(CC) LD=$(LD) AR=$(AR) RANLIB=$(RANLIB) $(MAKE) -C $(IPTABLES_DIR) KERNEL_DIR=../../linux/linux/
 
 	touch build-iptables-stamp
