@@ -75,7 +75,7 @@ http_callback_404(httpd *webserver, request *r)
 			r->request.host,
 			r->request.path);
 	url = httpdUrlEncode(tmp_url);
-	
+
 	if (!is_online()) {
 		/* The internet connection is down at the moment  - apologize and do not redirect anywhere */
 		http_wifidog_header(r, "Uh oh! Internet access unavailable");
@@ -124,7 +124,7 @@ http_callback_404(httpd *webserver, request *r)
 				config->gw_id,
 				url);
 		http_wifidog_footer(r);
-		debug(LOG_INFO, "Captured %s and re-directed them to login page", r->clientAddr);
+		debug(LOG_INFO, "Captured %s requesting [%s] and re-directed them to login page", r->clientAddr, url);
 		free(newlocation);
 	}
 

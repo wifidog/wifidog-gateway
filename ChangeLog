@@ -1,5 +1,8 @@
 # $Header$
 
+2005-03-20 Mina Naguib <mina@ilesansfil.org>
+	* More verbose debugging output
+
 2005-03-12 Mina Naguib <mina@ilesansfil.org>
 	* More debugging output
 	* Document ugly hack involving tid_fw_thread
