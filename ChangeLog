@@ -1,4 +1,8 @@
 # $Header$
+2005-04-03 Philippe April <philippe@ilesansfil.org>
+	* Fixed issue with FAQ
+	* ipkg/rules: If autogen.sh doesn't exist, it's ok. 'configure' will.
+
 2005-04-01 Philippe April <philippe@ilesansfil.org>
 	* Duplicated auth server list in NAT table to fix the issue
 	of using an auth server on port 80, since port 80 was being systematically
