@@ -1,5 +1,10 @@
 # $Header$
 
+2004-03-09  Philippe April <papril777@yahoo.com>
+    * Small fix in the default.php login page
+    * exit() where the program was supposed to exit but wasn't when the
+    firewall could not be setup
+
 2004-03-09  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Tiny change to increase cross-platform compatibility. It can now build on OS X and it comes close to building on my old BSD box.
 

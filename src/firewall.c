@@ -109,6 +109,7 @@ fw_init(void)
 
     if (execute(command) != 0) {
         debug(D_LOG_ERR, "Could not setup firewall, exiting...");
+        exit(1);
     }
 
     return(0);
