@@ -108,7 +108,7 @@ static const struct {
 static OpCodes config_parse_token(const char *cp, const char *filename, int linenum);
 static void config_notnull(void *parm, char *parmname);
 static int parse_boolean_value(char *);
-static void new_auth_server(char *, int);
+static void new_auth_server(char *, char *, int);
 
 /** Accessor for the current gateway configuration
 @return:  A pointer to the current config.  The pointer isn't opaque, but should be treated as READ-ONLY
@@ -178,7 +178,7 @@ void
 config_read(char *filename)
 {
 	FILE *fd;
-	char line[MAX_BUF], *s, *p1, *p2;
+	char line[MAX_BUF], *s, *p1, *p2, *path;
 	int linenum = 0, opcode, value;
 
 	debug(LOG_INFO, "Reading configuration file '%s'", filename);
@@ -249,9 +249,26 @@ config_read(char *filename)
 					if (p2 != NULL && (*(p2 + 1) != '\n')
 						       && (*(p2 + 1) != '\0')) {
 						p2++;
-						new_auth_server(p1, atoi(p2));
+						path = p2;
+						p2 = strchr(p2, ' ' );
+						if (p2 != NULL
+							    && (*p2 != '\n')
+							    && (*p2 != '\0')) {
+							*p2 = '\0';
+							p2++;
+							new_auth_server(p1,
+								path,
+								atoi(p2));
+						} else {
+							p2 = strchr(path, '\n');
+							if (p2 != NULL)
+								*p2 = '\0';
+							new_auth_server(p1, 
+								path,
+								DEFAULT_AUTHSERVPORT);
+						}
 					} else {
-						new_auth_server(p1, DEFAULT_AUTHSERVPORT);
+						debug(LOG_ERR, "No auth server path specified for %s", p1);
 					}
 					break;
 				case oHTTPDName:
@@ -353,11 +370,12 @@ config_notnull(void *parm, char *parmname)
     @param port Port of the server
 */
 static void
-new_auth_server(char *host, int port)
+new_auth_server(char *host, char *path, int port)
 {
 	t_auth_serv	*new, *tmp;
 
-	debug(LOG_DEBUG, "Adding %s:%d to the auth server list", host, port);
+	debug(LOG_DEBUG, "Adding %s:%d%s to the auth server list",
+			host, port, path);
 
 	/* Allocate memory */
 	new = (t_auth_serv *)malloc(sizeof(t_auth_serv));
@@ -369,6 +387,7 @@ new_auth_server(char *host, int port)
 	
 	/* Fill in struct */
 	new->authserv_hostname = strdup(host);
+	new->authserv_path = strdup(path);
 	new->authserv_port = port;
 	new->next = NULL;
 	

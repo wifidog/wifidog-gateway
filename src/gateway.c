@@ -52,6 +52,7 @@
 #include "http.h"
 #include "client_list.h"
 #include "wdctl_thread.h"
+#include "ping_thread.h"
 
 extern int errno;
 
@@ -183,6 +184,10 @@ main_loop(void)
 	/* start control thread */
 	pthread_create(&tid, NULL, (void *)thread_wdctl, 
 			(void *)strdup(config->wdctl_sock));
+	pthread_detach(tid);
+	
+	/* start heartbeat thread */
+	pthread_create(&tid, NULL, (void *)thread_ping, NULL);
 	pthread_detach(tid);
 	
 	debug(LOG_NOTICE, "Waiting for connections");

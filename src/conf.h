@@ -48,6 +48,7 @@
 
 typedef struct _auth_serv_t {
     char *authserv_hostname;	/**< @brief Hostname of the central server */
+    char *authserv_path;	/**< @brief Path where wifidog resides */
     int authserv_port;	    /**< @brief Port the central server listens on */
     struct _auth_serv_t *next;
 } t_auth_serv;
@@ -90,8 +91,7 @@ typedef struct {
 } s_config;
 
 /** @brief Get the current gateway configuration */
-s_config *
-config_get_config(void);
+s_config *config_get_config(void);
 
 /** @brief Initialise the conf system */
 void config_init(void);

@@ -109,13 +109,15 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	 * TODO: XXX change the PHP so we can harmonize stage as request_type
 	 * everywhere.
 	 */
-	sprintf(buf, "GET %s?stage=%s&ip=%s&mac=%s&token=%s&incoming=%ld&outgoing=%ld HTTP/1.0\n"
+	memset(buf, 0, sizeof(buf));
+	snprintf(buf, (sizeof(buf) - 1), "GET %s?stage=%s&ip=%s&mac=%s"
+		"&token=%s&incoming=%ld&outgoing=%ld HTTP/1.0\n"
                 "User-Agent: WiFiDog %s\n"
                 "Host: %s\n"
                 "\n",
             config->authserv_path, request_type, ip, mac, 
 	    token, incoming, outgoing, VERSION, 
-	    config->auth_servers->authserv_hostname);
+	    auth_server->authserv_hostname);
 	send(sockfd, buf, strlen(buf), 0);
 
 	debug(LOG_DEBUG, "Sending HTTP request to auth server: %s\n", buf);
