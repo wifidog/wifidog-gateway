@@ -152,9 +152,9 @@ connect_to_server(char *sock_name)
 	sock = socket(AF_UNIX, SOCK_STREAM, 0);
 	sa_un.sun_family = AF_UNIX;
 	strcpy(sa_un.sun_path, sock_name);
-	/* XXX Again, the + 2 is magical on OS X.... */
+
 	if (connect(sock, (struct sockaddr *)&sa_un, 
-				strlen(sa_un.sun_path) + 2)) {
+			strlen(sa_un.sun_path) + sizeof(sa_un.sun_family))) {
 		fprintf(stderr, "wdctl: Error: %s\n", strerror(errno));
 		exit(1);
 	}
