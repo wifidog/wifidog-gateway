@@ -1,4 +1,9 @@
 # $Header$
+2005-04-01 Philippe April <philippe@ilesansfil.org>
+	* Duplicated auth server list in NAT table to fix the issue
+	of using an auth server on port 80, since port 80 was being systematically
+	redirected to 2060 otherwise.
+	* Released 1.1.1
 
 2005-03-29 Mina Naguib <mina@ilesansfil.org>
 	* Added FAQ document copied from wiki

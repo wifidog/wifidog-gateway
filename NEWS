@@ -1,3 +1,6 @@
+WiFiDog 1.1.1:
+    - An auth server on port 80 will now work
+    - Added an FAQ
 
 WiFiDog 1.1.0:
 	- Changes:

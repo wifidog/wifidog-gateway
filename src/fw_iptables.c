@@ -157,6 +157,7 @@ void
 iptables_fw_clear_authservers(void)
 {
     iptables_do_command("-t filter -F " TABLE_WIFIDOG_AUTHSERVERS);
+    iptables_do_command("-t nat -F " TABLE_WIFIDOG_AUTHSERVERS);
 }
 
 void
@@ -170,6 +171,7 @@ iptables_fw_set_authservers(void)
     for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
 	    if (auth_server->last_ip && strcmp(auth_server->last_ip, "0.0.0.0") != 0) {
 	        iptables_do_command("-t filter -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->last_ip);
+	        iptables_do_command("-t nat -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->last_ip);
 	    }
     }
 
@@ -220,6 +222,7 @@ iptables_fw_init(void)
 			iptables_do_command("-t nat -N " TABLE_WIFIDOG_WIFI_TO_ROUTER);
 			iptables_do_command("-t nat -N " TABLE_WIFIDOG_WIFI_TO_INTERNET);
 			iptables_do_command("-t nat -N " TABLE_WIFIDOG_UNKNOWN);
+			iptables_do_command("-t nat -N " TABLE_WIFIDOG_AUTHSERVERS);
 
 			/* Assign links and rules to these new chains */
 			iptables_do_command("-t nat -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_OUTGOING, gw_interface);
@@ -232,6 +235,7 @@ iptables_fw_init(void)
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j ACCEPT", FW_MARK_PROBATION);
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_UNKNOWN);
 
+			iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j " TABLE_WIFIDOG_AUTHSERVERS);
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 80 -j REDIRECT --to-ports %d", gw_port);
 
 
@@ -301,17 +305,19 @@ iptables_fw_destroy(void)
     iptables_do_command("-t mangle -X " TABLE_WIFIDOG_OUTGOING);
     iptables_do_command("-t mangle -X " TABLE_WIFIDOG_INCOMING);
 
-	 /*
-	  *
-	  * Everything in the NAT table
-	  *
-	  */
-	 debug(LOG_DEBUG, "Destroying chains in the NAT table");
-	 iptables_fw_destroy_mention("nat", "PREROUTING", TABLE_WIFIDOG_OUTGOING);
+	/*
+	 *
+	 * Everything in the NAT table
+	 *
+	 */
+	debug(LOG_DEBUG, "Destroying chains in the NAT table");
+	iptables_fw_destroy_mention("nat", "PREROUTING", TABLE_WIFIDOG_OUTGOING);
+	iptables_do_command("-t nat -F " TABLE_WIFIDOG_AUTHSERVERS);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_OUTGOING);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_WIFI_TO_ROUTER);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_WIFI_TO_INTERNET);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_UNKNOWN);
+	iptables_do_command("-t nat -X " TABLE_WIFIDOG_AUTHSERVERS);
     iptables_do_command("-t nat -X " TABLE_WIFIDOG_OUTGOING);
     iptables_do_command("-t nat -X " TABLE_WIFIDOG_WIFI_TO_ROUTER);
     iptables_do_command("-t nat -X " TABLE_WIFIDOG_WIFI_TO_INTERNET);
