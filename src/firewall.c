@@ -51,23 +51,9 @@ t_node         *firstnode = NULL;
 int
 fw_allow(char *ip, char *mac, int tag)
 {
-    char            s_tag[16];
-    char            script[MAX_BUF];
-    struct stat     st;
-    char           *command[] = {script, "allow", ip, mac, s_tag, NULL};
+    iptables_do_command("-t mangle -A wifidog_mark -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
 
-    sprintf(s_tag, "%-10d", tag);
-    sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype,
-        SCRIPT_FWACCESS);
-
-    debug(LOG_DEBUG, "Allowing ip %s mac %s with MARK %s", ip, mac, s_tag);
-
-    if (-1 == (stat(script, &st))) {
-        debug(LOG_ERR, "Could not find %s: %s", script,
-              strerror(errno));
-        return (1);
-    }
-    return (execute(command));
+    return 1;
 }
 
 /**
@@ -84,23 +70,9 @@ fw_allow(char *ip, char *mac, int tag)
 int
 fw_deny(char *ip, char *mac, int tag)
 {
-    char            s_tag[16];
-    char            script[MAX_BUF];
-    struct stat     st;
-    char           *command[] = {script, "deny", ip, mac, s_tag, NULL};
+    iptables_do_command("-t mangle -D wifidog_mark -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
 
-    sprintf(s_tag, "%-10d", tag);
-    sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype,
-        SCRIPT_FWACCESS);
-
-    debug(LOG_DEBUG, "Denying ip %s mac %s with MARK %s", ip, mac, s_tag);
-
-    if (-1 == (stat(script, &st))) {
-        debug(LOG_ERR, "Could not find %s: %s", script,
-              strerror(errno));
-        return (1);
-    }
-    return (execute(command));
+    return 1;
 }
 
 /** @brief Execute a shell command
@@ -111,17 +83,25 @@ fw_deny(char *ip, char *mac, int tag)
  * @return Return code of the command
  */
 int
-execute(char **argv)
+execute(char *line)
 {
-    int             pid, status, rc;
+    int pid,
+        status,
+        rc;
 
-    debug(LOG_DEBUG, "Executing '%s'", argv[0]);
+    const char *new_argv[4];
+    new_argv[0] = "/bin/sh";
+    new_argv[1] = "-c";
+    new_argv[2] = line;
+    new_argv[3] = NULL;
 
     if ((pid = fork()) < 0) {    /* fork a child process           */
         debug(LOG_ERR, "fork(): %s", strerror(errno));
         exit(1);
     } else if (pid == 0) {    /* for the child process:         */
-        if (execvp(*argv, argv) < 0) {    /* execute the command  */
+        /* We don't want to see any errors */
+        close(2);
+        if (execvp("/bin/sh", (char *const *)new_argv) < 0) {    /* execute the command  */
             debug(LOG_ERR, "fork(): %s", strerror(errno));
             exit(1);
         }
@@ -131,7 +111,7 @@ execute(char **argv)
         } while (rc != pid && rc != -1);    /* wait for completion  */
     }
 
-    return (status);
+    return (WEXITSTATUS(status));
 }
 
 /**
@@ -176,30 +156,46 @@ arp_get(char *req_ip)
 int
 fw_init(void)
 {
-    char            port[16];
-    char            script[MAX_BUF];
-    int             rc;
-    struct stat     st;
-    char           *command[] = {script, config.gw_interface, config.gw_address,
-    port, config.authserv_hostname, NULL};
+    debug(LOG_INFO, "Initializing Firewall");
 
-    sprintf(port, "%-5d", config.gw_port);
-    sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype,
-        SCRIPT_FWINIT);
+    iptables_do_command("-t nat -N wifidog_validate");
+    iptables_do_command("-t nat -A wifidog_validate -d %s -j ACCEPT", config.gw_address);
+    iptables_do_command("-t nat -A wifidog_validate -d %s -j ACCEPT", config.authserv_hostname);
+    iptables_do_command("-t nat -A wifidog_validate -p udp --dport 67 -j ACCEPT");
+    iptables_do_command("-t nat -A wifidog_validate -p tcp --dport 67 -j ACCEPT");
+    iptables_do_command("-t nat -A wifidog_validate -p udp --dport 53 -j ACCEPT");
+    iptables_do_command("-t nat -A wifidog_validate -p tcp --dport 80 -j ACCEPT");
+    iptables_do_command("-t nat -A wifidog_validate -p tcp --dport 443 -j ACCEPT");
+    iptables_do_command("-t nat -A wifidog_validate -j DROP");
 
-    if (-1 == (stat(script, &st))) {
-        debug(LOG_ERR, "Could not find %s: %s", script,
-              strerror(errno));
-        debug(LOG_ERR, "Exiting...");
-        exit(1);
-    }
-    debug(LOG_NOTICE, "Setting firewall rules");
+    iptables_do_command("-t nat -N wifidog_unknown");
+    iptables_do_command("-t nat -A wifidog_unknown -d %s -j ACCEPT", config.gw_address);
+    iptables_do_command("-t nat -A wifidog_unknown -d %s -j ACCEPT", config.authserv_hostname);
+    iptables_do_command("-t nat -A wifidog_unknown -p udp --dport 67 -j ACCEPT");
+    iptables_do_command("-t nat -A wifidog_unknown -p tcp --dport 67 -j ACCEPT");
+    iptables_do_command("-t nat -A wifidog_unknown -p udp --dport 53 -j ACCEPT");
+    iptables_do_command("-t nat -A wifidog_unknown -p tcp --dport 80 -j REDIRECT --to-ports %d", config.gw_port);
+    iptables_do_command("-t nat -A wifidog_unknown -j DROP");
 
-    if ((rc = execute(command)) != 0) {
-        debug(LOG_ERR, "Could not setup firewall, exiting...");
-        exit(1);
-    }
-    return (rc);
+    iptables_do_command("-t nat -N wifidog_known");
+    iptables_do_command("-t nat -A wifidog_known -j ACCEPT");
+
+    iptables_do_command("-t nat -N wifidog_locked");
+    iptables_do_command("-t nat -A wifidog_locked -j DROP");
+
+    iptables_do_command("-t nat -N wifidog_class");
+    iptables_do_command("-t nat -A wifidog_class -i %s -m mark --mark 0x1 -j wifidog_validate", config.gw_interface);
+    iptables_do_command("-t nat -A wifidog_class -i %s -m mark --mark 0x2 -j wifidog_known", config.gw_interface);
+    iptables_do_command("-t nat -A wifidog_class -i %s -m mark --mark 0x254 -j wifidog_locked", config.gw_interface);
+    iptables_do_command("-t nat -A wifidog_class -i %s -j wifidog_unknown", config.gw_interface);
+
+    iptables_do_command("-t mangle -N wifidog_mark");
+
+    iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j wifidog_mark", config.gw_interface);
+
+    iptables_do_command("-t nat -I PREROUTING 1 -i %s -j wifidog_class", config.gw_interface);
+
+    return 1;
 }
 
 /**
@@ -212,21 +208,38 @@ fw_init(void)
 int
 fw_destroy(void)
 {
-    char            script[MAX_BUF];
-    struct stat     st;
-    char           *command[] = {script, config.gw_interface, NULL};
+    int rc, tries, fd;
 
-    sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype,
-        SCRIPT_FWDESTROY);
+    debug(LOG_INFO, "Removing Firewall rules");
 
-    if (-1 == (stat(script, &st))) {
-        debug(LOG_ERR, "Could not find %s: %s", script,
-              strerror(errno));
-        return (1);
+    iptables_do_command("-t nat -F wifidog_class");
+    iptables_do_command("-t mangle -F wifidog_mark");
+
+    iptables_do_command("-t nat -F wifidog_validate");
+    iptables_do_command("-t nat -F wifidog_unknown");
+    iptables_do_command("-t nat -F wifidog_known");
+    iptables_do_command("-t nat -F wifidog_locked");
+    iptables_do_command("-t nat -X wifidog_validate");
+    iptables_do_command("-t nat -X wifidog_unknown");
+    iptables_do_command("-t nat -X wifidog_known");
+    iptables_do_command("-t nat -X wifidog_locked");
+
+    /* We loop in case wifidog has crashed and left some unwanted rules,
+     * maybe we shouldn't loop forever, we'll give it 10 tries
+     */
+    rc = 0;
+    for (tries = 0; tries < 10 && rc == 0; tries++) {
+        rc = iptables_do_command("-t nat -D PREROUTING -i %s -j wifidog_class", config.gw_interface);
     }
-    debug(LOG_NOTICE, "Flushing firewall rules");
+    iptables_do_command("-t nat -X wifidog_class");
 
-    return (execute(command));
+    rc = 0;
+    for (tries = 0; tries < 10 && rc == 0; tries++) {
+        rc = iptables_do_command("-t mangle -D PREROUTING -i %s -j wifidog_mark", config.gw_interface);
+    }
+    iptables_do_command("-t mangle -X wifidog_mark");
+
+    return 1;
 }
 
 /**
@@ -490,3 +503,4 @@ node_delete(t_node * node)
         }
     }
 }
+

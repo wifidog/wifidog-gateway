@@ -50,7 +50,7 @@ int fw_destroy(void);
 int fw_allow(char *ip, char *mac, int profile);
 int fw_deny(char *ip, char *mac, int profile);
 void fw_counter(void);
-int execute(char **argv);
+int execute(char *line);
 char *arp_get(char *req_ip);
 
 void node_init(void);

@@ -16,54 +16,34 @@
  * 59 Temple Place - Suite 330        Fax:    +1-617-542-2652       *
  * Boston, MA  02111-1307,  USA       gnu@gnu.org                   *
  *                                                                  *
-\********************************************************************/
+ \********************************************************************/
 
 /* $Header$ */
-/** @file common.h
-    @brief Common constants and other bits
-    @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
-    @todo This file is evil, it should only contain constants, not includes.  Makes it very hard to find out what other files a code section uses.
-*/
+/** @internal
+  @file iptables.c
+  @brief Firewall iptables functions
+  @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
+ */
 
-#ifndef _COMMON_H_
-#define _COMMON_H_
+#include "common.h"
 
-#define _GNU_SOURCE
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <string.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <stdarg.h>
-#include <time.h>
-#include <netdb.h>
-#include <fcntl.h>
-#include <errno.h>
+/* global new argv and argc */
+static char *newargv[255];
+static int newargc;
 
-#include <syslog.h>
-#include <pthread.h>
+extern s_config config;
 
-#include "config.h"
+int
+iptables_do_command(char *format, ...)
+{
+    va_list vlist;
+    char *fmt_cmd,
+        *cmd;
 
-#include "httpd.h"
+    va_start(vlist, format);
+    vasprintf(&fmt_cmd, format, vlist);
+    asprintf(&cmd, "iptables %s", fmt_cmd);
 
-#include "gateway.h"
-#include "conf.h"
-#include "commandline.h"
-#include "debug.h"
-#include "iptables.h"
-#include "firewall.h"
-#include "http.h"
-#include "auth.h"
-#include "centralserver.h"
+    return execute(cmd);
+}
 
-#define MAX_BUF 4096
-
-#define SCRIPT_FWCOUNTERS   "fw.counters"
-
-#endif /* _COMMON_H_ */
