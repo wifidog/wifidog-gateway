@@ -15,6 +15,7 @@ BUILD_DIR:=$(CURDIR)/ipkg
 TMP_DIR:=$(BUILD_DIR)/tmp
 STAGING_DIR=$(BUILDROOT)/build_$(ARCH)/staging_dir
 IPTABLES_DIR := $(BUILDROOT)/build_$(ARCH)/iptables-1.2.9
+IPKG_DIR := $(BUILDROOT)/build_$(ARCH)/ipkg-utils-1.7
 KERNEL_MODULES_DIR := $(BUILDROOT)/build_$(ARCH)/WRT54GS/release/src/linux/linux/modules/lib/modules/2.4.20
 UCLIBC_DIR := $(BUILDROOT)/build_$(ARCH)/uClibc
 
@@ -34,10 +35,18 @@ build: build-wifidog build-iptables
 
 build-wifidog: build-wifidog-stamp
 build-wifidog-stamp:
-	./autogen.sh BUILDROOT=$(BUILDROOT) --prefix=/usr
+	./autogen.sh
+	-$(MAKE) distclean
+	CC=$(CC) LD=$(LD) AR=$(AR) RANLIB=$(RANLIB) ./configure --prefix=/usr  --host=$(ARCH) --build=$(ARCH) --target=$(ARCH)
 	$(MAKE)
 
 	touch build-wifidog-stamp
+
+build-ipkg-utils: build-ipkg-utils-stamp
+build-ipkg-utils-stamp:
+	$(MAKE) -C $(BUILDROOT) ipkg-utils
+	
+	touch build-ipkg-utils-stamp
 
 build-iptables: build-iptables-stamp
 build-iptables-stamp:
@@ -61,6 +70,7 @@ install: build install-wifidog install-iptables install-kernel-modules install-p
 	mkdir -p $(TMP_DIR)/usr/bin
 	#OpenWrt doesn't have a full init.d architecture, but we still need the module check so we install the normal init.d script in /usr/bin/wifidog-init
 	cp $(CURDIR)/scripts/init.d/wifidog $(TMP_DIR)/usr/bin/wifidog-init
+	chmod +x $(TMP_DIR)/usr/bin/wifidog-init
 	#And call wifidog-init from S65wifidog
 	mkdir -p $(TMP_DIR)/etc/init.d
 	cp $(CURDIR)/scripts/openwrt/S65wifidog $(TMP_DIR)/etc/init.d
