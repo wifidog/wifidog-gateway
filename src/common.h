@@ -34,7 +34,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
-#include <wait.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <stdarg.h>
 #include <time.h>
