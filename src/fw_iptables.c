@@ -352,7 +352,7 @@ iptables_fw_counters_update(void)
     t_client *p1;
 
     /* Look for outgoing traffic */
-    asprintf(&script, "%s %s", "iptables", "-v -x -t mangle -L " TABLE_WIFIDOG_OUTGOING);
+    asprintf(&script, "%s %s", "iptables", "-v -n -x -t mangle -L " TABLE_WIFIDOG_OUTGOING);
     if (!(output = popen(script, "r"))) {
         debug(LOG_ERR, "popen(): %s", strerror(errno));
         return -1;
@@ -384,7 +384,7 @@ iptables_fw_counters_update(void)
     pclose(output);
 
     /* Look for wifi-to-firewall traffic */
-    asprintf(&script, "%s %s", "iptables", "-v -x -t filter -L " TABLE_WIFIDOG_WIFI_TO_GW);
+    asprintf(&script, "%s %s", "iptables", "-v -n -x -t filter -L " TABLE_WIFIDOG_WIFI_TO_GW);
     if (!(output = popen(script, "r"))) {
         debug(LOG_ERR, "popen(): %s", strerror(errno));
         return -1;
@@ -397,7 +397,7 @@ iptables_fw_counters_update(void)
     while (('\n' != fgetc(output)) && !feof(output))
         ;
     while (output && !(feof(output))) {
-        rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %s %*s %*s %*s %*s %*s 0x%*u", &counter, ip);
+        rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %s %*s", &counter, ip);
         if (2 == rc && EOF != rc) {
             debug(LOG_DEBUG, "WIFI2FW %s Bytes=%ld", ip, counter);
 	    LOCK_CLIENT_LIST();
@@ -416,7 +416,7 @@ iptables_fw_counters_update(void)
     pclose(output);
 
     /* Look for incoming traffic */
-    asprintf(&script, "%s %s", "iptables", "-v -x -t mangle -L " TABLE_WIFIDOG_INCOMING);
+    asprintf(&script, "%s %s", "iptables", "-v -n -x -t mangle -L " TABLE_WIFIDOG_INCOMING);
     if (!(output = popen(script, "r"))) {
         debug(LOG_ERR, "popen(): %s", strerror(errno));
         return -1;

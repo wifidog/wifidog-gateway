@@ -1,4 +1,7 @@
 # $Header$
+2005-02-11 Philippe April <philippe@ilesansfil.org>
+	* Fixed a bug in counting the traffic between client and gateway
+	* Alpha8
 
 2005-02-04 Mina Naguib <mina@ilesansfil.org>
 	* Partially bugfix apology when offline
