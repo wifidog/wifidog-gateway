@@ -1,2 +1,12 @@
-WifiDog 0.1:
-	-Initial prototype release
+WifiDog 1.0.2:
+	-Fix reversed incoming and outgoing connections in statistics reported to the auth server
+	-Will now gracefully handle auth servers changing IP adress.
+	-Fixes two bugs in byte counting. (Possible missed data, and incoming and outgoing were reversed.
+	-Fixed file descriptor leaks
+	-wdctl_status now returns all connected	users.
+	-worked around sed -i not being available on all platform
+	-ipkg no longuer overwrites config file
+	-Several code changes in thread handling and libhttpd to fix occasional hangs.
+
+WifiDog 1.0.0:
+	-Initial release
