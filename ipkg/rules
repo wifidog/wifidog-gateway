@@ -1,0 +1,91 @@
+#!/usr/bin/make -f 
+
+ifndef BUILDROOT
+	ERR := $(error Please set BUILDROOT to OpenWRT's buildroot)
+endif
+
+ARCH:=mipsel
+
+WIFIDOG_MAJOR_VERSION := $(shell awk -F= '$$1 == "WIFIDOG_MAJOR_VERSION" {print $$2}' configure.in)
+WIFIDOG_MINOR_VERSION := $(shell awk -F= '$$1 == "WIFIDOG_MINOR_VERSION" {print $$2}' configure.in)
+WIFIDOG_MICRO_VERSION := $(shell awk -F= '$$1 == "WIFIDOG_MICRO_VERSION" {print $$2}' configure.in)
+VERSION=$(WIFIDOG_MAJOR_VERSION).$(WIFIDOG_MINOR_VERSION).$(WIFIDOG_MICRO_VERSION)
+
+BUILD_DIR:=$(CURDIR)/ipkg
+TMP_DIR:=$(BUILD_DIR)/tmp
+STAGING_DIR=$(BUILDROOT)/build_$(ARCH)/staging_dir
+IPTABLES_DIR := $(BUILDROOT)/build_$(ARCH)/WRT54GS/release/src/router/iptables
+KERNEL_MODULES_DIR := $(BUILDROOT)/build_$(ARCH)/WRT54GS/release/src/linux/linux/modules/lib/modules/2.4.20
+UCLIBC_DIR := $(BUILDROOT)/build_$(ARCH)/uClibc
+
+GNU_TARGET_NAME=$(ARCH)-linux
+TARGET_CROSS=$(STAGING_DIR)/bin/$(ARCH)-linux-uclibc-
+
+CC=$(TARGET_CROSS)gcc
+LD=$(TARGET_CROSS)ld
+AR=$(TARGET_CROSS)ar
+RANLIB=$(TARGET_CROSS)ranlib
+STRIP=$(TARGET_CROSS)strip
+IPKG_BUILD=$(STAGING_DIR)/bin/ipkg-build
+
+all: binary
+
+build: build-wifidog build-iptables
+
+build-wifidog: build-wifidog-stamp
+build-wifidog-stamp:
+	./autogen.sh BUILDROOT=$(BUILDROOT) --prefix=/usr
+	$(MAKE)
+
+	touch build-wifidog-stamp
+
+build-iptables: build-iptables-stamp
+build-iptables-stamp:
+	CC=$(CC) LD=$(LD) AR=$(AR) RANLIB=$(RANLIB) $(MAKE) -C $(IPTABLES_DIR) KERNEL_DIR=../../linux/linux/
+
+	touch build-iptables-stamp
+	 
+clean:
+	-$(MAKE) clean
+	-$(MAKE) distclean
+	$(MAKE) -C $(IPTABLES_DIR) clean
+	rm -rf $(TMP_DIR)
+	rm -f build-wifidog-stamp
+	rm -f build-iptables-stamp
+
+install: build install-wifidog install-iptables install-kernel-modules install-pthread
+	mkdir -p $(TMP_DIR)/etc
+	cp $(BUILD_DIR)/wifidog.conf $(TMP_DIR)/etc
+
+install-wifidog:
+	mkdir -p $(TMP_DIR)/usr/bin
+	cp $(CURDIR)/src/wifidog $(TMP_DIR)/usr/bin
+	$(STRIP) $(TMP_DIR)/usr/bin/wifidog
+
+install-iptables:
+	mkdir -p $(TMP_DIR)/usr/lib/iptables
+	cp $(IPTABLES_DIR)/extensions/libipt_{mac,mark,MARK}.so $(TMP_DIR)/usr/lib/iptables
+
+install-kernel-modules:
+	mkdir -p $(TMP_DIR)/lib/modules/2.4.20/kernel/net/ipv4/netfilter
+	cp $(KERNEL_MODULES_DIR)/kernel/net/ipv4/netfilter/ipt_mac.o $(TMP_DIR)/lib/modules/2.4.20/kernel/net/ipv4/netfilter
+
+install-pthread:
+	mkdir -p $(TMP_DIR)/lib
+	cp $(UCLIBC_DIR)/lib/libpthread*so $(TMP_DIR)/lib
+	cp $(UCLIBC_DIR)/lib/libpthread*so.0 $(TMP_DIR)/lib
+
+binary: build install
+	mkdir -p $(TMP_DIR)/CONTROL
+	echo "Package: wifidog" > $(TMP_DIR)/CONTROL/control
+	echo "Version: $(VERSION)" >> $(TMP_DIR)/CONTROL/control
+	echo "Architecture: $(ARCH)" >> $(TMP_DIR)/CONTROL/control
+	echo "Section: base" >> $(TMP_DIR)/CONTROL/control
+	echo "Maintainer: WiFiDog <wifidog@isf.waglo.com>" >> $(TMP_DIR)/CONTROL/control
+	echo "Priority: optional" >> $(TMP_DIR)/CONTROL/control
+	echo "Description: The WiFiDog project is a complete and embeedable captive portal solution for wireless community groups or individuals who wish to open a free HotSpot while still preventing abuse of their Internet connection." >> $(TMP_DIR)/CONTROL/control
+	echo "Source: http://www.ilesansfil.org/wiki/WiFiDog" >> $(TMP_DIR)/CONTROL/control
+	$(IPKG_BUILD) -c -o root -g root $(TMP_DIR) $(CURDIR)/../
+
+.PHONY: all clean build install binary
+
