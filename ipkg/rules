@@ -45,7 +45,6 @@ build-wifidog-stamp:
 build-ipkg-utils: build-ipkg-utils-stamp
 build-ipkg-utils-stamp:
 	$(MAKE) -C $(BUILDROOT) ipkg-utils
-	
 	touch build-ipkg-utils-stamp
 
 build-iptables: build-iptables-stamp
@@ -75,14 +74,14 @@ install: build install-wifidog install-iptables install-kernel-modules install-p
 	mkdir -p $(TMP_DIR)/etc/init.d
 	cp $(CURDIR)/scripts/openwrt/S65wifidog $(TMP_DIR)/etc/init.d
 	chmod +x $(TMP_DIR)/etc/init.d/S65wifidog
-	
+
 install-wifidog:
 	mkdir -p $(TMP_DIR)/usr/bin
 	cp $(CURDIR)/src/wifidog $(TMP_DIR)/usr/bin
 	cp $(CURDIR)/src/wdctl $(TMP_DIR)/usr/bin
 	$(STRIP) $(TMP_DIR)/usr/bin/wifidog
 	$(STRIP) $(TMP_DIR)/usr/bin/wdctl
-	
+
 install-iptables:
 	mkdir -p $(TMP_DIR)/usr/lib/iptables
 	cp $(IPTABLES_DIR)/extensions/libipt_{mac,mark,MARK}.so $(TMP_DIR)/usr/lib/iptables
@@ -106,7 +105,7 @@ binary: build install
 	echo "Priority: optional" >> $(TMP_DIR)/CONTROL/control
 	echo "Description: The WiFiDog project is a complete and embeedable captive portal solution for wireless community groups or individuals who wish to open a free HotSpot while still preventing abuse of their Internet connection." >> $(TMP_DIR)/CONTROL/control
 	echo "Source: http://www.ilesansfil.org/wiki/WiFiDog" >> $(TMP_DIR)/CONTROL/control
-	echo "/etc/wifidog.conf" >> $(TMP_DIR)/CONTROL/conffiles
+	echo "/etc/wifidog.conf" > $(TMP_DIR)/CONTROL/conffiles
 	$(IPKG_BUILD) -c -o root -g root $(TMP_DIR) $(CURDIR)
 
 .PHONY: all clean build install binary

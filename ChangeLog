@@ -1,5 +1,9 @@
 # $Header$
-
+2004-11-18 Benoit Grégoire  <bock@step.polymtl.ca>
+	* src/ping_thread.c: Merge phil's bug fixes from stable branch
+	* ipkg/rules:  Merge phil's bug fixes from stable branch
+	* configure.in:  Set version to 1.1.0alpha
+	
 2004-11-18 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* src/fw_iptables.[ch]: Merged in Phil's patch.
 	* src/*: Added ping_thread hooks to reset authserver table in the

@@ -134,10 +134,12 @@ ping(void)
 		}
 		memcpy(auth_server->last_ip, h_addr, sizeof(struct in_addr));
 	} else {
+	  
 		for (i = 0; i < sizeof(struct in_addr)
 				&& (*((char *)auth_server->last_ip + i)
 					== *((char *)h_addr + i)); i++);
 		if (i < sizeof(struct in_addr)) {
+		  memcpy(auth_server->last_ip, h_addr, sizeof(struct in_addr));
 			fw_clear_authservers();
 			fw_set_authservers();
 		}
