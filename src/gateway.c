@@ -29,12 +29,20 @@
 
 extern s_config config;
 
+fd_set master, read_fds;
+
 void main_loop(void)
 {
-    int sockfd, new_fd, sin_size, yes = 1, childPid, flags, counter_time = 0;
+    int sockfd, new_fd, sin_size, yes = 1, childPid, flags;
     struct sockaddr_in my_addr;
     struct sockaddr_in their_addr;
     struct sigaction sa;
+    struct timeval tv;
+    time_t last_checked;
+    int fdmax, i, cnt_last_check;
+
+    FD_ZERO(&master);
+    FD_ZERO(&read_fds);
 
     sa.sa_handler = sigchld_handler;
     sigemptyset(&sa.sa_mask);
@@ -74,11 +82,9 @@ void main_loop(void)
         exit(1);
     }
 
-    debug(D_LOG_DEBUG, "Setting socket to non-blocking");
-
-    if (-1 == (flags = fcntl(sockfd, F_GETFL, 0)))
-        flags = 0;
-    fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
+    // Add socket to master set
+    FD_SET(sockfd, &master);
+    fdmax = sockfd;
 
     sa.sa_handler = termination_handler;
     sigemptyset(&sa.sa_mask);
@@ -103,37 +109,42 @@ void main_loop(void)
     }
 
     fw_init();
+    tv.tv_sec = config.checkinterval;
+    last_checked = time(NULL);
 
     while(1) {
-        sin_size = sizeof(struct sockaddr_in);
-        if (-1 == (new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size))) {
-            sleep(1);
-            if (config.checkinterval == counter_time++) {
-                counter_time = 0;
-                fw_counter();
-            } 
-            continue;
+        read_fds = master;
+        if (select(fdmax + 1, &read_fds, NULL, NULL, &tv) == -1) {
+            perror("select");
         }
 
-        debug(D_LOG_INFO, "Connection from %s", inet_ntoa(their_addr.sin_addr));
-
-        switch((childPid = fork())) {
-            case -1: /* error */
-                perror("fork()");
-                exit(1);
-                break;
-
-            case 0: /* parent */
-                close(sockfd);
-                http_request(new_fd, their_addr);
-                exit(0);
-                break;
-
-            default: /* child */
-                close(new_fd);
-                break;
+        for(i = 0; i <= fdmax; i++) {
+            if (FD_ISSET(i, &read_fds)) {
+                if (i == sockfd) {
+                    // Handle new connections
+                    sin_size = sizeof(struct sockaddr_in);
+                    if (-1 == (new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size))) {
+                        perror("accept");
+                    } else {
+                        // Add to master set so we can monitor
+                        FD_SET(new_fd, &master);
+                        if (new_fd > fdmax) {
+                            fdmax = new_fd;
+                            debug(D_LOG_DEBUG, "New fdmax %d", fdmax);
+                        }
+                        debug(D_LOG_INFO, "New connection from %s on socket %d", inet_ntoa(their_addr.sin_addr), new_fd);
+                    }
+                } else {
+                    // Data from client
+                    http_request(i, their_addr);
+                }
+            }
         }
-        close(new_fd);
+
+        if (time(NULL) - last_checked > config.checkinterval) {
+            fw_counter();
+            last_checked = time(NULL);
+        }
     }
 
     fw_destroy();

@@ -147,6 +147,7 @@ fw_counter(void)
             
             /* TODO If the client is not active for x seconds */
             /* timeout the client and destroy token */
+            debug(D_LOG_DEBUG, "Counter for %s: %ld bytes", ip, counter);
         }
     }
     pclose(output);

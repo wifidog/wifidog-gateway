@@ -29,6 +29,8 @@
 
 extern s_config config;
 
+extern fd_set master;
+
 void
 http_request(int sockfd, struct sockaddr_in their_addr)
 {
@@ -120,6 +122,7 @@ http_request(int sockfd, struct sockaddr_in their_addr)
     
     debug(D_LOG_INFO, "Closing connection to %s", inet_ntoa(their_addr.sin_addr));
     close(sockfd);
+    FD_CLR(sockfd, &master);
 }
 
 void

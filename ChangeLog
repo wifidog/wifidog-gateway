@@ -1,6 +1,12 @@
 # $Header$
 
 2004-03-09  Philippe April <papril777@yahoo.com>
+    * Major changes: not forking anymore for new connections, now using
+    select() instead. It will allow us to efficiently use a linked list to track
+    users and other things. It introduces some bugs and design issues but will
+    be better in the end.
+
+2004-03-09  Philippe April <papril777@yahoo.com>
     * Small fix in the default.php login page
     * exit() where the program was supposed to exit but wasn't when the
     firewall could not be setup
