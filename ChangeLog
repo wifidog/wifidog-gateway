@@ -1,4 +1,11 @@
 # $Header$
+2004-04-11  Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Very large modification. The entire architecture has been reworked
+	so that authentications to the central server are performed in a
+	fork()'d child process and the exit code from that child is then
+	used to set the User Class of the connection.
+	* The UserClasses (global definitions) and Rights (per connection)
+	have been integrated.
 
 2004-03-16  Mina Naguib <minaguib@users.sourceforge.net>
 	* Changed HTTP server tasks to be handled by libhttpd - merged
