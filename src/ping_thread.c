@@ -64,7 +64,7 @@ thread_ping(void *arg)
 	pthread_mutex_t		cond_mutex = PTHREAD_MUTEX_INITIALIZER;
 	struct	timespec	timeout;
 	
-	if (!started_time)
+	if (!started_time || started_time < MINIMUM_STARTED_TIME)
 		started_time = time(NULL);
 
 	while (1) {

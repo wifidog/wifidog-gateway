@@ -260,7 +260,7 @@ int is_auth_online() {
 }
 
 /*
- * @return A string containing humn-readable status text. MUST BE free()d by caller
+ * @return A string containing human-readable status text. MUST BE free()d by caller
  */
 char * get_status_text() {
 	char buffer[STATUS_BUF_SIZ];
