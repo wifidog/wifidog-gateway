@@ -28,6 +28,7 @@
 #include "common.h"
 
 extern s_config config;
+extern int fw_quiet;
 
 int
 iptables_do_command(char *format, ...)
@@ -57,6 +58,7 @@ iptables_do_command(char *format, ...)
 int
 iptables_fw_init(void)
 {
+    fw_quiet = 0;
     iptables_do_command("-t nat -N wifidog_validate");
     iptables_do_command("-t nat -A wifidog_validate -d %s -j ACCEPT", config.gw_address);
     iptables_do_command("-t nat -A wifidog_validate -d %s -j ACCEPT", config.authserv_hostname);
@@ -109,6 +111,7 @@ iptables_fw_destroy(void)
 {
     int rc, tries;
 
+    fw_quiet = 1;
     iptables_do_command("-t nat -F wifidog_class");
     iptables_do_command("-t mangle -F wifidog_mark");
 
@@ -142,6 +145,8 @@ iptables_fw_destroy(void)
 int
 iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag)
 {
+    fw_quiet = 0;
+
     switch(type) {
         case FW_ACCESS_ALLOW:
             return iptables_do_command("-t mangle -A wifidog_mark -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);

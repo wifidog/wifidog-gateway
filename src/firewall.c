@@ -31,6 +31,7 @@
 #include "common.h"
 
 extern s_config config;
+int fw_quiet = 0;
 
 pthread_mutex_t nodes_mutex;
 
@@ -95,8 +96,8 @@ execute(char *line)
         debug(LOG_ERR, "fork(): %s", strerror(errno));
         exit(1);
     } else if (pid == 0) {    /* for the child process:         */
-        /* We don't want to see any errors */
-        close(2);
+        /* We don't want to see any errors if quiet flag is on */
+        if (fw_quiet) close(2);
         if (execvp("/bin/sh", (char *const *)new_argv) < 0) {    /* execute the command  */
             debug(LOG_ERR, "fork(): %s", strerror(errno));
             exit(1);

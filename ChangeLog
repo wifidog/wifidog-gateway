@@ -6,6 +6,7 @@
     * Fixed memory leaks
     * Moved most of the iptables-specific (all but the counters)
     to iptables.c to modularize a bit more
+    * Hack to allow deciding if we want FW calls' messages quiet or not
 
 2004-04-23  Philippe April <papril777@yahoo.com>
     * Fixed a debug line
