@@ -43,7 +43,6 @@ typedef enum fw_access_t_ {
     FW_ACCESS_DENY
 } fw_access_t;
 
-static int iptables_do_command(char *format, ...);
 int iptables_fw_init(void);
 int iptables_fw_destroy(void);
 int iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag);

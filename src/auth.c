@@ -44,6 +44,9 @@
 #include "iptables.h"
 #include "firewall.h"
 
+static void _http_output(int fd, char *msg);
+static void _http_redirect(int fd, char *format, ...);
+
 pthread_mutex_t	nodes_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 s_config config;

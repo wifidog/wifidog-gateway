@@ -40,6 +40,10 @@
 #include "http.h"
 #include "auth.h"
 
+static void config_notnull(void *parm, char *parmname);
+static int parse_value(char *);
+static char *get_string(char *ptr);
+
 #define DEFAULT_CONFIGFILE "/etc/wifidog.conf"
 #define DEFAULT_DAEMON 1
 #define DEFAULT_DEBUGLEVEL LOG_INFO
@@ -76,7 +80,7 @@ typedef enum {
     oSyslogFacility
 } OpCodes;
 
-struct {
+static struct {
 	const char *name;
 	OpCodes opcode;
 	int required;
@@ -138,7 +142,7 @@ config_init_override(void)
     if (!config.daemon) config.daemon = DEFAULT_DAEMON;
 }
 
-OpCodes
+static OpCodes
 parse_token(const char *cp, const char *filename, int linenum)
 {
 	int i;
@@ -259,7 +263,7 @@ config_read(char *filename)
 	fclose(fd);
 }
 
-int
+static int
 parse_value(char *line)
 {
 	if (strcasecmp(line, "yes") == 0) {
@@ -278,7 +282,7 @@ parse_value(char *line)
 	return -1;
 }
 
-char *
+static char *
 get_string(char *ptr)
 {
 	char *buf;
@@ -304,7 +308,7 @@ config_validate(void)
 	}
 }
 
-void
+static void
 config_notnull(void *parm, char *parmname)
 {
 	if (parm == NULL) {

@@ -40,6 +40,8 @@
 #include "firewall.h"
 #include "debug.h"
 
+static int iptables_do_command(char *format, ...);
+
 extern pthread_mutex_t	nodes_mutex;
 extern s_config config;
 extern int fw_quiet;

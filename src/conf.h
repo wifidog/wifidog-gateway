@@ -31,9 +31,6 @@ void config_init(void);
 void config_init_override(void);
 void config_read(char *filename);
 void config_validate(void);
-void config_notnull(void *parm, char *parmname);
-int parse_value(char *);
-char *get_string(char *ptr);
 
 typedef struct {
     char *configfile;
