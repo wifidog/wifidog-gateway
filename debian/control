@@ -1,7 +1,7 @@
 Source: wifidog
 Section: net
 Priority: optional
-Maintainer: Philippe April <wifidog@philippeapril.com>
+Maintainer: Philippe April <philippe@ilesansfil.org>
 
 Package: wifidog
 Architecture: any
@@ -12,5 +12,4 @@ Description: The WiFi Guard Dog client
  solution for wireless community groups or individuals who wish to open
  a free HotSpot while still preventing abuse of their Internet connection.
  .
- This pakacge contains only the client part. An authentification server
- must be available to make use of it.
+ This package contains only the client part.

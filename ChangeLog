@@ -1,4 +1,6 @@
 # $Header$
+2005-03-01 Philippe April <philippe@ilesansfil.org>
+	* Tagged v1_1_0_beta3
 
 2005-02-28 Mina Naguib <mina@ilesansfil.org>
 	* Do not update the last_updated field on incoming traffic - update it on
