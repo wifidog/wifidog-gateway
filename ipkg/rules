@@ -37,7 +37,7 @@ build-wifidog: build-wifidog-stamp
 build-wifidog-stamp:
 	./autogen.sh
 	-$(MAKE) distclean
-	CC=$(CC) LD=$(LD) AR=$(AR) RANLIB=$(RANLIB) ./configure --prefix=/usr  --host=$(ARCH) --build=$(ARCH) --target=$(ARCH)
+	CC=$(CC) LD=$(LD) AR=$(AR) RANLIB=$(RANLIB) ./configure --prefix=/usr  --host=$(ARCH) --target=$(ARCH)
 	$(MAKE)
 
 	touch build-wifidog-stamp
