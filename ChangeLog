@@ -1,5 +1,7 @@
 # $Header$
-
+2004-08-23 Benoit Grégoire  <bock@step.polymtl.ca>
+	* src/centralserver.c:  Fix path for auth by appending /auth/ to auth_server->authserv_path.  Wifidog works again.
+	
 2004-08-20 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Debug output of all HTTP transactions and their responses.
 	* Changed ipkg to use wifidog.conf from the base tree

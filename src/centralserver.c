@@ -110,7 +110,7 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	 * everywhere.
 	 */
 	memset(buf, 0, sizeof(buf));
-	snprintf(buf, (sizeof(buf) - 1), "GET %s?stage=%s&ip=%s&mac=%s"
+	snprintf(buf, (sizeof(buf) - 1), "GET %s/auth/?stage=%s&ip=%s&mac=%s"
 		"&token=%s&incoming=%ld&outgoing=%ld HTTP/1.0\n"
                 "User-Agent: WiFiDog %s\n"
                 "Host: %s\n"
