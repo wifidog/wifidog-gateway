@@ -1,4 +1,9 @@
 # $Header$
+2005-01-23 Philippe April <isf_lists@philippeapril.com>
+	* wdctl status will return the auth servers in the linked list
+	* We'll now forward to the auth server to display the used-to-be-ugly
+	messages like "go ahead and validate your account you have 15 minutes"
+	* Bumped to alpha6
 
 2005-01-06 Philippe April <philippe@philippeapril.com>
 	* fw_iptables.c: Changed REJECT to DROP for the end of the table Unknown,

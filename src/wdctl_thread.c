@@ -52,6 +52,7 @@
 
 /* Defined in clientlist.c */
 extern	pthread_mutex_t	client_list_mutex;
+extern	pthread_mutex_t	config_mutex;
 
 static void *thread_wdctl_handler(void *);
 static void wdctl_status(int);
@@ -196,10 +197,14 @@ thread_wdctl_handler(void *arg)
 static void
 wdctl_status(int fd)
 {
+    s_config *config;
+    t_auth_serv *auth_server;
 	char		buffer[STATUS_BUF_SIZ];
 	ssize_t		len;
 	t_client	*first;
 	int		count;
+
+    config = config_get_config();
 	
 	len = 0;
 	snprintf(buffer, (sizeof(buffer) - len), "WiFiDog status\n\n");
@@ -242,6 +247,15 @@ wdctl_status(int fd)
 	}
 	
 	UNLOCK_CLIENT_LIST();
+
+    LOCK_CONFIG();
+    
+    for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
+        snprintf((buffer + len), (sizeof(buffer) - len), "\nHostname: %s IP: %s\n", auth_server->authserv_hostname, auth_server->last_ip);
+        len = strlen(buffer);
+    }
+
+    UNLOCK_CONFIG();
 	
 	write(fd, buffer, len);
 }

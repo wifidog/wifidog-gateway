@@ -179,39 +179,58 @@ authenticate_client(request *r)
 	free(mac);
 
 	switch(auth_response.authcode) {
+
 	case AUTH_ERROR:
 		/* Error talking to central server */
 		debug(LOG_ERR, "Got %d from central server authenticating "
 			"token %s from %s at %s", auth_response, client->token,
 			client->ip, client->mac);
 		_http_output(client->fd, "Access denied: We did not get a "
-				"valid answer from the central server");
+			"valid answer from the central server");
 		break;
+
 	case AUTH_DENIED:
 		/* Central server said invalid token */
-		_http_output(client->fd, "Access denied");
+		//_http_output(client->fd, "Access denied");
+	    _http_redirect(r->clientSock, "http://%s:%d%sgw_message.php?message=denied",
+		    config_get_config()->auth_servers->authserv_hostname, 
+		    config_get_config()->auth_servers->authserv_http_port,
+		    config_get_config()->auth_servers->authserv_path);
 		break;
-        case AUTH_VALIDATION:
+
+    case AUTH_VALIDATION:
 		client->fw_connection_state = FW_MARK_PROBATION;
-        	fw_allow(client->ip, client->mac, FW_MARK_PROBATION);
-	        _http_output(r->clientSock, "You have 15 minutes to activate your account, hurry up!");
-		break;
-        case AUTH_ALLOWED:
-		client->fw_connection_state = FW_MARK_KNOWN;
-        	fw_allow(client->ip, client->mac, FW_MARK_KNOWN);
-	        _http_redirect(r->clientSock, "http://%s:%d%sportal/?gw_id=%s",
-			config_get_config()->auth_servers->authserv_hostname, 
-			config_get_config()->auth_servers->authserv_http_port,
-			config_get_config()->auth_servers->authserv_path,
-			config_get_config()->gw_id);
-		break;
-        case AUTH_VALIDATION_FAILED:
-	        _http_output(r->clientSock, "You have failed to validate your account in 15 minutes");
-		break;
-        default:
-	        _http_output(r->clientSock, "Internal error");
-		debug(LOG_WARNING, "I don't know what the validation code %d means", auth_response.authcode);
-		break;
+        fw_allow(client->ip, client->mac, FW_MARK_PROBATION);
+	    //_http_output(r->clientSock, "You have 15 minutes to activate your account, hurry up!");
+	    _http_redirect(r->clientSock, "http://%s:%d%sgw_message.php?message=activate",
+		    config_get_config()->auth_servers->authserv_hostname, 
+		    config_get_config()->auth_servers->authserv_http_port,
+		    config_get_config()->auth_servers->authserv_path);
+	    break;
+
+    case AUTH_ALLOWED:
+	    client->fw_connection_state = FW_MARK_KNOWN;
+       	fw_allow(client->ip, client->mac, FW_MARK_KNOWN);
+	    _http_redirect(r->clientSock, "http://%s:%d%sportal/?gw_id=%s",
+	        config_get_config()->auth_servers->authserv_hostname, 
+		    config_get_config()->auth_servers->authserv_http_port,
+		    config_get_config()->auth_servers->authserv_path,
+		    config_get_config()->gw_id);
+	    break;
+
+    case AUTH_VALIDATION_FAILED:
+	    //_http_output(r->clientSock, "You have failed to validate your account in 15 minutes");
+	    _http_redirect(r->clientSock, "http://%s:%d%sgw_message.php?message=failed_validation",
+	        config_get_config()->auth_servers->authserv_hostname, 
+	        config_get_config()->auth_servers->authserv_http_port,
+	        config_get_config()->auth_servers->authserv_path);
+	    break;
+
+    default:
+	    _http_output(r->clientSock, "Internal error");
+	    debug(LOG_WARNING, "I don't know what the validation code %d means", auth_response.authcode);
+	    break;
+
 	}
 
 	pthread_mutex_unlock(&client_list_mutex);
