@@ -1,5 +1,9 @@
 # $Header$
 
+2005-02-15 Mina Naguib <mina@ilesansfil.org>
+	* Now also reports wifidog_uptime when it pings the server, as well as
+	shows it in wdctl status
+
 2005-02-13 Mina Naguib <mina@ilesansfil.org>
 	* Completely re-did the iptables rules.  Most of the rules are now in the
 	filter table instead of the nat table.  Also DROPs are now replaced with

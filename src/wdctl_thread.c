@@ -54,6 +54,9 @@
 extern	pthread_mutex_t	client_list_mutex;
 extern	pthread_mutex_t	config_mutex;
 
+/* Defined in ping_thread.c */
+extern time_t started_time;
+
 static void *thread_wdctl_handler(void *);
 static void wdctl_status(int);
 static void wdctl_stop(int);
@@ -203,11 +206,25 @@ wdctl_status(int fd)
 	ssize_t		len;
 	t_client	*first;
 	int		count;
+	unsigned long int uptime = 0;
+	unsigned int days = 0, hours = 0, minutes = 0, seconds = 0;
 
     config = config_get_config();
 	
 	len = 0;
 	snprintf(buffer, (sizeof(buffer) - len), "WiFiDog status\n\n");
+	len = strlen(buffer);
+
+
+	uptime = time(NULL) - started_time;
+	days    = uptime / (24 * 60 * 60);
+	uptime -= days * (24 * 60 * 60);
+	hours   = uptime / (60 * 60);
+	uptime -= hours * (60 * 60);
+	minutes = uptime / 60;
+	uptime -= minutes * 60;
+	seconds = uptime;
+	snprintf((buffer + len), (sizeof(buffer) - len), "Uptime: %ud %uh %um %us\n\n", days, hours, minutes, seconds);
 	len = strlen(buffer);
 
 	LOCK_CLIENT_LIST();

@@ -50,6 +50,8 @@
 
 static void ping(void);
 
+time_t started_time = 0;
+
 /** Launches a thread that periodically checks in with the wifidog auth server to perform heartbeat function.
 @param arg NULL
 @todo This thread loops infinitely, need a watchdog to verify that it is still running?
@@ -61,6 +63,9 @@ thread_ping(void *arg)
 	pthread_mutex_t		cond_mutex = PTHREAD_MUTEX_INITIALIZER;
 	struct	timespec	timeout;
 	
+	if (!started_time)
+		started_time = time(NULL);
+
 	while (1) {
 		/* Make sure we check the servers at the very begining */
 		/** @todo  Note that this will only help if the second server responds.  The logic of the ping itslef should be changed so it iterates in the list until it finds one that responds ox exausts the list */
@@ -199,7 +204,7 @@ ping(void)
 	/*
 	 * Prep & send request
 	 */
-	snprintf(request, sizeof(request) - 1, "GET %sping/?gw_id=%s&sys_uptime=%lu&sys_memfree=%u&sys_load=%.2f HTTP/1.0\n"
+	snprintf(request, sizeof(request) - 1, "GET %sping/?gw_id=%s&sys_uptime=%lu&sys_memfree=%u&sys_load=%.2f&wifidog_uptime=%lu HTTP/1.0\n"
 			"User-Agent: WiFiDog %s\n"
 			"Host: %s\n"
 			"\n",
@@ -208,6 +213,7 @@ ping(void)
 			sys_uptime,
 			sys_memfree,
 			sys_load,
+			(long unsigned int)((long unsigned int)time(NULL) - (long unsigned int)started_time),
 			VERSION,
 			auth_server->authserv_hostname);
 
