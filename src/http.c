@@ -86,13 +86,26 @@ http_callback_auth(httpd * webserver)
 				"ip %s", webserver->clientAddr);
 			httpdOutput(webserver, "Failed to retrieve your MAC "
 					"address");
-		}
-		else {
+		} else {
 			// We have their MAC address
 
-			if (!node_find_by_ip(webserver->clientAddr)) {
-				node_add(webserver->clientAddr, mac, 
-						token->value, 0, 0);
+			if ((node = node_find_by_ip(webserver->clientAddr))
+					== NULL) {
+				debug(D_LOG_DEBUG, "New node for %s",
+					webserver->clientAddr);
+				node_add(webserver->clientAddr, mac,
+					token->value, 0, 0);
+			} else {
+				debug(D_LOG_DEBUG, "Node for %s already "
+					"exists", node->ip);
+				if (node->rights != NULL) {
+					/* log off if logged in */
+					debug(D_LOG_DEBUG, "Logging off %s "
+						"because they tried a new "
+						"token", node->ip);
+					fw_deny(node->ip, node->mac,
+						node->rights->profile);
+				}
 			}
 
 			node = node_find_by_ip(webserver->clientAddr);

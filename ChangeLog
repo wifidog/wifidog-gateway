@@ -1,5 +1,8 @@
 # $Header$
 2004-04-14  Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Existing IPs are logged off when they're authenticated again.
+
+2004-04-14  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Fixed clean up so it happens at the right time.
 
 2004-04-14  Alexandre Carmel-Veilleux <acv@acv.ca>
