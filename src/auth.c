@@ -199,8 +199,9 @@ thread_authenticate_client(void *arg)
         case AUTH_ALLOWED:
 		client->fw_connection_state = FW_MARK_KNOWN;
         	fw_allow(client->ip, client->mac, FW_MARK_KNOWN);
-	        _http_redirect(client->fd, "http://%s%sportal/?gw_id=%s",
+	        _http_redirect(client->fd, "http://%s:%d%sportal/?gw_id=%s",
 			config_get_config()->auth_servers->authserv_hostname, 
+			config_get_config()->auth_servers->authserv_http_port,
 			config_get_config()->auth_servers->authserv_path,
 			config_get_config()->gw_id);
 		break;

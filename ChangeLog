@@ -1,4 +1,7 @@
 # $Header$
+2004-10-15 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* src/auth.c: Fixed hard coded port.
+
 2004-10-09 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* src/gateway.c: More logging on termination_handler.
 
