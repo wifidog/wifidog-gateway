@@ -10,7 +10,8 @@ Once you have successfully built a full toolchain according to the
 instructions for OpwnWRT, you can compile binaries for the MIPS_EL
 platform.
  
- Once you have successfully compiled your buildroot, you can change bace to your wifidog CVS checkout and use the commands:
+Once you have successfully compiled your buildroot, you can change
+back to your wifidog CVS checkout directory and use the commands:
 
 ./autogen.sh BUILDROOT=<path_to_openwrt_buildroot>
 make
