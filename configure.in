@@ -84,8 +84,8 @@ AC_SUBST(enable_latex_docs)
 BB_ENABLE_DOXYGEN
 
 # check for libhttpd
-AC_CHECK_HEADER(httpd.h, , AC_MSG_ERROR(You do not seem to have the libhttpd headers - please obtain it from http://www.hughes.com.au/products/libhttpd/) )
-AC_CHECK_LIB(httpd, httpdCreate, , AC_MSG_ERROR(You do not seem to have the libhttpd library - please obtain it from http://www.hughes.com.au/products/libhttpd/) )
+AC_CHECK_HEADER(httpd.h, , AC_MSG_ERROR(You do not seem to have the libhttpd headers - please obtain libhttpd from http://www.hughes.com.au/products/libhttpd/ , patch it with http://www.topfx.com/dist/libhttpd.custom404.patch and install it) )
+AC_CHECK_LIB(httpd, httpdCreate, , AC_MSG_ERROR(You do not seem to have the libhttpd library - please obtain it from http://www.hughes.com.au/products/libhttpd/ , patch it with http://www.topfx.com/dist/libhttpd.custom404.patch and install it) )
 AC_CHECK_LIB(httpd, httpdAddC404Content, , AC_MSG_ERROR(You seem to have an original UNPATCHED version of libhttpd.  Please re-install with patch from http://www.topfx.com/dist/libhttpd.custom404.patch) )
 			
 AC_OUTPUT( 		Makefile 
