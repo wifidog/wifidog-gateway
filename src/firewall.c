@@ -51,7 +51,9 @@ t_node         *firstnode = NULL;
 int
 fw_allow(char *ip, char *mac, int tag)
 {
-    return iptables_do_command("-t mangle -A wifidog_mark -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
+    debug(LOG_DEBUG, "Allowing %s %s with tag %d", ip, mac, tag);
+
+    return iptables_fw_access(FW_ACCESS_ALLOW, ip, mac, tag);
 }
 
 /**
@@ -68,7 +70,9 @@ fw_allow(char *ip, char *mac, int tag)
 int
 fw_deny(char *ip, char *mac, int tag)
 {
-    return iptables_do_command("-t mangle -D wifidog_mark -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
+    debug(LOG_DEBUG, "Denying %s %s with tag %d", ip, mac, tag);
+
+    return iptables_fw_access(FW_ACCESS_DENY, ip, mac, tag);
 }
 
 /** @brief Execute a shell command
@@ -145,51 +149,13 @@ arp_get(char *req_ip)
 /**
  * @brief Initialize the firewall
  *
- * Initialize the firewall rules by executing the 'fw.init' script:
- * fw.init <gw_interface> <gw_address> <port> <authserv_hostname>
- * @return Return code of the fw.init script
+ * Initialize the firewall rules
  */
 int
 fw_init(void)
 {
     debug(LOG_INFO, "Initializing Firewall");
-
-    iptables_do_command("-t nat -N wifidog_validate");
-    iptables_do_command("-t nat -A wifidog_validate -d %s -j ACCEPT", config.gw_address);
-    iptables_do_command("-t nat -A wifidog_validate -d %s -j ACCEPT", config.authserv_hostname);
-    iptables_do_command("-t nat -A wifidog_validate -p udp --dport 67 -j ACCEPT");
-    iptables_do_command("-t nat -A wifidog_validate -p tcp --dport 67 -j ACCEPT");
-    iptables_do_command("-t nat -A wifidog_validate -p udp --dport 53 -j ACCEPT");
-    iptables_do_command("-t nat -A wifidog_validate -p tcp --dport 80 -j ACCEPT");
-    iptables_do_command("-t nat -A wifidog_validate -p tcp --dport 443 -j ACCEPT");
-    iptables_do_command("-t nat -A wifidog_validate -j DROP");
-
-    iptables_do_command("-t nat -N wifidog_unknown");
-    iptables_do_command("-t nat -A wifidog_unknown -d %s -j ACCEPT", config.gw_address);
-    iptables_do_command("-t nat -A wifidog_unknown -d %s -j ACCEPT", config.authserv_hostname);
-    iptables_do_command("-t nat -A wifidog_unknown -p udp --dport 67 -j ACCEPT");
-    iptables_do_command("-t nat -A wifidog_unknown -p tcp --dport 67 -j ACCEPT");
-    iptables_do_command("-t nat -A wifidog_unknown -p udp --dport 53 -j ACCEPT");
-    iptables_do_command("-t nat -A wifidog_unknown -p tcp --dport 80 -j REDIRECT --to-ports %d", config.gw_port);
-    iptables_do_command("-t nat -A wifidog_unknown -j DROP");
-
-    iptables_do_command("-t nat -N wifidog_known");
-    iptables_do_command("-t nat -A wifidog_known -j ACCEPT");
-
-    iptables_do_command("-t nat -N wifidog_locked");
-    iptables_do_command("-t nat -A wifidog_locked -j DROP");
-
-    iptables_do_command("-t nat -N wifidog_class");
-    iptables_do_command("-t nat -A wifidog_class -i %s -m mark --mark 0x1 -j wifidog_validate", config.gw_interface);
-    iptables_do_command("-t nat -A wifidog_class -i %s -m mark --mark 0x2 -j wifidog_known", config.gw_interface);
-    iptables_do_command("-t nat -A wifidog_class -i %s -m mark --mark 0x254 -j wifidog_locked", config.gw_interface);
-    iptables_do_command("-t nat -A wifidog_class -i %s -j wifidog_unknown", config.gw_interface);
-
-    iptables_do_command("-t mangle -N wifidog_mark");
-
-    iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j wifidog_mark", config.gw_interface);
-
-    iptables_do_command("-t nat -I PREROUTING 1 -i %s -j wifidog_class", config.gw_interface);
+    iptables_fw_init();
 
     return 1;
 }
@@ -204,36 +170,8 @@ fw_init(void)
 int
 fw_destroy(void)
 {
-    int rc, tries;
-
     debug(LOG_INFO, "Removing Firewall rules");
-
-    iptables_do_command("-t nat -F wifidog_class");
-    iptables_do_command("-t mangle -F wifidog_mark");
-
-    iptables_do_command("-t nat -F wifidog_validate");
-    iptables_do_command("-t nat -F wifidog_unknown");
-    iptables_do_command("-t nat -F wifidog_known");
-    iptables_do_command("-t nat -F wifidog_locked");
-    iptables_do_command("-t nat -X wifidog_validate");
-    iptables_do_command("-t nat -X wifidog_unknown");
-    iptables_do_command("-t nat -X wifidog_known");
-    iptables_do_command("-t nat -X wifidog_locked");
-
-    /* We loop in case wifidog has crashed and left some unwanted rules,
-     * maybe we shouldn't loop forever, we'll give it 10 tries
-     */
-    rc = 0;
-    for (tries = 0; tries < 10 && rc == 0; tries++) {
-        rc = iptables_do_command("-t nat -D PREROUTING -i %s -j wifidog_class", config.gw_interface);
-    }
-    iptables_do_command("-t nat -X wifidog_class");
-
-    rc = 0;
-    for (tries = 0; tries < 10 && rc == 0; tries++) {
-        rc = iptables_do_command("-t mangle -D PREROUTING -i %s -j wifidog_mark", config.gw_interface);
-    }
-    iptables_do_command("-t mangle -X wifidog_mark");
+    iptables_fw_destroy();
 
     return 1;
 }

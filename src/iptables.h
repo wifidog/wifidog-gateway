@@ -27,6 +27,14 @@
 #ifndef _IPTABLES_H_
 #define _IPTABLES_H_
 
+typedef enum fw_access_t_ {
+    FW_ACCESS_ALLOW,
+    FW_ACCESS_DENY,
+} fw_access_t;
+
 int iptables_do_command(char *format, ...);
+int iptables_fw_init(void);
+int iptables_fw_destroy(void);
+int iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag);
 
 #endif /* _IPTABLES_H_ */
