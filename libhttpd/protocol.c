@@ -61,9 +61,8 @@ int _httpd_net_read(sock, buf, len)
 
 	if (nfds > 0) {
 		return(read(sock, buf, len));
-	} else {
-		return(-1);
 	}
+	return(nfds);
 #endif
 }
 
