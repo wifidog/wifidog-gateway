@@ -1,5 +1,12 @@
 # $Header$
 
+2005-01-06 Philippe April <philippe@philippeapril.com>
+	* fw_iptables.c: Changed REJECT to DROP for the end of the table Unknown,
+	  REJECT doesn't seem to be available in the NAT table.
+	* fw_iptables.c: Indented things
+	* fw_iptables.c Fix: Created the authservers table at the beginning and destroy
+	  at exit time only to avoid recreating it everytime
+
 2005-01-05 Philippe April <philippe@philippeapril.com>
 	* Typo, fixed some spaces (mostly esthetic)
 	* Bumped to alpha4

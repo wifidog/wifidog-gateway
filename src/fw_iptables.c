@@ -160,15 +160,12 @@ iptables_fw_set_authservers(void)
     
     LOCK_CONFIG();
     
-    iptables_do_command("-t nat -N " TABLE_WIFIDOG_AUTHSERVERS);
-    for (auth_server = config->auth_servers; auth_server != NULL;
-		    auth_server = auth_server->next) {
-	if (auth_server->last_ip == NULL ||
-	                  strcmp(auth_server->last_ip, "0.0.0.0") == 0) {
-	    iptables_do_command("-t nat -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->authserv_hostname);
-	} else {
-	    iptables_do_command("-t nat -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->last_ip);
-	}
+    for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
+	    if (auth_server->last_ip == NULL || strcmp(auth_server->last_ip, "0.0.0.0") == 0) {
+	        iptables_do_command("-t nat -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->authserv_hostname);
+	    } else {
+	        iptables_do_command("-t nat -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->last_ip);
+	    }
     }
 
     UNLOCK_CONFIG();
@@ -184,6 +181,10 @@ iptables_fw_init(void)
     config = config_get_config();
     fw_quiet = 0;
     
+    /* Create authservers table here instead of in iptables_fw_set_authservers
+     * so we only have to flush it and not destroy/create every time */
+    iptables_do_command("-t nat -N " TABLE_WIFIDOG_AUTHSERVERS);
+
     iptables_fw_set_authservers();
 
     LOCK_CONFIG();
@@ -210,13 +211,14 @@ iptables_fw_init(void)
     iptables_load_ruleset("global", TABLE_WIFIDOG_UNKNOWN);
     iptables_load_ruleset("unknown-users", TABLE_WIFIDOG_UNKNOWN);
     LOCK_CONFIG();
+
     /* XXX If there's a rule in global for port 80, it overrides this. */
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 80 -j REDIRECT --to-ports %d", config->gw_port);
     UNLOCK_CONFIG();
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j REJECT");
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j DROP");
 
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_KNOWN);
-    /** Insert global rules BEFORE the "defaults" */
+    /* Insert global rules BEFORE the "defaults" */
     iptables_load_ruleset("global", TABLE_WIFIDOG_KNOWN);
     iptables_load_ruleset("known-users", TABLE_WIFIDOG_KNOWN);
 
