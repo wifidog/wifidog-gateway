@@ -49,11 +49,11 @@
 #include "conf.h"
 #include "commandline.h"
 #include "debug.h"
+#include "userclasses.h"
 #include "firewall.h"
 #include "http.h"
 #include "centralserver.h"
 #include "child.h"
-#include "userclasses.h"
 
 #define MAX_BUF 4096
 

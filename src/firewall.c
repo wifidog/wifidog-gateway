@@ -321,6 +321,9 @@ free_node(t_node *node)
 	if (node->token != NULL)
 		free(node->token);
 
+	if (node->rights != NULL)
+		free_userrights(node->rights);
+
 	free(node);
 }
 

@@ -36,6 +36,8 @@ sigchld_handler(int signal)
 	int	status;
 	t_node	*tmp_node;
 	ChildInfo	*tmp_ci;
+	UserRights	*tmp_ur;
+	UserClasses	*tmp_uc;
 	
 	pid = wait(&status);
 
@@ -75,13 +77,29 @@ sigchld_handler(int signal)
 	 */
 	
 	if (status > 0) {
-        debug(D_LOG_DEBUG, "Allowing %s with mac %s and profile %d", tmp_ci->ip, tmp_ci->mac, status);
+		debug(D_LOG_DEBUG, "Allowing %s with mac %s and profile %d", 
+				tmp_ci->ip, tmp_ci->mac, status);
+		
+		tmp_uc = find_userclasses(status);
+
+		if (tmp_uc == NULL) {
+			debug(D_LOG_DEBUG, "Profile %d undefined", status);
+			return;
+		}
+		
+		tmp_ur = new_userrights();
+		tmp_ur->profile = status;
+		tmp_ur->start_time = time(NULL);
+		tmp_ur->end_time = tmp_ur->start_time - (time_t)tmp_uc->timeout;
+		
 		fw_allow(tmp_ci->ip, tmp_ci->mac, status);
 		if (tmp_node = node_find_by_ip(tmp_ci->ip)) {
 			tmp_node->active = 1;
+			tmp_node->rights = tmp_ur;
 		}
 	} else {
-        debug(D_LOG_DEBUG, "Denying %s with mac %s and profile %d", tmp_ci->ip, tmp_ci->mac, status);
+		debug(D_LOG_DEBUG, "Denying %s with mac %s and profile %d", 
+				tmp_ci->ip, tmp_ci->mac, status);
 		if (tmp_node = node_find_by_ip(tmp_ci->ip)) {
 			fw_deny(tmp_ci->ip, tmp_ci->mac, status);
 			node_delete(tmp_node);
