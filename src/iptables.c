@@ -83,9 +83,9 @@ iptables_fw_init(void)
     iptables_do_command("-t nat -A wifidog_locked -j DROP");
 
     iptables_do_command("-t nat -N wifidog_class");
-    iptables_do_command("-t nat -A wifidog_class -i %s -m mark --mark 0x1 -j wifidog_validate", config.gw_interface);
-    iptables_do_command("-t nat -A wifidog_class -i %s -m mark --mark 0x2 -j wifidog_known", config.gw_interface);
-    iptables_do_command("-t nat -A wifidog_class -i %s -m mark --mark 0x254 -j wifidog_locked", config.gw_interface);
+    iptables_do_command("-t nat -A wifidog_class -i %s -m mark --mark 0x%u -j wifidog_validate", config.gw_interface, MARK_VALIDATION);
+    iptables_do_command("-t nat -A wifidog_class -i %s -m mark --mark 0x%u -j wifidog_known", config.gw_interface, MARK_KNOWN);
+    iptables_do_command("-t nat -A wifidog_class -i %s -m mark --mark 0x%u -j wifidog_locked", config.gw_interface, MARK_LOCKED);
     iptables_do_command("-t nat -A wifidog_class -i %s -j wifidog_unknown", config.gw_interface);
 
     iptables_do_command("-t mangle -N wifidog_mark");
