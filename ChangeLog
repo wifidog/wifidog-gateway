@@ -1,4 +1,7 @@
 # $Header$
+2004-04-22  Philippe April <papril777@yahoo.com>
+    * Major changes, cleaned up code
+    * Changed the way firewall tags traffic
 
 2004-04-21  Philippe April <papril777@yahoo.com>
     * Changed fw.destroy so it cleans up more in a while loop

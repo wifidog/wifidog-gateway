@@ -28,7 +28,21 @@
 #ifndef _AUTH_H_
 #define _AUTH_H_
 
+typedef enum {
+    AUTH_ERROR = -1,
+    AUTH_DENIED = 0,
+    AUTH_ALLOWED = 1,
+    AUTH_VALIDATION = 5,
+    AUTH_VALIDATION_FAILED = 6,
+    AUTH_LOCKED = 254,
+} t_authcode;
+
+typedef struct _t_authresponse {
+    int authcode;
+} t_authresponse;
+
 void auth_thread(void *ptr);
 void cleanup_thread(void *ptr);
+void _http_redirect(int fd, char *format, ...);
 
 #endif

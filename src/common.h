@@ -28,6 +28,7 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -55,11 +56,10 @@
 #include "conf.h"
 #include "commandline.h"
 #include "debug.h"
-#include "userclasses.h"
 #include "firewall.h"
 #include "http.h"
-#include "centralserver.h"
 #include "auth.h"
+#include "centralserver.h"
 
 #define MAX_BUF 4096
 

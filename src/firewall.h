@@ -27,15 +27,22 @@
 #ifndef _FIREWALL_H_
 #define _FIREWALL_H_
 
+typedef enum _t_marks {
+    MARK_VALIDATION = 1,
+    MARK_KNOWN = 2,
+    MARK_LOCKED = 254,
+} t_marks;
+
 typedef struct _t_node {
 	struct	_t_node	*next;
 	char	*ip,
 		*mac,
 		*token;
 	int	active, /* boolean */
+        noactivity, /* seconds since there has not been activity */
+        tag, /* the MARK in the firewall */
 		fd;	/* socket */
 	long	int	counter;
-	UserRights	*rights;
 } t_node;
 
 int fw_init(void);
@@ -53,7 +60,5 @@ t_node *node_find_by_ip(char *ip);
 t_node *node_find_by_token(char *token);
 void node_delete(t_node *node);
 void free_node(t_node *node);
-
-int check_userrights(t_node *node);
 
 #endif /* _FIREWALL_H_ */

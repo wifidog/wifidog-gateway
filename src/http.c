@@ -36,10 +36,10 @@ http_callback_404(httpd * webserver)
 {
 	char *newlocation;
 
-	if (asprintf(&newlocation, "Location: %s?gw_address=%s&gw_port=%d&"
+	if ((asprintf(&newlocation, "Location: %s?gw_address=%s&gw_port=%d&"
 			"gw_id=%s", config.authserv_loginurl, 
 			config.gw_address, config.gw_port, 
-			config.gw_id) == -1) {
+			config.gw_id)) == -1) {
 		debug(LOG_ERR, "Failed to asprintf newlocation");
 		httpdOutput(webserver, "Internal error occurred");
 	} else {
@@ -77,11 +77,9 @@ http_callback_auth(httpd * webserver)
 	httpVar * token;
 	char	*mac,
 		*ip;
-	int profile;
-	int temp;
 	pthread_t tid;
 
-	if (token = httpdGetVariableByName(webserver, "token")) {
+	if ((token = httpdGetVariableByName(webserver, "token"))) {
 		// They supplied variable "token"
 		if (!(mac = arp_get(webserver->clientAddr))) {
 			// We could not get their MAC address
@@ -103,14 +101,6 @@ http_callback_auth(httpd * webserver)
 			} else {
 				debug(LOG_DEBUG, "Node for %s already "
 					"exists", node->ip);
-				if (node->rights != NULL) {
-					/* log off if logged in */
-					debug(LOG_DEBUG, "Logging off %s "
-						"because they tried a new "
-						"token", node->ip);
-					fw_deny(node->ip, node->mac,
-						node->rights->profile);
-				}
 			}
 
 			node = node_find_by_ip(webserver->clientAddr);

@@ -35,7 +35,6 @@ void
 main_loop(void)
 {
 	struct timeval tv;
-	time_t last_checked;
 	httpd * webserver;
 	int result;
 	pthread_t	tid;
@@ -62,6 +61,7 @@ main_loop(void)
 	init_signals();
 
 	// Reset the firewall
+	fw_destroy();
 	fw_init();
 
 	/* start clean up thread */
@@ -123,8 +123,6 @@ main(int argc, char **argv)
 	config_read(config.configfile);
 	config_validate();
 
-	init_userclasses(0);
-	
 	if (config.daemon) {
 		int childPid;
 

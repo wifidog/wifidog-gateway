@@ -37,34 +37,38 @@ GW_IP=$2
 GW_PORT=$3
 AUTHSERV_IP=$4
 
-${IPTABLES} -t nat -N wifidog_p1
-${IPTABLES} -t nat -A wifidog_p1 -d ${GW_IP} -j ACCEPT
-${IPTABLES} -t nat -A wifidog_p1 -d ${AUTHSERV_IP} -j ACCEPT
-${IPTABLES} -t nat -A wifidog_p1 -p udp --dport 53 -j ACCEPT
-${IPTABLES} -t nat -A wifidog_p1 -p tcp --dport 80 -j REDIRECT --to-ports ${GW_PORT}
-${IPTABLES} -t nat -A wifidog_p1 -j DROP
+${IPTABLES} -t nat -N wifidog_validate
+${IPTABLES} -t nat -A wifidog_validate -d ${GW_IP} -j ACCEPT
+${IPTABLES} -t nat -A wifidog_validate -d ${AUTHSERV_IP} -j ACCEPT
+${IPTABLES} -t nat -A wifidog_validate -p udp --dport 67 -j ACCEPT
+${IPTABLES} -t nat -A wifidog_validate -p tcp --dport 67 -j ACCEPT
+${IPTABLES} -t nat -A wifidog_validate -p udp --dport 53 -j ACCEPT
+${IPTABLES} -t nat -A wifidog_validate -p tcp --dport 80 -j ACCEPT
+${IPTABLES} -t nat -A wifidog_validate -p tcp --dport 443 -j ACCEPT
+${IPTABLES} -t nat -A wifidog_validate -j DROP
 
-${IPTABLES} -t nat -N wifidog_p2
-${IPTABLES} -t nat -A wifidog_p2 -j ACCEPT
+${IPTABLES} -t nat -N wifidog_unknown
+${IPTABLES} -t nat -A wifidog_unknown -d ${GW_IP} -j ACCEPT
+${IPTABLES} -t nat -A wifidog_unknown -d ${AUTHSERV_IP} -j ACCEPT
+${IPTABLES} -t nat -A wifidog_unknown -p udp --dport 67 -j ACCEPT
+${IPTABLES} -t nat -A wifidog_unknown -p tcp --dport 67 -j ACCEPT
+${IPTABLES} -t nat -A wifidog_unknown -p udp --dport 53 -j ACCEPT
+${IPTABLES} -t nat -A wifidog_unknown -p tcp --dport 80 -j REDIRECT --to-ports ${GW_PORT}
+${IPTABLES} -t nat -A wifidog_unknown -j DROP
 
-${IPTABLES} -t nat -N wifidog_p3
-${IPTABLES} -t nat -A wifidog_p3 -j ACCEPT
+${IPTABLES} -t nat -N wifidog_known
+${IPTABLES} -t nat -A wifidog_known -j ACCEPT
 
-${IPTABLES} -t nat -N wifidog_p4
-${IPTABLES} -t nat -A wifidog_p4 -j ACCEPT
-
-${IPTABLES} -t nat -N wifidog_p5
-${IPTABLES} -t nat -A wifidog_p5 -j ACCEPT
+${IPTABLES} -t nat -N wifidog_locked
+${IPTABLES} -t nat -A wifidog_locked -j DROP
 
 ${IPTABLES} -t nat -N wifidog_class
-${IPTABLES} -t nat -A wifidog_class -i ${GW_INTERFACE} -m mark --mark 0x1 -j wifidog_p1
-${IPTABLES} -t nat -A wifidog_class -i ${GW_INTERFACE} -m mark --mark 0x2 -j wifidog_p2
-${IPTABLES} -t nat -A wifidog_class -i ${GW_INTERFACE} -m mark --mark 0x3 -j wifidog_p3
-${IPTABLES} -t nat -A wifidog_class -i ${GW_INTERFACE} -m mark --mark 0x4 -j wifidog_p4
-${IPTABLES} -t nat -A wifidog_class -i ${GW_INTERFACE} -m mark --mark 0x5 -j wifidog_p5
+${IPTABLES} -t nat -A wifidog_class -i ${GW_INTERFACE} -m mark --mark 0x1 -j wifidog_validate
+${IPTABLES} -t nat -A wifidog_class -i ${GW_INTERFACE} -m mark --mark 0x2 -j wifidog_known
+${IPTABLES} -t nat -A wifidog_class -i ${GW_INTERFACE} -m mark --mark 0x254 -j wifidog_locked
+${IPTABLES} -t nat -A wifidog_class -i ${GW_INTERFACE} -j wifidog_unknown
 
 ${IPTABLES} -t mangle -N wifidog_mark
-${IPTABLES} -t mangle -A wifidog_mark -j MARK --set-mark 0x1
 
 ${IPTABLES} -t mangle -I PREROUTING 1 -i ${GW_INTERFACE} -j wifidog_mark
 ${IPTABLES} -t nat -I PREROUTING 1 -i ${GW_INTERFACE} -j wifidog_class

@@ -30,13 +30,12 @@
 extern s_config config;
 
 int
-authenticate(char *ip, char *mac, char *token, long int stats)
+authenticate(t_authresponse *authresponse, char *ip, char *mac, char *token, long int stats)
 {
 	int sockfd, numbytes;
 	char buf[MAX_BUF];
 	struct hostent *he;
 	struct sockaddr_in their_addr;
-	int profile;
 	char *p1;
 
 	if ((he = gethostbyname(config.authserv_hostname)) == NULL) {
@@ -79,20 +78,20 @@ authenticate(char *ip, char *mac, char *token, long int stats)
 
 	close(sockfd);
 
-	if ((p1 = strstr(buf, "Profile: "))) {
-		if (sscanf(p1, "Profile: %d", &profile) == 1) {
-			debug(LOG_INFO, "Auth server returned profile %d",
-				profile);
-			return(profile);
+	if ((p1 = strstr(buf, "Auth: "))) {
+		if (sscanf(p1, "Auth: %d", &authresponse->authcode) == 1) {
+			debug(LOG_INFO, "Auth server returned response %d",
+				authresponse->authcode);
+			return(authresponse->authcode);
 		} else {
 			debug(LOG_WARNING, "Auth server did not return "
 				"expected information");
-			return(-1);
+			return(AUTH_ERROR);
 		}
 	} else {
-		return(-1);
+		return(AUTH_ERROR);
 	}
 
-	return(-1);
+	return(AUTH_ERROR);
 }
 

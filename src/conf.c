@@ -62,7 +62,6 @@ typedef enum {
 	oCheckInterval,
 	oFWScriptsPath,
 	oFWType,
-	oUserClass,
     oSyslogFacility,
 } OpCodes;
 
@@ -87,7 +86,6 @@ struct {
 	{ "checkinterval",      oCheckInterval },
 	{ "fwscriptspath",      oFWScriptsPath },
 	{ "fwtype",             oFWType },
-	{ "userclass",  		oUserClass },
 	{ "syslogfacility", 	oSyslogFacility },
 	{ NULL,                 oBadOption },
 };
@@ -113,8 +111,6 @@ config_init(void)
 	config.checkinterval = DEFAULT_CHECKINTERVAL;
 	config.fwscripts_path = DEFAULT_FWSCRIPTS_PATH;
 	config.fwtype = DEFAULT_FWTYPE;
-	config.userclasses = (char **)malloc(sizeof(char *) * 256);
-	memset(config.userclasses, 0, sizeof(char *) * 256);
 	config.syslog_facility = DEFAULT_SYSLOG_FACILITY;
     config.daemon = -1;
     config.log_syslog = DEFAULT_LOG_SYSLOG;
@@ -196,10 +192,6 @@ config_read(char *filename)
 				opcode = parse_token(s, filename, linenum);
 
 				switch(opcode) {
-				case oUserClass:
-					add_userclass((int)strtol(p1, NULL, 10),
-							++p2);
-					break;
 				case oDaemon:
 					if (config.daemon == -1 && ((value = parse_value(p1)) != -1)) {
 						config.daemon = value;
@@ -287,24 +279,6 @@ get_string(char *ptr)
 
 	buf = strdup(ptr);
 	return buf;
-}
-
-char *
-add_userclass(int profile, char *ptr)
-{
-	char *tmp_str;
-
-	if (profile > 255 || profile < 0)
-		return NULL;
-
-	if (*(config.userclasses + profile) != NULL)
-		free(*(config.userclasses + profile));
-
-	tmp_str = strdup(ptr);
-
-	*(config.userclasses + profile) = tmp_str;
-
-	return tmp_str;
 }
 
 void

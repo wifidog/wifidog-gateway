@@ -36,20 +36,26 @@ t_node *firstnode = NULL;
 /**
  * @brief Allow a user through the firewall
  *
- * Add a rule in the firewall to tag the user's packets with its profile
- * number by providing his IP and MAC address. This is done by
+ * Add a rule in the firewall to MARK the user's packets with the proper
+ * rule by providing his IP and MAC address. This is done by
  * executing the firewall script "fw.access" like this:
- * fw.access allow <ip> <mac> <profile>
+ * fw.access allow <ip> <mac> <tag>
+ * @param ip IP address to allow
+ * @param mac MAC address to allow
+ * @tag tag Tag
+ * @return Return code of the command
  */
 int
-fw_allow(char *ip, char *mac, int profile)
+fw_allow(char *ip, char *mac, int tag)
 {
-	char s_profile[16];
+	char s_tag[16];
 	char script[MAX_BUF];
 	struct stat st;
-	char *command[] = {script, "allow", ip, mac, s_profile, NULL};
+	char *command[] = {script, "allow", ip, mac, s_tag, NULL};
 
-	sprintf(s_profile, "%-10d", profile);
+    debug(LOG_DEBUG, "Allowing ip %s mac %s with MARK %s", ip, mac, s_tag);
+
+	sprintf(s_tag, "%-10d", tag);
 	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, 
 		SCRIPT_FWACCESS);
 
@@ -68,16 +74,22 @@ fw_allow(char *ip, char *mac, int profile)
  * Remove the rule in the firewall that was tagging the user's traffic
  * by executing the firewall script "fw.access" this way:
  * fw.access deny <ip> <mac> <profile>
+ * @param ip IP address to deny
+ * @param mac MAC address to deny
+ * @tag tag Tag
+ * @return Return code of the command
  */
 int
-fw_deny(char *ip, char *mac, int profile)
+fw_deny(char *ip, char *mac, int tag)
 {
-	char s_profile[16];
+	char s_tag[16];
 	char script[MAX_BUF];
 	struct stat st;
-	char *command[] = {script, "deny", ip, mac, s_profile, NULL};
+	char *command[] = {script, "deny", ip, mac, s_tag, NULL};
 
-	sprintf(s_profile, "%-10d", profile);
+    debug(LOG_DEBUG, "Denying ip %s mac %s with MARK %s", ip, mac, s_tag);
+
+	sprintf(s_tag, "%-10d", tag);
 	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype,
 		SCRIPT_FWACCESS);
 
@@ -95,6 +107,7 @@ fw_deny(char *ip, char *mac, int profile)
  * Fork a child and execute a shell command, the parent
  * process waits for the child to return and returns the child's exit()
  * value.
+ * @return Return code of the command
  */
 int
 execute(char **argv)
@@ -125,8 +138,8 @@ execute(char **argv)
  *
  * Go through all the entries in /proc/net/arp until we find the requested
  * IP address and return the MAC address bound to it.
+ * @todo Make this function portable (using shell scripts?)
  */
-/* TODO Make this function portable... Use shell scripts? */
 char *
 arp_get(char *req_ip)
 {
@@ -158,6 +171,7 @@ arp_get(char *req_ip)
  *
  * Initialize the firewall rules by executing the 'fw.init' script:
  * fw.init <gw_interface> <gw_address> <port> <authserv_hostname>
+ * @return Return code of the fw.init script
  */
 int
 fw_init(void)
@@ -195,6 +209,7 @@ fw_init(void)
  *
  * Remove the firewall rules by executing the 'fw.destroy' script.
  * This is used when we do a clean shutdown of WiFiDog.
+ * @return Return code of the fw.destroy script
  */
 int
 fw_destroy(void)
@@ -217,12 +232,16 @@ fw_destroy(void)
 	return(execute(command));
 }
 
+/**
+ * @todo Make this function smaller and use sub-fonctions
+ */
 void
 fw_counter(void)
 {
 	FILE	*output;
 	long	int	counter;
-	int	profile,
+    t_authresponse authresponse;
+	int	tag,
 		rc;
 	char	ip[255],
 		mac[255],
@@ -238,69 +257,78 @@ fw_counter(void)
 	} else {
 		while (!(feof(output)) && output) {
 			rc = fscanf(output, "%ld %s %s %d", &counter, ip, 
-					mac, &profile);
+					mac, &tag);
 			if (rc == 4 && rc != EOF) {
 
 				pthread_mutex_lock(&nodes_mutex);
 
 				p1 = node_find_by_ip(ip);
-				
-				if (!(p1) || (p1->rights->last_checked +
-					(config.checkinterval *
-					 config.clienttimeout)) > time(NULL)) {
-					/* Do nothing */
-				} else if (p1->counter == counter) {
-					/* expire clients for inactivity */
-					debug(LOG_INFO, "Client %s was "
-						"inactive", ip);
-					fw_deny(p1->ip, p1->mac,
-						p1->rights->profile);
-					node_delete(p1);
-				} else if (!(p1->active)) {
-					p1->rights->last_checked = time(NULL);
-					p1->counter = counter;
-					
-					token = strdup(p1->token);
-					
-					pthread_mutex_unlock(&nodes_mutex);
 
-					profile = authenticate(ip, mac, token,
-								counter);
-					
+                if (p1) {
+					token = strdup(p1->token);
+
+					pthread_mutex_unlock(&nodes_mutex);
+					authenticate(&authresponse, ip, mac, token, counter);
 					pthread_mutex_lock(&nodes_mutex);
 
 					free(token);
-					
-					/* may have changed while we held the
-					 * mutex */
-					p1 = node_find_by_ip(ip);
 
+					p1 = node_find_by_ip(ip);
 					if (p1 == NULL) {	
 						debug(LOG_DEBUG, "Node was "
 							"freed while being "
 							"re-validated!");
-					} else if (profile <= 0) {
-						/* failed */
-						debug(LOG_NOTICE, "Auth "
-							"failed for client %s",
-							ip);
-						fw_deny(p1->ip, p1->mac,
-							p1->rights->profile);
-						node_delete(p1);
-					} else {
-						/* successful */
-						debug(LOG_INFO, "Updated "
-							"client %s counter to "
-							"%ld bytes", ip,
-							counter);
+                    }
 
-						if (!check_userrights(p1)) {
-							fw_deny(p1->ip, p1->mac,
-							   p1->rights->profile);
-							node_delete(p1);
-						}
-					}
-				}
+                    debug(LOG_INFO, "User %s counter currently %d, new counter %d", p1->ip, p1->counter, counter);
+                    if (counter > p1->counter) {
+                        p1->counter = counter;
+						    debug(LOG_INFO, "Updated "
+    						"client %s counter to "
+    						"%ld bytes", ip,
+    						counter);
+                        p1->noactivity = time(NULL);
+                    } else {
+				        debug(LOG_INFO, "No activity recorded %s", p1->ip);
+                    }
+                    if (p1->noactivity +
+                       (config.checkinterval * config.clienttimeout)
+                       <= time(NULL)) {
+                        /* Timing out user */
+    			        debug(LOG_INFO, "Client %s was inactive for %d seconds, removing node and denying in firewall", ip,
+                            config.checkinterval * config.clienttimeout);
+        	    		fw_deny(p1->ip, p1->mac, p1->tag);
+        	    		node_delete(p1);
+    			    } else {
+                        /* This handles any change in the status
+                         * this allows us to change the status of a
+                         * user while he's connected */
+                        switch(authresponse.authcode) {
+                            case AUTH_DENIED:
+                            case AUTH_VALIDATION_FAILED:
+    						    debug(LOG_NOTICE, "Client %s now denied, removing node", ip);
+        						fw_deny(p1->ip, p1->mac, p1->tag);
+        						node_delete(p1);
+                                break;
+                            case AUTH_ALLOWED:
+                                if (p1->tag != MARK_KNOWN) {
+                                    debug(LOG_INFO, "Access has changed, refreshing firewall and clearing counters");
+                                    fw_deny(p1->ip, p1->mac, p1->tag);
+                                    p1->tag = MARK_KNOWN;
+                                    p1->counter = 0;
+                                    fw_allow(p1->ip, p1->mac, p1->tag);
+                                }
+                                break;
+                            case AUTH_VALIDATION:
+                                /* Do nothing, user is in validation period */
+                                break;
+                            default:
+                                debug(LOG_DEBUG, "I do not know about type %d", authresponse.authcode);
+                                break;
+                        }
+                    }
+                }
+				
 				pthread_mutex_unlock(&nodes_mutex);
 			}
 		}
@@ -310,11 +338,12 @@ fw_counter(void)
 
 /**
  * @brief Initializes the list of connected clients (node)
+ *
+ * Initializes the list of connected clients (node)
  */
 void
 node_init(void)
 {
-
 	firstnode = NULL;
 }
 
@@ -323,6 +352,12 @@ node_init(void)
  *
  * Based on the parameters it receives, this function creates a new entry
  * in the connections list. All the memory allocation is done here.
+ * @param ip IP address
+ * @param mac MAC address
+ * @param token Token
+ * @param counter Value of the counter at creation (usually 0)
+ * @param active Is the node active, or not
+ * @return Pointer to the node we just created
  */
 t_node *
 node_add(char *ip, char *mac, char *token, long int counter, int active)
@@ -366,7 +401,12 @@ node_add(char *ip, char *mac, char *token, long int counter, int active)
 }
 
 /**
- * @brief Finds a specific node by its IP
+ * @brief Finds a node by its IP
+ *
+ * Finds a  node by its IP, returns NULL if the node could not
+ * be found
+ * @param ip IP we are looking for in the linked list
+ * @return Pointer to the node, or NULL if not found
  */
 t_node *
 node_find_by_ip(char *ip)
@@ -384,7 +424,11 @@ node_find_by_ip(char *ip)
 }
 
 /**
- * @brief Finds a specific node by its token
+ * @brief Finds a node by its token
+ *
+ * Finds a node by its token
+ * @param token Token we are looking for in the linked list
+ * @return Pointer to the node, or NULL if not found
  */
 t_node *
 node_find_by_token(char *token)
@@ -405,8 +449,8 @@ node_find_by_token(char *token)
  * @brief Frees the memory used by a t_node structure
  *
  * This function frees the memory used by the t_node structure in the
- * proper order. It also calls the free_userrights() function to free
- * the memory used by the rights structure for the node.
+ * proper order.
+ * @param node Points to the node to be freed
  */
 void
 free_node(t_node *node)
@@ -421,9 +465,6 @@ free_node(t_node *node)
 	if (node->token != NULL)
 		free(node->token);
 
-	if (node->rights != NULL)
-		free_userrights(node->rights);
-
 	free(node);
 }
 
@@ -432,6 +473,7 @@ free_node(t_node *node)
  *
  * Removes the specified node from the connections list and then calls
  * the function to free the memory used by the node.
+ * @param node Points to the node to be deleted
  */
 void
 node_delete(t_node *node)
@@ -451,23 +493,5 @@ node_delete(t_node *node)
 			}
 		}
 	}
-}
-
-/**
- * @brief Check the rights for a client
- *
- * This function validates that a client hasn't met one of the conditions
- * for the termination of his connection. Right now, we only check to see
- * for a time-out. More checks could be added here.
- */
-int
-check_userrights(t_node *node)
-{
-	if (node->rights->end_time <= time(NULL)) {
-		debug(LOG_INFO, "Connection %s has expired", node->ip);
-		return 0;
-	}
-
-	return 1;
 }
 

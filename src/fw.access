@@ -28,7 +28,7 @@
 IPTABLES=iptables
 
 if [ ! $4 ]; then
-    echo "Usage: $0 <allow|deny> <ip> <mac> <profile>"
+    echo "Usage: $0 <allow|deny> <ip> <mac> <tag>"
     echo
     exit 1
 fi
@@ -43,7 +43,7 @@ case "$1" in
         ;;
 
     *)
-        echo "Usage: $0 <allow|deny> <ip> <mac> <profile>"
+        echo "Usage: $0 <allow|deny> <ip> <mac> <tag>"
         echo
         exit
         ;;

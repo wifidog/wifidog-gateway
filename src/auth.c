@@ -62,12 +62,11 @@ void
 auth_thread(void *ptr)
 {
 	t_node	*node;
-	int	profile;
-	UserClasses	*tmp_uc;
-	UserRights	*tmp_ur;
+	t_authresponse	auth_response;
 	char	*ip,
 		*mac,
 		*token;
+    t_node *p1;
 
 	ip = (char *)ptr;
 
@@ -85,7 +84,7 @@ auth_thread(void *ptr)
 	
 	pthread_mutex_unlock(&nodes_mutex);
 		
-	profile = authenticate(ip, mac, token, 0);
+	authenticate(&auth_response, ip, mac, token, 0);
 	
 	pthread_mutex_lock(&nodes_mutex);
 	
@@ -102,20 +101,19 @@ auth_thread(void *ptr)
 		return;
 	}
 
-	if (profile == -1) {
+	if (auth_response.authcode == AUTH_ERROR) {
 		// Error talking to central server
 		debug(LOG_ERR, "Got %d from central server authenticating "
-			"token %s from %s at %s", profile, node->token,
+			"token %s from %s at %s", auth_response, node->token,
 			node->ip, node->mac);
 		_http_output(node->fd, "Access denied: We did not get a valid "
 			"answer from the central server");
 		node->fd = 0;
 		pthread_mutex_unlock(&nodes_mutex);
 		return;
-	} else if (profile == 0) {
+	} else if (auth_response.authcode == AUTH_DENIED) {
 		// Central server said invalid token
-		_http_output(node->fd, "Your authentication has failed or "
-			"timed-out.  Please re-login");
+		_http_output(node->fd, "Access denied");
 		node->fd = 0;
 		pthread_mutex_unlock(&nodes_mutex);
 		return;
@@ -123,39 +121,36 @@ auth_thread(void *ptr)
 
 	/* If we get here, we've got a profile > 0 */
 	
-	debug(LOG_INFO, "Node %s with mac %s and profile "
-		"%d validated", node->ip, node->mac, profile);
+	debug(LOG_INFO, "Node %s with mac %s "
+		"validated", node->ip, node->mac);
 	
-	tmp_uc = find_userclasses(profile);
-	
-	if (tmp_uc == NULL) {
-		debug(LOG_WARNING, "Profile %d undefined", profile);
-		_http_output(node->fd, "User Class not defined");
-		node->fd = 0;
-		pthread_mutex_unlock(&nodes_mutex);
-		return;
-	} else {
-		debug(LOG_INFO, "Profile %d UserClasses retrieved", profile);
-	}
-	
-	if (tmp_uc->active) {
-		/* Profile is active */
+    p1 = node_find_by_ip(node->ip);
+    p1->noactivity = time(NULL);
+    switch(auth_response.authcode) {
+        case AUTH_VALIDATION:
+            p1->tag = MARK_VALIDATION;
+        	fw_allow(node->ip, node->mac, MARK_VALIDATION);
+	        _http_output(node->fd, "You have 15 minutes to activate your account, hurry up!");
+            break;
+        case AUTH_ALLOWED:
+            p1->tag = MARK_KNOWN;
+        	fw_allow(node->ip, node->mac, MARK_KNOWN);
+	        _http_redirect(node->fd, "http://%s/wifidog/portal.php?gw_id=%s", config.authserv_hostname, config.gw_id);
+            break;
+        case AUTH_VALIDATION_FAILED:
+	        _http_output(node->fd, "You have failed to validate your account in 15 minutes");
+            break;
+        case AUTH_DENIED:
+	        _http_output(node->fd, "Authentication failure");
+            break;
+        default:
+	        _http_output(node->fd, "Internal error");
+            debug(LOG_WARNING, "I don't know what the validation code %d means", auth_response.authcode);
+            break;
+    }
 		
-		tmp_ur = new_userrights();
-		tmp_ur->profile = profile;
-		tmp_ur->start_time = time(NULL);
-		tmp_ur->last_checked = time(NULL);
-		tmp_ur->end_time = tmp_ur->start_time + (time_t)tmp_uc->timeout;
-		
-		fw_allow(node->ip, node->mac, profile);
-		
-		node->active = 1;
-		node->rights = tmp_ur;
-		
-		_http_output(node->fd, "You are now good to go");
-	} else {
-		_http_output(node->fd, "User Class inactive");
-	}
+	//_http_output(node->fd, "You are now good to go");
+	//_http_redirect(node->fd, "http://%s/wifidog/portal.php?gw_id=%s", config.authserv_hostname, config.gw_id);
 	
 	node->fd = 0;
 
@@ -167,11 +162,34 @@ auth_thread(void *ptr)
 static void
 _http_output(int fd, char *msg)
 {
-	char response[] = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-"
-			  "Type: text/html\r\n\r\n";
+	char header[] = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-"
+			  "Type: text/html\r\n\r\n<html><body>";
+	char footer[] = "</body></html>";
 	
-	send(fd, response, sizeof(response), 0);
+	send(fd, header, sizeof(header), 0);
 	send(fd, msg, strlen(msg), 0);
+	send(fd, footer, sizeof(footer), 0);
 	shutdown(fd, 2);
 	close(fd);
 }
+
+void
+_http_redirect(int fd, char *format, ...)
+{
+	char *response, *url;
+    va_list vlist;
+    
+    va_start(vlist, format);
+
+    vasprintf(&url, format, vlist);
+
+    asprintf(&response, "HTTP/1.1 307 Please authenticate yourself here\r\nLocation: %s\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<html><head>Redirection</head><body>Please <a href='%s'>Click here</a> if you're not redirected.", url, url);
+
+	send(fd, response, strlen(response), 0);
+	shutdown(fd, 2);
+	close(fd);
+
+    free(response);
+    free(url);
+}
+

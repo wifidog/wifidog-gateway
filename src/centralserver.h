@@ -27,6 +27,6 @@
 #ifndef _CENTRALSERVER_H_
 #define _CENTRALSERVER_H_
 
-int authenticate(char *ip, char *mac, char *token, long int stats);
+int authenticate(t_authresponse *authresponse, char *ip, char *mac, char *token, long int stats);
 
 #endif /* _CENTRALSERVER_H_ */

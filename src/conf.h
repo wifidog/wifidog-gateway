@@ -34,7 +34,6 @@ void config_validate(void);
 void config_notnull(void *parm, char *parmname);
 int parse_value(char *);
 char *get_string(char *ptr);
-char *add_userclass(int profile, char *ptr);
 
 typedef struct {
     char *configfile;
@@ -54,7 +53,6 @@ typedef struct {
     int checkinterval;
     char *fwscripts_path;
     char *fwtype;
-    char **userclasses;
     int log_syslog;
     int syslog_facility;
 } s_config;
