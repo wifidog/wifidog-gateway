@@ -200,7 +200,7 @@ void
 fw_counter(void)
 {
     t_authresponse  authresponse;
-    char            *token, *ip;
+    char            *token, *ip, *mac;
     t_node         *p1, *p2;
 
     if (-1 == iptables_fw_counters()) {
@@ -214,8 +214,11 @@ fw_counter(void)
     p2 = firstnode;
     while (NULL != (p1 = p2)) {
         p2 = p1->next;
+
         ip = strdup(p1->ip);
         token = strdup(p1->token);
+        mac = strdup(p1->mac);
+
         pthread_mutex_unlock(&nodes_mutex);
         authenticate(&authresponse, STAGE_COUNTERS, p1->ip, p1->mac, token, p1->counters.incoming, p1->counters.outgoing);
         pthread_mutex_lock(&nodes_mutex);
@@ -230,6 +233,11 @@ fw_counter(void)
                 debug(LOG_INFO, "%s - Inactive for %ld seconds, removing node and denying in firewall", p1->ip, config.checkinterval * config.clienttimeout);
                 fw_deny(p1->ip, p1->mac, p1->tag);
                 node_delete(p1);
+
+                /* Advertise the logout */
+                pthread_mutex_unlock(&nodes_mutex);
+                authenticate(&authresponse, STAGE_LOGOUT, ip, mac, token, 0, 0);
+                pthread_mutex_lock(&nodes_mutex);
             } else {
                 /*
                  * This handles any change in

@@ -1,4 +1,7 @@
 # $Header$
+2004-05-13  Philippe April <papril777@yahoo.com>
+    * Advertise to the central server when we logged out a user
+
 2004-05-12  Philippe April <papril777@yahoo.com>
     * Sending a "stage" when doing authentication for the server
     to be able to know if it's a login, or just a counters update.
