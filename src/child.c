@@ -77,27 +77,48 @@ sigchld_handler(int signal)
 	 */
 	
 	if (status > 0) {
-		debug(D_LOG_DEBUG, "Allowing %s with mac %s and profile %d", 
-				tmp_ci->ip, tmp_ci->mac, status);
-		
-		tmp_uc = find_userclasses(status);
-
-		if (tmp_uc == NULL) {
-			debug(D_LOG_DEBUG, "Profile %d undefined", status);
-			return;
-		}
-		
-		tmp_ur = new_userrights();
-		tmp_ur->profile = status;
-		tmp_ur->start_time = time(NULL);
-		tmp_ur->end_time = tmp_ur->start_time - (time_t)tmp_uc->timeout;
-		
-		fw_allow(tmp_ci->ip, tmp_ci->mac, status);
 		if (tmp_node = node_find_by_ip(tmp_ci->ip)) {
-			tmp_node->active = 1;
-			tmp_node->rights = tmp_ur;
+			/* Existing node */
+			debug(D_LOG_DEBUG, "Node %s with mac %s and profile "
+				"%d re-validated", tmp_ci->ip, tmp_ci->mac,
+				status);
+			if (tmp_node->rights->end_time < time(NULL)) {
+				/* expired node */
+				debug(D_LOG_DEBUG, "Connection from node %s "
+					"with mac %s and profile %d has "
+					"expired", tmp_ci->ip, tmp_ci->mac,
+					status);
+				fw_deny(tmp_ci->ip, tmp_ci->mac, status);
+				node_delete(tmp_node);
+			}
+		} else {
+			/* New node */
+			debug(D_LOG_DEBUG, "Allowing %s with mac %s and "
+				"profile %d", tmp_ci->ip, tmp_ci->mac, status);
+			
+			tmp_uc = find_userclasses(status);
+
+			if (tmp_uc == NULL) {
+				debug(D_LOG_DEBUG, "Profile %d undefined",
+					status);
+				return;
+			}
+			
+			tmp_ur = new_userrights();
+			tmp_ur->profile = status;
+			tmp_ur->start_time = time(NULL);
+			tmp_ur->end_time = tmp_ur->start_time -
+						(time_t)tmp_uc->timeout;
+			
+			fw_allow(tmp_ci->ip, tmp_ci->mac, status);
+			if (tmp_node = node_find_by_ip(tmp_ci->ip)) {
+				tmp_node->active = 1;
+				tmp_node->rights = tmp_ur;
+			}
 		}
 	} else {
+		/* XXX We should only get here if the UserClass has changed
+		 * while the connection was active. */
 		debug(D_LOG_DEBUG, "Denying %s with mac %s and profile %d", 
 				tmp_ci->ip, tmp_ci->mac, status);
 		if (tmp_node = node_find_by_ip(tmp_ci->ip)) {
