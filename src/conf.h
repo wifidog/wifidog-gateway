@@ -39,6 +39,7 @@ typedef struct {
     char *configfile;
     int daemon;
     int debuglevel;
+    char *external_interface;
     char *gw_id;
     char *gw_interface;
     char *gw_address;

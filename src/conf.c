@@ -60,6 +60,7 @@ typedef enum {
 	oBadOption,
 	oDaemon,
 	oDebugLevel,
+	oExternalInterface,
 	oGatewayID,
 	oGatewayInterface,
 	oGatewayAddress,
@@ -82,6 +83,7 @@ struct {
 } keywords[] = {
 	{ "daemon",             oDaemon },
 	{ "debuglevel",         oDebugLevel },
+	{ "externalinterface",  oExternalInterface },
 	{ "gatewayid",          oGatewayID },
 	{ "gatewayinterface",   oGatewayInterface },
 	{ "gatewayaddress",     oGatewayAddress },
@@ -106,6 +108,7 @@ config_init(void)
 	strcpy(config.configfile, DEFAULT_CONFIGFILE);
 	config.debuglevel = DEFAULT_DEBUGLEVEL;
 	config.httpdmaxconn = DEFAULT_HTTPDMAXCONN;
+	config.external_interface = NULL;
 	config.gw_id = DEFAULT_GATEWAYID;
 	config.gw_interface = NULL;
 	config.gw_address = NULL;
@@ -203,6 +206,9 @@ config_read(char *filename)
 						config.daemon = value;
 					}
 					break;
+				case oExternalInterface:
+					config.external_interface = get_string(p1);
+					break;
 				case oGatewayID:
 					config.gw_id = get_string(p1);
 					break;
@@ -284,6 +290,7 @@ get_string(char *ptr)
 void
 config_validate(void)
 {
+	config_notnull(config.external_interface, "ExternalInterface");
 	config_notnull(config.gw_id, "GatewayID");
 	config_notnull(config.gw_interface, "GatewayInterface");
 	config_notnull(config.gw_address, "GatewayAddress");

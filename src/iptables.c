@@ -97,12 +97,13 @@ iptables_fw_init(void)
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_KNOWN, config.gw_interface, MARK_KNOWN);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_LOCKED, config.gw_interface, MARK_LOCKED);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -j " TABLE_WIFIDOG_UNKNOWN, config.gw_interface);
+    iptables_do_command("-t nat -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_CLASS, config.gw_interface);
 
     iptables_do_command("-t mangle -N " TABLE_WIFIDOG_MARK);
-
     iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_MARK, config.gw_interface);
 
-    iptables_do_command("-t nat -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_CLASS, config.gw_interface);
+    iptables_do_command("-t mangle -N " TABLE_WIFIDOG_TRAFFIC);
+    iptables_do_command("-t mangle -I FORWARD 1 -i %s -j " TABLE_WIFIDOG_TRAFFIC, config.external_interface);
 
     return 1;
 }
@@ -122,6 +123,7 @@ iptables_fw_destroy(void)
     fw_quiet = 1;
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_CLASS);
     iptables_do_command("-t mangle -F " TABLE_WIFIDOG_MARK);
+    iptables_do_command("-t mangle -F " TABLE_WIFIDOG_TRAFFIC);
 
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_VALIDATE);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_UNKNOWN);
@@ -147,6 +149,12 @@ iptables_fw_destroy(void)
     }
     iptables_do_command("-t mangle -X " TABLE_WIFIDOG_MARK);
 
+    rc = 0;
+    for (tries = 0; tries < 10 && rc == 0; tries++) {
+        rc = iptables_do_command("-t mangle -D FORWARD -i %s -j " TABLE_WIFIDOG_TRAFFIC, config.external_interface);
+    }
+    iptables_do_command("-t mangle -X " TABLE_WIFIDOG_TRAFFIC);
+
     return 1;
 }
 
@@ -154,17 +162,22 @@ int
 iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag)
 {
     fw_quiet = 0;
+    int rc;
 
     switch(type) {
         case FW_ACCESS_ALLOW:
-            return iptables_do_command("-t mangle -A " TABLE_WIFIDOG_MARK " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
+            iptables_do_command("-t mangle -A " TABLE_WIFIDOG_MARK " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
+            rc = iptables_do_command("-t mangle -A " TABLE_WIFIDOG_TRAFFIC " -d %s -j ACCEPT", ip);
             break;
         case FW_ACCESS_DENY:
-            return iptables_do_command("-t mangle -D " TABLE_WIFIDOG_MARK " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
+            iptables_do_command("-t mangle -D " TABLE_WIFIDOG_MARK " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
+            rc = iptables_do_command("-t mangle -D " TABLE_WIFIDOG_TRAFFIC " -d %s -j ACCEPT", ip);
             break;
         default:
-            return -1;
+            rc = -1;
             break;
     }
+
+    return rc;
 }
 

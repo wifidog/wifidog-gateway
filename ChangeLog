@@ -1,5 +1,9 @@
 # $Header$
 2004-05-07  Philippe April <wifidog@philippeapril.com>
+    * New parameter ExternalInterface
+    * Made possible to count inbound traffic by inserting new rules
+
+2004-05-07  Philippe April <wifidog@philippeapril.com>
     * Cleaned up common.h from files
 
 2004-05-07  Philippe April <wifidog@philippeapril.com>

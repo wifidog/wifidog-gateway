@@ -29,6 +29,7 @@
 
 #define TABLE_WIFIDOG_MARK      "WiFiDog_Mark"
 #define TABLE_WIFIDOG_CLASS     "WiFiDog_Class"
+#define TABLE_WIFIDOG_TRAFFIC   "WiFiDog_Traffic"
 
 #define TABLE_WIFIDOG_VALIDATE  "WiFiDog_Validate"
 #define TABLE_WIFIDOG_KNOWN     "WiFiDog_Known"
