@@ -151,7 +151,7 @@ auth_thread(void *ptr)
         case AUTH_ALLOWED:
             p1->tag = MARK_KNOWN;
         	fw_allow(node->ip, node->mac, MARK_KNOWN);
-	        _http_redirect(node->fd, "http://%s/wifidog/portal.php?gw_id=%s", config.authserv_hostname, config.gw_id);
+	        _http_redirect(node->fd, "http://%s/wifidog/portal/?gw_id=%s", config.authserv_hostname, config.gw_id);
             break;
         case AUTH_VALIDATION_FAILED:
 	        _http_output(node->fd, "You have failed to validate your account in 15 minutes");
@@ -165,11 +165,6 @@ auth_thread(void *ptr)
             break;
     }
 		
-    /*
-	_http_output(node->fd, "You are now good to go");
-	_http_redirect(node->fd, "http://%s/wifidog/portal.php?gw_id=%s", config.authserv_hostname, config.gw_id);
-    */
-	
 	node->fd = 0;
 
 	pthread_mutex_unlock(&nodes_mutex);
