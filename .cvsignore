@@ -18,4 +18,8 @@ stamp-h
 stamp-h.in
 stamp-h1
 wifidog.spec
+build-ipkg-utils-stamp
+build-iptables-stamp
+build-wifidog-stamp
+wifidog_*.ipk
 
