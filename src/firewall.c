@@ -126,6 +126,24 @@ fw_init(void)
     return iptables_fw_init();
 }
 
+/** Clear the authserver rules
+ */
+void
+fw_clear_authservers(void)
+{
+	debug(LOG_INFO, "Clearing the authservers list");
+	iptables_fw_clear_authservers();
+}
+
+/** Set the authservers rules
+ */
+void
+fw_set_authservers(void)
+{
+	debug(LOG_INFO, "Setting the authservers list");
+	iptables_fw_set_authservers();
+}
+
 /** Remove the firewall rules
  * This is used when we do a clean shutdown of WiFiDog.
  * @return Return code of the fw.destroy script

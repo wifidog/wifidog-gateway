@@ -61,6 +61,7 @@ typedef struct _auth_serv_t {
     int authserv_ssl_port;	/**< @brief Https port the central server
 				     listens on */
     int authserv_use_ssl;	/**< @brief Use SSL or not */
+    struct in_addr *last_ip;	/**< @brief Last ip used by authserver */
     struct _auth_serv_t *next;
 } t_auth_serv;
 

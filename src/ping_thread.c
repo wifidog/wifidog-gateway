@@ -46,6 +46,7 @@
 #include "conf.h"
 #include "debug.h"
 #include "ping_thread.h"
+#include "util.h"
 
 static void ping(void);
 
@@ -92,7 +93,8 @@ ping(void)
 				totalbytes;
 	int			sockfd,
 				nfds,
-				done;
+				done,
+				i;
 	t_auth_serv		*auth_server;
 	char			request[MAX_BUF];
 	struct in_addr		*h_addr;
@@ -121,6 +123,24 @@ ping(void)
 		mark_auth_server_bad(auth_server);
 		close(sockfd);
 		return;
+	}
+
+	if (auth_server->last_ip == NULL) {
+		auth_server->last_ip = (struct in_addr *)malloc(
+				sizeof(struct in_addr));
+		if (auth_server->last_ip == NULL) {
+			debug(LOG_CRIT, "Could not allocate memory, Banzai!");
+			exit(-1);
+		}
+		memcpy(auth_server->last_ip, h_addr, sizeof(struct in_addr));
+	} else {
+		for (i = 0; i < sizeof(struct in_addr)
+				&& (*((char *)auth_server->last_ip + i)
+					== *((char *)h_addr + i)); i++);
+		if (i < sizeof(struct in_addr)) {
+			fw_clear_authservers();
+			fw_set_authservers();
+		}
 	}
 
 	their_addr.sin_family = AF_INET;

@@ -72,16 +72,19 @@ iptables_do_command(char *format, ...)
     return rc;
 }
 
-/** Initialize the firewall rules
- */
-int
-iptables_fw_init(void)
+void
+iptables_fw_clear_authservers(void)
+{
+    iptables_do_command("-t nat -F " TABLE_WIFIDOG_AUTHSERVERS);
+}
+
+void
+iptables_fw_set_authservers(void)
 {
     s_config *config;
     t_auth_serv *auth_server;
    
     config = config_get_config();
-    fw_quiet = 0;
     
     LOCK_CONFIG();
     
@@ -92,10 +95,27 @@ iptables_fw_init(void)
     }
 
     UNLOCK_CONFIG();
+}
 
+/** Initialize the firewall rules
+ */
+int
+iptables_fw_init(void)
+{
+    s_config *config;
+   
+    config = config_get_config();
+    fw_quiet = 0;
+    
+    iptables_fw_set_authservers();
+
+    LOCK_CONFIG();
+    
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_VALIDATE);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -j " TABLE_WIFIDOG_AUTHSERVERS);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", config->gw_address);
+
+    UNLOCK_CONFIG();
 
     /** Insert global rules BEFORE the "defaults" */
     
@@ -112,16 +132,26 @@ iptables_fw_init(void)
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p tcp --dport 443 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -j DROP");
 
+    LOCK_CONFIG();
+    
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_UNKNOWN);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j " TABLE_WIFIDOG_AUTHSERVERS);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", config->gw_address);
 
+    UNLOCK_CONFIG();
+    
     /** Insert global rules BEFORE the "defaults" */
 
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p udp --dport 67 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 67 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p udp --dport 53 -j ACCEPT");
+
+    LOCK_CONFIG();
+    
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 80 -j REDIRECT --to-ports %d", config->gw_port);
+
+    UNLOCK_CONFIG();
+    
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j DROP");
 
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_KNOWN);
@@ -134,6 +164,9 @@ iptables_fw_init(void)
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_LOCKED " -j DROP");
 
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_CLASS);
+
+    LOCK_CONFIG();
+    
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_VALIDATE, config->gw_interface, FW_MARK_PROBATION);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_KNOWN, config->gw_interface, FW_MARK_KNOWN);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_LOCKED, config->gw_interface, FW_MARK_LOCKED);
@@ -146,6 +179,8 @@ iptables_fw_init(void)
     iptables_do_command("-t mangle -N " TABLE_WIFIDOG_INCOMING);
     iptables_do_command("-t mangle -I FORWARD 1 -i %s -j " TABLE_WIFIDOG_INCOMING, config->external_interface);
 
+    UNLOCK_CONFIG();
+    
     return 1;
 }
 
@@ -169,6 +204,7 @@ iptables_fw_destroy(void)
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_UNKNOWN);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_KNOWN);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_LOCKED);
+    iptables_do_command("-t nat -X " TABLE_WIFIDOG_AUTHSERVERS);
     iptables_do_command("-t nat -X " TABLE_WIFIDOG_VALIDATE);
     iptables_do_command("-t nat -X " TABLE_WIFIDOG_UNKNOWN);
     iptables_do_command("-t nat -X " TABLE_WIFIDOG_KNOWN);

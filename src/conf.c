@@ -41,6 +41,7 @@
 #include "conf.h"
 #include "http.h"
 #include "auth.h"
+#include "firewall.h"
 
 /** @internal
  * Holds the current configuration of the gateway */
@@ -648,4 +649,7 @@ mark_auth_server_bad(t_auth_serv *bad_server)
 	}
 
 	pthread_mutex_unlock(&config_mutex);
+
+	fw_clear_authservers();
+	fw_set_authservers();
 }

@@ -38,6 +38,12 @@ typedef enum _t_fw_marks {
 /** @brief Initialize the firewall */
 int fw_init(void);
 
+/** @brief Clears the authservers list */
+void fw_clear_authservers(void);
+
+/** @brief Sets the authservers list */
+void fw_set_authservers(void);
+
 /** @brief Destroy the firewall */
 int fw_destroy(void);
 

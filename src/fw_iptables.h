@@ -50,6 +50,12 @@ typedef enum fw_access_t_ {
 /** @brief Initialize the firewall */
 int iptables_fw_init(void);
 
+/** @brief Initializes the authservers table */
+void iptables_fw_set_authservers(void);
+
+/** @brief Clears the authservers table */
+void iptables_fw_clear_authservers(void);
+
 /** @brief Destroy the firewall */
 int iptables_fw_destroy(void);
 
