@@ -1,4 +1,8 @@
 # $Header$
+2004-10-07 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* src/conf.c: Fixed mark_auth_server_bad() for the case where there
+	is only one auth server.
+
 2004-08-30 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* wifidog.conf: Corrected an example
 	* README.openwrt: Typo fixed, editorial changes
