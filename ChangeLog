@@ -1,5 +1,9 @@
 # $Header$
 
+2004-03-12  Philippe April <papril777@yahoo.com>
+    * Changed all perror()s into debug()s and added
+    errno.h to common.h
+
 2004-03-10  Philippe April <papril777@yahoo.com>
     * Small fix to firewall.c so we don't define variables after
     the function has started (so it builds on gcc-2.95)

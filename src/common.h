@@ -40,6 +40,7 @@
 #include <time.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #include "gateway.h"
 #include "conf.h"

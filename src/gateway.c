@@ -48,37 +48,37 @@ void main_loop(void)
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_RESTART;
     if (sigaction(SIGCHLD, &sa, NULL) == -1) {
-        perror("sigaction()");
+        debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
         exit(1);
     }
 
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        perror("socket()");
+        debug(D_LOG_ERR, "socket(): %s", strerror(errno));
         exit(1);
     }
 
     my_addr.sin_family = AF_INET;
     my_addr.sin_port = htons(config.gw_port);
     if (!inet_aton(config.gw_address, &my_addr.sin_addr)) {
-        perror("inet_aton()");
+        debug(D_LOG_ERR, "inet_aton(): %s", strerror(errno));
         exit(1);
     }
     memset(&(my_addr.sin_zero), '\0', 8);
 
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-        perror("setsockopt()");
+        debug(D_LOG_ERR, "setsockopt(): %s", strerror(errno));
         exit(1);
     } 
 
     debug(D_LOG_DEBUG, "Binding to socket");
     if (bind(sockfd, (struct sockaddr *)&my_addr, sizeof(struct sockaddr)) == -1) {
-        perror("bind()");
+        debug(D_LOG_ERR, "bind(): %s", strerror(errno));
         exit(1);
     }
 
     debug(D_LOG_DEBUG, "Listening on TCP port %d", config.gw_port);
     if (listen(sockfd, config.httpdmaxconn) == -1) {
-        perror("listen()");
+        debug(D_LOG_ERR, "listen(): %s", strerror(errno));
         exit(1);
     }
 
@@ -92,19 +92,19 @@ void main_loop(void)
 
     /* Trap SIGTERM */
     if (sigaction(SIGTERM, &sa, NULL) == -1) {
-        perror("sigaction()");
+        debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
         exit(1);
     }
 
     /* Trap SIGQUIT */
     if (sigaction(SIGQUIT, &sa, NULL) == -1) {
-        perror("sigaction()");
+        debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
         exit(1);
     }
 
     /* Trap SIGINT */
     if (sigaction(SIGINT, &sa, NULL) == -1) {
-        perror("sigaction()");
+        debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
         exit(1);
     }
 
@@ -115,7 +115,7 @@ void main_loop(void)
     while(1) {
         read_fds = master;
         if (select(fdmax + 1, &read_fds, NULL, NULL, &tv) == -1) {
-            perror("select");
+            debug(D_LOG_ERR, "select(): %s", strerror(errno));
         }
 
         for(i = 0; i <= fdmax; i++) {
@@ -124,7 +124,7 @@ void main_loop(void)
                     // Handle new connections
                     sin_size = sizeof(struct sockaddr_in);
                     if (-1 == (new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size))) {
-                        perror("accept");
+                        debug(D_LOG_ERR, "accept(): %s", strerror(errno));
                     } else {
                         // Add to master set so we can monitor
                         FD_SET(new_fd, &master);
@@ -170,13 +170,13 @@ main(int argc, char **argv)
         sigemptyset(&sa.sa_mask);
         sa.sa_flags = SA_RESTART;
         if (sigaction(SIGCHLD, &sa, NULL) == -1) {
-            perror("sigaction()");
+            debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
             exit(1);
         }
 
         switch((childPid = fork())) {
             case -1: /* error */
-                perror("fork()");
+                debug(D_LOG_ERR, "fork(): %s", strerror(errno));
                 exit(1);
                 break;
 

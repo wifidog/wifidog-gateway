@@ -59,11 +59,11 @@ execute(char **argv)
     debug(D_LOG_DEBUG, "Executing '%s'", argv[0]);
 
     if ((pid = fork()) < 0) {     /* fork a child process           */
-        perror("fork()");
+        debug(D_LOG_ERR, "fork(): %s", strerror(errno));
         exit(1);
     } else if (pid == 0) {          /* for the child process:         */
         if (execvp(*argv, argv) < 0) {     /* execute the command  */
-            perror("fork()");
+            debug(D_LOG_ERR, "fork(): %s", strerror(errno));
             exit(1);
         }
     } else {                                  /* for the parent:      */
@@ -139,7 +139,7 @@ fw_counter(void)
     char ip[255], mac[255];
 
     if (!(output = popen("./fw.counters", "r"))) {
-        perror("popen()");
+        debug(D_LOG_ERR, "popen(): %s", strerror(errno));
     }
     while (!(feof(output)) && output) {
         rc = fscanf(output, "%ld %s %s %d", &counter, ip, mac, &profile);

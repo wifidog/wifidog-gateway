@@ -198,12 +198,12 @@ auth(char *ip, char *mac, char *token, long int stats)
         char *p1;
 
         if ((he = gethostbyname(config.authserv_hostname)) == NULL) {
-            perror("gethostbyname()");
+            debug(D_LOG_ERR, "gethostbyname(): %s", strerror(errno));
             exit(1);
         }
 
         if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-            perror("socket()");
+            debug(D_LOG_ERR, "socket(): %s", strerror(errno));
             exit(1);
         }
 
@@ -213,7 +213,7 @@ auth(char *ip, char *mac, char *token, long int stats)
         memset(&(their_addr.sin_zero), '\0', 8);
 
         if (connect(sockfd, (struct sockaddr *)&their_addr, sizeof(struct sockaddr)) == -1) {
-            perror("connect()");
+            debug(D_LOG_ERR, "connect(): %s", strerror(errno));
             exit(1);
         }
 
@@ -221,7 +221,7 @@ auth(char *ip, char *mac, char *token, long int stats)
         sock_send(sockfd, buf);
         
         if ((numbytes = recv(sockfd, buf, MAX_BUF - 1, 0)) == -1) {
-            perror("recv()");
+            debug(D_LOG_ERR, "recv(): %s", strerror(errno));
             exit(1);
         }
 
