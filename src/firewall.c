@@ -33,6 +33,14 @@ pthread_mutex_t	nodes_mutex;
 
 t_node *firstnode = NULL;
 
+/**
+ * @brief Allow a user through the firewall
+ *
+ * Add a rule in the firewall to tag the user's packets with its profile
+ * number by providing his IP and MAC address. This is done by
+ * executing the firewall script "fw.access" like this:
+ * fw.access allow <ip> <mac> <profile>
+ */
 int
 fw_allow(char *ip, char *mac, int profile)
 {
@@ -54,6 +62,13 @@ fw_allow(char *ip, char *mac, int profile)
 	return(execute(command));
 }
 
+/**
+ * @brief Deny a user through the firewall
+ *
+ * Remove the rule in the firewall that was tagging the user's traffic
+ * by executing the firewall script "fw.access" this way:
+ * fw.access deny <ip> <mac> <profile>
+ */
 int
 fw_deny(char *ip, char *mac, int profile)
 {
@@ -75,6 +90,12 @@ fw_deny(char *ip, char *mac, int profile)
 	return(execute(command));
 }
 
+/** @brief Execute a shell command
+ *
+ * Fork a child and execute a shell command, the parent
+ * process waits for the child to return and returns the child's exit()
+ * value.
+ */
 int
 execute(char **argv)
 {
@@ -99,12 +120,18 @@ execute(char **argv)
 	return(status);
 }
 
+/**
+ * @brief Get an IP's MAC address from the ARP cache.
+ *
+ * Go through all the entries in /proc/net/arp until we find the requested
+ * IP address and return the MAC address bound to it.
+ */
+/* TODO Make this function portable... Use shell scripts? */
 char *
 arp_get(char *req_ip)
 {
 	FILE *proc;
 	char ip[16], *mac;
-
 
 	if (!(proc = fopen("/proc/net/arp", "r"))) {
 		return NULL;
@@ -126,6 +153,12 @@ arp_get(char *req_ip)
 	return NULL;
 }
 
+/**
+ * @brief Initialize the firewall
+ *
+ * Initialize the firewall rules by executing the 'fw.init' script:
+ * fw.init <gw_interface> <gw_address> <port> <authserv_hostname>
+ */
 int
 fw_init(void)
 {
@@ -157,6 +190,12 @@ fw_init(void)
 	return(rc);
 }
 
+/**
+ * @brief Destroy the firewall
+ *
+ * Remove the firewall rules by executing the 'fw.destroy' script.
+ * This is used when we do a clean shutdown of WiFiDog.
+ */
 int
 fw_destroy(void)
 {
