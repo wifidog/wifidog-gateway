@@ -29,6 +29,8 @@
 
 extern s_config config;
 
+pthread_mutex_t	sigterm_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 void
 main_loop(void)
 {
@@ -160,6 +162,10 @@ sigchld_handler(int s)
 void
 termination_handler(int s)
 {
+	/* Makes sure we only call fw_destroy() once. */
+	if (pthread_mutex_trylock(&sigterm_mutex))
+		return;
+	
 	fw_destroy();
 
 	debug(D_LOG_INFO, "Exiting...");

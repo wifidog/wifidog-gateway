@@ -2,6 +2,7 @@
 2004-04-18  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Fixed pthread_cond_timedwait. The mutex needed to be locked as
 	per the POSIX spec, yet Linux or Mac OS X don't care...
+	* Fixed the double SIGTERM handler on Linux...
 
 2004-04-17  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Added work around for uClibc bug in auth.c

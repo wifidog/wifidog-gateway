@@ -31,6 +31,8 @@ extern s_config config;
 
 pthread_mutex_t	nodes_mutex;
 
+pthread_mutex_t sigterm_mutex = PTHREAD_MUTEX_INITIALIZER
+
 t_node *firstnode = NULL;
 
 /**
