@@ -201,7 +201,7 @@ fw_destroy(void)
 {
 	char script[MAX_BUF];
 	struct stat st;
-	char *command[] = {script, NULL};
+	char *command[] = {script, config.gw_interface, NULL };
 
 	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, 
 		SCRIPT_FWDESTROY);

@@ -1,6 +1,9 @@
 # $Header$
 
-2004-04-16  Alexandre Carmel-Veilleux <acv@acv.ca>
+2004-04-17  Philippe April <papril777@yahoo.com>
+	* Fixed firewall scripts to make them standard and some firewall functions
+
+2004-04-17  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Updated documentation in firewall.c
 
 2004-04-17  Philippe April <papril777@yahoo.com>

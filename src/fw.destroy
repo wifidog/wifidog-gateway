@@ -24,7 +24,9 @@
 
 #    @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
 
-IPTABLES=/sbin/iptables
+IPTABLES=iptables
+
+GW_INTERFACE=$1
 
 ${IPTABLES} -t nat -F wifidog_p1
 ${IPTABLES} -t nat -F wifidog_p2
@@ -38,8 +40,8 @@ ${IPTABLES} -t nat -X wifidog_p2
 ${IPTABLES} -t nat -X wifidog_p3
 ${IPTABLES} -t nat -X wifidog_p4
 ${IPTABLES} -t nat -X wifidog_p5
-${IPTABLES} -t nat -D PREROUTING -i eth1 -j wifidog_class
+${IPTABLES} -t nat -D PREROUTING -i ${GW_INTERFACE} -j wifidog_class
 ${IPTABLES} -t nat -X wifidog_class
-${IPTABLES} -t mangle -D PREROUTING -i eth1 -j wifidog_mark
+${IPTABLES} -t mangle -D PREROUTING -i ${GW_INTERFACE} -j wifidog_mark
 ${IPTABLES} -t mangle -X wifidog_mark
 

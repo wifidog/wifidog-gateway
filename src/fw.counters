@@ -24,7 +24,7 @@
 
 #    @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
 
-IPTABLES=/sbin/iptables
+IPTABLES=iptables
 
 # Returns BYTES, IP, MAC, PROFILE
 ${IPTABLES} -v -x -t mangle -L wifidog_mark | grep MAC | sed 's/0x//g' | awk '{print $2 " " $8 " " $11 " " $14}'

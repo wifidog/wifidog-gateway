@@ -223,6 +223,12 @@ config_read(char *filename)
 				case oClientTimeout:
 					sscanf(p1, "%d", &config.clienttimeout);
 					break;
+                case oFWScriptsPath:
+					config.fwscripts_path = get_string(p1);
+					break;
+                case oFWType:
+					config.fwtype = get_string(p1);
+					break;
 				}
 			}
 		}
