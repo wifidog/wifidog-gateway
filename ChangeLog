@@ -1,4 +1,8 @@
 # $Header$
+2004-04-12  Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Changed child return value handling, again. Now it's actually
+	using the real value instead of the flag.
+
 2004-04-11  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Added extra debugging information.
 	* Fixed return value handling in debugging calls.

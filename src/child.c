@@ -33,8 +33,7 @@ void
 sigchld_handler(int signal)
 {
 	pid_t	pid;
-	int	status,
-		exit_code;
+	int	status;
 	t_node	*tmp_node;
 	ChildInfo	*tmp_ci;
 	UserRights	*tmp_ur;
@@ -45,11 +44,11 @@ sigchld_handler(int signal)
 	pid = wait(&status);
 
 	if (WIFEXITED(status))
-		exit_code = WEXITSTATUS(status);
+		status = WEXITSTATUS(status);
 	else
-		exit_code = -1;
+		status = 0;
 	
-	debug(D_LOG_DEBUG, "Got exit code %d for pid %d", exit_code, (int)pid);
+	debug(D_LOG_DEBUG, "Got exit code %d for pid %d", status, (int)pid);
 
 	if (child_list == NULL)
 		return; /* If we're not waiting for a pid, we still have
