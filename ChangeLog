@@ -1,4 +1,9 @@
 # $Header$
+2004-08-29 Guillaume Beaudoin <isf@soli.ca>
+	* wifidog.spec.in: Remove some leftover from libOFX.
+	* Makefile.am: Include debian/* files.
+	* We should now be able to package .deb and .rpm from dist.
+
 2004-08-27 Benoit Grégoire  <bock@step.polymtl.ca>
 	* README.openwrt,src/conf.c,h:  Documentation update
 	* src/gateway.c, src/ping_thread.c, src/wdctl.c, src/wdctl_thread.c:  Fix linking problems related to errno.h and extern int errno 

@@ -10,8 +10,7 @@ Name: %{name}
 Version: %{version}
 Release: %{release}
 Source: http://download.sourceforge.net/wifidog/%{name}-%{version}.tar.gz
-Requires: 
-Group:	Libraries/System
+Group: Applications/System
 Copyright: GPL
 Packager: Benoit Grégoire <bock@step.polymtl.ca>
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
@@ -47,7 +46,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc AUTHORS COPYING ChangeLog INSTALL NEWS README totest.txt doc/html doc/implementation_notes.txt
+%doc AUTHORS COPYING ChangeLog INSTALL NEWS README doc/html
 %{_bindir}/*
 %{_libdir}/*.a
 %{_libdir}/*.la
@@ -56,5 +55,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*
 
 %changelog
-* Sat March 8 2004 Benoit Grégoire <bock@step.polymtl.ca>
+* Sat Mar 8 2004 Benoit Grégoire <bock@step.polymtl.ca>
 - Created spec file
+* Sun Aug 29 2004 Guillaume Beaudoin <isf@soli.ca>
+- Littles fixes and libofx leftover.
