@@ -4,9 +4,6 @@
 
 bin_PROGRAMS = wifidog
  
-bin_SCRIPTS = fw.counters
-EXTRA_DIST = fw.counters
-
 AM_CPPFLAGS = \
 	-I${top_srcdir}/libhttpd/
 wifidog_LDADD = $(top_builddir)/libhttpd/libhttpd.la

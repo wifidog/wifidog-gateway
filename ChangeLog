@@ -3,6 +3,7 @@
     * Calling iptables directly instead of using shell scripts
     for fw_init, fw_destroy and fw_allow/fw_deny
     * Removed shell script for fw.counters
+    * Fixed memory leaks
 
 2004-04-23  Philippe April <papril777@yahoo.com>
     * Fixed a debug line

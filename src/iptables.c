@@ -35,11 +35,17 @@ iptables_do_command(char *format, ...)
     va_list vlist;
     char *fmt_cmd,
         *cmd;
+    int rc;
 
     va_start(vlist, format);
     vasprintf(&fmt_cmd, format, vlist);
     asprintf(&cmd, "iptables %s", fmt_cmd);
 
-    return execute(cmd);
+    rc = execute(cmd);
+
+    free(fmt_cmd);
+    free(cmd);
+
+    return rc;
 }
 
