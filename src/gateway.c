@@ -51,13 +51,8 @@
 #include "auth.h"
 #include "http.h"
 
-static void init_signals(void); /**< Registers all the signal handlers */
-static void main_loop(void); /**< Main execution loop */
-
-extern s_config config;
-
-/**
- * @brief handles SIGCHLD signals
+/**@internal
+ * @brief Handles SIGCHLD signals to avoid zombie processes
  *
  * When a child process exits, it causes a SIGCHLD to be sent to the
  * process. This handler catches it and reaps the child process so it
@@ -71,6 +66,8 @@ sigchld_handler(int s)
 	wait(&status);
 }
 
+/** Exits cleanly after cleaning up the firewall.  
+ *  Use this function anytime you need to exit after firewall initialization */
 void
 termination_handler(int s)
 {
@@ -86,6 +83,9 @@ termination_handler(int s)
 	exit(0);
 }
 
+/** @internal 
+    Registers all the signal handlers
+*/
 static void
 init_signals(void)
 {
@@ -135,20 +135,24 @@ init_signals(void)
 	}
 }
 
+/**@internal
+ * Main execution loop 
+ */
 static void
 main_loop(void)
 {
 	httpd * webserver;
 	int result;
 	pthread_t	tid;
+	s_config *config = config_get_config();
 
 	/* Initializes the linked list of connected clients */
 	client_list_init();
 
 	/* Initializes the web server */
 	debug(LOG_NOTICE, "Creating web server on %s:%d", 
-			config.gw_address, config.gw_port);
-	webserver = httpdCreate(config.gw_address, config.gw_port);
+			config->gw_address, config->gw_port);
+	webserver = httpdCreate(config->gw_address, config->gw_port);
 	if (webserver == NULL) {
 		debug(LOG_ERR, "Could not create web server");
 		exit(1);
@@ -217,17 +221,19 @@ main_loop(void)
 	/* never reached */
 }
 
+/** Reads the configuration file and then starts the main loop */
 int
 main(int argc, char **argv)
 {
+	s_config *config = config_get_config();
 	config_init();
 
 	parse_commandline(argc, argv);
 
-	config_read(config.configfile);
+	config_read(config->configfile);
 	config_validate();
 
-	if (config.daemon) {
+	if (config->daemon) {
 
 		debug(LOG_INFO, "Forking into background");
 

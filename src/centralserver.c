@@ -19,8 +19,7 @@
  \********************************************************************/
 
 /* $Header$ */
-/** @internal
-  @file centralserver.c
+/** @file centralserver.c
   @brief Functions to talk to the central server (auth/send stats/get rules/etc...)
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
  */
@@ -45,8 +44,17 @@
 #include "debug.h"
 #include "centralserver.h"
 
-extern s_config config;
+/* Defined in conf.h */
 
+/** Initiates a transaction with the auth server, either to authenticate or to update the traffic counters at the server
+@param authresponse Returns the information given by the central server 
+@param request_type Use the REQUEST_TYPE_* #defines in centralserver.h
+@param ip IP adress of the client this request is related to
+@param mac MAC adress of the client this request is related to
+@param token Authentification token of the client
+@param incoming Current counter of the client's total incoming traffic, in bytes 
+@param outgoing Current counter of the client's total outgoing traffic, in bytes 
+*/
 int
 auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, char *mac, char *token, long long incoming, long long outgoing)
 {
@@ -56,10 +64,11 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	struct hostent *he;
 	struct sockaddr_in their_addr;
 	char *tmp;
+	s_config *config = config_get_config();
 
-	if ((he = gethostbyname(config.authserv_hostname)) == NULL) {
+	if ((he = gethostbyname(config->authserv_hostname)) == NULL) {
 		debug(LOG_ERR, "Failed to resolve %s via gethostbyname(): "
-			"%s", config.authserv_hostname, strerror(errno));
+			"%s", config->authserv_hostname, strerror(errno));
 		return(-1);
 	}
 
@@ -69,12 +78,12 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	}
 
 	their_addr.sin_family = AF_INET;
-	their_addr.sin_port = htons(config.authserv_port);
+	their_addr.sin_port = htons(config->authserv_port);
 	their_addr.sin_addr = *((struct in_addr *)he->h_addr);
 	memset(&(their_addr.sin_zero), '\0', sizeof(their_addr.sin_zero));
 
 	debug(LOG_INFO, "Connecting to auth server %s on port %d", 
-		config.authserv_hostname, config.authserv_port);
+		config->authserv_hostname, config->authserv_port);
 
 	if (connect(sockfd, (struct sockaddr *)&their_addr,
 				sizeof(struct sockaddr)) == -1) {
@@ -86,8 +95,8 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	 * everywhere.
 	 */
 	sprintf(buf, "GET %s?stage=%s&ip=%s&mac=%s&token=%s&incoming=%ld&outgoing=%ld HTTP/1.1"
-		"\nHost: %s\n\n", config.authserv_path, request_type, mac, token,
-		incoming, outgoing, config.authserv_hostname);
+		"\nHost: %s\n\n", config->authserv_path, request_type, mac, token,
+		incoming, outgoing, config->authserv_hostname);
 	send(sockfd, buf, strlen(buf), 0);
 
 	debug(LOG_DEBUG, "Sending HTTP request to auth server: %s\n", buf);

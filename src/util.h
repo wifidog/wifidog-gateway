@@ -20,13 +20,15 @@
 
 /* $Header$ */
 /** @file util.h
-    @brief Misc files
+    @brief Misc utility functions
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
 */
 
 #ifndef _UTIL_H_
 #define _UTIL_H_
 
+/** @brief Execute a shell command
+ */
 int execute(char *cmd_line, int quiet);
 
 #endif /* _UTIL_H_ */

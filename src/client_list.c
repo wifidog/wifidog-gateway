@@ -21,8 +21,7 @@
 /*
  * $Header$
  */
-/** @internal
-  @file client_list.c
+/** @file client_list.c
   @brief Client List Functions
   @author Copyright (C) 2004 Alexandre Carmel-Veillex <acv@acv.ca>
  */
@@ -44,15 +43,23 @@
 #include "conf.h"
 #include "client_list.h"
 
-extern s_config config;
-
+/** Global mutex to protect access to the client list */
 pthread_mutex_t client_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-t_client         *firstclient = NULL;
+/** @internal
+ * Holds a pointer to the first element of the list 
+ */ 
+static t_client         *firstclient = NULL;
+
+/** Get the first element of the list of connected clients
+ */
+t_client *
+client_get_first_client(void)
+{
+    return firstclient;
+}
 
 /**
- * @brief Initializes the list of connected clients (client)
- *
  * Initializes the list of connected clients (client)
  */
 void
@@ -61,15 +68,11 @@ client_list_init(void)
     firstclient = NULL;
 }
 
-/**
- * @brief Adds a new client to the connections list
- *
- * Based on the parameters it receives, this function creates a new entry
+/** Based on the parameters it receives, this function creates a new entry
  * in the connections list. All the memory allocation is done here.
  * @param ip IP address
  * @param mac MAC address
  * @param token Token
- * @param counter Value of the counter at creation (usually 0)
  * @return Pointer to the client we just created
  */
 t_client         *
@@ -111,10 +114,7 @@ client_list_append(char *ip, char *mac, char *token)
     return curclient;
 }
 
-/**
- * @brief Finds a client by its IP and MAC
- *
- * Finds a  client by its IP and MAC, returns NULL if the client could not
+/** Finds a  client by its IP and MAC, returns NULL if the client could not
  * be found
  * @param ip IP we are looking for in the linked list
  * @param mac MAC we are looking for in the linked list
@@ -135,9 +135,7 @@ client_list_find(char *ip, char *mac)
     return NULL;
 }
 
-/**
- * @brief Finds a client by its IP
- *
+/** @deprecated
  * Finds a  client by its IP, returns NULL if the client could not
  * be found
  * @param ip IP we are looking for in the linked list
@@ -158,14 +156,11 @@ client_list_find_by_ip(char *ip)
     return NULL;
 }
 
-/**
- * @brief Finds a client by its token
- *
- * Finds a client by its token
+/** Finds a client by its token
  * @param token Token we are looking for in the linked list
  * @return Pointer to the client, or NULL if not found
  */
-t_client         *
+t_client *
 client_list_find_by_token(char *token)
 {
     t_client         *ptr;
@@ -180,15 +175,14 @@ client_list_find_by_token(char *token)
     return NULL;
 }
 
-/**
+/** @internal
  * @brief Frees the memory used by a t_client structure
- *
  * This function frees the memory used by the t_client structure in the
  * proper order.
  * @param client Points to the client to be freed
  */
 void
-client_list_free_node(t_client * client)
+_client_list_free_node(t_client * client)
 {
 
     if (client->mac != NULL)
@@ -219,12 +213,12 @@ client_list_delete(t_client * client)
 
     if (ptr == client) {
         firstclient = ptr->next;
-        client_list_free_node(client);
+        _client_list_free_node(client);
     } else {
         while (ptr->next != NULL && ptr != client) {
             if (ptr->next == client) {
                 ptr->next = client->next;
-                client_list_free_node(client);
+                _client_list_free_node(client);
             }
         }
     }

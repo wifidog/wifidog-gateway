@@ -29,23 +29,33 @@
 
 #include "firewall.h"
 
+/*@{*/ 
+/**Iptable table names used by WifiDog */
 #define TABLE_WIFIDOG_CLASS     "WiFiDog_Class"
 #define TABLE_WIFIDOG_OUTGOING  "WiFiDog_Outgoing"
 #define TABLE_WIFIDOG_INCOMING  "WiFiDog_Incoming"
-
 #define TABLE_WIFIDOG_VALIDATE  "WiFiDog_Validate"
 #define TABLE_WIFIDOG_KNOWN     "WiFiDog_Known"
 #define TABLE_WIFIDOG_UNKNOWN   "WiFiDog_Unknown"
 #define TABLE_WIFIDOG_LOCKED    "WiFiDog_Locked"
+/*@}*/ 
 
+/** Used by iptables_fw_access to select if the client should be granted of denied access */
 typedef enum fw_access_t_ {
     FW_ACCESS_ALLOW,
     FW_ACCESS_DENY
 } fw_access_t;
 
+/** @brief Initialize the firewall */
 int iptables_fw_init(void);
+
+/** @brief Destroy the firewall */
 int iptables_fw_destroy(void);
+
+/** @brief Define the access of a specific client */
 int iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag);
+
+/** @brief All counters in the client list */
 int iptables_fw_counters_update(void);
 
 #endif /* _IPTABLES_H_ */

@@ -49,16 +49,10 @@
 #include "centralserver.h"
 #include "client_list.h"
 
-extern s_config config;
-int fw_quiet = 0;
-
 extern pthread_mutex_t client_list_mutex;
-extern t_client *firstclient;
 
 /**
- * @brief Allow a user through the firewall
- *
- * Add a rule in the firewall to MARK the user's packets with the proper
+ * Allow a client access through the firewall by adding a rule in the firewall to MARK the user's packets with the proper
  * rule by providing his IP and MAC address
  * @param ip IP address to allow
  * @param mac MAC address to allow
@@ -74,9 +68,7 @@ fw_allow(char *ip, char *mac, int fw_connection_state)
 }
 
 /**
- * @brief Deny a user through the firewall
- *
- * Remove the rule in the firewall that was fw_connection_stateging the user's traffic
+ * @brief Deny a client access through the firewall by removing the rule in the firewall that was fw_connection_stateging the user's traffic
  * @param ip IP address to deny
  * @param mac MAC address to deny
  * @param fw_connection_state fw_connection_state Tag
@@ -91,8 +83,7 @@ fw_deny(char *ip, char *mac, int fw_connection_state)
 }
 
 /**
- * @brief Get an IP's MAC address from the ARP cache.
- *
+ * Get an IP's MAC address from the ARP cache.
  * Go through all the entries in /proc/net/arp until we find the requested
  * IP address and return the MAC address bound to it.
  * @todo Make this function portable (using shell scripts?)
@@ -124,10 +115,7 @@ arp_get(char *req_ip)
     return NULL;
 }
 
-/**
- * @brief Initialize the firewall
- *
- * Initialize the firewall rules
+/** Initialize the firewall rules
  */
 int
 fw_init(void)
@@ -136,10 +124,7 @@ fw_init(void)
     return iptables_fw_init();
 }
 
-/**
- * @brief Destroy the firewall
- *
- * Remove the firewall rules
+/** Remove the firewall rules
  * This is used when we do a clean shutdown of WiFiDog.
  * @return Return code of the fw.destroy script
  */
@@ -150,7 +135,7 @@ fw_destroy(void)
     return iptables_fw_destroy();
 }
 
-/**
+/**Probably a misnomer, this function actually refreshes the entire client list's traffic counter, re-authenticates every client with the central server and update's the central servers traffic counters and notifies it if a client has logged-out.
  * @todo Make this function smaller and use sub-fonctions
  */
 void
@@ -160,6 +145,7 @@ fw_counter(void)
     char            *token, *ip, *mac;
     t_client        *p1, *p2;
     long long	    incoming, outgoing;
+    s_config *config = config_get_config();
 
     if (-1 == iptables_fw_counters_update()) {
         debug(LOG_ERR, "Could not get counters from firewall!");
@@ -167,8 +153,8 @@ fw_counter(void)
     }
 
     pthread_mutex_lock(&client_list_mutex);
-    
-    for (p1 = p2 = firstclient; NULL != p1; p1 = p2) {
+
+    for (p1 = p2 = client_get_first_client(); NULL != p1; p1 = p2) {
         p2 = p1->next;
 
         ip = strdup(p1->ip);
@@ -185,10 +171,10 @@ fw_counter(void)
             debug(LOG_ERR, "Node %s was freed while being re-validated!", ip);
         } else {
             if (p1->counters.last_updated +
-				(config.checkinterval * config.clienttimeout)
+				(config->checkinterval * config->clienttimeout)
 				<= time(NULL)) {
                 /* Timing out user */
-                debug(LOG_INFO, "%s - Inactive for %ld seconds, removing client and denying in firewall", p1->ip, config.checkinterval * config.clienttimeout);
+                debug(LOG_INFO, "%s - Inactive for %ld seconds, removing client and denying in firewall", p1->ip, config->checkinterval * config->clienttimeout);
                 fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
                 client_list_delete(p1);
 

@@ -27,17 +27,30 @@
 #ifndef _FIREWALL_H_
 #define _FIREWALL_H_
 
+/** Used by iptables.c */
 typedef enum _t_fw_marks {
-    FW_MARK_PROBATION = 1,
-    FW_MARK_KNOWN = 2,
-    FW_MARK_LOCKED = 254
+    FW_MARK_PROBATION = 1, /**< @brief The client is in probation period and must be authenticated 
+			    @todo: VERIFY THAT THIS IS ACCURATE*/
+    FW_MARK_KNOWN = 2,  /**< @brief The client is known to the firewall */ 
+    FW_MARK_LOCKED = 254 /**< @brief The client has been locked out */
 } t_fw_marks;
 
+/** @brief Initialize the firewall */
 int fw_init(void);
+
+/** @brief Destroy the firewall */
 int fw_destroy(void);
+
+/** @brief Allow a user through the firewall*/
 int fw_allow(char *ip, char *mac, int profile);
+
+/** @brief Deny a client access through the firewall*/
 int fw_deny(char *ip, char *mac, int profile);
+
+/** @brief Refreshes the entire client list */
 void fw_counter(void);
+
+/** @brief Get an IP's MAC address from the ARP cache.*/
 char *arp_get(char *req_ip);
 
 #endif /* _FIREWALL_H_ */

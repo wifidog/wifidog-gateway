@@ -22,9 +22,9 @@
  * $Header: /cvsroot/wifidog/wifidog/src/firewall.c,v 1.32 2004/04/23
  * 11:37:43 aprilp Exp $
  */
-/** @internal
-  @file firewall.c
-  @brief Firewall update functions
+/**
+  @file util.c
+  @brief Misc utility functions
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
  */
 
@@ -45,9 +45,7 @@
 #include "conf.h"
 #include "debug.h"
 
-/** @brief Execute a shell command
- *
- * Fork a child and execute a shell command, the parent
+/** Fork a child and execute a shell command, the parent
  * process waits for the child to return and returns the child's exit()
  * value.
  * @return Return code of the command

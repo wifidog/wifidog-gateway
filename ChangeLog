@@ -1,4 +1,12 @@
 # $Header$
+2004-05-27 Benoit Grégoire  <bock@step.polymtl.ca>
+	* Massive Doxygen update in all files.  IMPORTANT: The new convention is:  @brief in the .h, long description and parameters in the .c
+	* Cleaned up some more issues in my notes taken at the formal review
+	* client_list.c,h:  Make client_list_free_node() private, define and document client_list_mutex here
+	* config.c:  Start the hunt for evil globals:  Get rid of the config global
+	* doc/doxygen.cfg.in:  Enable generation of internal doc, a few other tweaks
+	* Documentation now generates a TODO list and DEPRECATED list, please look at them
+
 2004-05-27  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Cleaned up all the issues brought forward in the code review
 	  on 2004-05-26 at Benoit's. There are to many changes to list

@@ -19,8 +19,7 @@
 \********************************************************************/
 
 /* $Header$ */
-/** @internal
-    @file debug.c
+/** @file debug.c
     @brief Debug output routines
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
 */
@@ -32,29 +31,30 @@
 
 #include "conf.h"
 
-extern s_config config;
-
+/** @internal
+Do not use directly, use the debug macro */
 void
 _debug(char *filename, int line, int level, char *format, ...)
 {
     va_list vlist;
+    s_config *config = config_get_config();
 
-    if (config.debuglevel >= level) {
+    if (config->debuglevel >= level) {
         va_start(vlist, format);
 
         if (level <= LOG_WARNING) {
             fprintf(stderr, "[%d](%s:%d) ", level, filename, line);
             vfprintf(stderr, format, vlist);
             fputc('\n', stderr);
-        } else if (!config.daemon) {
+        } else if (!config->daemon) {
             fprintf(stdout, "[%d](%s:%d) ", level, filename, line);
             vfprintf(stdout, format, vlist);
             fputc('\n', stdout);
             fflush(stdout);
         }
 
-        if (config.log_syslog) {
-            openlog("wifidog", LOG_PID, config.syslog_facility);
+        if (config->log_syslog) {
+            openlog("wifidog", LOG_PID, config->syslog_facility);
             vsyslog(level, format, vlist);
             closelog();
         }

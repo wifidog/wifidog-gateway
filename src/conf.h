@@ -27,7 +27,8 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-/* Defaults for configuration values */
+/*@{*/ 
+/** Defaults configuration values */
 #define DEFAULT_CONFIGFILE "/etc/wifidog.conf"
 #define DEFAULT_DAEMON 1
 #define DEFAULT_DEBUGLEVEL LOG_INFO
@@ -40,43 +41,55 @@
 #define DEFAULT_CHECKINTERVAL 5
 #define DEFAULT_LOG_SYSLOG 0
 #define DEFAULT_SYSLOG_FACILITY LOG_DAEMON
-
-void config_init(void);
-void config_init_override(void);
-void config_read(char *filename);
-void config_validate(void);
+/*@}*/ 
 
 /**
  * Configuration structure
  */
 typedef struct {
-    char configfile[255];	/**< name of the config file */
-    int daemon;			/**< if daemon > 0, use daemon mode */
-    int debuglevel;		/**< Debug information verbosity */
-    char *external_interface;	/**< External network interface name for
+    char configfile[255];	/**< @brief name of the config file */
+    int daemon;			/**< @brief if daemon > 0, use daemon mode */
+    int debuglevel;		/**< @brief Debug information verbosity */
+    char *external_interface;	/**< @brief External network interface name for
 				     firewall rules */
-    char *gw_id;		/**< ID of the Gateway, sent to central
+    char *gw_id;		/**< @brief ID of the Gateway, sent to central
 				     server */
-    char *gw_interface;		/**< Interface we will accept connections on */
-    char *gw_address;		/**< Internal IP address for our web
+    char *gw_interface;		/**< @brief Interface we will accept connections on */
+    char *gw_address;		/**< @brief Internal IP address for our web
 				     server */
-    int gw_port;		/**< Port the webserver will run on */
-    char *authserv_hostname;	/**< Hostname of the central server */
-    int authserv_port;		/**< Port the central server listens on */
-    char *authserv_path;	/**< Path to the authentication script on
+    int gw_port;		/**< @brief Port the webserver will run on */
+    char *authserv_hostname;	/**< @brief Hostname of the central server */
+    int authserv_port;		/**< @brief Port the central server listens on */
+    char *authserv_path;	/**< @brief Path to the authentication script on
 				     the central server */
-    char *authserv_loginurl;	/**< Full URL to the login page */
-    char *httpdname;		/**< Name the web server will return when
+    char *authserv_loginurl;	/**< @brief Full URL to the login page */
+    char *httpdname;		/**< @brief Name the web server will return when
 				     replying to a request */
-    int httpdmaxconn;		/**< Used by libhttpd, not sure what it
+    int httpdmaxconn;		/**< @brief Used by libhttpd, not sure what it
 				     does */
-    int clienttimeout;		/**< How many CheckIntervals before a client
+    int clienttimeout;		/**< @brief How many CheckIntervals before a client
 				     must be re-authenticated */
-    int checkinterval;		/**< Frequency the the client timeout check
+    int checkinterval;		/**< @brief Frequency the the client timeout check
 				     thread will run. */
-    int log_syslog;		/**< boolean, wether to log to syslog */
-    int syslog_facility;	/**< facility to use when using syslog for
+    int log_syslog;		/**< @brief boolean, wether to log to syslog */
+    int syslog_facility;	/**< @brief facility to use when using syslog for
 				     logging */
 } s_config;
+
+/** @brief Get the current gateway configuration */
+s_config *
+config_get_config(void);
+
+/** @brief Initialise the conf system */
+void config_init(void);
+
+/** @brief Initialize the variables we override with the command line*/
+void config_init_override(void);
+
+/** @brief Reads the configuration file */
+void config_read(char *filename);
+
+/** @brief Check that the configuration is valid */
+void config_validate(void);
 
 #endif /* _CONFIG_H_ */

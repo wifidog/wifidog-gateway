@@ -29,8 +29,12 @@
 
 #include "httpd.h"
 
+/**@brief Callback for libhttpd */
 void http_callback_404(httpd * webserver);
+/**@brief Callback for libhttpd */
 void http_callback_about(httpd * webserver);
+/**@brief Callback for libhttpd */
 void http_callback_auth(httpd * webserver);
+
 
 #endif /* _HTTP_H_ */

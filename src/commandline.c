@@ -19,8 +19,7 @@
 \********************************************************************/
 
 /* $Header$ */
-/** @internal
-    @file commandline.c
+/** @file commandline.c
     @brief Command line argument handling
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
 */
@@ -33,9 +32,7 @@
 
 static void usage(void);
 
-extern s_config config;
-
-/**
+/** @internal
  * @brief Print usage
  *
  * Prints usage, called when wifidog is run with -h or with an unknown option
@@ -53,15 +50,13 @@ usage(void)
     printf("\n");
 }
 
-/**
- * @brief Parse the command line and set the config accordingly
- *
- * Uses getopt() to parse the command line and set configuration values
+/** Uses getopt() to parse the command line and set configuration values
  */
 void
 parse_commandline(int argc, char **argv)
 {
     int c;
+    s_config *config = config_get_config();
 
     while (-1 != (c = getopt(argc, argv, "c:hfd:s"))) {
         switch(c) {
@@ -72,22 +67,22 @@ parse_commandline(int argc, char **argv)
 
             case 'c':
                 if (optarg) {
-                    strncpy(config.configfile, optarg, sizeof(config.configfile));
+                    strncpy(config->configfile, optarg, sizeof(config->configfile));
                 }
                 break;
 
             case 'f':
-                config.daemon = 0;
+                config->daemon = 0;
                 break;
 
             case 'd':
                 if (optarg) {
-                    config.debuglevel = atoi(optarg);
+                    config->debuglevel = atoi(optarg);
                 }
                 break;
 
             case 's':
-                config.log_syslog = 1;
+                config->log_syslog = 1;
                 break;
 
             default:

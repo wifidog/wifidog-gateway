@@ -19,8 +19,7 @@
 \********************************************************************/
 
 /* $Header$ */
-/** @internal
-    @file auth.c
+/** @file auth.c
     @brief Authentication handling thread
     @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>
 */
@@ -45,14 +44,56 @@
 #include "firewall.h"
 #include "client_list.h"
 
-/* These two functions are used to bypass libhttpd output. */
-static void _http_output(int fd, char *msg);
-static void _http_redirect(int fd, char *format, ...);
-
+/* Defined in clientlist.c */
 extern	pthread_mutex_t	client_list_mutex;
 
-extern s_config config;
+/** @internal
+ * @brief Used to bypass libhttpd output.
+ * @note Can only be called once per connection because the socket gets
+ * closed. */
+static void
+_http_output(int fd, char *msg)
+{
+	char header[] = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-"
+			  "Type: text/html\r\n\r\n<html><body>";
+	char footer[] = "</body></html>";
+	
+	send(fd, header, sizeof(header), 0);
+	send(fd, msg, strlen(msg), 0);
+	send(fd, footer, sizeof(footer), 0);
+	shutdown(fd, 2);
+	close(fd);
+}
 
+/** @internal
+ * @brief Used to bypass libhttpd output.
+ * @note Can only be called once per connection because the socket gets
+ * closed. */
+static void
+_http_redirect(int fd, char *format, ...)
+{
+	char *response, *url;
+	va_list vlist;
+
+	va_start(vlist, format);
+
+	vasprintf(&url, format, vlist);
+
+	asprintf(&response, "HTTP/1.1 307 Please authenticate yourself here\r\nLocation: %s\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<html><head><title>Redirection</title></head><body>Please <a href='%s'>Click here</a> if you're not redirected.", url, url);
+
+	send(fd, response, strlen(response), 0);
+	shutdown(fd, 2);
+	close(fd);
+
+	free(response);
+	free(url);
+}
+
+/** Launches a thread that periodically checks if any of the connections has timed out
+@param arg Must contain a pointer to a string containing the IP adress of the client to check to check
+@todo Also pass MAC adress? 
+@todo This thread loops infinitely, need a watchdog to verify that it is still running?
+*/  
 void
 thread_client_timeout_check(void *arg)
 {
@@ -62,7 +103,7 @@ thread_client_timeout_check(void *arg)
 	
 	while (1) {
 		/* Sleep for config.checkinterval seconds... */
-		timeout.tv_sec = time(NULL) + config.checkinterval;
+	  timeout.tv_sec = time(NULL) + config_get_config()->checkinterval;
 		timeout.tv_nsec = 0;
 
 		/* Mutex must be locked for pthread_cond_timedwait... */
@@ -78,6 +119,8 @@ thread_client_timeout_check(void *arg)
 	}
 }
 
+/**Launches a thread to authenticate a single client against the central server and dies when done
+@param arg Not used */
 void
 thread_authenticate_client(void *arg)
 {
@@ -146,7 +189,7 @@ thread_authenticate_client(void *arg)
         case AUTH_ALLOWED:
 		client->fw_connection_state = FW_MARK_KNOWN;
         	fw_allow(client->ip, client->mac, FW_MARK_KNOWN);
-	        _http_redirect(client->fd, "http://%s/wifidog/portal/?gw_id=%s", config.authserv_hostname, config.gw_id);
+	        _http_redirect(client->fd, "http://%s/wifidog/portal/?gw_id=%s", config_get_config()->authserv_hostname, config_get_config()->gw_id);
 		break;
         case AUTH_VALIDATION_FAILED:
 	        _http_output(client->fd, "You have failed to validate your account in 15 minutes");
@@ -163,41 +206,4 @@ thread_authenticate_client(void *arg)
 	return;
 }
 
-/* XXX Can only be called once per connection because the socket gets
- * closed. */
-static void
-_http_output(int fd, char *msg)
-{
-	char header[] = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-"
-			  "Type: text/html\r\n\r\n<html><body>";
-	char footer[] = "</body></html>";
-	
-	send(fd, header, sizeof(header), 0);
-	send(fd, msg, strlen(msg), 0);
-	send(fd, footer, sizeof(footer), 0);
-	shutdown(fd, 2);
-	close(fd);
-}
-
-/* XXX Can only be called once per connection because the socket gets
- * closed. */
-static void
-_http_redirect(int fd, char *format, ...)
-{
-	char *response, *url;
-	va_list vlist;
-
-	va_start(vlist, format);
-
-	vasprintf(&url, format, vlist);
-
-	asprintf(&response, "HTTP/1.1 307 Please authenticate yourself here\r\nLocation: %s\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<html><head><title>Redirection</title></head><body>Please <a href='%s'>Click here</a> if you're not redirected.", url, url);
-
-	send(fd, response, strlen(response), 0);
-	shutdown(fd, 2);
-	close(fd);
-
-	free(response);
-	free(url);
-}
 

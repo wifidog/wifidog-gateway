@@ -19,8 +19,7 @@
  \********************************************************************/
 
 /* $Header$ */
-/** @internal
-  @file conf.c
+/** @file conf.c
   @brief Config file parsing
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
  */
@@ -40,9 +39,17 @@
 #include "http.h"
 #include "auth.h"
 
-s_config config;
+/** @internal
+ * Holds the current configuration of the gateway */
+static s_config config;
+
+/** @internal
+ * A flag.  If set to 1, there are missing or empty mandatory parameters in the config
+ */
 static int missing_parms;
 
+/** @internal
+ The different configuration options */
 typedef enum {
 	oBadOption,
 	oDaemon,
@@ -63,7 +70,9 @@ typedef enum {
 	oSyslogFacility
 } OpCodes;
 
-static struct {
+/** @internal
+ The config file keywords for the different configuration options */
+static const struct {
 	const char *name;
 	OpCodes opcode;
 	int required;
@@ -89,8 +98,17 @@ static struct {
 
 static void config_notnull(void *parm, char *parmname);
 static int parse_boolean_value(char *);
-static OpCodes config_parse_token(const char *, const char *, int);
 
+/** Accessor for the current gateway configuration
+@return:  A pointer to the current config.  The pointer isn't opaque, but should be treated as READ-ONLY
+ */
+s_config *
+config_get_config(void)
+{
+    return &config;
+}
+
+/** Sets the default config parameters and initialises the configuration system */
 void
 config_init(void)
 {
@@ -116,8 +134,6 @@ config_init(void)
 }
 
 /**
- * @brief Initialize the variables we override with the command line
- *
  * If the command-line didn't provide a config, use the default.
  */
 void
@@ -126,6 +142,9 @@ config_init_override(void)
     if (config.daemon == -1) config.daemon = DEFAULT_DAEMON;
 }
 
+/** @internal
+Parses a single token from the config file
+*/
 static OpCodes
 config_parse_token(const char *cp, const char *filename, int linenum)
 {
@@ -140,6 +159,9 @@ config_parse_token(const char *cp, const char *filename, int linenum)
 	return oBadOption;
 }
 
+/**
+@param filename Full path of the configuration file to be read 
+*/
 void
 config_read(char *filename)
 {
@@ -246,6 +268,9 @@ config_read(char *filename)
 	fclose(fd);
 }
 
+/** @internal
+Parses a boolean value from the config file
+*/
 static int
 parse_boolean_value(char *line)
 {
@@ -265,6 +290,7 @@ parse_boolean_value(char *line)
 	return -1;
 }
 
+/** Verifies if the configuration is complete and valid.  Terminates the program if it isn't */
 void
 config_validate(void)
 {
@@ -282,6 +308,9 @@ config_validate(void)
 	}
 }
 
+/** @internal
+    Verifies that a required parameter is not a null pointer
+*/
 static void
 config_notnull(void *parm, char *parmname)
 {

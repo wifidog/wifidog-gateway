@@ -19,8 +19,7 @@
 \********************************************************************/
 
 /* $Header$ */
-/** @internal
-    @file auth.h
+/** @file auth.h
     @brief Authentication handling thread
     @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>
 */
@@ -35,22 +34,26 @@
  * to result code from the central server itself.
  */
 typedef enum {
-    AUTH_ERROR = -1,
-    AUTH_DENIED = 0,
-    AUTH_ALLOWED = 1,
-    AUTH_VALIDATION = 5,
-    AUTH_VALIDATION_FAILED = 6,
-    AUTH_LOCKED = 254
+    AUTH_ERROR = -1, /**< An error occured during the validation process*/
+    AUTH_DENIED = 0, /**< Client was denied by the auth server */
+    AUTH_ALLOWED = 1, /**< Client was granted access by the auth server */
+    AUTH_VALIDATION = 5, /**< A misnomer.  Client is in 15 min probation to validate his new account */
+    AUTH_VALIDATION_FAILED = 6, /**< @todo DOCUMENT ME */
+    AUTH_LOCKED = 254 /**< Account has been locked */
 } t_authcode;
 
-/**
- * Structure returned by auth_server_request()
+/** @brief 
+ * This structure contains all the information returned by the  authentication server
  */
 typedef struct _t_authresponse {
-    int authcode;
+    t_authcode authcode; /**< @brief Authentication code returned by the server */
 } t_authresponse;
 
+
+/** @brief Authenticate a single client against the central server */
 void thread_authenticate_client(void *arg);
+
+/** @brief Periodically check if connections expired */
 void thread_client_timeout_check(void *arg);
 
 #endif

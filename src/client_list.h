@@ -27,39 +27,51 @@
 #ifndef _CLIENT_LIST_H_
 #define _CLIENT_LIST_H_
 
-/**
- * Counters struct for a client's bandwidth usage (in bytes)
+/** Counters struct for a client's bandwidth usage (in bytes)
  */
 typedef struct _t_counters {
-    long long	incoming;	/**< Incoming data */
-    long long	outgoing;	/**< Outgoing data */
-    time_t	last_updated;	/**< Last update of the counters */
+    long long	incoming;	/**< @brief Incoming data */
+    long long	outgoing;	/**< @brief Outgoing data */
+    time_t	last_updated;	/**< @brief Last update of the counters */
 } t_counters;
 
-/**
- * Client node for the connected client linked list.
+/** Client node for the connected client linked list.
  */
 typedef struct	_t_client {
-	struct	_t_client *next;
-	char	*ip;			/**< Client Ip address */
-	char	*mac;			/**< Client Mac address */
-	char	*token;			/**< Client token */
-	unsigned int fw_connection_state;	/**< Connection state in the
+  struct	_t_client *next;        /**< @brief Pointer to the next client */
+	char	*ip;			/**< @brief Client Ip address */
+	char	*mac;			/**< @brief Client Mac address */
+	char	*token;			/**< @brief Client token */
+	unsigned int fw_connection_state; /**< @brief Connection state in the
 						     firewall */
-	int	fd;			/**< Client HTTP socket (valid only
+	int	fd;			/**< @brief Client HTTP socket (valid only
 					     during login before one of the
 					     _http_* function is called */
-	t_counters	counters;	/**< Counters for input/output of
+	t_counters	counters;	/**< @brief Counters for input/output of
 					     the client. */
 } t_client;
 
+/** @brief Get the first element of the list of connected clients
+ */
+t_client *client_get_first_client(void);
+
+/** @brief Initializes the client list */
 void client_list_init(void);
+
+/** @brief Adds a new client to the connections list */
 t_client *client_list_add(char *ip, char *mac, char *token);
+
+/** @brief Finds a client by its IP and MAC */
 t_client *client_list_find(char *ip, char *mac);
+
+/** @brief Finds a client only by its IP */
 t_client *client_list_find_by_ip(char *ip); /* needed by iptables.c */
+
+/** @brief Finds a client by its token */
 t_client *client_list_find_by_token(char *token);
+
+/** @brief Deletes a client from the connections list */
 void client_list_delete(t_client *client);
-void client_list_free_node(t_client *client);
 
 #endif /* _CLIENT_LIST_H_ */
 

@@ -45,9 +45,12 @@
 static int iptables_do_command(char *format, ...);
 
 extern pthread_mutex_t	client_list_mutex;
-extern s_config config;
-extern int fw_quiet;
 
+/**
+Used to supress the error output of the firewall during destruction */ 
+static int fw_quiet = 0;
+
+/** @internal */
 static int
 iptables_do_command(char *format, ...)
 {
@@ -68,18 +71,16 @@ iptables_do_command(char *format, ...)
     return rc;
 }
 
-/**
- * @brief Initialize the firewall
- *
- * Initialize the firewall rules
+/** Initialize the firewall rules
  */
 int
 iptables_fw_init(void)
 {
+  s_config *config = config_get_config();
     fw_quiet = 0;
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_VALIDATE);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", config.gw_address);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", config.authserv_hostname);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", config->gw_address);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", config->authserv_hostname);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p udp --dport 67 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p tcp --dport 67 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p udp --dport 53 -j ACCEPT");
@@ -94,12 +95,12 @@ iptables_fw_init(void)
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -j DROP");
 
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_UNKNOWN);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", config.gw_address);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", config.authserv_hostname);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", config->gw_address);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", config->authserv_hostname);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p udp --dport 67 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 67 -j ACCEPT");
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p udp --dport 53 -j ACCEPT");
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 80 -j REDIRECT --to-ports %d", config.gw_port);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 80 -j REDIRECT --to-ports %d", config->gw_port);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j DROP");
 
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_KNOWN);
@@ -109,25 +110,22 @@ iptables_fw_init(void)
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_LOCKED " -j DROP");
 
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_CLASS);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_VALIDATE, config.gw_interface, FW_MARK_PROBATION);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_KNOWN, config.gw_interface, FW_MARK_KNOWN);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_LOCKED, config.gw_interface, FW_MARK_LOCKED);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -j " TABLE_WIFIDOG_UNKNOWN, config.gw_interface);
-    iptables_do_command("-t nat -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_CLASS, config.gw_interface);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_VALIDATE, config->gw_interface, FW_MARK_PROBATION);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_KNOWN, config->gw_interface, FW_MARK_KNOWN);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_LOCKED, config->gw_interface, FW_MARK_LOCKED);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -j " TABLE_WIFIDOG_UNKNOWN, config->gw_interface);
+    iptables_do_command("-t nat -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_CLASS, config->gw_interface);
 
     iptables_do_command("-t mangle -N " TABLE_WIFIDOG_OUTGOING);
-    iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_OUTGOING, config.gw_interface);
+    iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_OUTGOING, config->gw_interface);
 
     iptables_do_command("-t mangle -N " TABLE_WIFIDOG_INCOMING);
-    iptables_do_command("-t mangle -I FORWARD 1 -i %s -j " TABLE_WIFIDOG_INCOMING, config.external_interface);
+    iptables_do_command("-t mangle -I FORWARD 1 -i %s -j " TABLE_WIFIDOG_INCOMING, config->external_interface);
 
     return 1;
 }
 
-/**
- * @brief Destroy the firewall
- *
- * Remove the firewall rules
+/** Remove the firewall rules
  * This is used when we do a clean shutdown of WiFiDog and when it starts to make
  * sure there are no rules left over
  */
@@ -135,6 +133,7 @@ int
 iptables_fw_destroy(void)
 {
     int rc, tries;
+    s_config *config = config_get_config();
 
     fw_quiet = 1;
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_CLASS);
@@ -155,25 +154,26 @@ iptables_fw_destroy(void)
      */
     rc = 0;
     while (rc == 0) {
-        rc = iptables_do_command("-t nat -D PREROUTING -i %s -j " TABLE_WIFIDOG_CLASS, config.gw_interface);
+        rc = iptables_do_command("-t nat -D PREROUTING -i %s -j " TABLE_WIFIDOG_CLASS, config->gw_interface);
     }
     iptables_do_command("-t nat -X " TABLE_WIFIDOG_CLASS);
 
     rc = 0;
     while (rc == 0) {
-        rc = iptables_do_command("-t mangle -D PREROUTING -i %s -j " TABLE_WIFIDOG_OUTGOING, config.gw_interface);
+        rc = iptables_do_command("-t mangle -D PREROUTING -i %s -j " TABLE_WIFIDOG_OUTGOING, config->gw_interface);
     }
     iptables_do_command("-t mangle -X " TABLE_WIFIDOG_OUTGOING);
 
     rc = 0;
     while (rc == 0) {
-        rc = iptables_do_command("-t mangle -D FORWARD -i %s -j " TABLE_WIFIDOG_INCOMING, config.external_interface);
+        rc = iptables_do_command("-t mangle -D FORWARD -i %s -j " TABLE_WIFIDOG_INCOMING, config->external_interface);
     }
     iptables_do_command("-t mangle -X " TABLE_WIFIDOG_INCOMING);
 
     return 1;
 }
 
+/** Set the firewall access for a specific client */
 int
 iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag)
 {
@@ -198,6 +198,7 @@ iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag)
     return rc;
 }
 
+/** Update the counters of all the clients in the client list */
 int
 iptables_fw_counters_update(void)
 {

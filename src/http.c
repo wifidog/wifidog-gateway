@@ -19,8 +19,7 @@
  \********************************************************************/
 
 /* $Header$ */
-/** @internal
-  @file http.c
+/** @file http.c
   @brief HTTP IO functions
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
  */
@@ -42,19 +41,18 @@
 #include "httpd.h"
 #include "client_list.h"
 
-extern s_config config;
-
-pthread_mutex_t	client_list_mutex;
+extern pthread_mutex_t	client_list_mutex;
 
 void
 http_callback_404(httpd * webserver)
 {
 	char *newlocation;
+	s_config *config = config_get_config();
 
 	if ((asprintf(&newlocation, "Location: %s?gw_address=%s&gw_port=%d&"
-			"gw_id=%s", config.authserv_loginurl, 
-			config.gw_address, config.gw_port, 
-			config.gw_id)) == -1) {
+			"gw_id=%s", config->authserv_loginurl, 
+			config->gw_address, config->gw_port, 
+			config->gw_id)) == -1) {
 		debug(LOG_ERR, "Failed to asprintf newlocation");
 		httpdOutput(webserver, "Internal error occurred");
 	} else {
@@ -64,8 +62,8 @@ http_callback_404(httpd * webserver)
 		httpdPrintf(webserver, "<html><head><title>Redirection</title></head><body>"
 				"Please <a href='%s?gw_address=%s&gw_port=%d"
 				"&gw_id=%s'>click here</a> to login", 
-				config.authserv_loginurl, config.gw_address, 
-				config.gw_port, config.gw_id);
+				config->authserv_loginurl, config->gw_address, 
+				config->gw_port, config->gw_id);
 		debug(LOG_INFO, "Captured %s and re-directed them to login "
 			"page", webserver->clientAddr);
 		free(newlocation);

@@ -27,10 +27,14 @@
 #ifndef _CENTRALSERVER_H_
 #define _CENTRALSERVER_H_
 
+/** @brief Ask the central server to login a client */
 #define REQUEST_TYPE_LOGIN     "login"
+/** @brief Notify the the central server of a client logout */
 #define REQUEST_TYPE_LOGOUT    "logout"
+/** @brief Update the central server's traffic counters */
 #define REQUEST_TYPE_COUNTERS  "counters"
 
+/** @brief Initiates a transaction with the auth server */
 int auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, char *mac, char *token, long long incoming, long long outgoing);
 
 #endif /* _CENTRALSERVER_H_ */
