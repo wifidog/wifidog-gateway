@@ -238,10 +238,8 @@ wdctl_status(int fd)
 		len = strlen(buffer);
 
 		snprintf((buffer + len), (sizeof(buffer) - len), "\tIn: %lld\t"
-				"Out: %lld\t"
-                "To GW: %lld\n", first->counters.incoming,
-				first->counters.outgoing,
-                first->counters.togateway);
+				"Out: %lld\n" , first->counters.incoming,
+				first->counters.outgoing);
 		len = strlen(buffer);
 
 		count++;

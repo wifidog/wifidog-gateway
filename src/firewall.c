@@ -260,7 +260,7 @@ fw_counter(void)
                             debug(LOG_INFO, "%s - Access has changed, refreshing firewall and clearing counters", p1->ip);
                             fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
                             p1->fw_connection_state = FW_MARK_KNOWN;
-                            p1->counters.togateway = p1->counters.incoming = p1->counters.outgoing = 0;
+                            p1->counters.incoming = p1->counters.outgoing = 0;
                             fw_allow(p1->ip, p1->mac, p1->fw_connection_state);
                         }
                         break;
