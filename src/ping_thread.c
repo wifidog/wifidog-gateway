@@ -150,7 +150,8 @@ ping(void)
 	
 	if (numbytes == -1) {
 		debug(LOG_ERR, "read(): %s", strerror(errno));
-		exit(1);
+		mark_auth_server_bad(auth_server);
+		return;
 	}
 
 	numbytes = totalbytes;
