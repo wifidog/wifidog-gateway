@@ -30,7 +30,9 @@
 extern s_config config;
 
 /**
- * Prints usage if wifidog is called with -h or with an unknown option
+ * @brief Print usage
+ *
+ * Prints usage, called when wifidog is run with -h or with an unknown option
  */
 void
 usage(void)
