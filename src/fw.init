@@ -70,6 +70,6 @@ ${IPTABLES} -t nat -A wifidog_class -i ${GW_INTERFACE} -m mark --mark 0x5 -j wif
 ${IPTABLES} -t mangle -N wifidog_mark
 ${IPTABLES} -t mangle -A wifidog_mark -j MARK --set-mark 0x1
 
-${IPTABLES} -t mangle -I PREROUTING 1 -i eth1 -j wifidog_mark
-${IPTABLES} -t nat -I PREROUTING 1 -i eth1 -j wifidog_class
+${IPTABLES} -t mangle -I PREROUTING 1 -i ${GW_INTERFACE} -j wifidog_mark
+${IPTABLES} -t nat -I PREROUTING 1 -i ${GW_INTERFACE} -j wifidog_class
 
