@@ -1,5 +1,8 @@
 # $Header$
 
+2004-11-10 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* libhttpd/protocol.c: select() based timeout.
+
 2004-10-31 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* configure.in: bumped version number to "1.0.2-pre1" since we
 	  already have ile sans fil hot spots advertising "1.0.1".

@@ -36,7 +36,6 @@
 #include "httpd.h"
 #include "httpd_priv.h"
 
-
 int _httpd_net_read(sock, buf, len)
 	int	sock;
 	char	*buf;
@@ -45,7 +44,26 @@ int _httpd_net_read(sock, buf, len)
 #if defined(_WIN32) 
 	return( recv(sock, buf, len, 0));
 #else
-	return( read(sock, buf, len));
+	/*return( read(sock, buf, len));*/
+	/* XXX Select based IO */
+
+	int		nfds;
+	fd_set		readfds;
+	struct timeval	timeout;
+	
+	FD_ZERO(&readfds);
+	FD_SET(sock, &readfds);
+	timeout.tv_sec = 10;
+	timeout.tv_usec = 0;
+	nfds = sock + 1;
+
+	nfds = select(nfds, &readfds, NULL, NULL, &timeout);
+
+	if (nfds > 0) {
+		return(read(sock, buf, len));
+	} else {
+		return(-1);
+	}
 #endif
 }
 
