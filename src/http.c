@@ -29,230 +29,82 @@
 
 extern s_config config;
 
-extern fd_set master;
-
-void
-http_request(int sockfd, struct sockaddr_in their_addr)
+void http_callback_404(httpd * webserver)
 {
-    char buffer[MAX_BUF], request[MAX_BUF];
-    char line[MAX_BUF], header[MAX_BUF];
-    char body[MAX_BUF];
-    char *token;
-    void *p1, *p2;
-    char *p3, *p4;
-    int r_get = 0, r_token = 0, s, rc, profile;
-    time_t cur_time;
-    char *ip, *mac;
+	char *newlocation;
 
-    cur_time = time(NULL);
-
-    p1 = request;
-
-    do {
-        s = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
-        memcpy(p1, buffer, s);
-        p1 += s;
-    } while(!(p2 = strstr(request, "\r\n\r\n")) && s);
-    request[(int)p2 - (int)request + 2] = '\0';
-
-    if ((p1 = strstr(request, "\r\n"))) {
-        memcpy(line, request, (int)p1 - (int)request);
-        line[(int)p1 - (int)request] = '\0';
-        if ((strncasecmp(line, "GET", 3) == 0) ||
-                (strncasecmp(line, "POST", 4) == 0) ||
-                (strncasecmp(line, "HEAD", 4) == 0)) {
-            r_get = 1;
-            if (strstr(line, "/auth") && (p3 = strchr(line, '?')) != NULL) {
-                if ((p4 = strchr(p3, ' '))) {
-                    p4[0] = '\0';
-                }
-                if ((p4 = strchr(p3, '\n'))) {
-                    p4[0] = '\0';
-                }
-                init_cgi(p3 + 1);
-                if ((token = get_cgi("token")) && (strlen(token) > 0)) {
-                    r_token = 1;
-                }
-            }
-        }
-    }
-
-    if (r_get && r_token) {
-        ip = inet_ntoa(their_addr.sin_addr);
-        mac = arp_get(ip);
-
-        /* We will respond with a 200 all the time */
-        http_header(header, 200, "OK", NULL);
-
-        if (!mac) {
-            http_body(body, "I could not find your hardware address for your IP address %s, please report this error to the systems administrator", ip);
-        } else {
-            if ((profile = auth(ip, mac, token, 0)) != -1) {
-                /* Authentication succesful */
-                if (profile == 0) {
-                    http_body(body, "This token is not valid anymore");
-                } else {
-                    if ((rc = fw_allow(ip, mac, profile)) == 0) {
-                        http_body(body, "You %s at %s, have been granted profile %d!", ip, mac, profile);
-
-                        /* Add client's IP and token into a linked list so we can keep
-                         * track of it on the auth server, only if he's not there already */
-                        if (!node_find_by_ip(ip)) {
-                            node_add(ip, mac, token, 0);
-                        }
-                    } else {
-                        http_body(body, "Authentication was succesful, but the firewall could not be modified, I got return code %d, please contact the systems administrators");
-                    }
-                }
-            } else {
-                /* Authentication unsuccesful */
-                http_body(body, "Access denied because we did not get a valid answer from the authentication server");
-            }
-        }
-    } else if (r_get) {
-        char newlocation[MAX_BUF];
-        sprintf(newlocation, "%s?gw_address=%s&gw_port=%d&gw_id=%s", config.authserv_loginurl, config.gw_address, config.gw_port, config.gw_id);
-
-        /* If we got a GET/POST/HEAD but no token, redirect */
-        http_header(header, 302, "Found", "Location: %s", newlocation);
-        http_body(body, "This document has moved <a href=\"%s\">here</a>", newlocation);
-        debug(D_LOG_INFO, "302 - %s - %s", inet_ntoa(their_addr.sin_addr), newlocation);
-    } else {
-        /* Else, error page */
-        http_header(header, 500, "Error", NULL);
-        http_body(body, "I could not understand your request");
-        debug(D_LOG_INFO, "500 - %s", inet_ntoa(their_addr.sin_addr));
-    }
-    sock_send(sockfd, header);
-    sock_send(sockfd, body);
-    
-    debug(D_LOG_INFO, "Closing connection to %s", inet_ntoa(their_addr.sin_addr));
-    close(sockfd);
-    FD_CLR(sockfd, &master);
+	if (asprintf(&newlocation, "Location: %s?gw_address=%s&gw_port=%d&gw_id=%s", config.authserv_loginurl, config.gw_address, config.gw_port, config.gw_id) == -1) {
+		debug(D_LOG_ERR, "Failed to asprintf newlocation");
+		httpdOutput(webserver, "Internal error occurred");
+	}
+	else {
+		// Re-direct them to auth server
+		httpdSetResponse(webserver, "307 Please authenticate yourself here");
+		httpdAddHeader(webserver, newlocation);
+		httpdPrintf(webserver, "<html><head>Redirection</head><body>Please <a href='%s?gw_address=%s&gw_port=%d&gw_id=%s'>click here</a> to login", config.authserv_loginurl, config.gw_address, config.gw_port, config.gw_id);
+		debug(D_LOG_INFO, "Captured %s and re-directed them to login page", webserver->clientAddr);
+		free(newlocation);
+	}
 }
 
-void
-http_header(char *buffer, int code, char *code_msg, char *fmt, ...)
+void http_callback_about(httpd * webserver)
 {
-    va_list ap;
-    char tmp[MAX_BUF];
-
-    sprintf(buffer, "HTTP/1.1 %d %s\n", code, code_msg);
-    sprintf(tmp, "Server: %s\n", config.httpdname);
-    strcat(buffer, tmp);
-    sprintf(tmp, "Date: %s\n", gmtdate());
-    strcat(buffer, tmp);
-
-    if (fmt) {
-        va_start(ap, fmt);
-        vsprintf(tmp, fmt, ap);
-        va_end(ap);
-        strcat(buffer, tmp);
-        strcat(buffer, "\n");
-    }
-
-    strcat(buffer, "Content-Type: text/html\n");
-    strcat(buffer, "Connection: close\n\n");
+	httpdOutput(webserver, "<html><body><h1>About:</h1>");
+	httpdOutput(webserver, "This is WiFiDog. Copyright (C) 2004 and released under the GNU GPL license.");
+	httpdOutput(webserver, "<p>");
+	httpdOutput(webserver, "For more information visit <a href='http://www.ilesansfil.org/wiki/WiFiDog'>http://www.ilesansfil.org/wiki/WiFiDog</a>");
+	httpdOutput(webserver, "</body></html>");
 }
 
-void
-http_body(char *body, char *fmt, ...)
+void http_callback_auth(httpd * webserver)
 {
-    va_list ap;
-    char tmp[MAX_BUF];
+	httpVar * token;
+	char * mac;
+	int profile;
+	int temp;
 
-    strcpy(body, "<HTML><HEAD></HEAD><BODY>");
-
-    va_start(ap, fmt);
-    vsprintf(tmp, fmt, ap);
-    va_end(ap);
-
-    strcat(body, tmp);
-    strcat(body, "</BODY></HTML>\n\n");
-}
-
-void
-sock_send(int sockfd, char *buffer)
-{
-    send(sockfd, buffer, strlen(buffer), 0);
-}
-
-char *
-gmtdate()
-{
-    char *strdate;
-    time_t rawtime;
-    struct tm *tmtime;
-
-    strdate = (char *)malloc(255);
-
-    time(&rawtime);
-    tmtime = gmtime(&rawtime);
-    strftime(strdate, 255, "%a, %d %b %Y %T %Z", tmtime);
-
-    return strdate;
-}
-
-int
-auth(char *ip, char *mac, char *token, long int stats)
-{
-        int sockfd, numbytes;
-        char buf[MAX_BUF];
-        struct hostent *he;
-        struct sockaddr_in their_addr;
-        int profile;
-        char *p1;
-
-        if ((he = gethostbyname(config.authserv_hostname)) == NULL) {
-            debug(D_LOG_ERR, "gethostbyname(): %s", strerror(errno));
-            exit(1);
-        }
-
-        if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-            debug(D_LOG_ERR, "socket(): %s", strerror(errno));
-            exit(1);
-        }
-
-        their_addr.sin_family = AF_INET;
-        their_addr.sin_port = htons(config.authserv_port);
-        their_addr.sin_addr = *((struct in_addr *)he->h_addr);
-        memset(&(their_addr.sin_zero), '\0', 8);
-
-        debug(D_LOG_DEBUG, "Connecting to auth server %s on port %d", config.authserv_hostname, config.authserv_port);
-
-        if (connect(sockfd, (struct sockaddr *)&their_addr, sizeof(struct sockaddr)) == -1) {
-            debug(D_LOG_ERR, "connect(): %s", strerror(errno));
-            exit(1);
-        }
-
-        sprintf(buf, "GET %s?ip=%s&mac=%s&token=%s&stats=%ld HTTP/1.1\nHost: %s\n\n", config.authserv_path, ip, mac, token, stats, config.authserv_hostname);
-        sock_send(sockfd, buf);
-
-        debug(D_LOG_DEBUG, "Sending HTTP request:\n#####\n%s\n#####", buf);
-        
-        if ((numbytes = recv(sockfd, buf, MAX_BUF - 1, 0)) == -1) {
-            debug(D_LOG_ERR, "recv(): %s", strerror(errno));
-            exit(1);
-        }
-
-        buf[numbytes] = '\0';
-
-        close(sockfd);
-
-        if ((p1 = strstr(buf, "Profile: "))) {
-            if (sscanf(p1, "Profile: %d", &profile) == 1) {
-                debug(D_LOG_DEBUG, "Auth server returned profile %d", profile);
-                return(profile);
-            } else {
-                debug(D_LOG_DEBUG, "Auth server did not return expected information");
-                return(-1);
-            }
-        } else {
-            return(-1);
-        }
-
-        close(sockfd);
-
-    return(-1);
+	if (token = httpdGetVariableByName(webserver, "token")) {
+		// They supplied variable "token"
+		if (!(mac = arp_get(webserver->clientAddr))) {
+			// We could not get their MAC address
+			debug(D_LOG_ERR, "Failed to retrieve MAC address for ip %s", webserver->clientAddr);
+			httpdOutput(webserver, "Failed to retrieve your MAC address");
+		}
+		else {
+			// We have their MAC address
+			profile = authenticate(webserver->clientAddr, mac, token->value, 0);
+			if (profile == -1) {
+				// Error talking to central server
+				debug(D_LOG_ERR, "Got %d from central server authenticating token %s from %s at %s", profile, token->value, webserver->clientAddr, mac);
+				httpdOutput(webserver, "Access denied: We did not get a valid answer from the central server");
+			}
+			else if (profile == 0) {
+				// Central server said invalid token
+				httpdOutput(webserver, "Your authentication has failed or timed-out.  Please re-login");
+			}
+			else {
+				// Central server says token's good
+				// Now we should let them in
+				temp = fw_allow(webserver->clientAddr, mac, profile);
+				if (temp == 0) {
+					// They were added to firewall a-ok
+					/* Add client's IP and token into a linked list so we can keep
+					 * track of it on the auth server, only if he's not there already */
+					if (!node_find_by_ip(webserver->clientAddr)) {
+						 node_add(webserver->clientAddr, mac, token->value, 0);
+					}
+				}
+				else {
+					debug(D_LOG_ERR, "fw_allow returned %d when given %s at %s profile %d", temp, webserver->clientAddr, mac, profile);
+					httpdOutput(webserver, "Authentication succeeded, however we failed to modify the firewall.");
+				}
+			}
+			free(mac);
+		}
+	}
+	else {
+		// They did not supply variable "token"
+		httpdOutput(webserver, "Invalid token");
+	}
 }
 

@@ -99,16 +99,16 @@ char *
 arp_get(char *req_ip)
 {
     FILE *proc;
-    char ip[255], *mac;
+    char ip[16], *mac;
 
-    mac = (char *)malloc(255);
 
     if (!(proc = fopen("/proc/net/arp", "r"))) {
         return NULL;
     }
-   
+
     /* Skip first line */
     fscanf(proc, "%*s %*s %*s %*s %*s %*s %*s %*s %*s");
+    mac = (char *)malloc(18);
     while(!feof(proc)) {
         fscanf(proc, "%15s %*s %*s %17s %*s %*s", ip, mac);
         if (strcmp(ip, req_ip) == 0) {
@@ -116,6 +116,8 @@ arp_get(char *req_ip)
         }
     }
     fclose(proc);
+
+	 free(mac);
 
     return NULL;
 }
@@ -195,7 +197,7 @@ fw_counter(void)
                     debug(D_LOG_DEBUG, "Client %s not found in linked list", ip);
                 } else {
                     p1->counter = counter;
-                    if ((profile = auth(p1->ip, p1->mac, p1->token, p1->counter)) == -1) {
+                    if ((profile = authenticate(p1->ip, p1->mac, p1->token, p1->counter)) == -1) {
                         /* User has to be kicked out */
                     }
                     debug(D_LOG_DEBUG, "Updated client %s counter to %ld bytes", ip, counter);

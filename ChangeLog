@@ -1,5 +1,9 @@
 # $Header$
 
+2004-03-16  Mina Naguib <minaguib@users.sourceforge.net>
+	* Changed HTTP server tasks to be handled by libhttpd - merged
+	incorporate_libhttpd branch
+
 2004-03-13  Philippe April <papril777@yahoo.com>
     * Modified the way firewall scripts are called so we can configure
     them in the config file (a bit more modular than it was)

@@ -19,45 +19,14 @@
 \********************************************************************/
 
 /* $Header$ */
-/** @file common.h
-    @brief Common constants and other bits
+/** @file centralserver.h
+    @brief Functions to talk to the central server (auth/send stats/get rules/etc...)
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
 */
 
-#ifndef _COMMON_H_
-#define _COMMON_H_
+#ifndef _CENTRALSERVER_H_
+#define _CENTRALSERVER_H_
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <string.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <stdarg.h>
-#include <time.h>
-#include <netdb.h>
-#include <fcntl.h>
-#include <errno.h>
+int authenticate(char *ip, char *mac, char *token, long int stats);
 
-#include "httpd.h"
-
-#include "gateway.h"
-#include "conf.h"
-#include "commandline.h"
-#include "debug.h"
-#include "firewall.h"
-#include "http.h"
-#include "centralserver.h"
-
-#define MAX_BUF 4096
-
-#define SCRIPT_FWINIT       "fw.init"
-#define SCRIPT_FWACCESS     "fw.access"
-#define SCRIPT_FWDESTROY    "fw.destroy"
-#define SCRIPT_FWCOUNTERS   "fw.counters"
-
-#endif /* _COMMON_H_ */
+#endif /* _CENTRALSERVER_H_ */

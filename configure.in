@@ -83,6 +83,9 @@ AC_SUBST(enable_latex_docs)
 # ----------------------------------------------------------------------------
 BB_ENABLE_DOXYGEN
 
+# check for libhttpd
+AC_CHECK_HEADER(httpd.h, , AC_MSG_ERROR(You do not seem to have the libhttpd headers - please obtain it from http://www.hughes.com.au/products/libhttpd/) )
+AC_CHECK_LIB(httpd, httpdCreate, , AC_MSG_ERROR(You do not seem to have the libhttpd library - please obtain it from http://www.hughes.com.au/products/libhttpd/) )
 			
 AC_OUTPUT( 		Makefile 
 	   		wifidog.spec

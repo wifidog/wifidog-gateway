@@ -30,7 +30,7 @@
 typedef struct {
     void *next;
     char ip[16];
-    char mac[32];
+    char mac[18];
     char token[33];
     long int counter;
 } t_node;

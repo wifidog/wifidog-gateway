@@ -27,11 +27,8 @@
 #ifndef _HTTP_H_
 #define _HTTP_H_
 
-void http_request(int sockfd, struct sockaddr_in their_addr);
-void http_header(char *buffer, int code, char *code_msg, char *fmt, ...);
-void http_body(char *body, char *fmt, ...);
-void sock_send(int sockfd, char *buffer);
-char *gmtdate();
-int auth(char *ip, char *mac, char *token, long int stats);
+void http_callback_404(httpd * webserver);
+void http_callback_about(httpd * webserver);
+void http_callback_auth(httpd * webserver);
 
 #endif /* _HTTP_H_ */

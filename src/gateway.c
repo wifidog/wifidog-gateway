@@ -29,121 +29,67 @@
 
 extern s_config config;
 
-fd_set master, read_fds;
-
 void main_loop(void)
 {
-    int sockfd, new_fd, sin_size, yes = 1, childPid, flags;
-    struct sockaddr_in my_addr;
-    struct sockaddr_in their_addr;
-    struct sigaction sa;
     struct timeval tv;
     time_t last_checked;
-    int fdmax, i, cnt_last_check;
+	 httpd * webserver;
+	 int result;
 
     /* Initialize the linked list */
     node_init();
 
-    FD_ZERO(&master);
-    FD_ZERO(&read_fds);
+	 // Initialize the web server
+    debug(D_LOG_DEBUG, "Creating web server on %s:%d", config.gw_address, config.gw_port);
+	 webserver = httpdCreate(config.gw_address, config.gw_port);
+	 if (webserver == NULL) {
+		debug(D_LOG_ERR, "Could not create web server");
+		exit(1);
+	 }
+    debug(D_LOG_DEBUG, "Assigning callbacks to web server");
+	 httpdAddCContent(webserver, "/wifidog", "about", 0, NULL, http_callback_about);
+	 httpdAddCContent(webserver, "/wifidog", "auth", 0, NULL, http_callback_auth);
+	 httpdAddCWildcardContent(webserver, "/", NULL, http_callback_404);
 
-    sa.sa_handler = sigchld_handler;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = SA_RESTART;
-    if (sigaction(SIGCHLD, &sa, NULL) == -1) {
-        debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
-        exit(1);
-    }
+	 // Init the signals to catch chld/quit/etc
+	 init_signals();
 
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        debug(D_LOG_ERR, "socket(): %s", strerror(errno));
-        exit(1);
-    }
-
-    my_addr.sin_family = AF_INET;
-    my_addr.sin_port = htons(config.gw_port);
-    if (!inet_aton(config.gw_address, &my_addr.sin_addr)) {
-        debug(D_LOG_ERR, "inet_aton(): %s", strerror(errno));
-        exit(1);
-    }
-    memset(&(my_addr.sin_zero), '\0', 8);
-
-    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-        debug(D_LOG_ERR, "setsockopt(): %s", strerror(errno));
-        exit(1);
-    } 
-
-    debug(D_LOG_DEBUG, "Binding to socket");
-    if (bind(sockfd, (struct sockaddr *)&my_addr, sizeof(struct sockaddr)) == -1) {
-        debug(D_LOG_ERR, "bind(): %s", strerror(errno));
-        exit(1);
-    }
-
-    debug(D_LOG_DEBUG, "Listening on TCP port %d", config.gw_port);
-    if (listen(sockfd, config.httpdmaxconn) == -1) {
-        debug(D_LOG_ERR, "listen(): %s", strerror(errno));
-        exit(1);
-    }
-
-    // Add socket to master set
-    FD_SET(sockfd, &master);
-    fdmax = sockfd;
-
-    sa.sa_handler = termination_handler;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = SA_RESTART;
-
-    /* Trap SIGTERM */
-    if (sigaction(SIGTERM, &sa, NULL) == -1) {
-        debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
-        exit(1);
-    }
-
-    /* Trap SIGQUIT */
-    if (sigaction(SIGQUIT, &sa, NULL) == -1) {
-        debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
-        exit(1);
-    }
-
-    /* Trap SIGINT */
-    if (sigaction(SIGINT, &sa, NULL) == -1) {
-        debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
-        exit(1);
-    }
-
+	 // Reset the firewall
     fw_init();
+
     last_checked = time(NULL);
 
+    debug(D_LOG_DEBUG, "Waiting for connections");
     while(1) {
-        tv.tv_sec = config.checkinterval;
-        tv.tv_usec = 0;
-        read_fds = master;
-        if (select(fdmax + 1, &read_fds, NULL, NULL, &tv) == -1) {
-            debug(D_LOG_ERR, "select(): %s", strerror(errno));
-        }
-
-        for(i = 0; i <= fdmax; i++) {
-            if (FD_ISSET(i, &read_fds)) {
-                if (i == sockfd) {
-                    // Handle new connections
-                    sin_size = sizeof(struct sockaddr_in);
-                    if (-1 == (new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size))) {
-                        debug(D_LOG_ERR, "accept(): %s", strerror(errno));
-                    } else {
-                        // Add to master set so we can monitor
-                        FD_SET(new_fd, &master);
-                        if (new_fd > fdmax) {
-                            fdmax = new_fd;
-                            debug(D_LOG_DEBUG, "New fdmax %d", fdmax);
-                        }
-                        debug(D_LOG_INFO, "New connection from %s on socket %d", inet_ntoa(their_addr.sin_addr), new_fd);
-                    }
-                } else {
-                    // Data from client
-                    http_request(i, their_addr);
-                }
-            }
-        }
+		 tv.tv_sec = config.checkinterval;
+		 tv.tv_usec = 0;
+		  result = httpdGetConnection(webserver, &tv);
+		  if (result < 0) {
+			  /*
+				* fixme
+				* An error occurred - should we abort? reboot the device ?
+				*/
+				debug(D_LOG_ERR, "httpdGetConnection returned %d", result);
+				exit(1);
+		  }
+		  else if (result > 0) {
+			  /*
+				* We got a connection
+				*/
+				 debug(D_LOG_DEBUG, "Received connection from %s", webserver->clientAddr);
+			  if (httpdReadRequest(webserver) >=0) {
+				  /*
+					* We read the request fine
+					*/
+				 debug(D_LOG_DEBUG, "Processing request from %s", webserver->clientAddr);
+				  httpdProcessRequest(webserver);
+			  }
+			  else {
+				debug(D_LOG_ERR, "No valid request received from %s", webserver->clientAddr);
+		  }
+			 debug(D_LOG_DEBUG, "Closing connection with %s", webserver->clientAddr);
+			  httpdEndRequest(webserver);
+		  }
 
         if (time(NULL) - last_checked > config.checkinterval) {
             fw_counter();
@@ -211,5 +157,40 @@ void termination_handler(int s)
 
     debug(D_LOG_INFO, "Exiting...");
     exit(0);
+}
+
+void init_signals()
+{
+    struct sigaction sa;
+
+    sa.sa_handler = sigchld_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART;
+    if (sigaction(SIGCHLD, &sa, NULL) == -1) {
+        debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
+        exit(1);
+    }
+
+    sa.sa_handler = termination_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART;
+
+    /* Trap SIGTERM */
+    if (sigaction(SIGTERM, &sa, NULL) == -1) {
+        debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
+        exit(1);
+    }
+
+    /* Trap SIGQUIT */
+    if (sigaction(SIGQUIT, &sa, NULL) == -1) {
+        debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
+        exit(1);
+    }
+
+    /* Trap SIGINT */
+    if (sigaction(SIGINT, &sa, NULL) == -1) {
+        debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
+        exit(1);
+    }
 }
 
