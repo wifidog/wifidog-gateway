@@ -110,7 +110,9 @@ int _httpd_readLine(request *r, char *destBuf, int len)
 	{
 		if (_httpd_readChar(r, &curChar) < 1)
 			return(0);
-		if (curChar == '\n')
+		// Fixed by Mina - if we read binary junk it's probably not a regular HTTP client
+		//if (curChar == '\n')
+		if (curChar == '\n' || !isascii(curChar))
 		{
 			*dst = 0;
 			return(1);

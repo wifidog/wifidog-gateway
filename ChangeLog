@@ -3,6 +3,11 @@
 2005-02-12 Mina Naguib <mina@ilesansfil.org>
 	* fw_iptables.c: Extra sanity checking the ip we read from the iptables
 	output
+	* libhttpd/protocol.c: Abort connection if read non-ascii from client. This
+	is often a telltale sign of a program such as skype using port 80 for
+	non-http requests - this therefore ends the thread as early as possible
+	instead of having it lay around for a while trying to get a valid http
+	request and taking up resources
 
 2005-02-11 Philippe April <philippe@ilesansfil.org>
 	* Tagged v1_1_0_beta1
