@@ -55,7 +55,7 @@ void
 http_callback_404(httpd *webserver, request *r)
 {
 	char		*newlocation,
-			protocol[6],
+			*protocol,
 			tmp_url[MAX_BUF],
 			*url;
 	int		port;
@@ -63,10 +63,10 @@ http_callback_404(httpd *webserver, request *r)
 	t_auth_serv	*auth_server = get_auth_server();
 
 	if (auth_server->authserv_use_ssl) {
-		strcpy(protocol, "https");
+		protocol = "https";
 		port = auth_server->authserv_ssl_port;
 	} else {
-		strcpy(protocol, "http");
+		protocol = "http";
 		port = auth_server->authserv_http_port;
 	}
 
@@ -206,7 +206,7 @@ http_wifidog_header(request *r, char *title)
 	httpdOutput(r, "<html>\n");
 	httpdOutput(r, "<head>\n");
 	httpdPrintf(r, "<title>%s</title>\n", title);
-	httpdPrintf(r, "<meta HTTP-EQUIV='Pragma' CONTENT='no-cache'>\n");
+	httpdOutput(r, "<meta HTTP-EQUIV='Pragma' CONTENT='no-cache'>\n");
 	httpdOutput(r, "</head>\n");
 	httpdOutput(r, "<body topmargin=0 leftmargin=0 marginwidth=0 marginheight=0 bgcolor=white text=#628C53 link=blue alink=blue vlink=blue>\n");
 

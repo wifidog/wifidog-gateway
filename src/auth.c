@@ -94,7 +94,7 @@ authenticate_client(request *r)
 		*mac,
 		*token;
 	char *newlocation = NULL;
-	char protocol[6];
+	char *protocol = NULL;
 	s_config	*config = NULL;
 	t_auth_serv	*auth_server = NULL;
 	int port = 80;
@@ -137,10 +137,10 @@ authenticate_client(request *r)
 	auth_server = get_auth_server();
 
 	if (auth_server->authserv_use_ssl) {
-		strcpy(protocol, "https");
+		protocol = "https";
 		port = auth_server->authserv_ssl_port;
 	} else {
-		strcpy(protocol, "http");
+		protocol = "http";
 		port = auth_server->authserv_http_port;
 	}
 

@@ -114,7 +114,7 @@ arp_get(char *req_ip)
     FILE           *proc;
 	 char ip[16];
 	 char mac[18];
-	 char * reply;
+	 char * reply = NULL;
 
     if (!(proc = fopen("/proc/net/arp", "r"))) {
         return NULL;

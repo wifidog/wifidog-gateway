@@ -507,8 +507,7 @@ parse_firewall_rule(char *ruleset, char *leftover)
 	else
 		tmp->mask = safe_strdup(mask);
 
-	debug(LOG_DEBUG, "Adding Firewall Rule %s %s port %s to %s",
-			token, tmp->protocol, tmp->port, tmp->mask);
+	debug(LOG_DEBUG, "Adding Firewall Rule %s %s port %s to %s", token, tmp->protocol, tmp->port, tmp->mask);
 	
 	/* Append the rule record */
 	if (config.rulesets == NULL) {

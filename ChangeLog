@@ -7,6 +7,8 @@
 	of always http+port 80
 	* auth.c: Better debugging output of what it's doing when it acts on auth
 	server response
+	* A little bit more care with buffers and their sizes
+	* Minor whitespace tweaking and a couple of internal doc typo fixes
 
 2005-03-06 Mina Naguib <mina@ilesansfil.org>
 	* Check return values of pthread_create

@@ -359,7 +359,7 @@ iptables_fw_destroy_mention(
 					iptables_do_command(command2);
 					free(command2);
 					deleted = 1;
-					/* Do not keep looping - the captures rulenums will no longer be accurate */
+					/* Do not keep looping - the captured rulenums will no longer be accurate */
 					break;
 				}
 			}

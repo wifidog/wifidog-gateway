@@ -39,6 +39,7 @@
 #include <signal.h>
 #include <errno.h>
 
+#include "common.h"
 #include "httpd.h"
 #include "util.h"
 #include "conf.h"
@@ -141,7 +142,7 @@ thread_wdctl_handler(void *arg)
 	int	fd,
 		done,
 		i;
-	char	request[4096];
+	char	request[MAX_BUF];
 	ssize_t	read_bytes,
 		len;
 
