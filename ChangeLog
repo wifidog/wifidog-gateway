@@ -1,5 +1,8 @@
 # $Header$
 
+2004-03-09  Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Tiny change to increase cross-platform compatibility. It can now build on OS X and it comes close to building on my old BSD box.
+
 2004-03-08  Benoit Grégoire  <bock@step.polymtl.ca>
 	* Initial CVS import.  Integrate a standrad GNU build system and Doxygen to the build process.  Add Doxygen and CVS headers, .cvsignores, etc.  Note that the imported code is Philippe April (papril777 at yahoo.com)'s work.  Tell me if I forgot anything.  Please note that the paths in the src/fw* scripts are still hardcoded.  Don't forget to update the ChangeLog file every commit and add doxygen comments to your code.  Happy hacking.
 
