@@ -60,19 +60,6 @@ http_callback_404(httpd *webserver, request *r)
 	int		port;
 	s_config	*config = config_get_config();
 	t_auth_serv	*auth_server = get_auth_server();
-	
-	if (!is_online()) {
-		/* No point re-directing them to the auth server if we haven't been able to talk
-		 * to it for a while */
-		httpdOutput(r, "<html><head><title>Currently unavailable</title></head><body><h1>Uh oh!</h1>");
-		httpdOutput(r, "We apologize, but it seems that we are currently unable to re-direct you to the login screen.");
-		httpdOutput(r, "<p>");
-		httpdOutput(r, "The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.");
-		httpdOutput(r, "<p>");
-		httpdOutput(r, "Please try again another time.");
-		httpdOutput(r, "</body></html>");
-		return;
-	}
 
 	if (auth_server->authserv_use_ssl) {
 		strcpy(protocol, "https");
@@ -88,7 +75,19 @@ http_callback_404(httpd *webserver, request *r)
 			r->request.path);
 	url = httpdUrlEncode(tmp_url);
 	
-	if ((asprintf(&newlocation, "Location: %s://%s:%d%slogin?"
+	if (!is_online()) {
+		/* No point re-directing them to the auth server if we haven't been able to talk
+		 * to it for a while */
+		httpdOutput(r, "<html><head><title>Currently unavailable</title></head><body><h1>Uh oh!</h1>");
+		httpdOutput(r, "We apologize, but it seems that we are currently unable to re-direct you to the login screen.");
+		httpdOutput(r, "<p>");
+		httpdOutput(r, "The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.");
+		httpdOutput(r, "<p>");
+		httpdPrintf(r, "In a while please <a href='%s'>click here</a> to try again.", url);
+		httpdOutput(r, "</body></html>");
+		debug(LOG_INFO, "Sent %s an apology since I am not online - no point sending them to auth server", r->clientAddr);
+	}
+	else if ((asprintf(&newlocation, "Location: %s://%s:%d%slogin?"
 			"gw_address=%s&gw_port=%d&gw_id=%s&url=%s",
 			protocol,
 			auth_server->authserv_hostname,
@@ -98,8 +97,6 @@ http_callback_404(httpd *webserver, request *r)
 			config->gw_id,
 			url)) == -1) {
 		debug(LOG_ERR, "Failed to asprintf newlocation");
-		free(url);
-		free(newlocation);
 		httpdOutput(r, "Internal error occurred");
 	} else {
 		/* Re-direct them to auth server */
@@ -119,9 +116,10 @@ http_callback_404(httpd *webserver, request *r)
 				url);
 		debug(LOG_INFO, "Captured %s and re-directed them to login "
 			"page", r->clientAddr);
-		free(url);
 		free(newlocation);
 	}
+
+	free(url);
 }
 
 void 
