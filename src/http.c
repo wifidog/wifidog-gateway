@@ -40,10 +40,11 @@
 #include "firewall.h"
 #include "http.h"
 #include "httpd.h"
+#include "client_list.h"
 
 extern s_config config;
 
-pthread_mutex_t	nodes_mutex;
+pthread_mutex_t	client_list_mutex;
 
 void
 http_callback_404(httpd * webserver)
@@ -87,7 +88,7 @@ http_callback_about(httpd * webserver)
 void 
 http_callback_auth(httpd * webserver)
 {
-	t_node	*node;
+	t_client	*client;
 	httpVar * token;
 	char	*mac,
 		*ip;
@@ -104,31 +105,31 @@ http_callback_auth(httpd * webserver)
 		} else {
 			/* We have their MAC address */
 
-			pthread_mutex_lock(&nodes_mutex);
+			pthread_mutex_lock(&client_list_mutex);
 			
-			if ((node = node_find_by_ip(webserver->clientAddr))
-					== NULL) {
-				debug(LOG_DEBUG, "New node for %s",
+			if ((client = client_list_find(webserver->clientAddr, mac)) == NULL) {
+				debug(LOG_DEBUG, "New client for %s",
 					webserver->clientAddr);
-				node_add(webserver->clientAddr, mac, token->value);
+				client_list_append(webserver->clientAddr, mac, token->value);
 			} else {
 				debug(LOG_DEBUG, "Node for %s already "
-					"exists", node->ip);
+					"exists", client->ip);
 			}
 
-			node = node_find_by_ip(webserver->clientAddr);
+			client = client_list_find(webserver->clientAddr, mac);
 
-			node->fd = webserver->clientSock;
+			client->fd = webserver->clientSock;
 			webserver->clientSock = -1;
 
-			pthread_mutex_unlock(&nodes_mutex);
+			pthread_mutex_unlock(&client_list_mutex);
 
 			/* That clientAddr may be freed prior to the thread
-			 * finishing. */
+			 * finishing. XXX The duplicated string will be freed
+			 * by the thread */
 			ip = strdup(webserver->clientAddr);
 			
 			/* start sub process */
-			pthread_create(&tid, NULL, (void *)auth_thread, (void *)ip);
+			pthread_create(&tid, NULL, (void *)thread_authenticate_client, (void *)ip);
 			pthread_detach(tid);
 
 			free(mac);

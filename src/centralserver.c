@@ -48,13 +48,14 @@
 extern s_config config;
 
 int
-authenticate(t_authresponse *authresponse, char *stage, char *ip, char *mac, char *token, long int incoming, long int outgoing)
+auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, char *mac, char *token, long long incoming, long long outgoing)
 {
-	int sockfd, numbytes;
+	int sockfd;
+        size_t	numbytes, totalbytes;
 	char buf[MAX_BUF];
 	struct hostent *he;
 	struct sockaddr_in their_addr;
-	char *p1;
+	char *tmp;
 
 	if ((he = gethostbyname(config.authserv_hostname)) == NULL) {
 		debug(LOG_ERR, "Failed to resolve %s via gethostbyname(): "
@@ -70,7 +71,7 @@ authenticate(t_authresponse *authresponse, char *stage, char *ip, char *mac, cha
 	their_addr.sin_family = AF_INET;
 	their_addr.sin_port = htons(config.authserv_port);
 	their_addr.sin_addr = *((struct in_addr *)he->h_addr);
-	memset(&(their_addr.sin_zero), '\0', 8);
+	memset(&(their_addr.sin_zero), '\0', sizeof(their_addr.sin_zero));
 
 	debug(LOG_INFO, "Connecting to auth server %s on port %d", 
 		config.authserv_hostname, config.authserv_port);
@@ -80,24 +81,35 @@ authenticate(t_authresponse *authresponse, char *stage, char *ip, char *mac, cha
 		debug(LOG_ERR, "connect(): %s", strerror(errno));
 		return(-1); /* non-fatal */
 	}
+	/**
+	 * TODO: XXX change the PHP so we can harmonize stage as request_type
+	 * everywhere.
+	 */
 	sprintf(buf, "GET %s?stage=%s&ip=%s&mac=%s&token=%s&incoming=%ld&outgoing=%ld HTTP/1.1"
-		"\nHost: %s\n\n", config.authserv_path, stage, ip, mac, token,
+		"\nHost: %s\n\n", config.authserv_path, request_type, mac, token,
 		incoming, outgoing, config.authserv_hostname);
 	send(sockfd, buf, strlen(buf), 0);
 
 	debug(LOG_DEBUG, "Sending HTTP request to auth server: %s\n", buf);
 
-	if ((numbytes = recv(sockfd, buf, MAX_BUF - 1, 0)) == -1) {
-		debug(LOG_ERR, "recv(): %s", strerror(errno));
+	numbytes = totalbytes = 0;
+	while ((numbytes = read(sockfd, buf + totalbytes, 
+				MAX_BUF - (totalbytes + 1))) > 0)
+		totalbytes =+ numbytes;
+	
+	if (numbytes == -1) {
+		debug(LOG_ERR, "read(): %s", strerror(errno));
 		exit(1);
 	}
 
+	numbytes = totalbytes;
+	
 	buf[numbytes] = '\0';
 
 	close(sockfd);
 
-	if ((p1 = strstr(buf, "Auth: "))) {
-		if (sscanf(p1, "Auth: %d", &authresponse->authcode) == 1) {
+	if ((tmp = strstr(buf, "Auth: "))) {
+		if (sscanf(tmp, "Auth: %d", &authresponse->authcode) == 1) {
 			debug(LOG_INFO, "Auth server returned authentication code %d",
 				authresponse->authcode);
 			return(authresponse->authcode);

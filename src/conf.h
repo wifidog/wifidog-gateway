@@ -27,30 +27,56 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+/* Defaults for configuration values */
+#define DEFAULT_CONFIGFILE "/etc/wifidog.conf"
+#define DEFAULT_DAEMON 1
+#define DEFAULT_DEBUGLEVEL LOG_INFO
+#define DEFAULT_HTTPDMAXCONN 10
+#define DEFAULT_GATEWAYID "default"
+#define DEFAULT_GATEWAYPORT 2060
+#define DEFAULT_AUTHSERVPORT 80
+#define DEFAULT_HTTPDNAME "WiFiDog"
+#define DEFAULT_CLIENTTIMEOUT 5
+#define DEFAULT_CHECKINTERVAL 5
+#define DEFAULT_LOG_SYSLOG 0
+#define DEFAULT_SYSLOG_FACILITY LOG_DAEMON
+
 void config_init(void);
 void config_init_override(void);
 void config_read(char *filename);
 void config_validate(void);
 
+/**
+ * Configuration structure
+ */
 typedef struct {
-    char *configfile;
-    int daemon;
-    int debuglevel;
-    char *external_interface;
-    char *gw_id;
-    char *gw_interface;
-    char *gw_address;
-    int gw_port;
-    char *authserv_hostname;
-    int authserv_port;
-    char *authserv_path;
-    char *authserv_loginurl;
-    char *httpdname;
-    int httpdmaxconn;
-    int clienttimeout;
-    int checkinterval;
-    int log_syslog;
-    int syslog_facility;
+    char configfile[255];	/**< name of the config file */
+    int daemon;			/**< if daemon > 0, use daemon mode */
+    int debuglevel;		/**< Debug information verbosity */
+    char *external_interface;	/**< External network interface name for
+				     firewall rules */
+    char *gw_id;		/**< ID of the Gateway, sent to central
+				     server */
+    char *gw_interface;		/**< Interface we will accept connections on */
+    char *gw_address;		/**< Internal IP address for our web
+				     server */
+    int gw_port;		/**< Port the webserver will run on */
+    char *authserv_hostname;	/**< Hostname of the central server */
+    int authserv_port;		/**< Port the central server listens on */
+    char *authserv_path;	/**< Path to the authentication script on
+				     the central server */
+    char *authserv_loginurl;	/**< Full URL to the login page */
+    char *httpdname;		/**< Name the web server will return when
+				     replying to a request */
+    int httpdmaxconn;		/**< Used by libhttpd, not sure what it
+				     does */
+    int clienttimeout;		/**< How many CheckIntervals before a client
+				     must be re-authenticated */
+    int checkinterval;		/**< Frequency the the client timeout check
+				     thread will run. */
+    int log_syslog;		/**< boolean, wether to log to syslog */
+    int syslog_facility;	/**< facility to use when using syslog for
+				     logging */
 } s_config;
 
 #endif /* _CONFIG_H_ */

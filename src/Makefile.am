@@ -16,7 +16,9 @@ wifidog_SOURCES = commandline.c \
 	gateway.c \
 	centralserver.c \
 	http.c \
-	auth.c
+	auth.c \
+	client_list.c \
+	util.c
 
 noinst_HEADERS = commandline.h \
 	common.h \
@@ -27,5 +29,7 @@ noinst_HEADERS = commandline.h \
 	gateway.h \
 	centralserver.h \
 	http.h \
-	auth.h
+	auth.h \
+	client_list.h \
+	util.h
 

@@ -27,47 +27,17 @@
 #ifndef _FIREWALL_H_
 #define _FIREWALL_H_
 
-typedef enum _t_marks {
-    MARK_VALIDATION = 1,
-    MARK_KNOWN = 2,
-    MARK_LOCKED = 254
-} t_marks;
-
-typedef struct counters_t_ {
-    long int incoming;
-    long int outgoing;
-    long int last_updated;
-} counters_t;
-
-typedef struct _t_node {
-	struct	_t_node	*next;
-	char *ip;
-    char *mac;
-	char *token;
-
-    /* the MARK in the firewall */
-    unsigned int tag;
-
-    /* socket */
-	int	fd;
-
-    /* the counters */
-	counters_t counters;
-} t_node;
+typedef enum _t_fw_marks {
+    FW_MARK_PROBATION = 1,
+    FW_MARK_KNOWN = 2,
+    FW_MARK_LOCKED = 254
+} t_fw_marks;
 
 int fw_init(void);
 int fw_destroy(void);
 int fw_allow(char *ip, char *mac, int profile);
 int fw_deny(char *ip, char *mac, int profile);
 void fw_counter(void);
-int execute(char *line);
 char *arp_get(char *req_ip);
-
-void node_init(void);
-t_node *node_add(char *ip, char *mac, char *token);
-t_node *node_find_by_ip(char *ip);
-t_node *node_find_by_token(char *token);
-void node_delete(t_node *node);
-void free_node(t_node *node);
 
 #endif /* _FIREWALL_H_ */

@@ -51,130 +51,18 @@
 #include "auth.h"
 #include "http.h"
 
-static void init_signals(void);
-static void main_loop(void);
+static void init_signals(void); /**< Registers all the signal handlers */
+static void main_loop(void); /**< Main execution loop */
 
 extern s_config config;
 
-pthread_mutex_t	sigterm_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-static void
-main_loop(void)
-{
-	struct timeval tv;
-	httpd * webserver;
-	int result;
-	pthread_t	tid;
-
-	/* Initialize the linked list */
-	node_init();
-
-	/* Initialize the web server */
-	debug(LOG_NOTICE, "Creating web server on %s:%d", 
-			config.gw_address, config.gw_port);
-	webserver = httpdCreate(config.gw_address, config.gw_port);
-	if (webserver == NULL) {
-		debug(LOG_ERR, "Could not create web server");
-		exit(1);
-	}
-	debug(LOG_DEBUG, "Assigning callbacks to web server");
-	httpdAddCContent(webserver, "/wifidog", "about", 0, NULL,
-			http_callback_about);
-	httpdAddCContent(webserver, "/wifidog", "auth", 0, NULL,
-			http_callback_auth);
-	httpdAddC404Content(webserver, http_callback_404);
-
-	/* Init the signals to catch chld/quit/etc */
-	init_signals();
-
-	/* Reset the firewall */
-	fw_destroy();
-	fw_init();
-
-	/* start clean up thread */
-	pthread_create(&tid, NULL, (void *)cleanup_thread, NULL);
-	pthread_detach(tid);
-	
-	debug(LOG_NOTICE, "Waiting for connections");
-	while(1) {
-		tv.tv_sec = config.checkinterval;
-		tv.tv_usec = 0;
-		result = httpdGetConnection(webserver, &tv);
-		if (result == -1) {
-			/* Interrupted system call */
-			continue; /* restart loop */
-		} else if (result < -1) {
-			/*
-			 * FIXME
-			 * An error occurred - should we abort?
-			 * reboot the device ?
-			 */
-			debug(LOG_ERR, "httpdGetConnection returned %d",
-				result);
-			fw_destroy();
-			exit(1);
-		} else if (result > 0) {
-			/*
-			 * We got a connection
-			 */
-			debug(LOG_INFO, "Received connection from %s",
-				webserver->clientAddr);
-			if (httpdReadRequest(webserver) >=0) {
-				/*
-				 * We read the request fine
-				 */
-				debug(LOG_DEBUG, "Processing request from %s", webserver->clientAddr);
-				debug(LOG_DEBUG, "Calling httpdProcessRequest() for %s", webserver->clientAddr);
-				httpdProcessRequest(webserver);
-				debug(LOG_DEBUG, "Returned from httpdProcessRequest() for %s", webserver->clientAddr);
-			}
-			else {
-				debug(LOG_ERR, "No valid request received from %s", webserver->clientAddr);
-			}
-			debug(LOG_DEBUG, "Closing connection with %s", webserver->clientAddr);
-			httpdEndRequest(webserver);
-		}
-	}
-
-	fw_destroy();
-}
-
-int
-main(int argc, char **argv)
-{
-	config_init();
-
-	parse_commandline(argc, argv);
-
-	config_read(config.configfile);
-	config_validate();
-
-	if (config.daemon) {
-		int childPid;
-
-		debug(LOG_INFO, "Forking into background");
-
-		switch((childPid = fork())) {
-		case -1: /* error */
-			debug(LOG_ERR, "fork(): %s", strerror(errno));
-			exit(1);
-			break;
-
-		case 0: /* parent */
-			main_loop();
-			break;
-
-		default: /* child */
-			exit(0);
-			break;
-		}
-	} else {
-		main_loop();
-	}
-
-	return(0);
-}
-
+/**
+ * @brief handles SIGCHLD signals
+ *
+ * When a child process exits, it causes a SIGCHLD to be sent to the
+ * process. This handler catches it and reaps the child process so it
+ * can exit. Otherwise we'd get zombie processes.
+ */
 void
 sigchld_handler(int s)
 {
@@ -186,13 +74,15 @@ sigchld_handler(int s)
 void
 termination_handler(int s)
 {
+	static	pthread_mutex_t	sigterm_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 	/* Makes sure we only call fw_destroy() once. */
 	if (pthread_mutex_trylock(&sigterm_mutex))
 		return;
 	
 	fw_destroy();
 
-	debug(LOG_WARNING, "Exiting...");
+	debug(LOG_DEBUG, "Exiting...");
 	exit(0);
 }
 
@@ -212,6 +102,11 @@ init_signals(void)
 	}
 
 	/* Trap SIGPIPE */
+	/* This is done so that when libhttpd does a socket operation on
+	 * a disconnected socket (i.e.: Broken Pipes) we catch the signal
+	 * and do nothing. The alternative is to exit. SIGPIPE are harmless
+	 * if not desirable.
+	 */
 	if (sigaction(SIGPIPE, &sa, NULL) == -1) {
 		debug(LOG_ERR, "sigaction(): %s", strerror(errno));
 		exit(1);
@@ -240,3 +135,119 @@ init_signals(void)
 	}
 }
 
+static void
+main_loop(void)
+{
+	httpd * webserver;
+	int result;
+	pthread_t	tid;
+
+	/* Initializes the linked list of connected clients */
+	client_list_init();
+
+	/* Initializes the web server */
+	debug(LOG_NOTICE, "Creating web server on %s:%d", 
+			config.gw_address, config.gw_port);
+	webserver = httpdCreate(config.gw_address, config.gw_port);
+	if (webserver == NULL) {
+		debug(LOG_ERR, "Could not create web server");
+		exit(1);
+	}
+	debug(LOG_DEBUG, "Assigning callbacks to web server");
+	httpdAddCContent(webserver, "/wifidog", "about", 0, NULL,
+			http_callback_about);
+	httpdAddCContent(webserver, "/wifidog", "auth", 0, NULL,
+			http_callback_auth);
+	httpdAddC404Content(webserver, http_callback_404);
+
+	/* Init the signals to catch chld/quit/etc */
+	init_signals();
+
+	/* Reset the firewall (if WiFiDog crashed) */
+	fw_destroy();
+	fw_init();
+
+	/* start clean up thread */
+	pthread_create(&tid, NULL, (void *)thread_client_timeout_check, NULL);
+	pthread_detach(tid);
+	
+	debug(LOG_NOTICE, "Waiting for connections");
+	while(1) {
+		result = httpdGetConnection(webserver, NULL);
+
+		/* We can't convert this to a switch because there might be
+		 * values that are not -1, 0 or 1. */
+		if (result == -1) {
+			/* Interrupted system call */
+			continue; /* restart loop */
+		} else if (result < -1) {
+			/*
+			 * FIXME
+			 * An error occurred - should we abort?
+			 * reboot the device ?
+			 */
+			debug(LOG_ERR, "FATAL: httpdGetConnection returned "
+				       "unexpected value %d, exiting.", result);
+			termination_handler(0); /* the 0 is a place holder
+						   because termination_handler
+						   takes an int as argument. */
+		} else if (result > 0) {
+			/*
+			 * We got a connection
+			 */
+			debug(LOG_INFO, "Received connection from %s",
+				webserver->clientAddr);
+			if (httpdReadRequest(webserver) >=0) {
+				/*
+				 * We read the request fine
+				 */
+				debug(LOG_DEBUG, "Processing request from %s", webserver->clientAddr);
+				debug(LOG_DEBUG, "Calling httpdProcessRequest() for %s", webserver->clientAddr);
+				httpdProcessRequest(webserver);
+				debug(LOG_DEBUG, "Returned from httpdProcessRequest() for %s", webserver->clientAddr);
+			}
+			else {
+				debug(LOG_DEBUG, "No valid request received from %s", webserver->clientAddr);
+			}
+			debug(LOG_DEBUG, "Closing connection with %s", webserver->clientAddr);
+			httpdEndRequest(webserver);
+		}
+	}
+
+	/* never reached */
+}
+
+int
+main(int argc, char **argv)
+{
+	config_init();
+
+	parse_commandline(argc, argv);
+
+	config_read(config.configfile);
+	config_validate();
+
+	if (config.daemon) {
+
+		debug(LOG_INFO, "Forking into background");
+
+		switch(fork()) {
+		case -1: /* error */
+			debug(LOG_ERR, "fork(): %s", strerror(errno));
+			exit(1);
+			break;
+
+		case 0: /* parent */
+			main_loop();
+			break;
+
+		default: /* child */
+			exit(0);
+			break;
+		}
+	} else {
+		main_loop();
+	}
+
+	return(0); /* never reached */
+}

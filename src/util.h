@@ -19,33 +19,15 @@
 \********************************************************************/
 
 /* $Header$ */
-/** @file iptables.h
-    @brief Firewall iptables functions
+/** @file util.h
+    @brief Misc files
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
 */
 
-#ifndef _IPTABLES_H_
-#define _IPTABLES_H_
+#ifndef _UTIL_H_
+#define _UTIL_H_
 
-#include "firewall.h"
+int execute(char *cmd_line, int quiet);
 
-#define TABLE_WIFIDOG_CLASS     "WiFiDog_Class"
-#define TABLE_WIFIDOG_OUTGOING  "WiFiDog_Outgoing"
-#define TABLE_WIFIDOG_INCOMING  "WiFiDog_Incoming"
+#endif /* _UTIL_H_ */
 
-#define TABLE_WIFIDOG_VALIDATE  "WiFiDog_Validate"
-#define TABLE_WIFIDOG_KNOWN     "WiFiDog_Known"
-#define TABLE_WIFIDOG_UNKNOWN   "WiFiDog_Unknown"
-#define TABLE_WIFIDOG_LOCKED    "WiFiDog_Locked"
-
-typedef enum fw_access_t_ {
-    FW_ACCESS_ALLOW,
-    FW_ACCESS_DENY
-} fw_access_t;
-
-int iptables_fw_init(void);
-int iptables_fw_destroy(void);
-int iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag);
-int iptables_fw_counters_update(void);
-
-#endif /* _IPTABLES_H_ */

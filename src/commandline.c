@@ -72,7 +72,7 @@ parse_commandline(int argc, char **argv)
 
             case 'c':
                 if (optarg) {
-                    config.configfile = optarg;
+                    strncpy(config.configfile, optarg, sizeof(config.configfile));
                 }
                 break;
 

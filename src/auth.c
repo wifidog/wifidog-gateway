@@ -43,16 +43,18 @@
 #include "centralserver.h"
 #include "iptables.h"
 #include "firewall.h"
+#include "client_list.h"
 
+/* These two functions are used to bypass libhttpd output. */
 static void _http_output(int fd, char *msg);
 static void _http_redirect(int fd, char *format, ...);
 
-pthread_mutex_t	nodes_mutex = PTHREAD_MUTEX_INITIALIZER;
+extern	pthread_mutex_t	client_list_mutex;
 
-s_config config;
+extern s_config config;
 
 void
-cleanup_thread(void *ptr)
+thread_client_timeout_check(void *arg)
 {
 	pthread_cond_t		cond = PTHREAD_COND_INITIALIZER;
 	pthread_mutex_t		cond_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -77,102 +79,92 @@ cleanup_thread(void *ptr)
 }
 
 void
-auth_thread(void *ptr)
+thread_authenticate_client(void *arg)
 {
-	t_node	*node;
+	t_client	*client;
 	t_authresponse	auth_response;
 	char	*ip,
 		*mac,
 		*token;
-    t_node *p1;
 
-	ip = (char *)ptr;
+	ip = (char *)arg;
 
-	pthread_mutex_lock(&nodes_mutex);
+	pthread_mutex_lock(&client_list_mutex);
 
-	node = node_find_by_ip(ip);
+	client = client_list_find(ip, mac);
 
-	if (node == NULL) {
-		pthread_mutex_unlock(&nodes_mutex);
+	if (client == NULL) {
+		debug(LOG_ERR, "Could not find client client for %s (%s)",
+				ip, mac);
+		pthread_mutex_unlock(&client_list_mutex);
 		return; /* Implicit pthread_exit() */
 	}
 	
-	mac = strdup(node->mac);
-	token = strdup(node->token);
+	mac = strdup(client->mac);
+	token = strdup(client->token);
 	
-	pthread_mutex_unlock(&nodes_mutex);
+	pthread_mutex_unlock(&client_list_mutex);
 		
-	authenticate(&auth_response, STAGE_LOGIN, ip, mac, token, 0, 0);
+	auth_server_request(&auth_response, REQUEST_TYPE_LOGIN, ip, mac, token, 0, 0);
 	
-	pthread_mutex_lock(&nodes_mutex);
+	pthread_mutex_lock(&client_list_mutex);
 	
-	/* can't trust the node to still exist */
-	node = node_find_by_ip(ip);
+	/* can't trust the client to still exist */
+	client = client_list_find(ip, mac);
 	
 	/* don't need any of them anymore */
 	free(ip);
 	free(token);
 	free(mac);
 	
-	if (node == NULL) {
-		pthread_mutex_unlock(&nodes_mutex);
+	if (client == NULL) {
+		debug(LOG_ERR, "Could not find client client for %s (%s)",
+				ip, mac);
+		pthread_mutex_unlock(&client_list_mutex);
 		return;
 	}
 
-	if (auth_response.authcode == AUTH_ERROR) {
+
+	switch(auth_response.authcode) {
+	case AUTH_ERROR:
 		/* Error talking to central server */
 		debug(LOG_ERR, "Got %d from central server authenticating "
-			"token %s from %s at %s", auth_response, node->token,
-			node->ip, node->mac);
-		_http_output(node->fd, "Access denied: We did not get a valid "
-			"answer from the central server");
-		node->fd = 0;
-		pthread_mutex_unlock(&nodes_mutex);
-		return;
-	} else if (auth_response.authcode == AUTH_DENIED) {
+			"token %s from %s at %s", auth_response, client->token,
+			client->ip, client->mac);
+		_http_output(client->fd, "Access denied: We did not get a "
+				"valid answer from the central server");
+		break;
+	case AUTH_DENIED:
 		/* Central server said invalid token */
-		_http_output(node->fd, "Access denied");
-		node->fd = 0;
-		pthread_mutex_unlock(&nodes_mutex);
-		return;
-	}
-
-	/* If we get here, we've got a profile > 0 */
-	
-	debug(LOG_INFO, "Node %s with mac %s "
-		"validated", node->ip, node->mac);
-	
-    p1 = node_find_by_ip(node->ip);
-    switch(auth_response.authcode) {
+		_http_output(client->fd, "Access denied");
+		break;
         case AUTH_VALIDATION:
-            p1->tag = MARK_VALIDATION;
-        	fw_allow(node->ip, node->mac, MARK_VALIDATION);
-	        _http_output(node->fd, "You have 15 minutes to activate your account, hurry up!");
-            break;
+		client->fw_connection_state = FW_MARK_PROBATION;
+        	fw_allow(client->ip, client->mac, FW_MARK_PROBATION);
+	        _http_output(client->fd, "You have 15 minutes to activate your account, hurry up!");
+		break;
         case AUTH_ALLOWED:
-            p1->tag = MARK_KNOWN;
-        	fw_allow(node->ip, node->mac, MARK_KNOWN);
-	        _http_redirect(node->fd, "http://%s/wifidog/portal/?gw_id=%s", config.authserv_hostname, config.gw_id);
-            break;
+		client->fw_connection_state = FW_MARK_KNOWN;
+        	fw_allow(client->ip, client->mac, FW_MARK_KNOWN);
+	        _http_redirect(client->fd, "http://%s/wifidog/portal/?gw_id=%s", config.authserv_hostname, config.gw_id);
+		break;
         case AUTH_VALIDATION_FAILED:
-	        _http_output(node->fd, "You have failed to validate your account in 15 minutes");
-            break;
-        case AUTH_DENIED:
-	        _http_output(node->fd, "Authentication failure");
-            break;
+	        _http_output(client->fd, "You have failed to validate your account in 15 minutes");
+		break;
         default:
-	        _http_output(node->fd, "Internal error");
-            debug(LOG_WARNING, "I don't know what the validation code %d means", auth_response.authcode);
-            break;
-    }
+	        _http_output(client->fd, "Internal error");
+		debug(LOG_WARNING, "I don't know what the validation code %d means", auth_response.authcode);
+		break;
+	}
 		
-	node->fd = 0;
+	client->fd = 0;
 
-	pthread_mutex_unlock(&nodes_mutex);
+	pthread_mutex_unlock(&client_list_mutex);
 	return;
 }
 
-/* XXX Can only be called once per connection */
+/* XXX Can only be called once per connection because the socket gets
+ * closed. */
 static void
 _http_output(int fd, char *msg)
 {
@@ -187,23 +179,25 @@ _http_output(int fd, char *msg)
 	close(fd);
 }
 
+/* XXX Can only be called once per connection because the socket gets
+ * closed. */
 static void
 _http_redirect(int fd, char *format, ...)
 {
 	char *response, *url;
-    va_list vlist;
-    
-    va_start(vlist, format);
+	va_list vlist;
 
-    vasprintf(&url, format, vlist);
+	va_start(vlist, format);
 
-    asprintf(&response, "HTTP/1.1 307 Please authenticate yourself here\r\nLocation: %s\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<html><head><title>Redirection</title></head><body>Please <a href='%s'>Click here</a> if you're not redirected.", url, url);
+	vasprintf(&url, format, vlist);
+
+	asprintf(&response, "HTTP/1.1 307 Please authenticate yourself here\r\nLocation: %s\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<html><head><title>Redirection</title></head><body>Please <a href='%s'>Click here</a> if you're not redirected.", url, url);
 
 	send(fd, response, strlen(response), 0);
 	shutdown(fd, 2);
 	close(fd);
 
-    free(response);
-    free(url);
+	free(response);
+	free(url);
 }
 

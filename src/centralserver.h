@@ -27,10 +27,10 @@
 #ifndef _CENTRALSERVER_H_
 #define _CENTRALSERVER_H_
 
-#define STAGE_LOGIN     "login"
-#define STAGE_LOGOUT    "logout"
-#define STAGE_COUNTERS  "counters"
+#define REQUEST_TYPE_LOGIN     "login"
+#define REQUEST_TYPE_LOGOUT    "logout"
+#define REQUEST_TYPE_COUNTERS  "counters"
 
-int authenticate(t_authresponse *authresponse, char *stage, char *ip, char *mac, char *token, long int incoming, long int outgoing);
+int auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, char *mac, char *token, long long incoming, long long outgoing);
 
 #endif /* _CENTRALSERVER_H_ */

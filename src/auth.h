@@ -28,6 +28,12 @@
 #ifndef _AUTH_H_
 #define _AUTH_H_
 
+/**
+ * @brief Authentication codes returned by auth server.
+ *
+ * Authentication result codes returned by auth_server_request() corresponding
+ * to result code from the central server itself.
+ */
 typedef enum {
     AUTH_ERROR = -1,
     AUTH_DENIED = 0,
@@ -37,11 +43,14 @@ typedef enum {
     AUTH_LOCKED = 254
 } t_authcode;
 
+/**
+ * Structure returned by auth_server_request()
+ */
 typedef struct _t_authresponse {
     int authcode;
 } t_authresponse;
 
-void auth_thread(void *ptr);
-void cleanup_thread(void *ptr);
+void thread_authenticate_client(void *arg);
+void thread_client_timeout_check(void *arg);
 
 #endif

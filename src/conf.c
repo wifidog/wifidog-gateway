@@ -40,23 +40,6 @@
 #include "http.h"
 #include "auth.h"
 
-static void config_notnull(void *parm, char *parmname);
-static int parse_value(char *);
-static char *get_string(char *ptr);
-
-#define DEFAULT_CONFIGFILE "/etc/wifidog.conf"
-#define DEFAULT_DAEMON 1
-#define DEFAULT_DEBUGLEVEL LOG_INFO
-#define DEFAULT_HTTPDMAXCONN 10
-#define DEFAULT_GATEWAYID "default"
-#define DEFAULT_GATEWAYPORT 2060
-#define DEFAULT_AUTHSERVPORT 80
-#define DEFAULT_HTTPDNAME "WiFiDog"
-#define DEFAULT_CLIENTTIMEOUT 5
-#define DEFAULT_CHECKINTERVAL 5
-#define DEFAULT_LOG_SYSLOG 0
-#define DEFAULT_SYSLOG_FACILITY LOG_DAEMON
-
 s_config config;
 static int missing_parms;
 
@@ -77,7 +60,7 @@ typedef enum {
 	oHTTPDName,
 	oClientTimeout,
 	oCheckInterval,
-    oSyslogFacility
+	oSyslogFacility
 } OpCodes;
 
 static struct {
@@ -104,12 +87,15 @@ static struct {
 	{ NULL,                 oBadOption },
 };
 
+static void config_notnull(void *parm, char *parmname);
+static int parse_boolean_value(char *);
+static OpCodes config_parse_token(const char *, const char *, int);
+
 void
 config_init(void)
 {
 	debug(LOG_DEBUG, "Setting default config parameters");
-	config.configfile = (char *)malloc(255);
-	strcpy(config.configfile, DEFAULT_CONFIGFILE);
+	strncpy(config.configfile, DEFAULT_CONFIGFILE, sizeof(config.configfile));
 	config.debuglevel = DEFAULT_DEBUGLEVEL;
 	config.httpdmaxconn = DEFAULT_HTTPDMAXCONN;
 	config.external_interface = NULL;
@@ -125,25 +111,23 @@ config_init(void)
 	config.clienttimeout = DEFAULT_CLIENTTIMEOUT;
 	config.checkinterval = DEFAULT_CHECKINTERVAL;
 	config.syslog_facility = DEFAULT_SYSLOG_FACILITY;
-    config.daemon = -1;
-    config.log_syslog = DEFAULT_LOG_SYSLOG;
+	config.daemon = -1;
+	config.log_syslog = DEFAULT_LOG_SYSLOG;
 }
 
 /**
  * @brief Initialize the variables we override with the command line
  *
- *
- * Initialize the variables we override with the command line after the config has been read
- * if they haven't been initialized by the configuration file
+ * If the command-line didn't provide a config, use the default.
  */
 void
 config_init_override(void)
 {
-    if (!config.daemon) config.daemon = DEFAULT_DAEMON;
+    if (config.daemon == -1) config.daemon = DEFAULT_DAEMON;
 }
 
 static OpCodes
-parse_token(const char *cp, const char *filename, int linenum)
+config_parse_token(const char *cp, const char *filename, int linenum)
 {
 	int i;
 
@@ -202,45 +186,44 @@ config_read(char *filename)
 			if ((strncmp(s, "#", 1)) != 0) {
 				debug(LOG_DEBUG, "Parsing token: %s, "
 						"value: %s", s, p1);
-				opcode = parse_token(s, filename, linenum);
+				opcode = config_parse_token(s, filename, linenum);
 
 				switch(opcode) {
 				case oDaemon:
-					if (config.daemon == -1 && ((value = parse_value(p1)) != -1)) {
+					if (config.daemon == -1 && ((value = parse_boolean_value(p1)) != -1)) {
 						config.daemon = value;
 					}
 					break;
 				case oExternalInterface:
-					config.external_interface = get_string(p1);
+					config.external_interface = strdup(p1);
 					break;
 				case oGatewayID:
-					config.gw_id = get_string(p1);
+					config.gw_id = strdup(p1);
 					break;
 				case oGatewayInterface:
-					config.gw_interface = get_string(p1);
+					config.gw_interface = strdup(p1);
 					break;
 				case oGatewayAddress:
-					config.gw_address = get_string(p1);
+					config.gw_address = strdup(p1);
 					break;
 				case oGatewayPort:
 					sscanf(p1, "%d", &config.gw_port);
 					break;
 				case oAuthservHostname:
 					config.authserv_hostname = 
-						get_string(p1);
+						strdup(p1);
 					break;
 				case oHTTPDName:
-					config.httpdname = get_string(p1);
+					config.httpdname = strdup(p1);
 					break;
 				case oHTTPDMaxConn:
 					sscanf(p1, "%d", &config.httpdmaxconn);
 					break;
 				case oAuthservPath:
-					config.authserv_path = get_string(p1);
+					config.authserv_path = strdup(p1);
 					break;
 				case oAuthservLoginUrl:
-					config.authserv_loginurl = 
-						get_string(p1);
+					config.authserv_loginurl = strdup(p1);
 					break;
 				case oBadOption:
                     debug(LOG_ERR, "Exiting...");
@@ -264,7 +247,7 @@ config_read(char *filename)
 }
 
 static int
-parse_value(char *line)
+parse_boolean_value(char *line)
 {
 	if (strcasecmp(line, "yes") == 0) {
 		return 1;
@@ -280,15 +263,6 @@ parse_value(char *line)
 	}
 
 	return -1;
-}
-
-static char *
-get_string(char *ptr)
-{
-	char *buf;
-
-	buf = strdup(ptr);
-	return buf;
 }
 
 void

@@ -1,4 +1,9 @@
 # $Header$
+2004-05-27  Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Cleaned up all the issues brought forward in the code review
+	  on 2004-05-26 at Benoit's. There are to many changes to list
+	  individually.
+
 2004-05-15  Philippe April <papril777@yahoo.com>
     * Commented out cookie handling in libhttpd because it segfaults if
     you pass a particular formatting/buggy one

@@ -27,9 +27,8 @@
 #ifndef _GATEWAY_H_
 #define _GATEWAY_H_
 
-void termination_handler(int s);
+void termination_handler(int s); /**< exits cleanly and clear the firewall
+				      rules. */
 void sigchld_handler(int s);
-void check_counters(void);
-void fork_counter_checker(void);
 
 #endif /* _GATEWAY_H_ */
