@@ -36,8 +36,6 @@
 #define DEFAULT_HTTPDNAME "WiFiDog"
 #define DEFAULT_CLIENTTIMEOUT 5
 #define DEFAULT_CHECKINTERVAL 5
-#define DEFAULT_FWSCRIPTS_PATH "."
-#define DEFAULT_FWTYPE "."
 #define DEFAULT_LOG_SYSLOG 0
 #define DEFAULT_SYSLOG_FACILITY LOG_DAEMON
 
@@ -60,8 +58,6 @@ typedef enum {
 	oHTTPDName,
 	oClientTimeout,
 	oCheckInterval,
-	oFWScriptsPath,
-	oFWType,
     oSyslogFacility,
 } OpCodes;
 
@@ -84,8 +80,6 @@ struct {
 	{ "httpdname",          oHTTPDName },
 	{ "clienttimeout",      oClientTimeout },
 	{ "checkinterval",      oCheckInterval },
-	{ "fwscriptspath",      oFWScriptsPath },
-	{ "fwtype",             oFWType },
 	{ "syslogfacility", 	oSyslogFacility },
 	{ NULL,                 oBadOption },
 };
@@ -109,8 +103,6 @@ config_init(void)
 	config.httpdname = NULL;
 	config.clienttimeout = DEFAULT_CLIENTTIMEOUT;
 	config.checkinterval = DEFAULT_CHECKINTERVAL;
-	config.fwscripts_path = DEFAULT_FWSCRIPTS_PATH;
-	config.fwtype = DEFAULT_FWTYPE;
 	config.syslog_facility = DEFAULT_SYSLOG_FACILITY;
     config.daemon = -1;
     config.log_syslog = DEFAULT_LOG_SYSLOG;
@@ -235,12 +227,6 @@ config_read(char *filename)
 					break;
 				case oClientTimeout:
 					sscanf(p1, "%d", &config.clienttimeout);
-					break;
-                case oFWScriptsPath:
-					config.fwscripts_path = get_string(p1);
-					break;
-                case oFWType:
-					config.fwtype = get_string(p1);
 					break;
                 case oSyslogFacility:
 					sscanf(p1, "%d", &config.syslog_facility);

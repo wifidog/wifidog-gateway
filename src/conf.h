@@ -51,8 +51,6 @@ typedef struct {
     int httpdmaxconn;
     int clienttimeout;
     int checkinterval;
-    char *fwscripts_path;
-    char *fwtype;
     int log_syslog;
     int syslog_facility;
 } s_config;
