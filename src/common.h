@@ -22,6 +22,7 @@
 /** @file common.h
     @brief Common constants and other bits
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
+    @todo This file is evil, it should only contain constants, not includes.  Makes it very hard to find out what other files a code section uses.
 */
 
 #ifndef _COMMON_H_
@@ -44,6 +45,8 @@
 #include <errno.h>
 
 #include <pthread.h>
+
+#include "config.h"
 
 #include "httpd.h"
 

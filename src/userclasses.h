@@ -27,21 +27,28 @@
 #ifndef _USERCLASSES_H_
 #define _USERCLASSES_H_
 
-/* Format still up in the air... */
+/** @brief The structure for user classes 
+*
+*@note The format still up in the air... 
+*@note Should this be opaque structures?
+*/
 typedef struct _user_classes {
-	int	profile;	/* 0-255, limited by exit() return values */
-	int	timeout;	/* In minutes */
-	int	active;		/* User active, boolean */
+	int	profile;	/**< 0-255, limited by exit() return values */
+	int	timeout;	/**< Timeout in minutes */
+	int	active;		/**< User active, boolean */
 	struct	_user_classes	*next,
 				*prev;
 } UserClasses;
 
+/** @brief The structure for user rights 
+*/
 typedef struct _user_rights {
-	int	profile;	/* keyed to a global profile */
-	time_t	start_time,	/* when connection started */
-		end_time,	/* start_time + timeout */
-		last_checked;	/* time of last check */
+	int	profile;	/**< keyed to a global profile */
+	time_t	start_time,	/**< when connection started */
+		end_time,	/**< start_time + timeout */
+		last_checked;	/**< time of last check */
 } UserRights;
+
 
 UserRights *new_userrights(void);
 void free_userrights(UserRights *rights);
@@ -51,6 +58,14 @@ void free_userclasses(UserClasses *class);
 void insert_userclasses(UserClasses *class);
 UserClasses *find_userclasses(int profile);
 UserClasses *remove_userclasses(int profile);
+
+/** @brief Initialize user classes subsystem 
+*
+* This is a more detailled description...
+* @param remote_allowed This param is a boolean 
+* @return TRUE if initialization succeded 
+* @todo Implement different return value on failure.  Currently always return true.
+*/
 int init_userclasses(int remote_allowed); /* Arg is boolean */
 
 #endif /* _USERCLASSES_H_ */

@@ -1,5 +1,10 @@
 # $Header$
 2004-04-19  Benoit Grégoire  <bock@step.polymtl.ca>
+	* doc/doxygen.cfg.in:  Config tweaking.  Exclude libhttpd directory, enable todolist and buglist
+	* src/common.h:  Include the autoconf config.h.  Add a todo to state that this file is evil.
+	* src/userclasses.h:  As requested, document a file to show how doxygen works.  Check out what happens with the todo in "Related Pages" in the docs.  You all installed doxygen, right? 
+
+2004-04-18  Benoit Grégoire  <bock@step.polymtl.ca>
 	* Properly integrate libhttpd into the source tree ;)  Note that this will create a proper system wide shared librery for libghttpd.  Still to be done:  1- Store Mina's patch somewhere,  in case we want to upgrade libhttpd.  2-Add configure option not to build httpd, and use an already installed one.
 
 2004-04-18  Alexandre Carmel-Veilleux <acv@acv.ca>
