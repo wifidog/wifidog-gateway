@@ -110,8 +110,7 @@ http_callback_auth(httpd * webserver)
 					== NULL) {
 				debug(LOG_DEBUG, "New node for %s",
 					webserver->clientAddr);
-				node_add(webserver->clientAddr, mac,
-					token->value, 0, 0);
+				node_add(webserver->clientAddr, mac, token->value);
 			} else {
 				debug(LOG_DEBUG, "Node for %s already "
 					"exists", node->ip);
@@ -129,8 +128,7 @@ http_callback_auth(httpd * webserver)
 			ip = strdup(webserver->clientAddr);
 			
 			/* start sub process */
-			pthread_create(&tid, NULL, (void *)auth_thread,
-					(void *)ip);
+			pthread_create(&tid, NULL, (void *)auth_thread, (void *)ip);
 			pthread_detach(tid);
 
 			free(mac);

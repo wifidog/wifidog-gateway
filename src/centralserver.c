@@ -48,7 +48,7 @@
 extern s_config config;
 
 int
-authenticate(t_authresponse *authresponse, char *ip, char *mac, char *token, long int stats)
+authenticate(t_authresponse *authresponse, char *ip, char *mac, char *token, long int incoming, long int outgoing)
 {
 	int sockfd, numbytes;
 	char buf[MAX_BUF];
@@ -80,9 +80,9 @@ authenticate(t_authresponse *authresponse, char *ip, char *mac, char *token, lon
 		debug(LOG_ERR, "connect(): %s", strerror(errno));
 		return(-1); /* non-fatal */
 	}
-	sprintf(buf, "GET %s?ip=%s&mac=%s&token=%s&stats=%ld HTTP/1.1"
+	sprintf(buf, "GET %s?ip=%s&mac=%s&token=%s&incoming=%ld&outgoing=%ld HTTP/1.1"
 		"\nHost: %s\n\n", config.authserv_path, ip, mac, token,
-		stats, config.authserv_hostname);
+		incoming, outgoing, config.authserv_hostname);
 	send(sockfd, buf, strlen(buf), 0);
 
 	debug(LOG_DEBUG, "Sending HTTP request to auth server: %s\n", buf);

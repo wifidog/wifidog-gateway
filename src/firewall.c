@@ -199,115 +199,148 @@ fw_destroy(void)
 void
 fw_counter(void)
 {
-    FILE           *output;
-    unsigned long int counter;
     t_authresponse  authresponse;
-    unsigned int    tag, rc;
-    char            ip[255],
-                    mac[255],
-                    *script,
-                    *token;
-    t_node         *p1;
+    char            *token, *ip;
+    t_node         *p1, *p2;
 
-    /* FIXME make iptables a DEFINE or something */
-    asprintf(&script, "%s %s", "iptables", "-v -x -t mangle -L " TABLE_WIFIDOG_MARK);
-
-    if (!(output = popen(script, "r"))) {
-        debug(LOG_ERR, "popen(): %s", strerror(errno));
+    if (-1 == iptables_fw_counters()) {
+        debug(LOG_ERR, "Could not get counters from firewall!");
         return;
     }
 
-    free(script);
+    p1 = firstnode;
 
-    /* skip the first two lines */
-    while (('\n' != fgetc(output)) && !feof(output))
-        ;
-    while (('\n' != fgetc(output)) && !feof(output))
-        ;
-    while (output && !(feof(output))) {
-        rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %s %*s %*s %s %*s %*s 0x%u", &counter, ip, mac, &tag);
-        if (4 == rc && EOF != rc) {
-            pthread_mutex_lock(&nodes_mutex);
+    pthread_mutex_lock(&nodes_mutex);
+    p2 = firstnode;
+    while (NULL != (p1 = p2)) {
+        p2 = p1->next;
+        ip = strdup(p1->ip);
+        token = strdup(p1->token);
+        pthread_mutex_unlock(&nodes_mutex);
+        authenticate(&authresponse, p1->ip, p1->mac, token, p1->counters.incoming, p1->counters.outgoing);
+        pthread_mutex_lock(&nodes_mutex);
 
-            p1 = node_find_by_ip(ip);
-
-            if (p1) {
-                token = strdup(p1->token);
-
-                pthread_mutex_unlock(&nodes_mutex);
-                authenticate(&authresponse, ip, mac, token, counter);
-                pthread_mutex_lock(&nodes_mutex);
-
-                free(token);
-
-                p1 = node_find_by_ip(ip);
-                if (p1 == NULL) {
-                    /* FIXME We should not continue for this entry past this point */
-                    debug(LOG_DEBUG, "Node %s was freed while being re-validated!", ip);
-                }
-                debug(LOG_DEBUG, "%s - Counter currently %ld, new counter %ld", p1->ip, p1->counter, counter);
-                if (counter > p1->counter) {
-                    p1->counter = counter;
-                    debug(LOG_INFO, "%s - Updated counter to %ld bytes", p1->ip, p1->counter);
-                    p1->noactivity = time(NULL);
-                } else {
-                    debug(LOG_INFO, "%s - Recorded no activity since %ld", p1->ip, p1->noactivity);
-                }
-                if (p1->noactivity +
-                    (config.checkinterval * config.clienttimeout)
-                    <= time(NULL)) {
-                    /* Timing out user */
-                    debug(LOG_INFO, "%s - Inactive for %ld seconds, removing node and denying in firewall", ip, config.checkinterval * config.clienttimeout);
-                    fw_deny(p1->ip, p1->mac, p1->tag);
-                    node_delete(p1);
-                } else {
-                    /*
-                     * This handles any change in
-                     * the status this allows us
-                     * to change the status of a
-                     * user while he's connected
-                     */
-                    switch (authresponse.authcode) {
-                        case AUTH_DENIED:
-
-                        case AUTH_VALIDATION_FAILED:
-                            debug(LOG_NOTICE, "%s - Validation timeout, now denied. Removing node and firewall rules", ip);
-                            fw_deny(p1->ip, p1->mac, p1->tag);
-                            node_delete(p1);
-                            break;
-
-                        case AUTH_ALLOWED:
-                            if (p1->tag != MARK_KNOWN) {
-                                debug(LOG_INFO, "%s - Access has changed, refreshing firewall and clearing counters", ip);
-                                fw_deny(p1->ip, p1->mac, p1->tag);
-                                p1->tag = MARK_KNOWN;
-                                p1->counter = 0;
-                                fw_allow(p1->ip, p1->mac, p1->tag);
-                            }
-                            break;
-
-                        case AUTH_VALIDATION:
-                            /*
-                             * Do nothing, user
-                             * is in validation
-                             * period
-                             */
-                            debug(LOG_INFO, "%s - User in validation period", ip);
-                            break;
-
-                        default:
-                            debug(LOG_DEBUG, "I do not know about authentication code %d", authresponse.authcode);
-                            break;
-                    }
-                }
-                pthread_mutex_unlock(&nodes_mutex);
+        if (!(p1 = node_find_by_ip(ip))) {
+            debug(LOG_ERR, "Node %s was freed while being re-validated!", ip);
+        } else {
+            if (p1->counters.last_updated +
+                (config.checkinterval * config.clienttimeout)
+                <= time(NULL)) {
+                /* Timing out user */
+                debug(LOG_INFO, "%s - Inactive for %ld seconds, removing node and denying in firewall", p1->ip, config.checkinterval * config.clienttimeout);
+                fw_deny(p1->ip, p1->mac, p1->tag);
+                node_delete(p1);
             } else {
-                /* Node was not found in list, FIXME remove from firewall rules */
-                debug(LOG_NOTICE, "Node %s was not found in list", ip);
+                /*
+                 * This handles any change in
+                 * the status this allows us
+                 * to change the status of a
+                 * user while he's connected
+                 */
+                switch (authresponse.authcode) {
+                    case AUTH_DENIED:
+
+                    case AUTH_VALIDATION_FAILED:
+                        debug(LOG_NOTICE, "%s - Validation timeout, now denied. Removing node and firewall rules", p1->ip);
+                        fw_deny(p1->ip, p1->mac, p1->tag);
+                        node_delete(p1);
+                        break;
+
+                    case AUTH_ALLOWED:
+                        if (p1->tag != MARK_KNOWN) {
+                            debug(LOG_INFO, "%s - Access has changed, refreshing firewall and clearing counters", p1->ip);
+                            fw_deny(p1->ip, p1->mac, p1->tag);
+                            p1->tag = MARK_KNOWN;
+                            p1->counters.incoming = p1->counters.outgoing = 0;
+                            fw_allow(p1->ip, p1->mac, p1->tag);
+                        }
+                        break;
+
+                    case AUTH_VALIDATION:
+                        /*
+                         * Do nothing, user
+                         * is in validation
+                         * period
+                         */
+                        debug(LOG_INFO, "%s - User in validation period", p1->ip);
+                        break;
+
+                    default:
+                        debug(LOG_DEBUG, "I do not know about authentication code %d", authresponse.authcode);
+                        break;
+                }
             }
         }
+
+        free(token);
+        free(ip);
     }
-    pclose(output);
+    pthread_mutex_unlock(&nodes_mutex);
+
+
+//            debug(LOG_DEBUG, "%s - Counter currently %ld, new counter %ld", p1->ip, p1->counter, counters[i]->outgoing);
+//
+//                if (counters[i]->outgoing > p1->counter) {
+//                    p1->counter = counters[i]->outgoing;
+//                    debug(LOG_INFO, "%s - Updated counter to %ld bytes", p1->ip, p1->counter);
+//                    p1->noactivity = time(NULL);
+//                } else {
+//                    debug(LOG_INFO, "%s - Recorded no activity since %ld", p1->ip, p1->noactivity);
+//                }
+//                if (p1->noactivity +
+//                    (config.checkinterval * config.clienttimeout)
+//                    <= time(NULL)) {
+//                    /* Timing out user */
+//                    debug(LOG_INFO, "%s - Inactive for %ld seconds, removing node and denying in firewall", p1->ip, config.checkinterval * config.clienttimeout);
+//                    fw_deny(p1->ip, p1->mac, p1->tag);
+//                    node_delete(p1);
+//                } else {
+//                    /*
+//                     * This handles any change in
+//                     * the status this allows us
+//                     * to change the status of a
+//                     * user while he's connected
+//                     */
+//                    switch (authresponse.authcode) {
+//                        case AUTH_DENIED:
+//
+//                        case AUTH_VALIDATION_FAILED:
+//                            debug(LOG_NOTICE, "%s - Validation timeout, now denied. Removing node and firewall rules", p1->ip);
+//                            fw_deny(p1->ip, p1->mac, p1->tag);
+//                            node_delete(p1);
+//                            break;
+//
+//                        case AUTH_ALLOWED:
+//                            if (p1->tag != MARK_KNOWN) {
+//                                debug(LOG_INFO, "%s - Access has changed, refreshing firewall and clearing counters", p1->ip);
+//                                fw_deny(p1->ip, p1->mac, p1->tag);
+//                                p1->tag = MARK_KNOWN;
+//                                p1->counter = 0;
+//                                fw_allow(p1->ip, p1->mac, p1->tag);
+//                            }
+//                            break;
+//
+//                        case AUTH_VALIDATION:
+//                            /*
+//                             * Do nothing, user
+//                             * is in validation
+//                             * period
+//                             */
+//                            debug(LOG_INFO, "%s - User in validation period", p1->ip);
+//                            break;
+//
+//                        default:
+//                            debug(LOG_DEBUG, "I do not know about authentication code %d", authresponse.authcode);
+//                            break;
+//                    }
+//                }
+//        } else {
+//            /* Node was not found in list, FIXME remove from firewall rules */
+//            debug(LOG_NOTICE, "Node %s was not found in list", counters[i]->ip);
+//        }
+//        pthread_mutex_unlock(&nodes_mutex);
+//    }
+
 }
 
 /**
@@ -330,11 +363,10 @@ node_init(void)
  * @param mac MAC address
  * @param token Token
  * @param counter Value of the counter at creation (usually 0)
- * @param active Is the node active, or not
  * @return Pointer to the node we just created
  */
 t_node         *
-node_add(char *ip, char *mac, char *token, long int counter, int active)
+node_add(char *ip, char *mac, char *token)
 {
     t_node         *curnode, *prevnode;
 
@@ -357,8 +389,8 @@ node_add(char *ip, char *mac, char *token, long int counter, int active)
     curnode->ip = strdup(ip);
     curnode->mac = strdup(mac);
     curnode->token = strdup(token);
-    curnode->counter = counter;
-    curnode->active = active;
+    curnode->counters.incoming = curnode->counters.outgoing = 0;
+    curnode->counters.last_updated = time(NULL);
 
     if (prevnode == NULL) {
         firstnode = curnode;

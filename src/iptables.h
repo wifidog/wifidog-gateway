@@ -27,9 +27,11 @@
 #ifndef _IPTABLES_H_
 #define _IPTABLES_H_
 
-#define TABLE_WIFIDOG_MARK      "WiFiDog_Mark"
+#include "firewall.h"
+
 #define TABLE_WIFIDOG_CLASS     "WiFiDog_Class"
-#define TABLE_WIFIDOG_TRAFFIC   "WiFiDog_Traffic"
+#define TABLE_WIFIDOG_OUTGOING  "WiFiDog_Outgoing"
+#define TABLE_WIFIDOG_INCOMING  "WiFiDog_Incoming"
 
 #define TABLE_WIFIDOG_VALIDATE  "WiFiDog_Validate"
 #define TABLE_WIFIDOG_KNOWN     "WiFiDog_Known"
@@ -45,5 +47,6 @@ int iptables_do_command(char *format, ...);
 int iptables_fw_init(void);
 int iptables_fw_destroy(void);
 int iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag);
+int iptables_fw_counters(void);
 
 #endif /* _IPTABLES_H_ */

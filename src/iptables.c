@@ -30,11 +30,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <syslog.h>
+#include <errno.h>
+#include <string.h>
+#include <pthread.h>
 
 #include "conf.h"
 #include "iptables.h"
 #include "firewall.h"
+#include "debug.h"
 
+extern pthread_mutex_t	nodes_mutex;
 extern s_config config;
 extern int fw_quiet;
 
@@ -99,11 +105,11 @@ iptables_fw_init(void)
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -j " TABLE_WIFIDOG_UNKNOWN, config.gw_interface);
     iptables_do_command("-t nat -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_CLASS, config.gw_interface);
 
-    iptables_do_command("-t mangle -N " TABLE_WIFIDOG_MARK);
-    iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_MARK, config.gw_interface);
+    iptables_do_command("-t mangle -N " TABLE_WIFIDOG_OUTGOING);
+    iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_OUTGOING, config.gw_interface);
 
-    iptables_do_command("-t mangle -N " TABLE_WIFIDOG_TRAFFIC);
-    iptables_do_command("-t mangle -I FORWARD 1 -i %s -j " TABLE_WIFIDOG_TRAFFIC, config.external_interface);
+    iptables_do_command("-t mangle -N " TABLE_WIFIDOG_INCOMING);
+    iptables_do_command("-t mangle -I FORWARD 1 -i %s -j " TABLE_WIFIDOG_INCOMING, config.external_interface);
 
     return 1;
 }
@@ -122,8 +128,8 @@ iptables_fw_destroy(void)
 
     fw_quiet = 1;
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_CLASS);
-    iptables_do_command("-t mangle -F " TABLE_WIFIDOG_MARK);
-    iptables_do_command("-t mangle -F " TABLE_WIFIDOG_TRAFFIC);
+    iptables_do_command("-t mangle -F " TABLE_WIFIDOG_OUTGOING);
+    iptables_do_command("-t mangle -F " TABLE_WIFIDOG_INCOMING);
 
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_VALIDATE);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_UNKNOWN);
@@ -145,15 +151,15 @@ iptables_fw_destroy(void)
 
     rc = 0;
     for (tries = 0; tries < 10 && rc == 0; tries++) {
-        rc = iptables_do_command("-t mangle -D PREROUTING -i %s -j " TABLE_WIFIDOG_MARK, config.gw_interface);
+        rc = iptables_do_command("-t mangle -D PREROUTING -i %s -j " TABLE_WIFIDOG_OUTGOING, config.gw_interface);
     }
-    iptables_do_command("-t mangle -X " TABLE_WIFIDOG_MARK);
+    iptables_do_command("-t mangle -X " TABLE_WIFIDOG_OUTGOING);
 
     rc = 0;
     for (tries = 0; tries < 10 && rc == 0; tries++) {
-        rc = iptables_do_command("-t mangle -D FORWARD -i %s -j " TABLE_WIFIDOG_TRAFFIC, config.external_interface);
+        rc = iptables_do_command("-t mangle -D FORWARD -i %s -j " TABLE_WIFIDOG_INCOMING, config.external_interface);
     }
-    iptables_do_command("-t mangle -X " TABLE_WIFIDOG_TRAFFIC);
+    iptables_do_command("-t mangle -X " TABLE_WIFIDOG_INCOMING);
 
     return 1;
 }
@@ -166,12 +172,12 @@ iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag)
 
     switch(type) {
         case FW_ACCESS_ALLOW:
-            iptables_do_command("-t mangle -A " TABLE_WIFIDOG_MARK " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
-            rc = iptables_do_command("-t mangle -A " TABLE_WIFIDOG_TRAFFIC " -d %s -j ACCEPT", ip);
+            iptables_do_command("-t mangle -A " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
+            rc = iptables_do_command("-t mangle -A " TABLE_WIFIDOG_INCOMING " -d %s -j ACCEPT", ip);
             break;
         case FW_ACCESS_DENY:
-            iptables_do_command("-t mangle -D " TABLE_WIFIDOG_MARK " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
-            rc = iptables_do_command("-t mangle -D " TABLE_WIFIDOG_TRAFFIC " -d %s -j ACCEPT", ip);
+            iptables_do_command("-t mangle -D " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
+            rc = iptables_do_command("-t mangle -D " TABLE_WIFIDOG_INCOMING " -d %s -j ACCEPT", ip);
             break;
         default:
             rc = -1;
@@ -179,5 +185,82 @@ iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag)
     }
 
     return rc;
+}
+
+int
+iptables_fw_counters(void)
+{
+    FILE *output;
+    char *script,
+        ip[16],
+        rc;
+    unsigned long int counter;
+    t_node *p1;
+
+    /* Look for outgoing traffic */
+    asprintf(&script, "%s %s", "iptables", "-v -x -t mangle -L " TABLE_WIFIDOG_OUTGOING);
+    if (!(output = popen(script, "r"))) {
+        debug(LOG_ERR, "popen(): %s", strerror(errno));
+        return -1;
+    }
+    free(script);
+
+    /* skip the first two lines */
+    while (('\n' != fgetc(output)) && !feof(output))
+        ;
+    while (('\n' != fgetc(output)) && !feof(output))
+        ;
+    while (output && !(feof(output))) {
+        rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %s %*s %*s %*s %*s %*s 0x%*u", &counter, ip);
+        if (2 == rc && EOF != rc) {
+            debug(LOG_DEBUG, "Outgoing %s Bytes=%ld", ip, counter);
+            pthread_mutex_lock(&nodes_mutex);
+            if ((p1 = node_find_by_ip(ip))) {
+                if (p1->counters.outgoing < counter) {
+                    p1->counters.outgoing = counter;
+                    p1->counters.last_updated = time(NULL);
+                    debug(LOG_DEBUG, "%s - Updated counter to %ld bytes", ip, counter);
+                }
+            } else {
+                debug(LOG_ERR, "Could not find %s in node list", ip);
+            }
+            pthread_mutex_unlock(&nodes_mutex);
+        }
+    }
+    pclose(output);
+
+    /* Look for incoming traffic */
+    asprintf(&script, "%s %s", "iptables", "-v -x -t mangle -L " TABLE_WIFIDOG_INCOMING);
+    if (!(output = popen(script, "r"))) {
+        debug(LOG_ERR, "popen(): %s", strerror(errno));
+        return -1;
+    }
+    free(script);
+
+    /* skip the first two lines */
+    while (('\n' != fgetc(output)) && !feof(output))
+        ;
+    while (('\n' != fgetc(output)) && !feof(output))
+        ;
+    while (output && !(feof(output))) {
+        rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %*s %s", &counter, ip);
+        if (2 == rc && EOF != rc) {
+            debug(LOG_DEBUG, "Incoming %s Bytes=%ld", ip, counter);
+            pthread_mutex_lock(&nodes_mutex);
+            if ((p1 = node_find_by_ip(ip))) {
+                if (p1->counters.incoming < counter) {
+                    p1->counters.incoming = counter;
+                    p1->counters.last_updated = time(NULL);
+                    debug(LOG_DEBUG, "%s - Updated counter to %ld bytes", ip, counter);
+                }
+            } else {
+                debug(LOG_ERR, "Could not find %s in node list", ip);
+            }
+            pthread_mutex_unlock(&nodes_mutex);
+        }
+    }
+    pclose(output);
+
+    return 1;
 }
 

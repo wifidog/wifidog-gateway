@@ -101,7 +101,7 @@ auth_thread(void *ptr)
 	
 	pthread_mutex_unlock(&nodes_mutex);
 		
-	authenticate(&auth_response, ip, mac, token, 0);
+	authenticate(&auth_response, ip, mac, token, 0, 0);
 	
 	pthread_mutex_lock(&nodes_mutex);
 	
@@ -142,7 +142,6 @@ auth_thread(void *ptr)
 		"validated", node->ip, node->mac);
 	
     p1 = node_find_by_ip(node->ip);
-    p1->noactivity = time(NULL);
     switch(auth_response.authcode) {
         case AUTH_VALIDATION:
             p1->tag = MARK_VALIDATION;

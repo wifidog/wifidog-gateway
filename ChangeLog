@@ -1,5 +1,10 @@
 # $Header$
 2004-05-07  Philippe April <wifidog@philippeapril.com>
+    * Now we store both incoming and outgoing counters on server
+    and expire if no activity at all on both
+    * Changed the structure of nodes a little
+
+2004-05-07  Philippe April <wifidog@philippeapril.com>
     * New parameter ExternalInterface
     * Made possible to count inbound traffic by inserting new rules
 
