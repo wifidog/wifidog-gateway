@@ -70,7 +70,7 @@ execute(char *cmd_line, int quiet)
         /* We don't want to see any errors if quiet flag is on */
         if (quiet) close(2);
         if (execvp("/bin/sh", (char *const *)new_argv) < 0) {    /* execute the command  */
-            debug(LOG_ERR, "fork(): %s", strerror(errno));
+            debug(LOG_ERR, "execvp(): %s", strerror(errno));
             exit(1);
         }
     } else {        /* for the parent:      */

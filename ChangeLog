@@ -8,6 +8,8 @@
 	* src/centralserver.c: Failure of read() no longer fatal.
 	* src/centralserver.c: In case of failure, return from
 	auth_server_request() is no longer an undefined authresponse.
+	* src/util.c: Fixed typo in logging.
+	* src/wdctl_thread.c: Added logging when socket path is too long.
 
 2004-08-30 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* wifidog.conf: Corrected an example

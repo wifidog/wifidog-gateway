@@ -78,6 +78,7 @@ thread_wdctl(void *arg)
 
 	if (strlen(sock_name) > (sizeof(sa_un.sun_path) - 1)) {
 		/* TODO: Die handler with logging.... */
+		debug(LOG_ERR, "WDCTL socket name too long");
 		exit(1);
 	}
 	
