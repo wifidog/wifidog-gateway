@@ -1,5 +1,8 @@
 # $Header$
 2004-08-23 Benoit Grégoire  <bock@step.polymtl.ca>
+	* src/ping_thread.c:  Send the gateway id to the central server during ping, so the server know which gateway checked in, and then knows for sure that it is up (well, once the server implements it...).
+	
+2004-08-23 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/centralserver.c:  Fix path for auth by appending /auth/ to auth_server->authserv_path.  Wifidog works again.
 	
 2004-08-20 Alexandre Carmel-Veilleux <acv@acv.ca>

@@ -128,12 +128,13 @@ ping(void)
 		close(sockfd);
 		return;
 	}
-
-	snprintf(request, sizeof(request) - 1, "GET %s/ping/ HTTP/1.0\n"
+		
+	snprintf(request, sizeof(request) - 1, "GET %s/ping/?gw_id=%s HTTP/1.0\n"
 			"User-Agent: WiFiDog %s\n"
 			"Host: %s\n"
 			"\n",
 			auth_server->authserv_path,
+			config_get_config()->gw_id,
 			VERSION,
 			auth_server->authserv_hostname);
 
