@@ -41,7 +41,8 @@ build-wifidog-stamp:
 
 build-iptables: build-iptables-stamp
 build-iptables-stamp:
-	sed -i "s/PF_EXT_SLIB:=icmp/PF_EXT_SLIB:=mac icmp/" $(IPTABLES_DIR)/extensions/Makefile
+	sed "s/PF_EXT_SLIB:=icmp/PF_EXT_SLIB:=mac icmp/" $(IPTABLES_DIR)/extensions/Makefile > $(IPTABLES_DIR)/extensions/Makefile.patched
+	mv -f $(IPTABLES_DIR)/extensions/Makefile.patched $(IPTABLES_DIR)/extensions/Makefile
 	CC=$(CC) LD=$(LD) AR=$(AR) RANLIB=$(RANLIB) $(MAKE) -C $(IPTABLES_DIR) KERNEL_DIR=../../linux/linux/
 
 	touch build-iptables-stamp

@@ -1,4 +1,7 @@
 # $Header$
+2004-10-26 Philippe April <philippe@philippeapril.com>
+	* ipkg/rules: sed -i is not standard, did a workaround.
+
 2004-10-22 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* src/various: Added wd_gethostbyname, a thread-safe (serialized)
 	  version of gethostbyname.
