@@ -1,5 +1,8 @@
 # $Header$
-2004-05-28 Benoit Grégoire  <papril777@yahoo.com>
+2004-06-01 Philippe April <papril777@yahoo.com>
+    * Sending User-Agent header to central server
+
+2004-05-28 Philippe April <papril777@yahoo.com>
     * Fixed bugs implemented after major changes
 
 2004-05-27 Benoit Grégoire  <bock@step.polymtl.ca>
