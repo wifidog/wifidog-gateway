@@ -80,6 +80,8 @@ termination_handler(int s)
 {
 	static	pthread_mutex_t	sigterm_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+	debug(LOG_DEBUG, "Caught signal %d, cleaning up and exiting", s);
+
 	/* XXX stupid openwrt bug */
 	pthread_kill(tid_fw_counter, SIGKILL);
 
@@ -87,6 +89,7 @@ termination_handler(int s)
 	if (pthread_mutex_trylock(&sigterm_mutex))
 		pthread_exit(NULL);
 	
+	debug(LOG_DEBUG, "Flushing firewall rules...");
 	fw_destroy();
 
 	debug(LOG_DEBUG, "Exiting...");

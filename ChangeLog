@@ -1,4 +1,7 @@
 # $Header$
+2004-10-09 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* src/gateway.c: More logging on termination_handler.
+
 2004-10-08 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* src/wdctl_thread.c: Fix wdctl_status to return all connected
 	users.
