@@ -558,6 +558,9 @@ get_ruleset(char *ruleset)
 	for (tmp = config.rulesets; tmp != NULL
 			&& strcmp(tmp->name, ruleset) != 0; tmp = tmp->next);
 
+	if (tmp == NULL)
+		return NULL;
+
 	return(tmp->rules);
 }
 

@@ -1,5 +1,8 @@
 # $Header$
 
+2004-11-23 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* src/conf.c: Fixed a NULL pointer dereference in get_ruleset().
+
 2004-11-22 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* libhttpd/api.c: Fix leak in HttpdEndRequest().
 	* src/ping_thread.c: Fix auth_server IP change code with latest
