@@ -41,7 +41,6 @@ _debug(char *filename, int line, int level, char *format, ...)
             fprintf(stderr, "[%d](%s:%d) ", level, filename, line);
             vfprintf(stderr, format, vlist);
             fputc('\n', stderr);
-            fflush(stderr);
         } else if (!config.daemon) {
             fprintf(stdout, "[%d](%s:%d) ", level, filename, line);
             vfprintf(stdout, format, vlist);
