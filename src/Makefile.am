@@ -2,7 +2,8 @@
 # $Header$
 #
 
-bin_PROGRAMS = wifidog
+bin_PROGRAMS = wifidog \
+	wdctl
  
 AM_CPPFLAGS = \
 	-I${top_srcdir}/libhttpd/
@@ -18,7 +19,8 @@ wifidog_SOURCES = commandline.c \
 	http.c \
 	auth.c \
 	client_list.c \
-	util.c
+	util.c \
+	wdctl_thread.c
 
 noinst_HEADERS = commandline.h \
 	common.h \
@@ -31,5 +33,8 @@ noinst_HEADERS = commandline.h \
 	http.h \
 	auth.h \
 	client_list.h \
-	util.h
+	util.h \
+	wdctl_thread.h \
+	wdctl.h
 
+wdctl_SOURCES = wdctl.c

@@ -135,7 +135,7 @@ client_list_find(char *ip, char *mac)
     return NULL;
 }
 
-/** @deprecated
+/**
  * Finds a  client by its IP, returns NULL if the client could not
  * be found
  * @param ip IP we are looking for in the linked list
@@ -149,6 +149,27 @@ client_list_find_by_ip(char *ip)
     ptr = firstclient;
     while (NULL != ptr) {
         if (0 == strcmp(ptr->ip, ip))
+            return ptr;
+        ptr = ptr->next;
+    }
+
+    return NULL;
+}
+
+/**
+ * Finds a  client by its Mac, returns NULL if the client could not
+ * be found
+ * @param mac Mac we are looking for in the linked list
+ * @return Pointer to the client, or NULL if not found
+ */
+t_client         *
+client_list_find_by_mac(char *mac)
+{
+    t_client         *ptr;
+
+    ptr = firstclient;
+    while (NULL != ptr) {
+        if (0 == strcmp(ptr->mac, mac))
             return ptr;
         ptr = ptr->next;
     }

@@ -47,6 +47,7 @@ usage(void)
     printf("  -f            Run in foreground\n");
     printf("  -d <level>    Debug level\n");
     printf("  -s            Log to syslog\n");
+    printf("  -w <path>     Wdctl socket path\n");
     printf("  -h            Print usage\n");
     printf("\n");
 }
@@ -59,7 +60,7 @@ parse_commandline(int argc, char **argv)
     int c;
     s_config *config = config_get_config();
 
-    while (-1 != (c = getopt(argc, argv, "c:hfd:s"))) {
+    while (-1 != (c = getopt(argc, argv, "c:hfd:sw:"))) {
         switch(c) {
             case 'h':
                 usage();
@@ -71,6 +72,13 @@ parse_commandline(int argc, char **argv)
                     strncpy(config->configfile, optarg, sizeof(config->configfile));
                 }
                 break;
+
+	    case 'w':
+		if (optarg) {
+		    free(config->wdctl_sock);
+		    config->wdctl_sock = strdup(optarg);
+		}
+		break;
 
             case 'f':
                 config->daemon = 0;

@@ -51,6 +51,9 @@
 #include "auth.h"
 #include "http.h"
 #include "client_list.h"
+#include "wdctl_thread.h"
+
+extern int errno;
 
 /**@internal
  * @brief Handles SIGCHLD signals to avoid zombie processes
@@ -155,7 +158,8 @@ main_loop(void)
 			config->gw_address, config->gw_port);
 	webserver = httpdCreate(config->gw_address, config->gw_port);
 	if (webserver == NULL) {
-		debug(LOG_ERR, "Could not create web server");
+		debug(LOG_ERR, "Could not create web server: %s",
+				strerror(errno));
 		exit(1);
 	}
 	debug(LOG_DEBUG, "Assigning callbacks to web server");
@@ -174,6 +178,11 @@ main_loop(void)
 
 	/* start clean up thread */
 	pthread_create(&tid, NULL, (void *)thread_client_timeout_check, NULL);
+	pthread_detach(tid);
+
+	/* start control thread */
+	pthread_create(&tid, NULL, (void *)thread_wdctl, 
+			(void *)strdup(config->wdctl_sock));
 	pthread_detach(tid);
 	
 	debug(LOG_NOTICE, "Waiting for connections");

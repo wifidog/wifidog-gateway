@@ -67,6 +67,7 @@ typedef enum {
 	oHTTPDName,
 	oClientTimeout,
 	oCheckInterval,
+	oWdctlSocket,
 	oSyslogFacility
 } OpCodes;
 
@@ -93,6 +94,7 @@ static const struct {
 	{ "clienttimeout",      oClientTimeout },
 	{ "checkinterval",      oCheckInterval },
 	{ "syslogfacility", 	oSyslogFacility },
+	{ "wdctlsocket", 	oWdctlSocket },
 	{ NULL,                 oBadOption },
 };
 
@@ -131,6 +133,7 @@ config_init(void)
 	config.syslog_facility = DEFAULT_SYSLOG_FACILITY;
 	config.daemon = -1;
 	config.log_syslog = DEFAULT_LOG_SYSLOG;
+	config.wdctl_sock = strdup(DEFAULT_WDCTL_SOCK);
 }
 
 /**
@@ -253,6 +256,10 @@ config_read(char *filename)
 					break;
 				case oCheckInterval:
 					sscanf(p1, "%d", &config.checkinterval);
+					break;
+				case oWdctlSocket:
+					free(config.wdctl_sock);
+					config.wdctl_sock = strdup(p1);
 					break;
 				case oClientTimeout:
 					sscanf(p1, "%d", &config.clienttimeout);

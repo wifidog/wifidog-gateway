@@ -65,7 +65,11 @@ t_client *client_list_append(char *ip, char *mac, char *token);
 t_client *client_list_find(char *ip, char *mac);
 
 /** @brief Finds a client only by its IP */
-t_client *client_list_find_by_ip(char *ip); /* needed by iptables.c and auth.c */
+t_client *client_list_find_by_ip(char *ip); /* needed by iptables.c, auth.c 
+					     * and wdctl_thread.c */
+
+/** @brief Finds a client only by its Mac */
+t_client *client_list_find_by_mac(char *mac); /* needed by wdctl_thread.c */
 
 /** @brief Finds a client by its token */
 t_client *client_list_find_by_token(char *token);

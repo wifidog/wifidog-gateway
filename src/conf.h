@@ -41,6 +41,7 @@
 #define DEFAULT_CHECKINTERVAL 5
 #define DEFAULT_LOG_SYSLOG 0
 #define DEFAULT_SYSLOG_FACILITY LOG_DAEMON
+#define DEFAULT_WDCTL_SOCK "/tmp/wdctl.sock"
 /*@}*/ 
 
 /**
@@ -48,6 +49,7 @@
  */
 typedef struct {
     char configfile[255];	/**< @brief name of the config file */
+    char *wdctl_sock;		/**< @brief wdctl path to socket */
     int daemon;			/**< @brief if daemon > 0, use daemon mode */
     int debuglevel;		/**< @brief Debug information verbosity */
     char *external_interface;	/**< @brief External network interface name for
