@@ -1,5 +1,13 @@
 # $Header$
 
+2005-03-07 Mina Naguib <mina@ilesansfil.org>
+	* auth.c: Got rid of legacy _http_output and _http_redirect - replaced them
+	with libhttpd functions and http_wifidog_header/http_wifidog_footer
+	* auth.c: When re-directing to auth server now respects SSL setting instead
+	of always http+port 80
+	* auth.c: Better debugging output of what it's doing when it acts on auth
+	server response
+
 2005-03-06 Mina Naguib <mina@ilesansfil.org>
 	* Check return values of pthread_create
 	* Internal documentation touch-ups

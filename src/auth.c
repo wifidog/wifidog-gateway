@@ -37,7 +37,7 @@
 #include <syslog.h>
 
 #include "httpd.h"
-
+#include "http.h"
 #include "safe.h"
 #include "conf.h"
 #include "debug.h"
@@ -49,63 +49,6 @@
 
 /* Defined in clientlist.c */
 extern	pthread_mutex_t	client_list_mutex;
-
-/** @internal
- * @brief Used to bypass libhttpd output.
- * @note Can only be called once per connection because the socket gets
- * closed. */
-static void
-_http_output(int fd, char *msg)
-{
-	char header[] = "HTTP/1.1 200 OK\r\n"
-		"Connection: close\r\n"
-		"Content-Type: text/html\r\n"
-		"Cache-control: private, no-cache, must-revalidate\r\n"
-		"Expires: Mon, 26 Jul 1997 05:00:00 GMT\r\n"
-		"Pragma: no-cache\r\n"
-		"\r\n"
-		"<html><head>\n"
-		"<meta http-equiv=\"Pragma\" CONTENT=\"no-cache\">\n"
-		"<meta http-equiv=\"Expires\" CONTENT=\"-1\">\n"
-		"</head>\n<body>\n";
-	char footer[] = "</body></html>";
-	
-	debug(LOG_DEBUG, "HTTP Response: [%s%s%s]", header, msg, footer);
-	
-	send(fd, header, strlen(header), 0);
-	send(fd, msg, strlen(msg), 0);
-	send(fd, footer, strlen(footer), 0);
-	shutdown(fd, 2);
-	close(fd);
-}
-
-/** @internal
- * @brief Used to bypass libhttpd output.
- * @note Can only be called once per connection because the socket gets
- * closed. */
-static void
-_http_redirect(int fd, char *format, ...)
-{
-	char *response, *url;
-	va_list vlist;
-
-	va_start(vlist, format);
-	safe_vasprintf(&url, format, vlist);
-	va_end(vlist);
-
-	safe_asprintf(&response, "HTTP/1.1 307 Please authenticate yourself here\r\nLocation: %s\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<html><head><title>Redirection</title></head><body>Please <a href='%s'>Click here</a> if you're not redirected.", url, url);
-
-	free(url);
-
-	debug(LOG_DEBUG, "HTTP Redirect: [%s]", response);
-	
-	send(fd, response, strlen(response), 0);
-
-	free(response);
-
-	shutdown(fd, 2);
-	close(fd);
-}
 
 /** Launches a thread that periodically checks if any of the connections has timed out
 @param arg Must contain a pointer to a string containing the IP adress of the client to check to check
@@ -150,13 +93,18 @@ authenticate_client(request *r)
 	char	*ip,
 		*mac,
 		*token;
+	char *newlocation = NULL;
+	char protocol[6];
+	s_config	*config = NULL;
+	t_auth_serv	*auth_server = NULL;
+	int port = 80;
 
 	LOCK_CLIENT_LIST();
 
 	client = client_list_find_by_ip(r->clientAddr);
 
 	if (client == NULL) {
-		debug(LOG_ERR, "Could not find client client for %s", ip);
+		debug(LOG_ERR, "Could not find client for %s", ip);
 		UNLOCK_CLIENT_LIST();
 		return;
 	}
@@ -184,54 +132,127 @@ authenticate_client(request *r)
 	free(token);
 	free(mac);
 
+	/* Prepare some variables we'll need below */
+	config = config_get_config();
+	auth_server = get_auth_server();
+
+	if (auth_server->authserv_use_ssl) {
+		strcpy(protocol, "https");
+		port = auth_server->authserv_ssl_port;
+	} else {
+		strcpy(protocol, "http");
+		port = auth_server->authserv_http_port;
+	}
+
 	switch(auth_response.authcode) {
 
 	case AUTH_ERROR:
 		/* Error talking to central server */
 		debug(LOG_ERR, "Got %d from central server authenticating token %s from %s at %s", auth_response, client->token, client->ip, client->mac);
-		_http_output(client->fd, "Access denied: We did not get a valid answer from the central server");
+		http_wifidog_header(r, "Error!");
+		httpdOutput(r, "Error: We did not get a valid answer from the central server");
+		http_wifidog_footer(r);
 		break;
 
 	case AUTH_DENIED:
 		/* Central server said invalid token */
-		//_http_output(client->fd, "Access denied");
-	    _http_redirect(r->clientSock, "http://%s:%d%sgw_message.php?message=denied",
-		    config_get_config()->auth_servers->authserv_hostname, 
-		    config_get_config()->auth_servers->authserv_http_port,
-		    config_get_config()->auth_servers->authserv_path);
+		debug(LOG_INFO, "Got DENIED from central server authenticating token %s from %s at %s - redirecting them to denied message", client->token, client->ip, client->mac);
+		safe_asprintf(&newlocation, "Location: %s://%s:%d%sgw_message.php?message=denied",
+			protocol,
+			auth_server->authserv_hostname,
+			port,
+			auth_server->authserv_path
+		);
+		httpdSetResponse(r, "307 Redirect to denied message\n");
+		httpdAddHeader(r, newlocation);
+		free(newlocation);
+		http_wifidog_header(r, "Redirection to message");
+		httpdPrintf(r, "Please <a href='%s://%s:%d%sgw_message.php?message=denied'>click here</a>.",
+			protocol,
+			auth_server->authserv_hostname,
+			port,
+			auth_server->authserv_path
+		);
+		http_wifidog_footer(r);
 		break;
 
     case AUTH_VALIDATION:
+		/* They just got validated for X minutes to check their email */
+		debug(LOG_INFO, "Got VALIDATION from central server authenticating token %s from %s at %s - adding to firewall and redirecting them to activate message", client->token, client->ip, client->mac);
 		client->fw_connection_state = FW_MARK_PROBATION;
-        fw_allow(client->ip, client->mac, FW_MARK_PROBATION);
-	    //_http_output(r->clientSock, "You have 15 minutes to activate your account, hurry up!");
-	    _http_redirect(r->clientSock, "http://%s:%d%sgw_message.php?message=activate",
-		    config_get_config()->auth_servers->authserv_hostname, 
-		    config_get_config()->auth_servers->authserv_http_port,
-		    config_get_config()->auth_servers->authserv_path);
+		fw_allow(client->ip, client->mac, FW_MARK_PROBATION);
+		safe_asprintf(&newlocation, "Location: %s://%s:%d%sgw_message.php?message=activate",
+			protocol,
+			auth_server->authserv_hostname,
+			port,
+			auth_server->authserv_path
+		);
+		httpdSetResponse(r, "307 Redirect to activate message\n");
+		httpdAddHeader(r, newlocation);
+		free(newlocation);
+		http_wifidog_header(r, "Redirection to message");
+		httpdPrintf(r, "Please <a href='%s://%s:%d%sgw_message.php?message=activate'>click here</a>.",
+			protocol,
+			auth_server->authserv_hostname,
+			port,
+			auth_server->authserv_path
+		);
+		http_wifidog_footer(r);
 	    break;
 
     case AUTH_ALLOWED:
-	    client->fw_connection_state = FW_MARK_KNOWN;
-       	fw_allow(client->ip, client->mac, FW_MARK_KNOWN);
-	    _http_redirect(r->clientSock, "http://%s:%d%sportal/?gw_id=%s",
-	        config_get_config()->auth_servers->authserv_hostname, 
-		    config_get_config()->auth_servers->authserv_http_port,
-		    config_get_config()->auth_servers->authserv_path,
-		    config_get_config()->gw_id);
+		/* Logged in successfully as a regular account */
+		debug(LOG_INFO, "Got ALLOWED from central server authenticating token %s from %s at %s - adding to firewall and redirecting them to portal", client->token, client->ip, client->mac);
+		client->fw_connection_state = FW_MARK_KNOWN;
+		fw_allow(client->ip, client->mac, FW_MARK_KNOWN);
+		safe_asprintf(&newlocation, "Location: %s://%s:%d%sportal/?gw_id=%s",
+			protocol,
+			auth_server->authserv_hostname,
+			port,
+			auth_server->authserv_path,
+			config->gw_id
+		);
+		httpdSetResponse(r, "307 Redirect to portal\n");
+		httpdAddHeader(r, newlocation);
+		free(newlocation);
+		http_wifidog_header(r, "Redirection to portal");
+		httpdPrintf(r, "Please <a href='%s://%s:%d%sportal/?gw_id=%s'>click here</a> for the portal.",
+			protocol,
+			auth_server->authserv_hostname,
+			port,
+			auth_server->authserv_path,
+			config->gw_id
+		);
+		http_wifidog_footer(r);
 	    break;
 
     case AUTH_VALIDATION_FAILED:
-	    //_http_output(r->clientSock, "You have failed to validate your account in 15 minutes");
-	    _http_redirect(r->clientSock, "http://%s:%d%sgw_message.php?message=failed_validation",
-	        config_get_config()->auth_servers->authserv_hostname, 
-	        config_get_config()->auth_servers->authserv_http_port,
-	        config_get_config()->auth_servers->authserv_path);
+		 /* Client had X minutes to validate account by email and didn't = too late */
+		debug(LOG_INFO, "Got VALIDATION_FAILED from central server authenticating token %s from %s at %s - redirecting them to failed_validation message", client->token, client->ip, client->mac);
+		safe_asprintf(&newlocation, "Location: %s://%s:%d%sgw_message.php?message=failed_validation",
+			protocol,
+			auth_server->authserv_hostname,
+			port,
+			auth_server->authserv_path
+		);
+		httpdSetResponse(r, "307 Redirect to failed validation message\n");
+		httpdAddHeader(r, newlocation);
+		free(newlocation);
+		http_wifidog_header(r, "Redirection to message");
+		httpdPrintf(r, "Please <a href='%s://%s:%d%sgw_message.php?message=failed_validation'>click here</a>.",
+			protocol,
+			auth_server->authserv_hostname,
+			port,
+			auth_server->authserv_path
+		);
+		http_wifidog_footer(r);
 	    break;
 
     default:
-	    _http_output(r->clientSock, "Internal error");
-	    debug(LOG_WARNING, "I don't know what the validation code %d means", auth_response.authcode);
+		debug(LOG_WARNING, "I don't know what the validation code %d means for token %s from %s at %s - sending error message", auth_response.authcode, client->token, client->ip, client->mac);
+		http_wifidog_header(r, "Internal error");
+		httpdOutput(r, "We can not validate your request at this time");
+		http_wifidog_footer(r);
 	    break;
 
 	}
