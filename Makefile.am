@@ -16,8 +16,7 @@ EXTRA_DIST = \
   wifidog.spec.in \
   wifidog.spec \
   config \
-  wifidog.conf \
-  phpauth
+  wifidog.conf
 
 .PHONY: doc
 doc:
