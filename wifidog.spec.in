@@ -54,7 +54,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/*.so
 %{_libdir}/*.so*
 %{_includedir}/*
-%{_datadir}/libofx/dtd/*
 
 %changelog
 * Sat March 8 2004 Benoit Grégoire <bock@step.polymtl.ca>
