@@ -39,14 +39,13 @@
 #include <unistd.h>
 #include <syslog.h>
 #include <signal.h>
+#include <errno.h>
 
 #include "../config.h"
 #include "common.h"
 #include "conf.h"
 #include "debug.h"
 #include "ping_thread.h"
-
-extern int errno;
 
 static void ping(void);
 

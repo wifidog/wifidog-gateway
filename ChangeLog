@@ -1,4 +1,8 @@
 # $Header$
+2004-08-27 Benoit Grégoire  <bock@step.polymtl.ca>
+	* README.openwrt,src/conf.c,h:  Documentation update
+	* src/gateway.c, src/ping_thread.c, src/wdctl.c, src/wdctl_thread.c:  Fix linking problems related to errno.h and extern int errno 
+	
 2004-08-26 Pascal Leclerc <pascal@plec.ca>
 	* Makefile.am: Remove phpauth from EXTRA_DIST
 

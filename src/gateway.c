@@ -54,9 +54,9 @@
 #include "wdctl_thread.h"
 #include "ping_thread.h"
 
-extern int errno;
-
-static pthread_t tid_fw_counter; /* XXX Ugly hack */
+/** XXX Ugly hack 
+* @todo UGLY HACKS SHOULD BE DOCUMENTED! */
+static pthread_t tid_fw_counter; 
 
 /**@internal
  * @brief Handles SIGCHLD signals to avoid zombie processes

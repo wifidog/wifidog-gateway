@@ -37,6 +37,7 @@
 #include <unistd.h>
 #include <syslog.h>
 #include <signal.h>
+#include <errno.h>
 
 #include "conf.h"
 #include "debug.h"
@@ -46,8 +47,6 @@
 #include "firewall.h"
 #include "client_list.h"
 #include "wdctl_thread.h"
-
-extern int errno;
 
 /* Defined in clientlist.c */
 extern	pthread_mutex_t	client_list_mutex;

@@ -47,6 +47,9 @@
 #define DEFAULT_AUTHSERVMAXTRIES 2
 /*@}*/ 
 
+/**
+ * Information about the authentication server
+ */
 typedef struct _auth_serv_t {
     char *authserv_hostname;	/**< @brief Hostname of the central server */
     char *authserv_path;	/**< @brief Path where wifidog resides */

@@ -36,10 +36,9 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <syslog.h>
+#include <errno.h>
 
 #include "wdctl.h"
-
-extern int errno;
 
 s_config config;
 

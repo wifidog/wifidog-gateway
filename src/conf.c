@@ -175,6 +175,9 @@ config_parse_token(const char *cp, const char *filename, int linenum)
 	return oBadOption;
 }
 
+/** @internal
+Parses auth server information
+*/
 static void
 parse_auth_server(FILE *file, char *filename, int *linenum)
 {
