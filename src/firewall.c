@@ -27,9 +27,9 @@
 
 #include "common.h"
 
-pthread_mutex_t	nodes_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 extern s_config config;
+
+pthread_mutex_t	nodes_mutex;
 
 t_node *firstnode = NULL;
 
@@ -181,11 +181,14 @@ fw_destroy(void)
 void
 fw_counter(void)
 {
-	FILE *output;
-	long int counter;
-	int profile, rc;
-	char ip[255], mac[255];
-	char script[MAX_BUF];
+	FILE	*output;
+	long	int	counter;
+	int	profile,
+		rc;
+	char	ip[255],
+		mac[255],
+		script[MAX_BUF],
+		*token;
 	t_node *p1;
 
 	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, 
@@ -203,6 +206,8 @@ fw_counter(void)
 				 * seconds timeout the client and destroy token.
 				 * Maybe this should be done on the auth
 				 * server */
+			
+				pthread_mutex_lock(&nodes_mutex);
 
 				p1 = node_find_by_ip(ip);
 
@@ -219,13 +224,27 @@ fw_counter(void)
 
 					p1->rights->last_checked = time(NULL);
 					p1->counter = counter;
-
-					profile =  authenticate(p1->ip,
-								p1->mac, 
-								p1->token,
-								p1->counter);
 					
-					if (profile <= 0) {
+					token = strdup(p1->token);
+					
+					pthread_mutex_unlock(&nodes_mutex);
+
+					profile = authenticate(ip, mac, token,
+								counter);
+					
+					pthread_mutex_lock(&nodes_mutex);
+
+					free(token);
+					
+					/* may have changed while we held the
+					 * mutex */
+					p1 = node_find_by_ip(ip);
+
+					if (p1 == NULL) {	
+						debug(D_LOG_DEBUG, "Node was "
+							"freed while being "
+							"re-validated!");
+					} else if (profile <= 0) {
 						/* failed */
 						debug(D_LOG_DEBUG, "Auth "
 							"failed for client %s",
@@ -247,6 +266,7 @@ fw_counter(void)
 						}
 					}
 				}
+				pthread_mutex_unlock(&nodes_mutex);
 			}
 		}
 		pclose(output);
@@ -257,9 +277,7 @@ void
 node_init(void)
 {
 
-	pthread_mutex_lock(&nodes_mutex);
 	firstnode = NULL;
-	pthread_mutex_unlock(&nodes_mutex);
 }
 
 t_node *
@@ -268,8 +286,6 @@ node_add(char *ip, char *mac, char *token, long int counter, int active)
 	t_node	*curnode,
 		*prevnode;
 
-	pthread_mutex_lock(&nodes_mutex);
-	
 	prevnode = NULL;
 	curnode = firstnode;
 
@@ -302,8 +318,6 @@ node_add(char *ip, char *mac, char *token, long int counter, int active)
 	debug(D_LOG_DEBUG, "Added a new node to linked list: IP: %s Token: %s",
 		ip, token);
 	
-	pthread_mutex_unlock(&nodes_mutex);
-
 	return curnode;
 }
 
@@ -312,18 +326,12 @@ node_find_by_ip(char *ip)
 {
 	t_node *ptr;
 	
-	pthread_mutex_lock(&nodes_mutex);
-
 	ptr = firstnode;
 	while (NULL != ptr) {
-		if (0 == strcmp(ptr->ip, ip)) {
-			pthread_mutex_unlock(&nodes_mutex);
+		if (0 == strcmp(ptr->ip, ip))
 			return ptr;
-		}
 		ptr = ptr->next;
 	}
-
-	pthread_mutex_unlock(&nodes_mutex);
 
 	return NULL;
 }
@@ -333,19 +341,13 @@ node_find_by_token(char *token)
 {
 	t_node *ptr;
 
-	pthread_mutex_lock(&nodes_mutex);
-
 	ptr = firstnode;
 	while (NULL != ptr) {
-		if (0 == strcmp(ptr->token, token)) {
-			pthread_mutex_unlock(&nodes_mutex);
+		if (0 == strcmp(ptr->token, token))
 			return ptr;
-		}
 		ptr = ptr->next;
 	} 
 
-	pthread_mutex_unlock(&nodes_mutex);
-			
 	return NULL;
 }
 
@@ -373,8 +375,6 @@ node_delete(t_node *node)
 {
 	t_node	*ptr;
 	
-	pthread_mutex_lock(&nodes_mutex);
-
 	ptr = firstnode;
 
 	if (ptr == node) {
@@ -388,8 +388,6 @@ node_delete(t_node *node)
 			}
 		}
 	}
-
-	pthread_mutex_unlock(&nodes_mutex);
 }
 
 int

@@ -29,6 +29,8 @@
 
 extern s_config config;
 
+pthread_mutex_t	nodes_mutex;
+
 void
 http_callback_404(httpd * webserver)
 {
@@ -73,7 +75,8 @@ http_callback_auth(httpd * webserver)
 {
 	t_node	*node;
 	httpVar * token;
-	char * mac;
+	char	*mac,
+		*ip;
 	int profile;
 	int temp;
 	pthread_t tid;
@@ -89,6 +92,8 @@ http_callback_auth(httpd * webserver)
 		} else {
 			// We have their MAC address
 
+			pthread_mutex_lock(&nodes_mutex);
+			
 			if ((node = node_find_by_ip(webserver->clientAddr))
 					== NULL) {
 				debug(D_LOG_DEBUG, "New node for %s",
@@ -113,9 +118,15 @@ http_callback_auth(httpd * webserver)
 			node->fd = webserver->clientSock;
 			webserver->clientSock = -1;
 
+			pthread_mutex_unlock(&nodes_mutex);
+
+			/* That clientAddr may be freed prior to the thread
+			 * finishing. */
+			ip = strdup(webserver->clientAddr);
+			
 			/* start sub process */
 			pthread_create(&tid, NULL, (void *)auth_thread,
-					(void *)node);
+					(void *)ip);
 			pthread_detach(tid);
 
 			free(mac);

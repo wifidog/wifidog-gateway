@@ -27,6 +27,8 @@
 
 #include "common.h"
 
+pthread_mutex_t	nodes_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 s_config config;
 
 static void _http_output(int fd, char *msg);
@@ -56,13 +58,42 @@ auth_thread(void *ptr)
 	int	profile;
 	UserClasses	*tmp_uc;
 	UserRights	*tmp_ur;
+	char	*ip,
+		*mac,
+		*token;
 
-	node = (t_node *)ptr;
+	ip = (char *)ptr;
 
-	if (node == NULL)
+	pthread_mutex_lock(&nodes_mutex);
+
+	node = node_find_by_ip(ip);
+
+	if (node == NULL) {
+		pthread_mutex_unlock(&nodes_mutex);
 		return; /* Implicit pthread_exit() */
-
-	profile = authenticate(node->ip, node->mac, node->token, 0);
+	}
+	
+	mac = strdup(node->mac);
+	token = strdup(node->token);
+	
+	pthread_mutex_unlock(&nodes_mutex);
+		
+	profile = authenticate(ip, mac, token, 0);
+	
+	pthread_mutex_lock(&nodes_mutex);
+	
+	/* can't trust the node to still exist */
+	node = node_find_by_ip(ip);
+	
+	/* don't need any of them anymore */
+	free(ip);
+	free(token);
+	free(mac);
+	
+	if (node == NULL) {
+		pthread_mutex_unlock(&nodes_mutex);
+		return;
+	}
 
 	if (profile == -1) {
 		// Error talking to central server
@@ -72,12 +103,14 @@ auth_thread(void *ptr)
 		_http_output(node->fd, "Access denied: We did not get a valid "
 			"answer from the central server");
 		node->fd = 0;
+		pthread_mutex_unlock(&nodes_mutex);
 		return;
 	} else if (profile == 0) {
 		// Central server said invalid token
 		_http_output(node->fd, "Your authentication has failed or "
 			"timed-out.  Please re-login");
 		node->fd = 0;
+		pthread_mutex_unlock(&nodes_mutex);
 		return;
 	}
 
@@ -92,6 +125,7 @@ auth_thread(void *ptr)
 		debug(D_LOG_DEBUG, "Profile %d undefined", profile);
 		_http_output(node->fd, "User Class not defined");
 		node->fd = 0;
+		pthread_mutex_unlock(&nodes_mutex);
 		return;
 	} else {
 		debug(D_LOG_DEBUG, "Profile %d UserClasses retrieved", profile);
@@ -118,6 +152,7 @@ auth_thread(void *ptr)
 	
 	node->fd = 0;
 
+	pthread_mutex_unlock(&nodes_mutex);
 	return;
 }
 
