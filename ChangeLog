@@ -2,6 +2,8 @@
 
 2005-02-04 Mina Naguib <mina@ilesansfil.org>
 	* Partially bugfix apology when offline
+	* ipkg/rules: More tweaking to make it build nicely with recent openwrt
+	buildroots
 
 2005-02-03 Mina Naguib <mina@ilesansfil.org>
 	* Keep track of last times we successfully & unsuccessfully spoke to the

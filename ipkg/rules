@@ -14,11 +14,11 @@ VERSION=$(WIFIDOG_MAJOR_VERSION).$(WIFIDOG_MINOR_VERSION).$(WIFIDOG_MICRO_VERSIO
 BUILD_DIR:=$(CURDIR)/ipkg
 TMP_DIR:=$(BUILD_DIR)/tmp
 STAGING_DIR=$(BUILDROOT)/build_$(ARCH)/staging_dir
-IPTABLES_DIR := $(wildcard $(BUILDROOT)/build_$(ARCH)/iptables-*/)
 IPKG_DIR := $(wildcard $(BUILDROOT)/build_$(ARCH)/ipkg-utils-*/)
+IPTABLES_DIR := $(wildcard $(BUILDROOT)/build_$(ARCH)/iptables-*/)
 KERNEL_VERSION := $(shell awk '$$1 == "\#define" && $$2 == "UTS_RELEASE" {gsub(/["]/, "", $$3); print $$3}' $(BUILDROOT)/build_$(ARCH)/WRT54GS/release/src/linux/linux/include/linux/version.h)
 KERNEL_MODULES_DIR := $(BUILDROOT)/build_$(ARCH)/WRT54GS/release/src/linux/linux/modules/lib/modules/$(KERNEL_VERSION)
-UCLIBC_DIR := $(BUILDROOT)/build_$(ARCH)/uClibc
+UCLIBC_DIR := $(wildcard $(BUILDROOT)/build_$(ARCH)/uClibc*/)
 
 GNU_TARGET_NAME=$(ARCH)-linux
 TARGET_CROSS=$(STAGING_DIR)/bin/$(ARCH)-linux-uclibc-
