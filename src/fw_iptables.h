@@ -31,11 +31,12 @@
 
 /*@{*/ 
 /**Iptable table names used by WifiDog */
-#define TABLE_WIFIDOG_CLASS     "WiFiDog_Class"
 #define TABLE_WIFIDOG_OUTGOING  "WiFiDog_Outgoing"
 #define TABLE_WIFIDOG_WIFI_TO_GW "WiFiDog_WIFI2GW"
+#define TABLE_WIFIDOG_WIFI_TO_INTERNET "WiFiDog_WIFI2Internet"
 #define TABLE_WIFIDOG_INCOMING  "WiFiDog_Incoming"
 #define TABLE_WIFIDOG_AUTHSERVERS "WiFiDog_AuthServers"
+#define TABLE_WIFIDOG_GLOBAL  "WiFiDog_Global"
 #define TABLE_WIFIDOG_VALIDATE  "WiFiDog_Validate"
 #define TABLE_WIFIDOG_KNOWN     "WiFiDog_Known"
 #define TABLE_WIFIDOG_UNKNOWN   "WiFiDog_Unknown"
@@ -59,6 +60,9 @@ void iptables_fw_clear_authservers(void);
 
 /** @brief Destroy the firewall */
 int iptables_fw_destroy(void);
+
+/** @brief Helper function for iptables_fw_destroy */
+int iptables_fw_destroy_mention( char * table, char * chain, char * mention);
 
 /** @brief Define the access of a specific client */
 int iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag);

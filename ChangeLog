@@ -1,5 +1,10 @@
 # $Header$
 
+2005-02-13 Mina Naguib <mina@ilesansfil.org>
+	* Completely re-did the iptables rules.  Most of the rules are now in the
+	filter table instead of the nat table.  Also DROPs are now replaced with
+	REJECTs to help tell the user connection refused instead of endless pauses
+
 2005-02-12 Mina Naguib <mina@ilesansfil.org>
 	* Stricter format rules for all *scan* functions hunting for IPs and MAC addresses
 	* fw_iptables.c: Make sure scanned IP address is a valid IP address

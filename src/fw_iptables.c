@@ -98,10 +98,10 @@ iptables_compile(char *chain, t_firewall_rule *rule)
     if (rule->block_allow == 1) {
         mode = strdup("ACCEPT");
     } else {
-        mode = strdup("DROP");
+        mode = strdup("REJECT");
     }
     
-    snprintf(command, sizeof(command),  "-t nat -A %s ", chain);
+    snprintf(command, sizeof(command),  "-t filter -A %s ", chain);
     if (rule->mask != NULL) {
         snprintf((command + strlen(command)), (sizeof(command) - 
                 strlen(command)), "-d %s ", rule->mask);
@@ -151,7 +151,7 @@ iptables_load_ruleset(char *ruleset, char *chain)
 void
 iptables_fw_clear_authservers(void)
 {
-    iptables_do_command("-t nat -F " TABLE_WIFIDOG_AUTHSERVERS);
+    iptables_do_command("-t filter -F " TABLE_WIFIDOG_AUTHSERVERS);
 }
 
 void
@@ -166,9 +166,9 @@ iptables_fw_set_authservers(void)
     
     for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
 	    if (auth_server->last_ip == NULL || strcmp(auth_server->last_ip, "0.0.0.0") == 0) {
-	        iptables_do_command("-t nat -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->authserv_hostname);
+	        iptables_do_command("-t filter -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->authserv_hostname);
 	    } else {
-	        iptables_do_command("-t nat -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->last_ip);
+	        iptables_do_command("-t filter -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->last_ip);
 	    }
     }
 
@@ -181,77 +181,116 @@ int
 iptables_fw_init(void)
 {
     s_config *config;
+	 char * gw_interface = NULL;
+	 char * external_interface = NULL;
+	 int gw_port = 0;
    
-    config = config_get_config();
     fw_quiet = 0;
+
+    config = config_get_config();
+	 LOCK_CONFIG();
+	 if (config->gw_interface)
+		 gw_interface = strdup(config->gw_interface);
+	 if (config->external_interface)
+		 external_interface = strdup(config->external_interface);
+	 gw_port = config->gw_port;
+	 UNLOCK_CONFIG();
     
-    /* Create authservers table here instead of in iptables_fw_set_authservers
-     * so we only have to flush it and not destroy/create every time */
-    iptables_do_command("-t nat -N " TABLE_WIFIDOG_AUTHSERVERS);
+	 /*
+	  *
+	  * Everything in the MANGLE table
+	  *
+	  */
 
-    iptables_fw_set_authservers();
+	 		/* Create new chains */
+			iptables_do_command("-t mangle -N " TABLE_WIFIDOG_OUTGOING);
+			iptables_do_command("-t mangle -N " TABLE_WIFIDOG_INCOMING);
 
-    LOCK_CONFIG();
+			/* Assign links and rules to these new chains */
+			iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_OUTGOING, gw_interface);
+
+			if (external_interface) {
+				iptables_do_command("-t mangle -I FORWARD 1 -i %s -j " TABLE_WIFIDOG_INCOMING, external_interface);
+			}
+			else {
+				iptables_do_command("-t mangle -I FORWARD 1 -j " TABLE_WIFIDOG_INCOMING);
+			}
+
+
+	 /*
+	  *
+	  * Everything in the NAT table
+	  *
+	  */
+
+	 		/* Create new chains */
+			iptables_do_command("-t nat -N " TABLE_WIFIDOG_WIFI_TO_INTERNET);
+			iptables_do_command("-t nat -N " TABLE_WIFIDOG_UNKNOWN);
+
+			/* Assign links and rules to these new chains */
+			if (external_interface) {
+				iptables_do_command("-t nat -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_WIFI_TO_INTERNET, gw_interface);
+			}
+			else {
+				iptables_do_command("-t nat -I PREROUTING 1 -j " TABLE_WIFIDOG_WIFI_TO_INTERNET);
+			}
+
+			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j RETURN", FW_MARK_KNOWN);
+			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j RETURN", FW_MARK_PROBATION);
+			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_UNKNOWN);
+			iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 80 -j REDIRECT --to-ports %d", gw_port);
+
+
+	 /*
+	  *
+	  * Everything in the FILTER table
+	  *
+	  */
+
+	 		/* Create new chains */
+			iptables_do_command("-t filter -N " TABLE_WIFIDOG_WIFI_TO_GW);
+			iptables_do_command("-t filter -N " TABLE_WIFIDOG_WIFI_TO_INTERNET);
+			iptables_do_command("-t filter -N " TABLE_WIFIDOG_AUTHSERVERS);
+			iptables_do_command("-t filter -N " TABLE_WIFIDOG_LOCKED);
+			iptables_do_command("-t filter -N " TABLE_WIFIDOG_GLOBAL);
+			iptables_do_command("-t filter -N " TABLE_WIFIDOG_VALIDATE);
+			iptables_do_command("-t filter -N " TABLE_WIFIDOG_KNOWN);
+			iptables_do_command("-t filter -N " TABLE_WIFIDOG_UNKNOWN);
+
+			/* Assign links and rules to these new chains */
+			iptables_do_command("-t filter -I INPUT 1 -i %s -j " TABLE_WIFIDOG_WIFI_TO_GW, gw_interface);
+
+			if (external_interface) {
+				iptables_do_command("-t filter -I FORWARD 1 -i %s -j " TABLE_WIFIDOG_WIFI_TO_INTERNET, gw_interface);
+			}
+			else {
+				iptables_do_command("-t filter -I FORWARD 1 -j " TABLE_WIFIDOG_WIFI_TO_INTERNET);
+			}
+
+			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_AUTHSERVERS);
+			iptables_fw_set_authservers();
+
+			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j " TABLE_WIFIDOG_LOCKED, FW_MARK_LOCKED);
+			iptables_load_ruleset("locked-users", TABLE_WIFIDOG_LOCKED);
+
+			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_GLOBAL);
+			iptables_load_ruleset("global", TABLE_WIFIDOG_GLOBAL);
+
+			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j " TABLE_WIFIDOG_VALIDATE, FW_MARK_PROBATION);
+			iptables_load_ruleset("validating-users", TABLE_WIFIDOG_VALIDATE);
+
+			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j " TABLE_WIFIDOG_KNOWN, FW_MARK_KNOWN);
+			iptables_load_ruleset("known-users", TABLE_WIFIDOG_KNOWN);
     
-    iptables_do_command("-t nat -N " TABLE_WIFIDOG_VALIDATE);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -j " TABLE_WIFIDOG_AUTHSERVERS);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", config->gw_address);
+			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_UNKNOWN);
+			iptables_load_ruleset("unknown-users", TABLE_WIFIDOG_UNKNOWN);
+			iptables_do_command("-t filter -A " TABLE_WIFIDOG_UNKNOWN " -j REJECT --reject-with icmp-port-unreachable");
 
-    UNLOCK_CONFIG();
+	if (gw_interface)
+		free(gw_interface);
+	if (external_interface)
+		free(external_interface);
 
-    /** Insert global rules BEFORE the "defaults" */
-    iptables_load_ruleset("global", TABLE_WIFIDOG_VALIDATE);
-    iptables_load_ruleset("validating-users", TABLE_WIFIDOG_VALIDATE);
-
-    LOCK_CONFIG();
-    
-    iptables_do_command("-t nat -N " TABLE_WIFIDOG_UNKNOWN);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j " TABLE_WIFIDOG_AUTHSERVERS);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", config->gw_address);
-
-    UNLOCK_CONFIG();
-    
-    /** Insert global rules BEFORE the "defaults" */
-    iptables_load_ruleset("global", TABLE_WIFIDOG_UNKNOWN);
-    iptables_load_ruleset("unknown-users", TABLE_WIFIDOG_UNKNOWN);
-    LOCK_CONFIG();
-
-    /* XXX If there's a rule in global for port 80, it overrides this. */
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 80 -j REDIRECT --to-ports %d", config->gw_port);
-    UNLOCK_CONFIG();
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j DROP");
-
-    iptables_do_command("-t nat -N " TABLE_WIFIDOG_KNOWN);
-    /* Insert global rules BEFORE the "defaults" */
-    iptables_load_ruleset("global", TABLE_WIFIDOG_KNOWN);
-    iptables_load_ruleset("known-users", TABLE_WIFIDOG_KNOWN);
-
-    iptables_do_command("-t nat -N " TABLE_WIFIDOG_LOCKED);
-    iptables_load_ruleset("locked-users", TABLE_WIFIDOG_KNOWN);
-    
-    iptables_do_command("-t nat -N " TABLE_WIFIDOG_CLASS);
-    LOCK_CONFIG();
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_VALIDATE, config->gw_interface, FW_MARK_PROBATION);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_KNOWN, config->gw_interface, FW_MARK_KNOWN);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_LOCKED, config->gw_interface, FW_MARK_LOCKED);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -j " TABLE_WIFIDOG_UNKNOWN, config->gw_interface);
-    iptables_do_command("-t nat -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_CLASS, config->gw_interface);
-
-    iptables_do_command("-t mangle -N " TABLE_WIFIDOG_OUTGOING);
-    iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_OUTGOING, config->gw_interface);
-
-    iptables_do_command("-t mangle -N " TABLE_WIFIDOG_INCOMING);
-    if (config->external_interface) {
-        iptables_do_command("-t mangle -I FORWARD 1 -i %s -j " TABLE_WIFIDOG_INCOMING, config->external_interface);
-    } else {
-        iptables_do_command("-t mangle -I FORWARD 1 -j " TABLE_WIFIDOG_INCOMING);
-    }
-
-    iptables_do_command("-t filter -N " TABLE_WIFIDOG_WIFI_TO_GW);
-    iptables_do_command("-t filter -I INPUT 1 -i %s -j " TABLE_WIFIDOG_WIFI_TO_GW, config->gw_interface);
-
-    UNLOCK_CONFIG();
-    
     return 1;
 }
 
@@ -262,58 +301,110 @@ iptables_fw_init(void)
 int
 iptables_fw_destroy(void)
 {
-    int rc;
-    s_config *config = config_get_config();
-
     fw_quiet = 1;
-    iptables_do_command("-t filter -F " TABLE_WIFIDOG_WIFI_TO_GW);
-    iptables_do_command("-t nat -F " TABLE_WIFIDOG_CLASS);
+
+	 /*
+	  *
+	  * Everything in the MANGLE table
+	  *
+	  */
+	 iptables_fw_destroy_mention("mangle", "PREROUTING", TABLE_WIFIDOG_OUTGOING);
+	 iptables_fw_destroy_mention("mangle", "FORWARD", TABLE_WIFIDOG_INCOMING);
     iptables_do_command("-t mangle -F " TABLE_WIFIDOG_OUTGOING);
     iptables_do_command("-t mangle -F " TABLE_WIFIDOG_INCOMING);
-
-    iptables_do_command("-t nat -F " TABLE_WIFIDOG_AUTHSERVERS);
-    iptables_do_command("-t nat -F " TABLE_WIFIDOG_VALIDATE);
-    iptables_do_command("-t nat -F " TABLE_WIFIDOG_UNKNOWN);
-    iptables_do_command("-t nat -F " TABLE_WIFIDOG_KNOWN);
-    iptables_do_command("-t nat -F " TABLE_WIFIDOG_LOCKED);
-    iptables_do_command("-t nat -X " TABLE_WIFIDOG_AUTHSERVERS);
-    iptables_do_command("-t nat -X " TABLE_WIFIDOG_VALIDATE);
-    iptables_do_command("-t nat -X " TABLE_WIFIDOG_UNKNOWN);
-    iptables_do_command("-t nat -X " TABLE_WIFIDOG_KNOWN);
-    iptables_do_command("-t nat -X " TABLE_WIFIDOG_LOCKED);
-
-    /* We loop in case wifidog has crashed and left some unwanted rules,
-     * maybe we shouldn't loop forever, we'll try anyway
-     */
-    rc = 0;
-    while (rc == 0) {
-        rc = iptables_do_command("-t nat -D PREROUTING -i %s -j " TABLE_WIFIDOG_CLASS, config->gw_interface);
-    }
-    iptables_do_command("-t nat -X " TABLE_WIFIDOG_CLASS);
-
-    rc = 0;
-    while (rc == 0) {
-        rc = iptables_do_command("-t filter -D INPUT -i %s -j " TABLE_WIFIDOG_WIFI_TO_GW, config->gw_interface);
-    }
-    iptables_do_command("-t filter -X " TABLE_WIFIDOG_WIFI_TO_GW);
-
-    rc = 0;
-    while (rc == 0) {
-        rc = iptables_do_command("-t mangle -D PREROUTING -i %s -j " TABLE_WIFIDOG_OUTGOING, config->gw_interface);
-    }
     iptables_do_command("-t mangle -X " TABLE_WIFIDOG_OUTGOING);
-
-    rc = 0;
-    while (rc == 0) {
-        if (config->external_interface) {
-            rc = iptables_do_command("-t mangle -D FORWARD -i %s -j " TABLE_WIFIDOG_INCOMING, config->external_interface);
-        } else {
-            rc = iptables_do_command("-t mangle -D FORWARD -j " TABLE_WIFIDOG_INCOMING);
-        }
-    }
     iptables_do_command("-t mangle -X " TABLE_WIFIDOG_INCOMING);
 
+	 /*
+	  *
+	  * Everything in the NAT table
+	  *
+	  */
+	 iptables_fw_destroy_mention("nat", "PREROUTING", TABLE_WIFIDOG_WIFI_TO_INTERNET);
+    iptables_do_command("-t nat -F " TABLE_WIFIDOG_WIFI_TO_INTERNET);
+    iptables_do_command("-t nat -F " TABLE_WIFIDOG_UNKNOWN);
+    iptables_do_command("-t nat -X " TABLE_WIFIDOG_WIFI_TO_INTERNET);
+    iptables_do_command("-t nat -X " TABLE_WIFIDOG_UNKNOWN);
+
+	 /*
+	  *
+	  * Everything in the FILTER table
+	  *
+	  */
+	 iptables_fw_destroy_mention("filter", "INPUT", TABLE_WIFIDOG_WIFI_TO_GW);
+	 iptables_fw_destroy_mention("filter", "FORWARD", TABLE_WIFIDOG_WIFI_TO_INTERNET);
+	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_WIFI_TO_GW);
+	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_WIFI_TO_INTERNET);
+	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_AUTHSERVERS);
+	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_LOCKED);
+	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_GLOBAL);
+	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_VALIDATE);
+	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_KNOWN);
+	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_UNKNOWN);
+	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_WIFI_TO_GW);
+	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_WIFI_TO_INTERNET);
+	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_AUTHSERVERS);
+	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_LOCKED);
+	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_GLOBAL);
+	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_VALIDATE);
+	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_KNOWN);
+	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_UNKNOWN);
+
     return 1;
+}
+
+/*
+ * Helper for iptables_fw_destroy
+ * @param table The table to search
+ * @param chain The chain in that table to search
+ * @param mention A word to find and delete in rules in the given table+chain
+ */
+int
+iptables_fw_destroy_mention(
+		char * table,
+		char * chain,
+		char * mention
+) {
+	FILE *p = NULL;
+	char *command = NULL;
+	char *command2 = NULL;
+	char line[MAX_BUF];
+	char rulenum[10];
+	int deleted = 0;
+
+	asprintf(&command, "iptables -t %s -L %s -n --line-numbers -v", table, chain);
+
+	if ((p = popen(command, "r"))) {
+		/* Skip first 2 lines */
+		while (!feof(p) && fgetc(p) != '\n');
+		while (!feof(p) && fgetc(p) != '\n');
+		/* Loop over entries */
+		while (fgets(line, sizeof(line), p)) {
+			/* Look for mention */
+			if (strstr(line, mention)) {
+				/* Found mention - Get the rule number into rulenum*/
+				if (sscanf(line, "%9[0-9]", rulenum) == 1) {
+					/* Delete the rule: */
+					asprintf(&command2, "-t %s -D %s %s", table, chain, rulenum);
+					iptables_do_command(command2);
+					free(command2);
+					deleted = 1;
+					/* Do not keep looping - the captures rulenums will no longer be accurate */
+					break;
+				}
+			}
+		}
+		pclose(p);
+	}
+
+	free(command);
+
+	if (deleted) {
+		/* Recurse just in case there are more in the same table+chain */
+		iptables_fw_destroy_mention(table, chain, mention);
+	}
+
+	return (deleted);
 }
 
 /** Set the firewall access for a specific client */
