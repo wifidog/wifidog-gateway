@@ -36,26 +36,23 @@ static void _http_output(int fd, char *msg);
 void
 cleanup_thread(void *ptr)
 {
-#ifndef __UCLIBC__
 	pthread_cond_t		cond = PTHREAD_COND_INITIALIZER;
 	pthread_mutex_t		cond_mutex = PTHREAD_MUTEX_INITIALIZER;
 	struct	timespec	timeout;
-#endif
 	
 	while (1) {
 		/* Sleep for config.checkinterval seconds... */
-#ifndef __UCLIBC__
-		/* Normal, thread safe */
 		timeout.tv_sec = time(NULL) + config.checkinterval;
 		timeout.tv_nsec = 0;
 
+		/* Mutex must be locked for pthread_cond_timedwait... */
+		pthread_mutex_lock(&cond_mutex);
+		
 		/* Thread safe "sleep" */
 		pthread_cond_timedwait(&cond, &cond_mutex, &timeout);
-#else
-		/* uClibc appears to have major issues... */
-		/* XXX Not compatible with anything but Linux 2.0 to 2.4 */
-		sleep(config.checkinterval);
-#endif
+
+		/* No longer needs to be locked */
+		pthread_mutex_unlock(&cond_mutex);
 		
 		fw_counter();
 	}
