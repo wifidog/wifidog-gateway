@@ -2,6 +2,8 @@
 2004-10-07 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* src/conf.c: Fixed mark_auth_server_bad() for the case where there
 	is only one auth server.
+	* src/ping_thread.c: Added extra debugging.
+	* src/ping_thread.c: Fixed file descriptor leak.
 
 2004-08-30 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* wifidog.conf: Corrected an example

@@ -94,6 +94,8 @@ ping(void)
 	char			request[MAX_BUF];
 	struct hostent		*he;
 	struct sockaddr_in	their_addr;
+
+	debug(LOG_DEBUG, "Entering ping()");
 	
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		debug(LOG_ERR, "socket(): %s", strerror(errno));
@@ -101,6 +103,9 @@ ping(void)
 	}
 
 	auth_server = get_auth_server();
+
+	debug(LOG_DEBUG, "Using auth server %s",
+			auth_server->authserv_hostname);
 	
 	if ((he = gethostbyname(auth_server->authserv_hostname)) == NULL) {
 		debug(LOG_ERR, "Failed to resolve %s via gethostbyname"
@@ -143,6 +148,8 @@ ping(void)
 	
 	send(sockfd, request, strlen(request), 0);
 
+	debug(LOG_DEBUG, "Reading response");
+	
 	numbytes = totalbytes = 0;
 	while ((numbytes = read(sockfd, request + totalbytes, 
 				MAX_BUF - (totalbytes + 1))) > 0)
@@ -151,6 +158,7 @@ ping(void)
 	if (numbytes == -1) {
 		debug(LOG_ERR, "read(): %s", strerror(errno));
 		mark_auth_server_bad(auth_server);
+		close(sockfd);
 		return;
 	}
 
