@@ -1,5 +1,9 @@
 # $Header$
 
+2005-03-02 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Ifdef'd out the bits that are Linux specific if __linux__ is not
+	  defined.
+
 2005-03-01 Mina Naguib <mina@ilesansfil.org>
 	* Minor visual tweaks to the web interface
 

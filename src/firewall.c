@@ -45,14 +45,17 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <net/ethernet.h>
-#include <netinet/ip.h>
-#include <netinet/ip_icmp.h>
-#include <netpacket/packet.h>
 #include <sys/uio.h>
 #include <fcntl.h>
 #include <netdb.h>
 #include <sys/time.h>
+
+#ifdef __linux__
+#include <net/ethernet.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+#include <netpacket/packet.h>
+#endif
 
 #include "httpd.h"
 #include "safe.h"
@@ -294,10 +297,12 @@ fw_counter(void)
 
 void icmp_ping(char *host) {
   struct sockaddr_in saddr;
+#ifdef __linux__
   struct { 
     struct ip ip;
     struct icmp icmp;
   } packet;
+#endif
   unsigned int i, j;
   int opt = 2000;
   unsigned short id = rand16();
@@ -310,7 +315,8 @@ void icmp_ping(char *host) {
 #endif
 
   memset(&(saddr.sin_zero), '\0', sizeof(saddr.sin_zero));
-  
+
+#ifdef __linux__
   memset(&packet.icmp, 0, sizeof(packet.icmp));
   packet.icmp.icmp_type = ICMP_ECHO;
   packet.icmp.icmp_id = id;
@@ -330,6 +336,7 @@ void icmp_ping(char *host) {
   if (setsockopt(icmp_fd, SOL_SOCKET, SO_RCVBUF, &opt, sizeof(opt)) == -1) {
       debug(LOG_ERR, "setsockopt(): %s", strerror(errno));
   }
+#endif
 
   return;
 }

@@ -39,7 +39,10 @@
 #include <sys/unistd.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>
+
+#ifdef __linux__
 #include <net/if.h>
+#endif
 
 #include <string.h>
 #include <pthread.h>
@@ -134,12 +137,16 @@ wd_gethostbyname(const char *name)
 }
 
 char *get_iface_ip(char *ifname) {
+#ifdef __linux__
     struct ifreq if_data;
+#endif
     struct in_addr in;
     char *ip_str;
     int sockd;
     u_int32_t ip;
 
+#ifdef __linux__
+    
     /* Create a socket */
     if ((sockd = socket (AF_INET, SOCK_PACKET, htons(0x8086))) < 0) {
         debug(LOG_ERR, "socket(): %s", strerror(errno));
@@ -159,6 +166,9 @@ char *get_iface_ip(char *ifname) {
 
     ip_str = (char *)inet_ntoa(in);
     return safe_strdup(ip_str);
+#else
+    return safe_strdup("0.0.0.0");
+#endif
 }
 
 void mark_online() {
