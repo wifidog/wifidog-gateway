@@ -207,34 +207,50 @@ http_wifidog_header(request *r, char *title)
 	httpdOutput(r, "<html>\n");
 	httpdOutput(r, "<head>\n");
 	httpdPrintf(r, "<title>%s</title>\n", title);
+	httpdPrintf(r, "<meta HTTP-EQUIV='Pragma' CONTENT='no-cache'>\n");
 	httpdOutput(r, "</head>\n");
-	httpdOutput(r, "<body bgcolor=white text=#628C53 link=blue alink=blue vlink=blue>\n");
-	httpdOutput(r, "<table width=100%% border=0 cellpadding=12>\n");
+	httpdOutput(r, "<body topmargin=0 leftmargin=0 marginwidth=0 marginheight=0 bgcolor=white text=#628C53 link=blue alink=blue vlink=blue>\n");
+
+	httpdOutput(r, "<table width=100%% height=100%% border=0 cellpadding=12 cellspacing=5>\n");
+
 	httpdOutput(r, "<tr>\n");
+
 	httpdOutput(r, "<td valign=top align=right width=30%% bgcolor=#e1f5da>\n");
 	httpdOutput(r, "&nbsp;<p>\n");
 	httpdOutput(r, "&nbsp;<p>\n");
 	httpdOutput(r, "<a href='/wifidog/status'>WiFiDog Status</a>\n");
 	httpdOutput(r, "<p>\n");
 	httpdOutput(r, "<a href='/wifidog/about'>About WiFiDog</a>\n");
+	httpdOutput(r, "<p>\n");
+	httpdOutput(r, "<a href='http://www.ilesansfil.org/wiki/WiFiDog'>WiFiDog's homepage</a>\n");
 	httpdOutput(r, "</td>\n");
+
 	httpdOutput(r, "<td valign=top align=left>\n");
 	httpdPrintf(r, "<h1>%s</h1>\n", title);
 	httpdOutput(r, "<hr>\n");
+
 }
 
 void
 http_wifidog_footer(request *r)
 {
 	httpdOutput(r, "</td>\n");
+
 	httpdOutput(r, "</tr>\n");
-	httpdOutput(r, "</table>\n");
+
+	httpdOutput(r, "<tr>\n");
+
+	httpdOutput(r, "<td colspan=2 height=1 valign=bottom align=center>\n");
 	httpdOutput(r, "<hr>\n");
-	httpdOutput(r, "<center><font size=1>\n");
+	httpdOutput(r, "<font size=1>\n");
 	httpdOutput(r, "Copyright (C) 2004-2005.  This software is released under the GNU GPL license.\n");
-	httpdOutput(r, "<p>\n");
-	httpdOutput(r, "For more information visit <a href='http://www.ilesansfil.org/wiki/WiFiDog'>http://www.ilesansfil.org/wiki/WiFiDog</a>\n");
-	httpdOutput(r, "</font></center>\n");
+	httpdOutput(r, "</font>\n");
+	httpdOutput(r, "</td>\n");
+
+	httpdOutput(r, "</tr>\n");
+
+	httpdOutput(r, "</table>\n");
+
 	httpdOutput(r, "</body>\n");
 	httpdOutput(r, "</html>\n");
 }
