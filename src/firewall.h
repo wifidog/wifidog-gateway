@@ -49,5 +49,7 @@ t_node *node_add(char *ip, char *mac, char *token, long int counter,
 		 int active);
 t_node *node_find_by_ip(char *ip);
 t_node *node_find_by_token(char *token);
+void node_delete(t_node *node);
+void free_node(t_node *node);
 
 #endif /* _FIREWALL_H_ */

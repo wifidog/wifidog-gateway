@@ -178,6 +178,7 @@ fw_counter(void)
     char ip[255], mac[255];
     char script[MAX_BUF];
     t_node *p1;
+    ChildInfo	*ci;
 
     sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, SCRIPT_FWCOUNTERS);
 
@@ -197,9 +198,16 @@ fw_counter(void)
                     debug(D_LOG_DEBUG, "Client %s not active", ip);
                 } else {
                     p1->counter = counter;
-                    if ((profile = authenticate(p1->ip, p1->mac, p1->token, p1->counter)) == -1) {
-                        /* User has to be kicked out */
-                    }
+
+		    ci = new_childinfo();
+		    ci->ip = strdup(p1->ip);
+		    ci->mac = strdup(p1->mac);
+		    register_child(ci);
+		   
+		    if (fork() == 0) {
+                    	authenticate(p1->ip, p1->mac, p1->token, p1->counter);
+			/* exit() is in authenticate(); */
+		    }
                     debug(D_LOG_DEBUG, "Updated client %s counter to %ld bytes", ip, counter);
                 }
             }
@@ -267,3 +275,31 @@ node_find_by_token(char *token)
     return NULL;
 }
 
+void
+free_node(t_node *node)
+{
+
+	/* The ip, mac and token maybe shouldn't be fixed-length strings... */
+	
+	free(node);
+}
+
+void
+node_delete(t_node *node)
+{
+	t_node	*ptr;
+		
+	ptr = firstnode;
+
+	if (ptr == node) {
+		firstnode = ptr->next;
+		free_node(node);
+	} else {
+		while (ptr->next != NULL && ptr != node) {
+			if (ptr->next == node) {
+				ptr->next = node->next;
+				free_node(node);
+			}
+		}
+	}
+}

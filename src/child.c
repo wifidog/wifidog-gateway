@@ -79,6 +79,11 @@ sigchld_handler(int signal)
 		if (tmp_node = node_find_by_ip(tmp_ci->ip)) {
 			tmp_node->active = 1;
 		}
+	} else {
+		if (tmp_node = node_find_by_ip(tmp_ci->ip)) {
+			fw_deny(tmp_ci->ip, tmp_ci->mac, status);
+			node_delete(tmp_node);
+		}
 	}
 
 	free_childinfo(tmp_ci);
