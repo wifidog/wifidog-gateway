@@ -68,14 +68,18 @@ main_loop(void)
 		tv.tv_sec = config.checkinterval;
 		tv.tv_usec = 0;
 		result = httpdGetConnection(webserver, &tv);
-		if (result < 0) {
+		if (result == -1) {
+			/* Interrupted system call */
+			continue; /* restart loop */
+		} else if (result < -1) {
 			/*
 			 * FIXME
-			 * An error occurred - should we abort? reboot the device ?
+			 * An error occurred - should we abort?
+			 * reboot the device ?
 			 */
 			debug(D_LOG_ERR, "httpdGetConnection returned %d",
 				result);
-	        fw_destroy();
+			fw_destroy();
 			exit(1);
 		} else if (result > 0) {
 			/*
