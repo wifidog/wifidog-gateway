@@ -78,6 +78,7 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 			debug(LOG_ERR, "Failed to resolve %s via gethostbyname"
 				"(): %s", auth_server->authserv_hostname, 
 				strerror(errno));
+			close(sockfd);
 			return(-1);
 		}
 	
@@ -99,6 +100,7 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 			} else {
 				mark_auth_server_bad(auth_server);
 				debug(LOG_ERR, "Aborting request");
+				close(sockfd);
 				return(-1); /* non-fatal */
 			}
 		} else {
@@ -129,7 +131,8 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	
 	if (numbytes == -1) {
 		debug(LOG_ERR, "read(): %s", strerror(errno));
-		exit(1);
+		close(sockfd);
+		return(-1);
 	}
 
 	numbytes = totalbytes;

@@ -4,6 +4,8 @@
 	is only one auth server.
 	* src/ping_thread.c: Added extra debugging.
 	* src/ping_thread.c: Fixed file descriptor leak.
+	* src/centralserver.c: Fixed many file descriptor leaks.
+	* src/centralserver.c: Failure of read() no longer fatal.
 
 2004-08-30 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* wifidog.conf: Corrected an example
