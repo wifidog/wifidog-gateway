@@ -10,10 +10,10 @@ doc_DATA = \
   INSTALL \
   NEWS \
   README \
-  FAQ \
   ChangeLog
   
 EXTRA_DIST = \
+  FAQ \
   wifidog.spec.in \
   wifidog.spec \
   config \
