@@ -1,5 +1,8 @@
 # $Header$
 2004-04-11  Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Removed duplicates signal handling hooks
+
+2004-04-11  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Node find if's expressions changed
 
 2004-04-11  Alexandre Carmel-Veilleux <acv@acv.ca>

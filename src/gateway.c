@@ -116,8 +116,6 @@ main_loop(void)
 int
 main(int argc, char **argv)
 {
-	struct sigaction sa;
-
 	config_init();
 
 	parse_commandline(argc, argv);
@@ -127,14 +125,6 @@ main(int argc, char **argv)
 
 	init_userclasses(0);
 	
-	sa.sa_handler = sigchld_handler;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = SA_RESTART;
-	if (sigaction(SIGCHLD, &sa, NULL) == -1) {
-		debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
-		exit(1);
-	}
-
 	if (config.daemon) {
 		int childPid;
 
@@ -171,7 +161,7 @@ termination_handler(int s)
 }
 
 void
-init_signals()
+init_signals(void)
 {
 	struct sigaction sa;
 
