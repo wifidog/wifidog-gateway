@@ -2,6 +2,8 @@
 
 2004-11-29 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* wifidog.conf: Fixed firewall rule bug.
+	* src/fw_iptables.c: Unknown user default block rule not "REJECT"
+	  instead of "DROP"
 
 2004-11-23 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* src/conf.c: Fixed a NULL pointer dereference in get_ruleset().

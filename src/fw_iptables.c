@@ -212,7 +212,7 @@ iptables_fw_init(void)
     /* XXX If there's a rule in global for port 80, it overrides this. */
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 80 -j REDIRECT --to-ports %d", config->gw_port);
     UNLOCK_CONFIG();
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j DROP");
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j REJECT");
 
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_KNOWN);
     /** Insert global rules BEFORE the "defaults" */
