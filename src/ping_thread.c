@@ -76,8 +76,6 @@ thread_ping(void *arg)
 		/* No longer needs to be locked */
 		pthread_mutex_unlock(&cond_mutex);
 
-		fprintf(stderr, "BANG\n");
-		
 		ping();
 	}
 }
@@ -131,13 +129,15 @@ ping(void)
 		return;
 	}
 
-	snprintf(request, sizeof(request) - 1, "GET %s/ping HTTP/1.0\r\n"
-			"User-Agent: WiFiDog %s\r\n"
-			"Host: %s\r\n"
-			"\r\n",
+	snprintf(request, sizeof(request) - 1, "GET %s/ping/ HTTP/1.0\n"
+			"User-Agent: WiFiDog %s\n"
+			"Host: %s\n"
+			"\n",
 			auth_server->authserv_path,
 			VERSION,
 			auth_server->authserv_hostname);
+
+	send(sockfd, request, strlen(request), 0);
 
 	numbytes = totalbytes = 0;
 	while ((numbytes = read(sockfd, request + totalbytes, 

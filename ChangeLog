@@ -1,4 +1,9 @@
 # $Header$
+
+2004-08-19 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Sort of fixed the hanging thread (with an explicit thread kill)
+	* Fixed ping code
+
 2004-08-13 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* All Auth Server configuration now handled by the "AuthServer" 
 	directive.

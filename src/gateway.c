@@ -56,6 +56,8 @@
 
 extern int errno;
 
+static pthread_t tid_fw_counter; /* XXX Ugly hack */
+
 /**@internal
  * @brief Handles SIGCHLD signals to avoid zombie processes
  *
@@ -78,9 +80,12 @@ termination_handler(int s)
 {
 	static	pthread_mutex_t	sigterm_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+	/* XXX stupid openwrt bug */
+	pthread_kill(tid_fw_counter, SIGKILL);
+
 	/* Makes sure we only call fw_destroy() once. */
 	if (pthread_mutex_trylock(&sigterm_mutex))
-		return;
+		pthread_exit(NULL);
 	
 	fw_destroy();
 
@@ -178,8 +183,8 @@ main_loop(void)
 	fw_init();
 
 	/* start clean up thread */
-	pthread_create(&tid, NULL, (void *)thread_client_timeout_check, NULL);
-	pthread_detach(tid);
+	pthread_create(&tid_fw_counter, NULL, (void *)thread_client_timeout_check, NULL);
+	pthread_detach(tid_fw_counter);
 
 	/* start control thread */
 	pthread_create(&tid, NULL, (void *)thread_wdctl, 

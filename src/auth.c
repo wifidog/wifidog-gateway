@@ -119,7 +119,9 @@ thread_client_timeout_check(void *arg)
 
 		/* No longer needs to be locked */
 		pthread_mutex_unlock(&cond_mutex);
-		
+	
+		debug(LOG_DEBUG, "Running fw_counter()");
+	
 		fw_counter();
 	}
 }
