@@ -12,7 +12,7 @@ wifidog_LDADD = $(top_builddir)/libhttpd/libhttpd.la
 wifidog_SOURCES = commandline.c \
 	conf.c \
 	debug.c \
-	iptables.c \
+	fw_iptables.c \
 	firewall.c \
 	gateway.c \
 	centralserver.c \
@@ -26,7 +26,7 @@ noinst_HEADERS = commandline.h \
 	common.h \
 	conf.h \
 	debug.h \
-	iptables.h \
+	fw_iptables.h \
 	firewall.h \
 	gateway.h \
 	centralserver.h \

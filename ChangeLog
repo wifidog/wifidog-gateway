@@ -1,4 +1,6 @@
 # $Header$
+2004-08-04 Philippe April <wifidog@philippeapril.com>
+    * Renamed iptables.[ch] to fw_iptables.[ch]
 
 2004-08-03 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Fixed broken sockaddr_un usage in wdctl.c and wdctl_thread.c

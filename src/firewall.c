@@ -44,7 +44,7 @@
 #include "debug.h"
 #include "conf.h"
 #include "firewall.h"
-#include "iptables.h"
+#include "fw_iptables.h"
 #include "auth.h"
 #include "centralserver.h"
 #include "client_list.h"

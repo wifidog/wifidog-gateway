@@ -20,7 +20,7 @@
 
 /* $Header$ */
 /** @internal
-  @file iptables.c
+  @file fw_iptables.c
   @brief Firewall iptables functions
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
  */
@@ -36,7 +36,7 @@
 #include <pthread.h>
 
 #include "conf.h"
-#include "iptables.h"
+#include "fw_iptables.h"
 #include "firewall.h"
 #include "debug.h"
 #include "util.h"

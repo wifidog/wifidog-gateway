@@ -40,7 +40,7 @@
 #include "debug.h"
 #include "auth.h"
 #include "centralserver.h"
-#include "iptables.h"
+#include "fw_iptables.h"
 #include "firewall.h"
 #include "client_list.h"
 

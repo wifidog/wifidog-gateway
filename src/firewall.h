@@ -27,7 +27,7 @@
 #ifndef _FIREWALL_H_
 #define _FIREWALL_H_
 
-/** Used by iptables.c */
+/** Used by fw_iptables.c */
 typedef enum _t_fw_marks {
     FW_MARK_PROBATION = 1, /**< @brief The client is in probation period and must be authenticated 
 			    @todo: VERIFY THAT THIS IS ACCURATE*/

@@ -19,13 +19,13 @@
 \********************************************************************/
 
 /* $Header$ */
-/** @file iptables.h
+/** @file fw_iptables.h
     @brief Firewall iptables functions
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
 */
 
-#ifndef _IPTABLES_H_
-#define _IPTABLES_H_
+#ifndef _FW_IPTABLES_H_
+#define _FW_IPTABLES_H_
 
 #include "firewall.h"
 
