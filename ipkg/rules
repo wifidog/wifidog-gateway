@@ -31,7 +31,7 @@ IPKG_BUILD=$(STAGING_DIR)/bin/ipkg-build
 
 all: binary
 
-build: build-wifidog build-iptables
+build: build-wifidog build-iptables build-ipkg-utils
 
 build-wifidog: build-wifidog-stamp
 build-wifidog-stamp:

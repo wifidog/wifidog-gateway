@@ -1,4 +1,7 @@
 # $Header$
+2004-10-28 Philippe April <philippe@philippeapril.com>
+	* ipkg/rules: building ipkg-tools before packaging
+
 2004-10-28 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* multiple files: Implemented a FirewallRule config command, it
 	  doesn't actually do anything yet.
