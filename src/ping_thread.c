@@ -97,15 +97,8 @@ ping(void)
 {
 	size_t			numbytes,
 				totalbytes;
-	int			sockfd,
-				nfds,
-				done,
-				i;
-	t_auth_serv		*auth_server;
-	char			request[MAX_BUF],
-				*tmp_addr;
-	struct in_addr		*h_addr;
-	struct sockaddr_in	their_addr;
+	int			sockfd, nfds, done;
+	char			request[MAX_BUF];
 	fd_set			readfds;
 	struct timeval		timeout;
 	FILE * fh;
@@ -116,62 +109,13 @@ ping(void)
 
 	debug(LOG_DEBUG, "Entering ping()");
 	
-	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		debug(LOG_ERR, "socket(): %s", strerror(errno));
-		exit(1);
-	}
-
-	auth_server = get_auth_server();
-
-	debug(LOG_DEBUG, "Using auth server %s",
-			auth_server->authserv_hostname);
-	
-	debug(LOG_DEBUG, "Resolving IP");
-	if ((h_addr = (struct in_addr *)wd_gethostbyname(auth_server->authserv_hostname)) == NULL) {
-		debug(LOG_ERR, "Failed to resolve %s via gethostbyname"
-				"(): %s", auth_server->authserv_hostname, 
-				strerror(errno));
-		debug(LOG_ERR, "Bumping auth server to last in line.");
-		mark_auth_server_bad(auth_server);
-		close(sockfd);
+	sockfd = connect_auth_server();
+	if (sockfd == -1) {
+		/*
+		 * No auth servers for me to talk to
+		 */
 		return;
 	}
-
-	if (auth_server->last_ip == NULL) {
-		auth_server->last_ip = safe_strdup(inet_ntoa(*h_addr));
-	} else {
-		tmp_addr = safe_strdup(inet_ntoa(*h_addr));
-		if (strcmp(auth_server->last_ip, tmp_addr) != 0) {
-			free(auth_server->last_ip);
-			auth_server->last_ip = tmp_addr;
-			fw_clear_authservers();
-			fw_set_authservers();
-		} else {
-			free(tmp_addr);
-		}
-	}
-
-	their_addr.sin_family = AF_INET;
-	their_addr.sin_port = htons(auth_server->authserv_http_port);
-	their_addr.sin_addr = *h_addr;
-	memset(&(their_addr.sin_zero), '\0', sizeof(their_addr.sin_zero));
-
-	debug(LOG_INFO, "Connecting to auth server %s on port %d", 
-			auth_server->authserv_hostname, 
-			auth_server->authserv_http_port);
-
-	if (connect(sockfd, (struct sockaddr *)&their_addr,
-				sizeof(struct sockaddr)) == -1) {
-		debug(LOG_ERR, "connect(): %s", strerror(errno));
-		debug(LOG_ERR, "Bumping auth server to last in line.");
-		mark_auth_server_bad(auth_server);
-		close(sockfd);
-		free(h_addr);
-		return;
-	}
-	free(h_addr);
-		
-	mark_online();
 
 	/*
 	 * Populate uptime, memfree and load
@@ -205,14 +149,14 @@ ping(void)
 			"User-Agent: WiFiDog %s\n"
 			"Host: %s\n"
 			"\n",
-			auth_server->authserv_path,
+			config_get_config()->auth_servers->authserv_path,
 			config_get_config()->gw_id,
 			sys_uptime,
 			sys_memfree,
 			sys_load,
 			(long unsigned int)((long unsigned int)time(NULL) - (long unsigned int)started_time),
 			VERSION,
-			auth_server->authserv_hostname);
+			config_get_config()->auth_servers->authserv_hostname);
 
 	debug(LOG_DEBUG, "HTTP Request to Server: [%s]", request);
 	
@@ -237,47 +181,47 @@ ping(void)
 			numbytes = read(sockfd, request + totalbytes,
 					MAX_BUF - (totalbytes + 1));
 			if (numbytes < 0) {
-				debug(LOG_ERR, "read(): %s", strerror(errno));
-				mark_auth_server_bad(auth_server);
+				debug(LOG_ERR, "An error occurred while reading from auth server: %s", strerror(errno));
+				/* FIXME */
 				close(sockfd);
 				return;
-			} else if (numbytes == 0) {
-				done = 1;
-			} else {
-				totalbytes += numbytes;
-				debug(LOG_DEBUG, "Read %d bytes, total now %d",
-						numbytes, totalbytes);
 			}
-		} else if (nfds == 0) {
-			debug(LOG_ERR, "select() timed out");
-			mark_auth_server_bad(auth_server);
+			else if (numbytes == 0) {
+				done = 1;
+			}
+			else {
+				totalbytes += numbytes;
+				debug(LOG_DEBUG, "Read %d bytes, total now %d", numbytes, totalbytes);
+			}
+		}
+		else if (nfds == 0) {
+			debug(LOG_ERR, "Timed out reading data via select() from auth server");
+			/* FIXME */
 			close(sockfd);
 			return;
-		} else if (nfds < 0) {
-			debug(LOG_ERR, "select(): %s", strerror(errno));
-			mark_auth_server_bad(auth_server);
+		}
+		else if (nfds < 0) {
+			debug(LOG_ERR, "Error reading data via select() from auth server: %s", strerror(errno));
+			/* FIXME */
 			close(sockfd);
 			return;
 		}
 	} while (!done);
+	close(sockfd);
 
 	debug(LOG_DEBUG, "Done reading reply, total %d bytes", totalbytes);
 
-	numbytes = totalbytes;
-	
-	request[numbytes] = '\0';
-
-	close(sockfd);
+	request[totalbytes] = '\0';
 
 	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", request);
 	
-	if (!strstr(request, "Pong")) {
-		debug(LOG_ERR, "Primary auth server offline");
-		debug(LOG_ERR, "Bumping auth server to last in line.");
-		mark_auth_server_bad(auth_server);
-		return;
+	if (strstr(request, "Pong") == 0) {
+		debug(LOG_WARNING, "Auth server did NOT say pong!");
+		/* FIXME */
 	}
-	
-	debug(LOG_DEBUG, "Auth Server Says: Pong");
+	else {
+		debug(LOG_DEBUG, "Auth Server Says: Pong");
+	}
+
 	return;	
 }

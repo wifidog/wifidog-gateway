@@ -37,4 +37,10 @@
 /** @brief Initiates a transaction with the auth server */
 int auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, char *mac, char *token, long int incoming, long int outgoing);
 
+/** @brief Tries really hard to connect to an auth server.  Returns a connected file descriptor or -1 on error */
+int connect_auth_server();
+
+/** @brief Helper function called by connect_auth_server() to do the actual work including recursion - do not call directly */
+int _connect_auth_server(int level);
+
 #endif /* _CENTRALSERVER_H_ */

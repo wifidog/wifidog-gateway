@@ -5,6 +5,18 @@
 	safe_vasprintf with propper logging and exit when error. Replaced all
 	instances of original with safe versions in all files
 	* Fix memory leak in iptables_fw_counters_update
+	* Partial merge from CaptiveDNS branch: Consolidated much of the networking
+	calls to the auth servers into a magical function called connect_auth_server()
+	that's responsible for dns lookup, connecting, marking servers bad, marking
+	online/auth_online, and refreshing the firewall rules.
+	* Partial merge from CaptiveDNS branch: Added new functions mark_auth_online(),
+	mark_auth_offline() and is_auth_online() - similar in nature to is_online()
+	etc. except tailored to decide on auth servers status - currently being called by
+	connect_auth_server()
+	* Partial merge from CaptiveDNS branch: Different apology in 404 handler
+	depending on whether internet is down or just auth server is down
+	* Partial merge from CaptiveDNS branch: wdctl status now shows status of
+	is_online and is_auth_online
 
 2005-02-16 Philippe April <philippe@ilesansfil.org>
 	* ipkg/rules - When we clean, forgot to delete ipkg-build-stamp

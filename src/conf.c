@@ -745,10 +745,6 @@ mark_auth_server_bad(t_auth_serv *bad_server)
 {
 	t_auth_serv	*tmp;
 
-	/* lock mutex so two different threads both don't mark the same
-	 * server as bad */
-	pthread_mutex_lock(&config_mutex);
-
 	if (config.auth_servers == bad_server && bad_server->next != NULL) {
 		/* Go to the last */
 		for (tmp = config.auth_servers; tmp->next != NULL; tmp = tmp->next);
@@ -760,10 +756,4 @@ mark_auth_server_bad(t_auth_serv *bad_server)
 		bad_server->next = NULL;
 	}
 
-	mark_offline();
-
-	pthread_mutex_unlock(&config_mutex);
-
-	fw_clear_authservers();
-	fw_set_authservers();
 }

@@ -167,17 +167,12 @@ iptables_fw_set_authservers(void)
    
     config = config_get_config();
     
-    LOCK_CONFIG();
-    
     for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
-	    if (auth_server->last_ip == NULL || strcmp(auth_server->last_ip, "0.0.0.0") == 0) {
-	        iptables_do_command("-t filter -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->authserv_hostname);
-	    } else {
+	    if (auth_server->last_ip && strcmp(auth_server->last_ip, "0.0.0.0") != 0) {
 	        iptables_do_command("-t filter -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->last_ip);
 	    }
     }
 
-    UNLOCK_CONFIG();
 }
 
 /** Initialize the firewall rules

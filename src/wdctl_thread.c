@@ -224,7 +224,14 @@ wdctl_status(int fd)
 	minutes = uptime / 60;
 	uptime -= minutes * 60;
 	seconds = uptime;
-	snprintf((buffer + len), (sizeof(buffer) - len), "Uptime: %ud %uh %um %us\n\n", days, hours, minutes, seconds);
+
+	snprintf((buffer + len), (sizeof(buffer) - len), "Uptime: %ud %uh %um %us\n", days, hours, minutes, seconds);
+	len = strlen(buffer);
+	
+	snprintf((buffer + len), (sizeof(buffer) - len), "is_online: %s\n", (is_online() ? "yes" : "no"));
+	len = strlen(buffer);
+	
+	snprintf((buffer + len), (sizeof(buffer) - len), "is_auth_online: %s\n\n", (is_auth_online() ? "yes" : "no"));
 	len = strlen(buffer);
 
 	LOCK_CLIENT_LIST();
@@ -276,7 +283,7 @@ wdctl_status(int fd)
     }
 
     UNLOCK_CONFIG();
-	
+
 	write(fd, buffer, len);
 }
 

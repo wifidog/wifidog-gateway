@@ -55,6 +55,8 @@ static pthread_mutex_t ghbn_mutex = PTHREAD_MUTEX_INITIALIZER;
 /* XXX Do these need to be locked ? */
 static time_t last_online_time = 0;
 static time_t last_offline_time = 0;
+static time_t last_auth_online_time = 0;
+static time_t last_auth_offline_time = 0;
 
 /** Fork a child and execute a shell command, the parent
  * process waits for the child to return and returns the child's exit()
@@ -109,8 +111,8 @@ wd_gethostbyname(const char *name)
 
 	if (he == NULL) {
 		free(h_addr);
-		mark_offline();
 		UNLOCK_GHBN();
+		mark_offline();
 		return NULL;
 	}
 
@@ -153,11 +155,23 @@ char *get_iface_ip(char *ifname) {
 }
 
 void mark_online() {
+	int isonline;
+	isonline = is_online();
 	time(&last_online_time);
+	if (!isonline) {
+		debug(LOG_INFO, "ONLINE status changed to ON");
+	}
 }
 
 void mark_offline() {
+	int isonline;
+	isonline = is_online();
 	time(&last_offline_time);
+	/* If we're offline it definately means the auth server is offline */
+	mark_auth_offline();
+	if (isonline) {
+		debug(LOG_INFO, "ONLINE status changed to OFF");
+	}
 }
 
 int is_online() {
@@ -167,6 +181,41 @@ int is_online() {
 	}
 	else {
 		/* We're probably online */
+		return (1);
+	}
+}
+
+void mark_auth_online() {
+	int isauthonline;
+	isauthonline = is_auth_online();
+	time(&last_auth_online_time);
+	/* If auth server is online it means we're definately online */
+	mark_online();
+	if (!isauthonline) {
+		debug(LOG_INFO, "AUTH_ONLINE status changed to ON");
+	}
+}
+
+void mark_auth_offline() {
+	int isauthonline;
+	isauthonline = is_auth_online();
+	time(&last_auth_offline_time);
+	if (isauthonline) {
+		debug(LOG_INFO, "AUTH_ONLINE status changed to OFF");
+	}
+}
+
+int is_auth_online() {
+	if (!is_online()) {
+		/* If we're not online auth is definately not online :) */
+		return (0);
+	}
+	else if (last_auth_online_time == 0 || (last_auth_offline_time - last_auth_online_time) >= (config_get_config()->checkinterval * 2) ) {
+		/* Auth is  probably offline */
+		return (0);
+	}
+	else {
+		/* Auth is probably online */
 		return (1);
 	}
 }

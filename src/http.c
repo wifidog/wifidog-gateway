@@ -77,16 +77,28 @@ http_callback_404(httpd *webserver, request *r)
 	url = httpdUrlEncode(tmp_url);
 	
 	if (!is_online()) {
-		/* No point re-directing them to the auth server if we haven't been able to talk
-		 * to it for a while */
-		httpdOutput(r, "<html><head><title>Currently unavailable</title></head><body><h1>Uh oh!</h1>");
+		/* The internet connection is down at the moment  - apologize and do not redirect anywhere */
+		httpdOutput(r, "<html><head><title>Internet access currently unavailable</title></head><body><h1>Uh oh!</h1>");
+		httpdOutput(r, "We apologize, but it seems that the internet connection that powers this hotspot is temporarily unavailable.");
+		httpdOutput(r, "<p>");
+		httpdOutput(r, "If at all possible, please notify the owners of this hotspot that the internet connection is out of service.");
+		httpdOutput(r, "<p>");
+		httpdOutput(r, "The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.");
+		httpdOutput(r, "<p>");
+		httpdPrintf(r, "In a while please <a href='%s'>click here</a> to try your request again.", tmp_url);
+		httpdOutput(r, "</body></html>");
+		debug(LOG_INFO, "Sent %s an apology since I am not online - no point sending them to auth server", r->clientAddr);
+	}
+	else if (!is_auth_online()) {
+		/* The auth server is down at the moment - apologize and do not redirect anywhere */
+		httpdOutput(r, "<html><head><title>Login screen currently unavailable</title></head><body><h1>Uh oh!</h1>");
 		httpdOutput(r, "We apologize, but it seems that we are currently unable to re-direct you to the login screen.");
 		httpdOutput(r, "<p>");
 		httpdOutput(r, "The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.");
 		httpdOutput(r, "<p>");
-		httpdPrintf(r, "In a while please <a href='%s'>click here</a> to try again.", tmp_url);
+		httpdPrintf(r, "In a couple of minutes please <a href='%s'>click here</a> to try your request again.", tmp_url);
 		httpdOutput(r, "</body></html>");
-		debug(LOG_INFO, "Sent %s an apology since I am not online - no point sending them to auth server", r->clientAddr);
+		debug(LOG_INFO, "Sent %s an apology since auth server not online - no point sending them to auth server", r->clientAddr);
 	}
 	else {
 		/* Re-direct them to auth server */
@@ -113,8 +125,7 @@ http_callback_404(httpd *webserver, request *r)
 				config->gw_port,
 				config->gw_id,
 				url);
-		debug(LOG_INFO, "Captured %s and re-directed them to login "
-			"page", r->clientAddr);
+		debug(LOG_INFO, "Captured %s and re-directed them to login page", r->clientAddr);
 		free(newlocation);
 	}
 
