@@ -211,17 +211,23 @@ client_list_delete(t_client * client)
 
     ptr = firstclient;
 
-    if (ptr == client) {
+    if (ptr == NULL) {
+        debug(LOG_ERR, "Node list empty!");
+    } else if (ptr == client) {
         firstclient = ptr->next;
         _client_list_free_node(client);
     } else {
-        while (ptr->next != NULL && ptr != client) {
-            if (ptr->next == client) {
-                ptr->next = client->next;
-                _client_list_free_node(client);
-            }
+        /* Loop forward until we reach our point in the list. */
+        while (ptr->next != NULL && ptr->next != client) {
+            ptr = ptr->next;
+        }
+        /* If we reach the end before finding out element, complain. */
+        if (ptr->next == NULL) {
+            debug(LOG_ERR, "Node to delete could not be found.");
+        /* Free element. */
+        } else {
+            ptr->next = client->next;
+            _client_list_free_node(client);
         }
     }
 }
-
-

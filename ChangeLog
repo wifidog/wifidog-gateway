@@ -1,4 +1,7 @@
 # $Header$
+2004-07-05 Philippe April <papril777@yahoo.com>
+    * Fixed an endless loop in client_list_delete
+
 2004-06-10 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Added debugging to libhttpd so that httpdGetConnection() traces
 	  its execution into ./httpdGetConnection.log. This should be removed
