@@ -1,5 +1,8 @@
 # $Header$
 
+2004-04-17  Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Added work around for uClibc bug in auth.c
+
 2004-04-17  Philippe April <papril777@yahoo.com>
 	* Fixed firewall scripts to make them standard and some firewall functions
 
