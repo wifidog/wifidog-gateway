@@ -57,8 +57,12 @@ clean:
 install: build install-wifidog install-iptables install-kernel-modules install-pthread
 	mkdir -p $(TMP_DIR)/etc
 	cp $(CURDIR)/wifidog.conf $(TMP_DIR)/etc
+	mkdir -p $(TMP_DIR)/usr/bin
+	#OpenWrt doesn't have a full init.d architecture, but we still need the module check so we install the normal init.d script in /usr/bin/wifidog-init
+	cp $(CURDIR)/scripts/init.d/wifidog $(TMP_DIR)/usr/bin/wifidog-init
+	#And call wifidog-init from S65wifidog
 	mkdir -p $(TMP_DIR)/etc/init.d
-	cp $(CURDIR)/scripts/init.d/wifidog $(TMP_DIR)/etc/init.d/S65wifidog
+	cp $(CURDIR)/scripts/openwrt/S65wifidog $(TMP_DIR)/etc/init.d
 	chmod +x $(TMP_DIR)/etc/init.d/S65wifidog
 	
 install-wifidog:

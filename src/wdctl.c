@@ -156,7 +156,7 @@ connect_to_server(char *sock_name)
 
 	if (connect(sock, (struct sockaddr *)&sa_un, 
 			strlen(sa_un.sun_path) + sizeof(sa_un.sun_family))) {
-		fprintf(stderr, "wdctl: Error: %s\n", strerror(errno));
+		fprintf(stderr, "wdctl: wifidog probably not started (Error: %s)\n", strerror(errno));
 		exit(1);
 	}
 
@@ -294,4 +294,5 @@ main(int argc, char **argv)
 		exit(1);
 		break;
 	}
+	exit(0);
 }

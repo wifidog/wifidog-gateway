@@ -1,4 +1,12 @@
 # $Header$
+2004-08-31 Benoit Grégoire  <bock@step.polymtl.ca>
+	* Makefile.am: Add rpm target
+	* wifidog.spec.in:  Rework spec file.  Now works and include the init script
+	* ipkg/rules:  Deal with the incomplete init.d system of the OpenWrt.   Install scripts/init.d/wifidog as /usr/bin/wifidog-init, and call wifidog-init start from S65wifidog. 
+	* scripts/openwrt/S65wifidog: Add file
+	* scripts/init.d/wifidog:  Fix performance and protability problem.  Make it chkconfig compliant.  Test that chkconfig --add wifidog works (at least on mandrake)
+ 	* src/wdctl.c:  Change some message, make sure wdctl return 0 unless there is an error.
+	
 2004-08-30 Benoit Grégoire  <bock@step.polymtl.ca>
 	* README.openwrt:  Documentation update
 	* Makefile.am:  Make a ipkg target to ease WRT54G installation

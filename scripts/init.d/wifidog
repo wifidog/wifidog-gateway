@@ -2,49 +2,61 @@
 #
 # Could be better, but it's working as expected
 #
-# Startup/shutdown script for Wifidog daemon
+# 
 #
+# chkconfig: 345 65 35
+#
+# description: Startup/shutdown script for Wifidog captive portal
+# processname: wifidog
+
 # Date    : 2004-08-25
 # Version : 1.0
 
 IPT=/usr/sbin/iptables
 WD_DIR=/usr/bin
 
-test_wifidog_is_working () {
-  WORKING=$(wdctl status 2>&1 | awk '{ print $3$4 }')
-  if [ "$WORKING" = "Connectionrefused" ]; then
-    echo "  Wifidog is not working, please start it before"
-    exit
-  fi
-}
-
-test_wifidog_is_not_working () {
-  WORKING=$(wdctl status 2>&1 | awk '{ print $3$4 }')
-    if [ "$WORKING" != "Connectionrefused" ]; then
-      echo "  Wifidog is already working"
-      exit
-    fi
-}
-
 case "$1" in
   start)
-    $0 test-module
-    echo "Starting Wifidog ..."
-    test_wifidog_is_not_working
-    $WD_DIR/wifidog
+    echo "Starting Wifidog ... "
+    if $WD_DIR/wdctl status 2> /dev/null
+    then
+	echo "FAILED:  Wifidog already running"
+    else
+        $0 test-module
+	if $WD_DIR/wifidog
+	then
+		echo "OK"
+	else
+		echo "FAILED:  Wifidog exited with non 0 status"
+	fi
+    fi
     ;;
   restart)
     $0 stop
     sleep 2
     $0 start
     ;;
+  reload)
+    $0 stop
+    sleep 2
+    $0 start
+    ;;
   stop)
-    echo "Stopping Wifidog ..."
-    test_wifidog_is_working
-    $WD_DIR/wdctl stop
+    echo "Stopping Wifidog ... "
+    if $WD_DIR/wdctl status 2> /dev/null
+    then
+       	if $WD_DIR/wdctl stop
+	then
+		echo "OK"
+	else
+		echo "FAILED:  wdctl stop exited with non 0 status"
+	fi
+       
+    else
+       echo "FAILED:  Wifidog was not running"
+    fi
     ;;
   status)
-    test_wifidog_is_working
     $WD_DIR/wdctl status
     ;;
   debug|test-module)
@@ -72,7 +84,8 @@ case "$1" in
 
     ### Find a module on disk
     module_exists () {
-      EXIST=$(find / -name $1.o 2>/dev/null)
+    echo " Looking for a module on disk"
+      EXIST=$(find /lib/modules/`uname -r` -name $1.*o 2>/dev/null)
       if [ -n "$EXIST" ]; then
         echo 1
       else
@@ -90,17 +103,19 @@ case "$1" in
       fi
     }
 
-    TEST_IPT_MAC=$(test_ipt_mac)
-    TEST_IPT_MAC_MODULE_EXISTS=$(module_exists "ipt_mac")
-
     echo "Testing for iptables modules"
+
+    echo "  Testing ipt_mac"
+    TEST_IPT_MAC=$(test_ipt_mac)
     if [ "$TEST_IPT_MAC" = "0" ]; then
-      echo "  iptables is not working with ipt_mac"
+      echo "   iptables is not working with ipt_mac"
+      echo "   Scanning disk for ipt_mac module"
+      TEST_IPT_MAC_MODULE_EXISTS=$(module_exists "ipt_mac")
       if [ "$TEST_IPT_MAC_MODULE_EXISTS" = "0" ]; then
-        echo "  ipt_mac module is missing, please install it (kernel or module)"
+        echo "   ipt_mac module is missing, please install it (kernel or module)"
         exit
       else
-        echo "  ipt_mac module exists, trying to load"
+        echo "   ipt_mac module exists, trying to load"
         insmod ipt_mac > /dev/null
         TEST_IPT_MAC_MODULE_MEMORY=$(module_in_memory "ipt_mac")
         if [ "$TEST_IPT_MAC_MODULE_MEMORY" = "0" ]; then
@@ -111,34 +126,38 @@ case "$1" in
         fi
       fi
     else
-      echo "  ipt_mac  module is working"
+      echo "   ipt_mac  module is working"
     fi
 
+    echo "  Testing ipt_mark"
     TEST_IPT_MARK=$(test_ipt_mark)
-    TEST_IPT_MARK_MODULE_EXISTS=$(module_exists "ipt_mark")
-
     if [ "$TEST_IPT_MARK" = "0" ]; then
-      echo "  iptables is not working with ipt_mark"
+      echo "   iptables is not working with ipt_mark"
+      echo "   Scanning disk for ipt_mark module"
+      TEST_IPT_MARK_MODULE_EXISTS=$(module_exists "ipt_mark")
       if [ "$TEST_IPT_MARK_MODULE_EXISTS" = "0" ]; then
-        echo "  iptables ipt_mark module missing, please install it (kernel or module)"
+        echo "   iptables ipt_mark module missing, please install it (kernel or module)"
         exit
       else
-        echo "  ipt_mark module exists, trying to load"
+        echo "   ipt_mark module exists, trying to load"
         insmod ipt_mark
         TEST_IPT_MARK_MODULE_MEMORY=$(module_in_memory "ipt_mark")
         if [ "$TEST_IPT_MARK_MODULE_MEMORY" = "0" ]; then
-          echo "  Error: ipt_mark not loaded"
+          echo "   Error: ipt_mark not loaded"
           exit
         else
-          echo "  ipt_mark loaded sucessfully"
+          echo "   ipt_mark loaded sucessfully"
         fi
       fi
       else
-    echo "  ipt_mark module is working"
+    echo "   ipt_mark module is working"
     fi
     ;;
+
   *)
-   echo "Usage: $0 {start|stop|restart|status|test-module}"
+   echo "Usage: $0 {start|stop|restart|reload|status|test-module}"
    exit 1
+   ;;
 esac
+
 
