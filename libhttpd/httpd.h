@@ -159,17 +159,10 @@ typedef struct _httpd_404 {
 typedef struct {
 	int	port,
 		serverSock,
-		clientSock,
-		readBufRemain,
-		startTime;
-	char	clientAddr[HTTP_IP_ADDR_LEN],
-		fileBasePath[HTTP_MAX_URL],
-		readBuf[HTTP_READ_BUF_LEN + 1],
-		*host,
-		*readBufPtr;
-	httpReq	request;
-	httpRes response;
-	httpVar	*variables;
+		startTime,
+		lastError;
+	char	fileBasePath[HTTP_MAX_URL],
+		*host;
 	httpDir	*content;
 	httpAcl	*defaultAcl;
 	http404  *handle404;
@@ -177,7 +170,16 @@ typedef struct {
 		*errorLog;
 } httpd;
 
-
+typedef struct {
+	int	clientSock,
+		readBufRemain;
+	httpReq	request;
+	httpRes response;
+	httpVar	*variables;
+	char	readBuf[HTTP_READ_BUF_LEN + 1],
+		*readBufPtr,
+		clientAddr[HTTP_IP_ADDR_LEN];
+} request;
 
 /***********************************************************************
 ** Function Prototypes
@@ -189,37 +191,37 @@ int httpdAddFileContent __ANSI_PROTO((httpd*,char*,char*,int,int(*)(),char*));
 int httpdAddStaticContent __ANSI_PROTO((httpd*,char*,char*,int,int(*)(),char*));
 int httpdAddWildcardContent __ANSI_PROTO((httpd*,char*,int(*)(),char*));
 int httpdAddCWildcardContent __ANSI_PROTO((httpd*,char*,int(*)(),void(*)()));
-int httpdAddVariable __ANSI_PROTO((httpd*,char*, char*));
-int httpdGetConnection __ANSI_PROTO((httpd*, struct timeval*));
-int httpdReadRequest __ANSI_PROTO((httpd*));
-int httpdCheckAcl __ANSI_PROTO((httpd*, httpAcl*));
+int httpdAddVariable __ANSI_PROTO((request*, char*, char*));
+request *httpdGetConnection __ANSI_PROTO((httpd*, struct timeval*));
+int httpdReadRequest __ANSI_PROTO((httpd*, request*));
+int httpdCheckAcl __ANSI_PROTO((httpd*, request *, httpAcl*));
 int httpdAddC404Content __ANSI_PROTO((httpd*,void(*)()));
 
-char *httpdRequestMethodName __ANSI_PROTO((httpd*));
+char *httpdRequestMethodName __ANSI_PROTO((request*));
 char *httpdUrlEncode __ANSI_PROTO((char *));
 
-void httpdAddHeader __ANSI_PROTO((httpd*, char*));
-void httpdSetContentType __ANSI_PROTO((httpd*, char*));
-void httpdSetResponse __ANSI_PROTO((httpd*, char*));
-void httpdEndRequest __ANSI_PROTO((httpd*));
+void httpdAddHeader __ANSI_PROTO((request*, char*));
+void httpdSetContentType __ANSI_PROTO((request*, char*));
+void httpdSetResponse __ANSI_PROTO((request*, char*));
+void httpdEndRequest __ANSI_PROTO((request*));
 
 httpd *httpdCreate __ANSI_PROTO(());
-void httpdFreeVariables __ANSI_PROTO((httpd*));
-void httpdDumpVariables __ANSI_PROTO((httpd*));
-void httpdOutput __ANSI_PROTO((httpd*, char*));
-void httpdPrintf __ANSI_PROTO((httpd*, char*, ...));
-void httpdProcessRequest __ANSI_PROTO((httpd*));
-void httpdSendHeaders __ANSI_PROTO((httpd*));
+void httpdFreeVariables __ANSI_PROTO((request*));
+void httpdDumpVariables __ANSI_PROTO((request*));
+void httpdOutput __ANSI_PROTO((request*, char*));
+void httpdPrintf __ANSI_PROTO((request*, char*, ...));
+void httpdProcessRequest __ANSI_PROTO((httpd*, request *));
+void httpdSendHeaders __ANSI_PROTO((request*));
 void httpdSetFileBase __ANSI_PROTO((httpd*, char*));
-void httpdSetCookie __ANSI_PROTO((httpd*, char*, char*));
+void httpdSetCookie __ANSI_PROTO((request*, char*, char*));
 
 void httpdSetErrorLog __ANSI_PROTO((httpd*, FILE*));
 void httpdSetAccessLog __ANSI_PROTO((httpd*, FILE*));
 void httpdSetDefaultAcl __ANSI_PROTO((httpd*, httpAcl*));
 
-httpVar	*httpdGetVariableByName __ANSI_PROTO((httpd*, char*));
-httpVar	*httpdGetVariableByPrefix __ANSI_PROTO((httpd*, char*));
-httpVar	*httpdGetVariableByPrefixedName __ANSI_PROTO((httpd*, char*, char*));
+httpVar	*httpdGetVariableByName __ANSI_PROTO((request*, char*));
+httpVar	*httpdGetVariableByPrefix __ANSI_PROTO((request*, char*));
+httpVar	*httpdGetVariableByPrefixedName __ANSI_PROTO((request*, char*, char*));
 httpVar *httpdGetNextVariableByPrefix __ANSI_PROTO((httpVar*, char*));
 
 httpAcl *httpdAddAcl __ANSI_PROTO((httpd*, httpAcl*, char*, int));

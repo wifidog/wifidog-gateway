@@ -89,10 +89,8 @@ static int scanCidr(val, result, length)
 }
 
 
-static int _isInCidrBlock(server, addr1, len1, addr2, len2)
-	httpd	*server;
-	int	addr1, len1,
-		addr2, len2;
+static int _isInCidrBlock(httpd *server, request *r, int addr1, int len1,
+		int addr2, int len2)
 {
 	int	count,
 		mask;
@@ -104,7 +102,7 @@ static int _isInCidrBlock(server, addr1, len1, addr2, len2)
 
 	if(len2 < len1)
 	{
-		_httpd_writeErrorLog(server,LEVEL_ERROR,
+		_httpd_writeErrorLog(server, r, LEVEL_ERROR,
 		    "IP Address must be more specific than network block");
 		return(0);
 	}
@@ -146,13 +144,13 @@ httpAcl *httpdAddAcl(server, acl, cidr, action)
 	*/
 	if(scanCidr(cidr, &addr, &len) < 0)
 	{
-		_httpd_writeErrorLog(server,LEVEL_ERROR,
+		_httpd_writeErrorLog(server, NULL, LEVEL_ERROR,
 			"Invalid IP address format");
 		return(NULL);
 	}
 	if (action != HTTP_ACL_PERMIT && action != HTTP_ACL_DENY)
 	{
-		_httpd_writeErrorLog(server,LEVEL_ERROR,
+		_httpd_writeErrorLog(server, NULL, LEVEL_ERROR,
 			"Invalid acl action");
 		return(NULL);
 	}
@@ -187,9 +185,7 @@ httpAcl *httpdAddAcl(server, acl, cidr, action)
 }
 
 
-int httpdCheckAcl(server, acl)
-	httpd	*server;
-	httpAcl	*acl;
+int httpdCheckAcl(httpd *server, request *r, httpAcl *acl)
 {
 	httpAcl	*cur;
 	int	addr, len,
@@ -198,11 +194,11 @@ int httpdCheckAcl(server, acl)
 
 
 	action = HTTP_ACL_DENY;
-	scanCidr(server->clientAddr, &addr, &len);
+	scanCidr(r->clientAddr, &addr, &len);
 	cur = acl;
 	while(cur)
 	{
-		res = _isInCidrBlock(server, cur->addr, cur->len, addr, len);
+		res = _isInCidrBlock(server, r, cur->addr, cur->len, addr, len);
 		if (res == 1)
 		{
 			action = cur->action;
@@ -212,8 +208,8 @@ int httpdCheckAcl(server, acl)
 	}
 	if (action == HTTP_ACL_DENY)
 	{
-		_httpd_send403(server);
-		_httpd_writeErrorLog(server,LEVEL_ERROR,
+		_httpd_send403(r);
+		_httpd_writeErrorLog(server, r, LEVEL_ERROR,
     			"Access denied by ACL");
 	}
 	return(action);

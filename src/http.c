@@ -33,6 +33,8 @@
 #include <unistd.h>
 #include <syslog.h>
 
+#include "httpd.h"
+
 #include "debug.h"
 #include "conf.h"
 #include "auth.h"
@@ -45,7 +47,7 @@
 extern pthread_mutex_t	client_list_mutex;
 
 void
-http_callback_404(httpd * webserver)
+http_callback_404(httpd *webserver, request *r)
 {
 	char		*newlocation,
 			protocol[6],
@@ -65,8 +67,8 @@ http_callback_404(httpd * webserver)
 
 	memset(tmp_url, 0, sizeof(tmp_url));
 	snprintf(tmp_url, (sizeof(tmp_url) - 1), "http://%s%s",
-			webserver->request.host,
-			webserver->request.path);
+			r->request.host,
+			r->request.path);
 	url = httpdUrlEncode(tmp_url);
 	
 	if ((asprintf(&newlocation, "Location: %s://%s:%d%slogin?"
@@ -81,12 +83,12 @@ http_callback_404(httpd * webserver)
 		debug(LOG_ERR, "Failed to asprintf newlocation");
 		free(url);
 		free(newlocation);
-		httpdOutput(webserver, "Internal error occurred");
+		httpdOutput(r, "Internal error occurred");
 	} else {
 		/* Re-direct them to auth server */
-		httpdSetResponse(webserver, "307 Please authenticate yourself here");
-		httpdAddHeader(webserver, newlocation);
-		httpdPrintf(webserver, "<html><head><title>Redirection</title></head><body>"
+		httpdSetResponse(r, "307 Please authenticate yourself here\n");
+		httpdAddHeader(r, newlocation);
+		httpdPrintf(r, "<html><head><title>Redirection</title></head><body>"
 				"Please <a href='%s://%s:%d%slogin?gw_address"
 				"=%s&gw_port=%d&gw_id=%s&url=%s'>click here</a> to "
 				"login",
@@ -99,76 +101,63 @@ http_callback_404(httpd * webserver)
 				config->gw_id,
 				url);
 		debug(LOG_INFO, "Captured %s and re-directed them to login "
-			"page", webserver->clientAddr);
+			"page", r->clientAddr);
 		free(url);
 		free(newlocation);
 	}
 }
 
 void 
-http_callback_about(httpd * webserver)
+http_callback_about(httpd *webserver, request *r)
 {
-	httpdOutput(webserver, "<html><body><h1>About:</h1>");
-	httpdOutput(webserver, "This is WiFiDog. Copyright (C) 2004 and "
+	httpdOutput(r, "<html><body><h1>About:</h1>");
+	httpdOutput(r, "This is WiFiDog. Copyright (C) 2004 and "
 			"released under the GNU GPL license.");
-	httpdOutput(webserver, "<p>");
-	httpdOutput(webserver, "For more information visit <a href='http://"
+	httpdOutput(r, "<p>");
+	httpdOutput(r, "For more information visit <a href='http://"
 			"www.ilesansfil.org/wiki/WiFiDog'>http://www."
 			"ilesansfil.org/wiki/WiFiDog</a>");
-	httpdOutput(webserver, "</body></html>");
+	httpdOutput(r, "</body></html>");
 }
 
 void 
-http_callback_auth(httpd * webserver)
+http_callback_auth(httpd *webserver, request *r)
 {
 	t_client	*client;
 	httpVar * token;
-	char	*mac,
-		*ip;
-	pthread_t tid;
+	char	*mac;
 
-	if ((token = httpdGetVariableByName(webserver, "token"))) {
+	if ((token = httpdGetVariableByName(r, "token"))) {
 		/* They supplied variable "token" */
-		if (!(mac = arp_get(webserver->clientAddr))) {
+		if (!(mac = arp_get(r->clientAddr))) {
 			/* We could not get their MAC address */
 			debug(LOG_ERR, "Failed to retrieve MAC address for "
-				"ip %s", webserver->clientAddr);
-			httpdOutput(webserver, "Failed to retrieve your MAC "
+				"ip %s", r->clientAddr);
+			httpdOutput(r, "Failed to retrieve your MAC "
 					"address");
 		} else {
 			/* We have their MAC address */
 
 			LOCK_CLIENT_LIST();
 			
-			if ((client = client_list_find(webserver->clientAddr, mac)) == NULL) {
+			if ((client = client_list_find(r->clientAddr, mac)) == NULL) {
 				debug(LOG_DEBUG, "New client for %s",
-					webserver->clientAddr);
-				client_list_append(webserver->clientAddr, mac, token->value);
+					r->clientAddr);
+				client_list_append(r->clientAddr, mac, token->value);
 			} else {
 				debug(LOG_DEBUG, "Node for %s already "
 					"exists", client->ip);
 			}
 
-			client = client_list_find(webserver->clientAddr, mac);
-
-			client->fd = webserver->clientSock;
-			webserver->clientSock = -1;
+			client = client_list_find(r->clientAddr, mac);
 
 			UNLOCK_CLIENT_LIST();
 
-			/* That clientAddr may be freed prior to the thread
-			 * finishing. XXX The duplicated string will be freed
-			 * by the thread */
-			ip = strdup(webserver->clientAddr);
-			
-			/* start sub process */
-			pthread_create(&tid, NULL, (void *)thread_authenticate_client, (void *)ip);
-			pthread_detach(tid);
-
+			authenticate_client(r);
 			free(mac);
 		}
 	} else {
 		/* They did not supply variable "token" */
-		httpdOutput(webserver, "Invalid token");
+		httpdOutput(r, "Invalid token");
 	}
 }

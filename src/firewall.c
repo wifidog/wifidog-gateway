@@ -41,6 +41,8 @@
 
 #include <string.h>
 
+#include "httpd.h"
+
 #include "debug.h"
 #include "conf.h"
 #include "firewall.h"

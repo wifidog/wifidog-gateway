@@ -79,30 +79,25 @@ int _httpd_net_write(sock, buf, len)
 #endif
 }
 
-int _httpd_readChar(server, cp)
-	httpd	*server;
-	char	*cp;
+int _httpd_readChar(request *r, char *cp)
 {
-	if (server->readBufRemain == 0)
+	if (r->readBufRemain == 0)
 	{
-		bzero(server->readBuf, HTTP_READ_BUF_LEN + 1);
-		server->readBufRemain = _httpd_net_read(server->clientSock, 
-			server->readBuf, HTTP_READ_BUF_LEN);
-		if (server->readBufRemain < 1)
+		bzero(r->readBuf, HTTP_READ_BUF_LEN + 1);
+		r->readBufRemain = _httpd_net_read(r->clientSock, 
+			r->readBuf, HTTP_READ_BUF_LEN);
+		if (r->readBufRemain < 1)
 			return(0);
-		server->readBuf[server->readBufRemain] = 0;
-		server->readBufPtr = server->readBuf;
+		r->readBuf[r->readBufRemain] = 0;
+		r->readBufPtr = r->readBuf;
 	}
-	*cp = *server->readBufPtr++;
-	server->readBufRemain--;
+	*cp = *r->readBufPtr++;
+	r->readBufRemain--;
 	return(1);
 }
 
 
-int _httpd_readLine(server, destBuf, len)
-	httpd	*server;
-	char	*destBuf;
-	int	len;
+int _httpd_readLine(request *r, char *destBuf, int len)
 {
 	char	curChar,
 		*dst;
@@ -113,7 +108,7 @@ int _httpd_readLine(server, destBuf, len)
 	dst = destBuf;
 	while(count < len)
 	{
-		if (_httpd_readChar(server, &curChar) < 1)
+		if (_httpd_readChar(r, &curChar) < 1)
 			return(0);
 		if (curChar == '\n')
 		{
@@ -135,10 +130,7 @@ int _httpd_readLine(server, destBuf, len)
 }
 
 
-int _httpd_readBuf(server, destBuf, len)
-	httpd	*server;
-	char	*destBuf;
-	int	len;
+int _httpd_readBuf(request *r, char *destBuf, int len)
 {
 	char	curChar,
 		*dst;
@@ -149,7 +141,7 @@ int _httpd_readBuf(server, destBuf, len)
 	dst = destBuf;
 	while(count < len)
 	{
-		if (_httpd_readChar(server, &curChar) < 1)
+		if (_httpd_readChar(r, &curChar) < 1)
 			return(0);
 		*dst++ = curChar;
 		count++;
@@ -157,8 +149,7 @@ int _httpd_readBuf(server, destBuf, len)
 	return(1);
 }
 
-void _httpd_writeAccessLog(server)
-	httpd	*server;
+void _httpd_writeAccessLog(httpd *server, request *r)
 {
 	char	dateBuf[30];
 	struct 	tm *timePtr;
@@ -171,17 +162,14 @@ void _httpd_writeAccessLog(server)
 	clock = time(NULL);
 	timePtr = localtime(&clock);
 	strftime(dateBuf, 30, "%d/%b/%Y:%T %Z",  timePtr);
-	responseCode = atoi(server->response.response);
+	responseCode = atoi(r->response.response);
 	fprintf(server->accessLog, "%s - - [%s] %s \"%s\" %d %d\n", 
-		server->clientAddr, dateBuf, httpdRequestMethodName(server), 
-		httpdRequestPath(server), responseCode, 
-		server->response.responseLength);
+		r->clientAddr, dateBuf, httpdRequestMethodName(r), 
+		httpdRequestPath(r), responseCode, 
+		r->response.responseLength);
 }
 
-void _httpd_writeErrorLog(server, level, message)
-	httpd	*server;
-	char	*level,
-		*message;
+void _httpd_writeErrorLog(httpd *server, request *r, char *level, char *message)
 {
 	char	dateBuf[30];
 	struct 	tm *timePtr;
@@ -193,10 +181,10 @@ void _httpd_writeErrorLog(server, level, message)
 	clock = time(NULL);
 	timePtr = localtime(&clock);
 	strftime(dateBuf, 30, "%a %b %d %T %Y",  timePtr);
-	if (*server->clientAddr != 0)
+	if (r != NULL && *r->clientAddr != 0)
 	{
 		fprintf(server->errorLog, "[%s] [%s] [client %s] %s\n",
-			dateBuf, level, server->clientAddr, message);
+			dateBuf, level, r->clientAddr, message);
 	}
 	else
 	{
@@ -347,9 +335,7 @@ void _httpd_freeVariables(var)
 	return;
 }
 
-void _httpd_storeData(server, query)
-	httpd	*server;
-        char    *query;
+void _httpd_storeData(request *r, char *query)
 {
         char    *cp,
 		*cp2,
@@ -379,7 +365,7 @@ void _httpd_storeData(server, query)
                 {
 			*cp = 0;
 			tmpVal = _httpd_unescape(val);
-			httpdAddVariable(server, var, tmpVal);
+			httpdAddVariable(r, var, tmpVal);
                         cp++;
                         cp2 = var;
 			val = NULL;
@@ -405,15 +391,12 @@ void _httpd_storeData(server, query)
         }
 	*cp = 0;
 	tmpVal = _httpd_unescape(val);
-	httpdAddVariable(server, var, tmpVal);
+	httpdAddVariable(r, var, tmpVal);
 	free(var);
 }
 
 
-void _httpd_formatTimeString(server, ptr, clock)
-	httpd	*server;
-	char	*ptr;
-	int	clock;
+void _httpd_formatTimeString(char *ptr, int clock)
 {
 	struct 	tm *timePtr;
 
@@ -424,48 +407,45 @@ void _httpd_formatTimeString(server, ptr, clock)
 }
 
 
-void _httpd_sendHeaders(server, contentLength, modTime)
-	httpd	*server;
-	int	contentLength,
-		modTime;
+void _httpd_sendHeaders(request *r, int contentLength, int modTime)
 {
 	char	tmpBuf[80],
 		timeBuf[HTTP_TIME_STRING_LEN];
 
-	if(server->response.headersSent)
+	if(r->response.headersSent)
 		return;
 
-	server->response.headersSent = 1;
-	_httpd_net_write(server->clientSock, "HTTP/1.0 ", 9);
-	_httpd_net_write(server->clientSock, server->response.response, 
-		strlen(server->response.response));
-	_httpd_net_write(server->clientSock, server->response.headers, 
-		strlen(server->response.headers));
+	r->response.headersSent = 1;
+	_httpd_net_write(r->clientSock, "HTTP/1.0 ", 9);
+	_httpd_net_write(r->clientSock, r->response.response, 
+		strlen(r->response.response));
+	_httpd_net_write(r->clientSock, r->response.headers, 
+		strlen(r->response.headers));
 
-	_httpd_formatTimeString(server, timeBuf, 0);
-	_httpd_net_write(server->clientSock,"Date: ", 6);
-	_httpd_net_write(server->clientSock, timeBuf, strlen(timeBuf));
-	_httpd_net_write(server->clientSock, "\n", 1);
+	_httpd_formatTimeString(timeBuf, 0);
+	_httpd_net_write(r->clientSock,"Date: ", 6);
+	_httpd_net_write(r->clientSock, timeBuf, strlen(timeBuf));
+	_httpd_net_write(r->clientSock, "\n", 1);
 
-	_httpd_net_write(server->clientSock, "Connection: close\n", 18);
-	_httpd_net_write(server->clientSock, "Content-Type: ", 14);
-	_httpd_net_write(server->clientSock, server->response.contentType, 
-		strlen(server->response.contentType));
-	_httpd_net_write(server->clientSock, "\n", 1);
+	_httpd_net_write(r->clientSock, "Connection: close\n", 18);
+	_httpd_net_write(r->clientSock, "Content-Type: ", 14);
+	_httpd_net_write(r->clientSock, r->response.contentType, 
+		strlen(r->response.contentType));
+	_httpd_net_write(r->clientSock, "\n", 1);
 
 	if (contentLength > 0)
 	{
-		_httpd_net_write(server->clientSock, "Content-Length: ", 16);
+		_httpd_net_write(r->clientSock, "Content-Length: ", 16);
 		snprintf(tmpBuf, sizeof(tmpBuf), "%d", contentLength);
-		_httpd_net_write(server->clientSock, tmpBuf, strlen(tmpBuf));
-		_httpd_net_write(server->clientSock, "\n", 1);
+		_httpd_net_write(r->clientSock, tmpBuf, strlen(tmpBuf));
+		_httpd_net_write(r->clientSock, "\n", 1);
 
-		_httpd_formatTimeString(server, timeBuf, modTime);
-		_httpd_net_write(server->clientSock, "Last-Modified: ", 15);
-		_httpd_net_write(server->clientSock, timeBuf, strlen(timeBuf));
-		_httpd_net_write(server->clientSock, "\n", 1);
+		_httpd_formatTimeString(timeBuf, modTime);
+		_httpd_net_write(r->clientSock, "Last-Modified: ", 15);
+		_httpd_net_write(r->clientSock, timeBuf, strlen(timeBuf));
+		_httpd_net_write(r->clientSock, "\n", 1);
 	}
-	_httpd_net_write(server->clientSock, "\n", 1);
+	_httpd_net_write(r->clientSock, "\n", 1);
 }
 
 httpDir *_httpd_findContentDir(server, dir, createFlag)
@@ -512,10 +492,7 @@ httpDir *_httpd_findContentDir(server, dir, createFlag)
 }
 
 
-httpContent *_httpd_findContentEntry(server, dir, entryName)
-	httpd	*server;
-	httpDir	*dir;
-	char	*entryName;
+httpContent *_httpd_findContentEntry(request *r, httpDir *dir, char *entryName)
 {
 	httpContent *curEntry;
 
@@ -532,64 +509,59 @@ httpContent *_httpd_findContentEntry(server, dir, entryName)
 		curEntry = curEntry->next;
 	}
 	if (curEntry)
-		server->response.content = curEntry;
+		r->response.content = curEntry;
 	return(curEntry);
 }
 
 
-void _httpd_send304(server)
-	httpd	*server;
+void _httpd_send304(request *r)
 {
-	httpdSetResponse(server, "304 Not Modified\n");
-	_httpd_sendHeaders(server,0,0);
+	httpdSetResponse(r, "304 Not Modified\n");
+	_httpd_sendHeaders(r,0,0);
 }
 
 
-void _httpd_send403(server)
-	httpd	*server;
+void _httpd_send403(request *r)
 {
-	httpdSetResponse(server, "403 Permission Denied\n");
-	_httpd_sendHeaders(server,0,0);
-	_httpd_sendText(server,
+	httpdSetResponse(r, "403 Permission Denied\n");
+	_httpd_sendHeaders(r,0,0);
+	_httpd_sendText(r,
 		"<HTML><HEAD><TITLE>403 Permission Denied</TITLE></HEAD>\n");
-	_httpd_sendText(server,
+	_httpd_sendText(r,
 		"<BODY><H1>Access to the request URL was denied!</H1>\n");
 }
 
 
-void _httpd_send404(server)
-	httpd	*server;
+void _httpd_send404(httpd *server, request *r)
 {
 	char	msg[HTTP_MAX_URL];
 
 	snprintf(msg, HTTP_MAX_URL,
-		"File does not exist: %s", server->request.path);
-	_httpd_writeErrorLog(server,LEVEL_ERROR, msg);
+		"File does not exist: %s\n", r->request.path);
+	_httpd_writeErrorLog(server, r, LEVEL_ERROR, msg);
 
 	if (server->handle404 && server->handle404->function) {
 		/*
 		 * There's a custom C 404 handler defined with httpdAddC404Content
 		 */
-		(server->handle404->function)(server);
+		(server->handle404->function)(server, r);
 	}
 	else {
 		/*
 		 * Send stock 404
 		 */
-		httpdSetResponse(server, "404 Not Found\n");
-		_httpd_sendHeaders(server,0,0);
-		_httpd_sendText(server,
+		httpdSetResponse(r, "404 Not Found\n");
+		_httpd_sendHeaders(r,0,0);
+		_httpd_sendText(r,
 			"<HTML><HEAD><TITLE>404 Not Found</TITLE></HEAD>\n");
-		_httpd_sendText(server,
+		_httpd_sendText(r,
 			"<BODY><H1>The request URL was not found!</H1>\n");
-		_httpd_sendText(server, "</BODY></HTML>\n");
+		_httpd_sendText(r, "</BODY></HTML>\n");
 	}
 }
 
 
-void _httpd_catFile(server, path)
-	httpd	*server;
-	char	*path;
+void _httpd_catFile(request *r, char *path)
 {
 	int	fd,
 		len;
@@ -601,31 +573,27 @@ void _httpd_catFile(server, path)
 	len = read(fd, buf, HTTP_MAX_LEN);
 	while(len > 0)
 	{
-		server->response.responseLength += len;
-		_httpd_net_write(server->clientSock, buf, len);
+		r->response.responseLength += len;
+		_httpd_net_write(r->clientSock, buf, len);
 		len = read(fd, buf, HTTP_MAX_LEN);
 	}
 	close(fd);
 }
 
 
-void _httpd_sendStatic(server, data)
-	httpd	*server;
-	char	*data;
+void _httpd_sendStatic(httpd *server, request *r, char *data)
 {
-	if (_httpd_checkLastModified(server,server->startTime) == 0)
+	if (_httpd_checkLastModified(r, server->startTime) == 0)
 	{
-		_httpd_send304(server);
+		_httpd_send304(r);
 	}
-	_httpd_sendHeaders(server, server->startTime, strlen(data));
-	httpdOutput(server, data);
+	_httpd_sendHeaders(r, server->startTime, strlen(data));
+	httpdOutput(r, data);
 }
 
 
 
-void _httpd_sendFile(server, path)
-	httpd	*server;
-	char	*path;
+void _httpd_sendFile(httpd *server, request *r, char *path)
 {
 	char	*suffix;
 	struct 	stat sbuf;
@@ -634,61 +602,55 @@ void _httpd_sendFile(server, path)
 	if (suffix != NULL)
 	{
 		if (strcasecmp(suffix,".gif") == 0) 
-			strcpy(server->response.contentType,"image/gif");
+			strcpy(r->response.contentType,"image/gif");
 		if (strcasecmp(suffix,".jpg") == 0) 
-			strcpy(server->response.contentType,"image/jpeg");
+			strcpy(r->response.contentType,"image/jpeg");
 		if (strcasecmp(suffix,".xbm") == 0) 
-			strcpy(server->response.contentType,"image/xbm");
+			strcpy(r->response.contentType,"image/xbm");
 		if (strcasecmp(suffix,".png") == 0) 
-			strcpy(server->response.contentType,"image/png");
+			strcpy(r->response.contentType,"image/png");
 	}
 	if (stat(path, &sbuf) < 0)
 	{
-		_httpd_send404(server);
+		_httpd_send404(server, r);
 		return;
 	}
-	if (_httpd_checkLastModified(server,sbuf.st_mtime) == 0)
+	if (_httpd_checkLastModified(r, sbuf.st_mtime) == 0)
 	{
-		_httpd_send304(server);
+		_httpd_send304(r);
 	}
 	else
 	{
-		_httpd_sendHeaders(server, sbuf.st_size, sbuf.st_mtime);
-		_httpd_catFile(server, path);
+		_httpd_sendHeaders(r, sbuf.st_size, sbuf.st_mtime);
+		_httpd_catFile(r, path);
 	}
 }
 
 
-int _httpd_sendDirectoryEntry(server, entry, entryName)
-	httpd		*server;
-	httpContent	*entry;
-	char		*entryName;
+int _httpd_sendDirectoryEntry(httpd *server, request *r, httpContent *entry,
+		char *entryName)
 {
 	char		path[HTTP_MAX_URL];
 
 	snprintf(path, HTTP_MAX_URL, "%s/%s", entry->path, entryName);
-	_httpd_sendFile(server,path);
+	_httpd_sendFile(server, r, path);
 	return(0);
 }
 
 
-void _httpd_sendText(server, msg)
-	httpd	*server;
-	char	*msg;
+void _httpd_sendText(request *r, char *msg)
 {
-	server->response.responseLength += strlen(msg);
-	_httpd_net_write(server->clientSock,msg,strlen(msg));
+	r->response.responseLength += strlen(msg);
+	_httpd_net_write(r->clientSock,msg,strlen(msg));
 }
 
 
-int _httpd_checkLastModified(server, modTime)
-	httpd	*server;
-	int	modTime;
+int _httpd_checkLastModified(request *r, int modTime)
 {
 	char 	timeBuf[HTTP_TIME_STRING_LEN];
 
-	_httpd_formatTimeString(server, timeBuf, modTime);
-	if (strcmp(timeBuf, server->request.ifModified) == 0)
+	_httpd_formatTimeString(timeBuf, modTime);
+	if (strcmp(timeBuf, r->request.ifModified) == 0)
 		return(0);
 	return(1);
 }

@@ -39,6 +39,8 @@
 #include <signal.h>
 #include <errno.h>
 
+#include "httpd.h"
+
 #include "conf.h"
 #include "debug.h"
 #include "auth.h"

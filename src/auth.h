@@ -51,7 +51,7 @@ typedef struct _t_authresponse {
 
 
 /** @brief Authenticate a single client against the central server */
-void thread_authenticate_client(void *arg);
+void authenticate_client(request *);
 
 /** @brief Periodically check if connections expired */
 void thread_client_timeout_check(void *arg);

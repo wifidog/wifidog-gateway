@@ -36,6 +36,8 @@
 #include <unistd.h>
 #include <syslog.h>
 
+#include "httpd.h"
+
 #include "conf.h"
 #include "debug.h"
 #include "auth.h"
@@ -131,9 +133,9 @@ thread_client_timeout_check(void *arg)
 }
 
 /**Launches a thread to authenticate a single client against the central server and dies when done
-@param arg Not used */
+@param r httpd request struct */
 void
-thread_authenticate_client(void *arg)
+authenticate_client(request *r)
 {
 	t_client	*client;
 	t_authresponse	auth_response;
@@ -141,11 +143,9 @@ thread_authenticate_client(void *arg)
 		*mac,
 		*token;
 
-	ip = (char *)arg;
-
 	pthread_mutex_lock(&client_list_mutex);
 
-	client = client_list_find_by_ip(ip);
+	client = client_list_find_by_ip(r->clientAddr);
 
 	if (client == NULL) {
 		debug(LOG_ERR, "Could not find client client for %s", ip);
@@ -158,25 +158,25 @@ thread_authenticate_client(void *arg)
 	
 	pthread_mutex_unlock(&client_list_mutex);
 		
-	auth_server_request(&auth_response, REQUEST_TYPE_LOGIN, ip, mac, token, 0, 0);
+	auth_server_request(&auth_response, REQUEST_TYPE_LOGIN, r->clientAddr,
+			mac, token, 0, 0);
 	
 	pthread_mutex_lock(&client_list_mutex);
 	
 	/* can't trust the client to still exist */
-	client = client_list_find(ip, mac);
-	
-	/* don't need any of them anymore */
-	free(ip);
-	free(token);
-	free(mac);
+	client = client_list_find(r->clientAddr, mac);
 	
 	if (client == NULL) {
 		debug(LOG_ERR, "Could not find client client for %s (%s)",
-				ip, mac);
+				r->clientAddr, mac);
 		pthread_mutex_unlock(&client_list_mutex);
+		free(token);
+		free(mac);
 		return;
 	}
-
+	
+	free(token);
+	free(mac);
 
 	switch(auth_response.authcode) {
 	case AUTH_ERROR:
@@ -194,27 +194,25 @@ thread_authenticate_client(void *arg)
         case AUTH_VALIDATION:
 		client->fw_connection_state = FW_MARK_PROBATION;
         	fw_allow(client->ip, client->mac, FW_MARK_PROBATION);
-	        _http_output(client->fd, "You have 15 minutes to activate your account, hurry up!");
+	        _http_output(r->clientSock, "You have 15 minutes to activate your account, hurry up!");
 		break;
         case AUTH_ALLOWED:
 		client->fw_connection_state = FW_MARK_KNOWN;
         	fw_allow(client->ip, client->mac, FW_MARK_KNOWN);
-	        _http_redirect(client->fd, "http://%s:%d%sportal/?gw_id=%s",
+	        _http_redirect(r->clientSock, "http://%s:%d%sportal/?gw_id=%s",
 			config_get_config()->auth_servers->authserv_hostname, 
 			config_get_config()->auth_servers->authserv_http_port,
 			config_get_config()->auth_servers->authserv_path,
 			config_get_config()->gw_id);
 		break;
         case AUTH_VALIDATION_FAILED:
-	        _http_output(client->fd, "You have failed to validate your account in 15 minutes");
+	        _http_output(r->clientSock, "You have failed to validate your account in 15 minutes");
 		break;
         default:
-	        _http_output(client->fd, "Internal error");
+	        _http_output(r->clientSock, "Internal error");
 		debug(LOG_WARNING, "I don't know what the validation code %d means", auth_response.authcode);
 		break;
 	}
-		
-	client->fd = 0;
 
 	pthread_mutex_unlock(&client_list_mutex);
 	return;

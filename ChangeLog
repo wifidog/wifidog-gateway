@@ -1,5 +1,16 @@
 # $Header$
 
+2004-11-17 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* libhttpd/*: libhttpd has been taken behind the shed and shot in
+	  the back of the head. The replacement separates the request struct
+	  from the server struct. It's thread safe if none of OUR threads
+	  write to server.
+	* src/*: All the changes to handle the new libhttpd and also to
+	  move over to a worker thread system. http_callback_auth() no
+	  longer spawns a thread either.
+	* *: this update preceded by a cvs tag PRE_NEW_LIBHTTPD.
+	* *: You want to check the mailing list archive also.
+
 2004-11-10 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* libhttpd/protocol.c: select() based timeout.
 

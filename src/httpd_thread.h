@@ -19,22 +19,15 @@
 \********************************************************************/
 
 /* $Header$ */
-/** @file http.h
-    @brief HTTP IO functions
-    @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
+/** @file httpd_thread.h
+    @brief WiFiDog httpd worker thread
+    @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>
 */
 
-#ifndef _HTTP_H_
-#define _HTTP_H_
+#ifndef _HTTPD_THREAD_H_
+#define _HTTPD_THREAD_H_
 
-#include "httpd.h"
+/** @brief Handle a web request */
+void thread_httpd(void *args);
 
-/**@brief Callback for libhttpd */
-void http_callback_404(httpd *webserver, request *r);
-/**@brief Callback for libhttpd */
-void http_callback_about(httpd *webserver, request *r);
-/**@brief Callback for libhttpd */
-void http_callback_auth(httpd *webserver, request *r);
-
-
-#endif /* _HTTP_H_ */
+#endif

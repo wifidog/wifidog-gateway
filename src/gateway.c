@@ -23,6 +23,7 @@
   @file gateway.c
   @brief Main loop
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
+  @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>
  */
 
 #include <stdio.h>
@@ -43,6 +44,8 @@
 /* for wait() */
 #include <sys/wait.h>
 
+#include "httpd.h"
+
 #include "debug.h"
 #include "conf.h"
 #include "gateway.h"
@@ -53,6 +56,7 @@
 #include "client_list.h"
 #include "wdctl_thread.h"
 #include "ping_thread.h"
+#include "httpd_thread.h"
 
 /** XXX Ugly hack 
 * @todo UGLY HACKS SHOULD BE DOCUMENTED! */
@@ -158,6 +162,8 @@ main_loop(void)
 	int result;
 	pthread_t	tid;
 	s_config *config = config_get_config();
+	request *r;
+	void **params;
 
 	/* Initializes the linked list of connected clients */
 	client_list_init();
@@ -200,44 +206,46 @@ main_loop(void)
 	
 	debug(LOG_NOTICE, "Waiting for connections");
 	while(1) {
-		result = httpdGetConnection(webserver, NULL);
+		r = httpdGetConnection(webserver, NULL);
 
 		/* We can't convert this to a switch because there might be
 		 * values that are not -1, 0 or 1. */
-		if (result == -1) {
+		if (webserver->lastError == -1) {
 			/* Interrupted system call */
 			continue; /* restart loop */
-		} else if (result < -1) {
+		} else if (webserver->lastError < -1) {
 			/*
 			 * FIXME
 			 * An error occurred - should we abort?
 			 * reboot the device ?
 			 */
 			debug(LOG_ERR, "FATAL: httpdGetConnection returned "
-				       "unexpected value %d, exiting.", result);
+				       "unexpected value %d, exiting.",
+				       webserver->lastError);
 			termination_handler(0); /* the 0 is a place holder
 						   because termination_handler
 						   takes an int as argument. */
-		} else if (result > 0) {
+		} else if (r != NULL) {
 			/*
 			 * We got a connection
+			 *
+			 * We should fork another thread
 			 */
-			debug(LOG_INFO, "Received connection from %s",
-				webserver->clientAddr);
-			if (httpdReadRequest(webserver) >=0) {
-				/*
-				 * We read the request fine
-				 */
-				debug(LOG_DEBUG, "Processing request from %s", webserver->clientAddr);
-				debug(LOG_DEBUG, "Calling httpdProcessRequest() for %s", webserver->clientAddr);
-				httpdProcessRequest(webserver);
-				debug(LOG_DEBUG, "Returned from httpdProcessRequest() for %s", webserver->clientAddr);
-			}
-			else {
-				debug(LOG_DEBUG, "No valid request received from %s", webserver->clientAddr);
-			}
-			debug(LOG_DEBUG, "Closing connection with %s", webserver->clientAddr);
-			httpdEndRequest(webserver);
+			debug(LOG_INFO, "Received connection from %s, spawning"
+				" worker thread", r->clientAddr);
+			/* The void**'s are a simulation of the normal C
+			 * function calling sequence. */
+			params = (void **)malloc(2 * sizeof(void *));
+			*params = webserver;
+			*(params + 1) = r;
+
+			pthread_create(&tid, NULL, (void *)thread_httpd,
+					(void *)params);
+			pthread_detach(tid);
+		} else {
+			/* webserver->lastError should be 2 */
+			/* XXX We failed an ACL.... No handling because
+			 * we don't set any... */
 		}
 	}
 

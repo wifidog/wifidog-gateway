@@ -36,6 +36,8 @@
 #include <string.h>
 #include <syslog.h>
 
+#include "httpd.h"
+
 #include "common.h"
 
 #include "util.h"
