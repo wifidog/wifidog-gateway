@@ -14,24 +14,20 @@
 ** connection with the use or performance of this software.
 **
 **
-** Original Id: ip_acl.c,v 1.3 2002/11/25 02:15:51 bambi Exp
+** $Id$
 **
 */
-
-/* $Header$ */
-/** @internal
-  @file httpd_acl.c
-  @brief HTTP Server ACL functions
-  @author Originally by Hughes Technologies Pty Ltd.
-  @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>
- */
 
 #include "config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if defined(_WIN32)
+#else
 #include <unistd.h>
+#endif
 
 #include "httpd.h"
 #include "httpd_priv.h"

@@ -14,34 +14,39 @@
 ** connection with the use or performance of this software.
 **
 **
-** Original Id: api.c,v 1.16 2002/11/25 02:15:51 bambi Exp
+** $Id$
 **
 */
-
-/* $Header$ */
-/** @internal
-  @file httpd_api.c
-  @brief HTTP Server API and main functions
-  @author Originally by Hughes Technologies Pty Ltd.
-  @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>
- */
-
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <netinet/in.h>
+
+#if defined(_WIN32)
+#include <winsock2.h>
+#else
+#include <unistd.h> 
+#include <sys/file.h>
+#include <netinet/in.h> 
+#include <arpa/inet.h> 
+#include <netdb.h>
+#include <sys/socket.h> 
+#include <netdb.h>
+#endif
 
 #include "config.h"
 #include "httpd.h"
 #include "httpd_priv.h"
 
-#include <stdarg.h>
+#ifdef HAVE_STDARG_H
+#  include <stdarg.h>
+#else
+#  include <varargs.h>
+#endif
 
 
 char *httpdUrlEncode(str)
@@ -228,16 +233,53 @@ httpd *httpdCreate(host, port)
 	/*
 	** Setup the socket
 	*/
+#ifdef _WIN32
+	{ 
+	WORD 	wVersionRequested;
+	WSADATA wsaData;
+	int 	err;
+
+	wVersionRequested = MAKEWORD( 2, 2 );
+
+	err = WSAStartup( wVersionRequested, &wsaData );
 	
+	/* Found a usable winsock dll? */
+	if( err != 0 ) 
+	   return NULL;
+
+	/* 
+	** Confirm that the WinSock DLL supports 2.2.
+	** Note that if the DLL supports versions greater 
+	** than 2.2 in addition to 2.2, it will still return
+	** 2.2 in wVersion since that is the version we
+	** requested.
+	*/
+
+	if( LOBYTE( wsaData.wVersion ) != 2 || 
+	    HIBYTE( wsaData.wVersion ) != 2 ) {
+
+		/* 
+		** Tell the user that we could not find a usable
+		** WinSock DLL.
+		*/
+		WSACleanup( );
+		return NULL;
+	}
+
+	/* The WinSock DLL is acceptable. Proceed. */
+ 	}
+#endif
+
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock  < 0)
 	{
 		free(new);
 		return(NULL);
 	}
-	
+#	ifdef SO_REUSEADDR
 	opt = 1;
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&opt,sizeof(int));
+#	endif
 	new->serverSock = sock;
 	bzero(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;
@@ -305,8 +347,8 @@ int httpdGetConnection(server, timeout)
 	bzero(&addr, sizeof(addr));
 	addrLen = sizeof(addr);
 	server->clientSock = accept(server->serverSock,(struct sockaddr *)&addr,
-		(int *)&addrLen);
-	ipaddr = (char *)inet_ntoa(addr.sin_addr);
+		&addrLen);
+	ipaddr = inet_ntoa(addr.sin_addr);
 	if (ipaddr)
 		strncpy(server->clientAddr, ipaddr, HTTP_IP_ADDR_LEN);
 	else
@@ -846,12 +888,26 @@ void httpdOutput(server, msg)
 
 
 
+#ifdef HAVE_STDARG_H
 void httpdPrintf(httpd *server, char *fmt, ...)
 {
+#else
+void httpdPrintf(va_alist)
+        va_dcl
+{
+        httpd		*server;
+        char		*fmt;
+#endif
         va_list         args;
 	char		buf[HTTP_MAX_LEN];
 
+#ifdef HAVE_STDARG_H
         va_start(args, fmt);
+#else
+        va_start(args);
+        server = (httpd *) va_arg(args, httpd * );
+        fmt = (char *) va_arg(args, char *);
+#endif
 	if (server->response.headersSent == 0)
 		httpdSendHeaders(server);
 	vsnprintf(buf, HTTP_MAX_LEN, fmt, args);

@@ -7,7 +7,10 @@ bin_PROGRAMS = wifidog
 bin_SCRIPTS = fw.access fw.counters fw.destroy fw.init
 EXTRA_DIST = fw.access fw.counters fw.destroy fw.init
 
-#wifidog_LDADD = $(top_builddir)/lib/libofx.la
+AM_CPPFLAGS = \
+	-I${top_srcdir}/libhttpd/
+wifidog_LDADD = $(top_builddir)/libhttpd/libhttpd.la
+
 wifidog_SOURCES = commandline.c \
 	conf.c \
 	debug.c \
@@ -16,10 +19,7 @@ wifidog_SOURCES = commandline.c \
 	centralserver.c \
 	http.c \
 	auth.c \
-	userclasses.c \
-	httpd_api.c \
-	httpd_proto.c \
-	httpd_acl.c
+	userclasses.c
 
 noinst_HEADERS = commandline.h \
 	common.h \
@@ -30,9 +30,5 @@ noinst_HEADERS = commandline.h \
 	centralserver.h \
 	http.h \
 	auth.h \
-	userclasses.h \
-	httpd_priv.h \
-	httpd.h
+	userclasses.h
 
-#AM_CPPFLAGS = \
-#	-I${top_srcdir}/inc

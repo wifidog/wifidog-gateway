@@ -1,6 +1,6 @@
 # $Header$
 
-SUBDIRS = src . doc 
+SUBDIRS = libhttpd src . doc 
 
 docdir = ${prefix}/share/doc/wifidog-@VERSION@
 

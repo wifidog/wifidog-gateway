@@ -14,17 +14,9 @@
 ** connection with the use or performance of this software.
 **
 **
-** Original Id: protocol.c,v 1.9 2002/11/25 02:15:51 bambi Exp
+** $Id$
 **
 */
-
-/* $Header$ */
-/** @internal
-  @file httpd_proto.c
-  @brief HTTP Server Protocol and Communication handling functions
-  @author Originally by Hughes Technologies Pty Ltd.
-  @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>
- */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,8 +26,11 @@
 #include <sys/stat.h>
 #include <time.h>
 
+#if defined(_WIN32) 
+#else
 #include <unistd.h>
 #include <sys/file.h>
+#endif
 
 #include "config.h"
 #include "httpd.h"
@@ -47,7 +42,11 @@ int _httpd_net_read(sock, buf, len)
 	char	*buf;
 	int	len;
 {
+#if defined(_WIN32) 
+	return( recv(sock, buf, len, 0));
+#else
 	return( read(sock, buf, len));
+#endif
 }
 
 
@@ -56,7 +55,11 @@ int _httpd_net_write(sock, buf, len)
 	char	*buf;
 	int	len;
 {
+#if defined(_WIN32) 
+	return( send(sock, buf, len, 0));
+#else
 	return( write(sock, buf, len));
+#endif
 }
 
 int _httpd_readChar(server, cp)

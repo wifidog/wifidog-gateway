@@ -14,17 +14,9 @@
 ** connection with the use or performance of this software.
 **
 **
-** Original Id: httpd.h,v 1.10 2002/11/25 02:15:51 bambi Exp
+** $Id$
 **
 */
-
-/* $Header$ */
-/** @internal
-  @file httpd.h
-  @brief HTTP Server Exported API declarations
-  @author Originally by Hughes Technologies Pty Ltd.
-  @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>
- */
 
 /*
 **  libhttpd Header File
@@ -40,9 +32,24 @@
 
 #define LIB_HTTPD_H 1
 
+#if !defined(__ANSI_PROTO)
+#if defined(_WIN32) || defined(__STDC__) || defined(__cplusplus)
+#  define __ANSI_PROTO(x)       x
+#else
+#  define __ANSI_PROTO(x)       ()
+#endif
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+
 /***********************************************************************
 ** Macro Definitions
 */
+
 
 #define	HTTP_PORT 		80
 #define HTTP_MAX_LEN		10240
@@ -78,6 +85,9 @@
 #define HTTP_ACL_DENY		2
 
 
+
+extern char 	LIBHTTPD_VERSION[],
+		LIBHTTPD_VENDOR[];
 
 /***********************************************************************
 ** Type Definitions
@@ -172,49 +182,54 @@ typedef struct {
 */
 
 
-int httpdAddCContent(httpd*,char*,char*,int,int(*)(),void(*)());
-int httpdAddFileContent(httpd*,char*,char*,int,int(*)(),char*);
-int httpdAddStaticContent(httpd*,char*,char*,int,int(*)(),char*);
-int httpdAddWildcardContent(httpd*,char*,int(*)(),char*);
-int httpdAddCWildcardContent(httpd*,char*,int(*)(),void(*)());
-int httpdAddVariable(httpd*,char*, char*);
-int httpdGetConnection(httpd*, struct timeval*);
-int httpdReadRequest(httpd*);
-int httpdCheckAcl(httpd*, httpAcl*);
-int httpdAddC404Content(httpd*,void(*)());
+int httpdAddCContent __ANSI_PROTO((httpd*,char*,char*,int,int(*)(),void(*)()));
+int httpdAddFileContent __ANSI_PROTO((httpd*,char*,char*,int,int(*)(),char*));
+int httpdAddStaticContent __ANSI_PROTO((httpd*,char*,char*,int,int(*)(),char*));
+int httpdAddWildcardContent __ANSI_PROTO((httpd*,char*,int(*)(),char*));
+int httpdAddCWildcardContent __ANSI_PROTO((httpd*,char*,int(*)(),void(*)()));
+int httpdAddVariable __ANSI_PROTO((httpd*,char*, char*));
+int httpdGetConnection __ANSI_PROTO((httpd*, struct timeval*));
+int httpdReadRequest __ANSI_PROTO((httpd*));
+int httpdCheckAcl __ANSI_PROTO((httpd*, httpAcl*));
+int httpdAddC404Content __ANSI_PROTO((httpd*,void(*)()));
 
-char *httpdRequestMethodName(httpd*);
-char *httpdUrlEncode(char *);
+char *httpdRequestMethodName __ANSI_PROTO((httpd*));
+char *httpdUrlEncode __ANSI_PROTO((char *));
 
-void httpdAddHeader(httpd*, char*);
-void httpdSetContentType(httpd*, char*);
-void httpdSetResponse(httpd*, char*);
-void httpdEndRequest(httpd*);
+void httpdAddHeader __ANSI_PROTO((httpd*, char*));
+void httpdSetContentType __ANSI_PROTO((httpd*, char*));
+void httpdSetResponse __ANSI_PROTO((httpd*, char*));
+void httpdEndRequest __ANSI_PROTO((httpd*));
 
-httpd *httpdCreate();
-void httpdFreeVariables(httpd*);
-void httpdDumpVariables(httpd*);
-void httpdOutput(httpd*, char*);
-void httpdPrintf(httpd*, char*, ...);
-void httpdProcessRequest(httpd*);
-void httpdSendHeaders(httpd*);
-void httpdSetFileBase(httpd*, char*);
-void httpdSetCookie(httpd*, char*, char*);
+httpd *httpdCreate __ANSI_PROTO(());
+void httpdFreeVariables __ANSI_PROTO((httpd*));
+void httpdDumpVariables __ANSI_PROTO((httpd*));
+void httpdOutput __ANSI_PROTO((httpd*, char*));
+void httpdPrintf __ANSI_PROTO((httpd*, char*, ...));
+void httpdProcessRequest __ANSI_PROTO((httpd*));
+void httpdSendHeaders __ANSI_PROTO((httpd*));
+void httpdSetFileBase __ANSI_PROTO((httpd*, char*));
+void httpdSetCookie __ANSI_PROTO((httpd*, char*, char*));
 
-void httpdSetErrorLog(httpd*, FILE*);
-void httpdSetAccessLog(httpd*, FILE*);
-void httpdSetDefaultAcl(httpd*, httpAcl*);
+void httpdSetErrorLog __ANSI_PROTO((httpd*, FILE*));
+void httpdSetAccessLog __ANSI_PROTO((httpd*, FILE*));
+void httpdSetDefaultAcl __ANSI_PROTO((httpd*, httpAcl*));
 
-httpVar	*httpdGetVariableByName(httpd*, char*);
-httpVar	*httpdGetVariableByPrefix(httpd*, char*);
-httpVar	*httpdGetVariableByPrefixedName(httpd*, char*, char*);
-httpVar *httpdGetNextVariableByPrefix(httpVar*, char*);
+httpVar	*httpdGetVariableByName __ANSI_PROTO((httpd*, char*));
+httpVar	*httpdGetVariableByPrefix __ANSI_PROTO((httpd*, char*));
+httpVar	*httpdGetVariableByPrefixedName __ANSI_PROTO((httpd*, char*, char*));
+httpVar *httpdGetNextVariableByPrefix __ANSI_PROTO((httpVar*, char*));
 
-httpAcl *httpdAddAcl(httpd*, httpAcl*, char*, int);
+httpAcl *httpdAddAcl __ANSI_PROTO((httpd*, httpAcl*, char*, int));
 
 
 /***********************************************************************
 ** Standard header file footer.  
 */
 
+#ifdef __cplusplus
+	}
+#endif /* __cplusplus */
 #endif /* file inclusion */
+
+
