@@ -1,8 +1,9 @@
 *.la
 *.lo
+*.o
 .deps
 .libs
 Makefile
 Makefile.in
 wifidog
-
+wdctl
