@@ -12,8 +12,6 @@ doc_DATA = \
   README \
   ChangeLog
   
-dist_sysconf_DATA = wifidog.conf
-
 EXTRA_DIST = \
   wifidog.spec.in \
   wifidog.spec \
