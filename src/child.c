@@ -101,19 +101,24 @@ sigchld_handler(int signal)
 			if (tmp_uc == NULL) {
 				debug(D_LOG_DEBUG, "Profile %d undefined",
 					status);
+				free_childinfo(tmp_ci);
 				return;
 			}
 			
-			tmp_ur = new_userrights();
-			tmp_ur->profile = status;
-			tmp_ur->start_time = time(NULL);
-			tmp_ur->end_time = tmp_ur->start_time -
-						(time_t)tmp_uc->timeout;
-			
-			fw_allow(tmp_ci->ip, tmp_ci->mac, status);
-			if (tmp_node = node_find_by_ip(tmp_ci->ip)) {
-				tmp_node->active = 1;
-				tmp_node->rights = tmp_ur;
+			if (tmp_uc->active) {
+				/* Profile is active */
+				
+				tmp_ur = new_userrights();
+				tmp_ur->profile = status;
+				tmp_ur->start_time = time(NULL);
+				tmp_ur->end_time = tmp_ur->start_time -
+							(time_t)tmp_uc->timeout;
+				
+				fw_allow(tmp_ci->ip, tmp_ci->mac, status);
+				if (tmp_node = node_find_by_ip(tmp_ci->ip)) {
+					tmp_node->active = 1;
+					tmp_node->rights = tmp_ur;
+				}
 			}
 		}
 	} else {
