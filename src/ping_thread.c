@@ -61,6 +61,10 @@ thread_ping(void *arg)
 	struct	timespec	timeout;
 	
 	while (1) {
+		/* Make sure we check the servers at the very begining */
+		/** @todo  Note that this will only help if the second server responds.  The logic of the ping itslef should be changed so it iterates in the list until it finds one that responds ox exausts the list */
+		ping();
+		
 		/* Sleep for config.checkinterval seconds... */
 		timeout.tv_sec = time(NULL) +
 				config_get_config()->checkinterval;
@@ -74,8 +78,6 @@ thread_ping(void *arg)
 
 		/* No longer needs to be locked */
 		pthread_mutex_unlock(&cond_mutex);
-
-		ping();
 	}
 }
 
@@ -128,7 +130,7 @@ ping(void)
 		return;
 	}
 		
-	snprintf(request, sizeof(request) - 1, "GET %s/ping/?gw_id=%s HTTP/1.0\n"
+	snprintf(request, sizeof(request) - 1, "GET %sping/?gw_id=%s HTTP/1.0\n"
 			"User-Agent: WiFiDog %s\n"
 			"Host: %s\n"
 			"\n",

@@ -12,16 +12,12 @@ platform.
  
  Once you have successfully compiled your buildroot, you can change bace to your wifidog CVS checkout and use the commands:
 
-$ ./autogen.sh BUILDROOT=<path_to_openwrt_buildroot>
-$ make
-
-To complete with the creation of an 'ipkg' for OpenWRT:
-
-$ ./ipkg/rules BUILDROOT=<path_to_openwrt_buildroot>
+./autogen.sh BUILDROOT=<path_to_openwrt_buildroot>
+make
+make ipkg
 
 If your OpenWRT buildroot is compiled and the toolchain is complete,
-you should now have an 'ipkg' in the parent directory of where you
-have WiFiDog.
+you should now have an 'ipkg' in your wifidog directory.
 
 The Makefile will compile iptables that is not compiled by default
 and import all the binaries in the right places in the ipkg tree.

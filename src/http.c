@@ -69,7 +69,7 @@ http_callback_404(httpd * webserver)
 			webserver->request.path);
 	url = httpdUrlEncode(tmp_url);
 	
-	if ((asprintf(&newlocation, "Location: %s://%s:%d%s/login?"
+	if ((asprintf(&newlocation, "Location: %s://%s:%d%slogin?"
 			"gw_address=%s&gw_port=%d&gw_id=%s&url=%s",
 			protocol,
 			auth_server->authserv_hostname,
@@ -87,7 +87,7 @@ http_callback_404(httpd * webserver)
 		httpdSetResponse(webserver, "307 Please authenticate yourself here");
 		httpdAddHeader(webserver, newlocation);
 		httpdPrintf(webserver, "<html><head><title>Redirection</title></head><body>"
-				"Please <a href='%s://%s:%d%s/login?gw_address"
+				"Please <a href='%s://%s:%d%slogin?gw_address"
 				"=%s&gw_port=%d&gw_id=%s&url=%s'>click here</a> to "
 				"login",
 				protocol,

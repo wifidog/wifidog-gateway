@@ -197,7 +197,7 @@ parse_auth_server(FILE *file, char *filename, int *linenum)
 	path = strdup(DEFAULT_AUTHSERVPATH);
 	http_port = DEFAULT_AUTHSERVPORT;
 	ssl_port = DEFAULT_AUTHSERVSSLPORT;
-	ssl_available = 0;
+	ssl_available = DEFAULT_AUTHSERVSSLAVAILABLE;
 	
 	/* Read first line */	
 	memset(line, 0, MAX_BUF);

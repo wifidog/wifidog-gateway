@@ -35,16 +35,20 @@
 #define DEFAULT_HTTPDMAXCONN 10
 #define DEFAULT_GATEWAYID "default"
 #define DEFAULT_GATEWAYPORT 2060
-#define DEFAULT_AUTHSERVPORT 80
-#define DEFAULT_AUTHSERVSSLPORT 443
 #define DEFAULT_HTTPDNAME "WiFiDog"
 #define DEFAULT_CLIENTTIMEOUT 5
 #define DEFAULT_CHECKINTERVAL 5
 #define DEFAULT_LOG_SYSLOG 0
 #define DEFAULT_SYSLOG_FACILITY LOG_DAEMON
 #define DEFAULT_WDCTL_SOCK "/tmp/wdctl.sock"
-#define DEFAULT_AUTHSERVPATH "/wifidog/auth"
-#define DEFAULT_AUTHSERVMAXTRIES 2
+#define DEFAULT_AUTHSERVPORT 80
+#define DEFAULT_AUTHSERVSSLPORT 443
+/** Note that DEFAULT_AUTHSERVSSLAVAILABLE must be 0 or 1, even if the config file syntax is yes or no */
+#define DEFAULT_AUTHSERVSSLAVAILABLE 0
+/** Note:  The path must NOT be prefixed by /, and must be suffixed /.  Leave empty for the server root.*/
+#define DEFAULT_AUTHSERVPATH "wifidog/"
+#define DEFAULT_AUTHSERVMAXTRIES 1
+
 /*@}*/ 
 
 /**

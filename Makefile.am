@@ -26,3 +26,7 @@ EXTRA_DIST = \
 .PHONY: doc
 doc:
 	$(MAKE) -C doc doc
+	
+.PHONY: ipkg
+ipkg: all
+	./ipkg/rules BUILDROOT=$(BUILDROOT)
