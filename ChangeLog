@@ -1,4 +1,7 @@
 # $Header$
+2004-08-06 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* AuthservPath no longer mandatory in config file.
+
 2004-08-04 Philippe April <wifidog@philippeapril.com>
     * Renamed iptables.[ch] to fw_iptables.[ch]
 

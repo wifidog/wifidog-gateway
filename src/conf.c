@@ -125,7 +125,7 @@ config_init(void)
 	config.gw_port = DEFAULT_GATEWAYPORT;
 	config.authserv_hostname = NULL;
 	config.authserv_port = DEFAULT_AUTHSERVPORT;
-	config.authserv_path = NULL;
+	config.authserv_path = strdup(DEFAULT_AUTHSERVPATH);
 	config.authserv_loginurl = NULL;
 	config.httpdname = NULL;
 	config.clienttimeout = DEFAULT_CLIENTTIMEOUT;
@@ -245,6 +245,7 @@ config_read(char *filename)
 					sscanf(p1, "%d", &config.httpdmaxconn);
 					break;
 				case oAuthservPath:
+					free(config.authserv_path);
 					config.authserv_path = strdup(p1);
 					break;
 				case oAuthservLoginUrl:
@@ -306,7 +307,6 @@ config_validate(void)
 	config_notnull(config.gw_interface, "GatewayInterface");
 	config_notnull(config.gw_address, "GatewayAddress");
 	config_notnull(config.authserv_hostname, "AuthservHostname");
-	config_notnull(config.authserv_path, "AuthservPath");
 	config_notnull(config.authserv_loginurl, "AuthservLoginUrl");
 
 	if (missing_parms) {

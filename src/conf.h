@@ -42,6 +42,7 @@
 #define DEFAULT_LOG_SYSLOG 0
 #define DEFAULT_SYSLOG_FACILITY LOG_DAEMON
 #define DEFAULT_WDCTL_SOCK "/tmp/wdctl.sock"
+#define DEFAULT_AUTHSERVPATH "/wifidog/auth"
 /*@}*/ 
 
 /**
