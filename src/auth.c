@@ -103,6 +103,7 @@ auth_thread(void *ptr)
 		tmp_ur = new_userrights();
 		tmp_ur->profile = profile;
 		tmp_ur->start_time = time(NULL);
+		tmp_ur->last_checked = time(NULL);
 		tmp_ur->end_time = tmp_ur->start_time + (time_t)tmp_uc->timeout;
 		
 		fw_allow(node->ip, node->mac, profile);

@@ -1,5 +1,8 @@
 # $Header$
 2004-04-14  Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Fixed clean up so it happens at the right time.
+
+2004-04-14  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Major retooling of insert_userclass(), fixed seg fault.
 	* The program now works as advertised.
 

@@ -205,10 +205,14 @@ fw_counter(void)
 				 * server */
 
 				p1 = node_find_by_ip(ip);
-				if (!(p1) || !(p1->active)) {
+				if (!(p1) || !(p1->active) ||
+					(p1->rights->last_checked +
+					 (config.checkinterval *
+					  config.clienttimeout)) > time(NULL)) {
 					debug(D_LOG_DEBUG, "Client %s not "
 						"active", ip);
 				} else {
+					p1->rights->last_checked = time(NULL);
 					p1->counter = counter;
 
 					profile =  authenticate(p1->ip,

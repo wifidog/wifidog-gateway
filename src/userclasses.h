@@ -38,8 +38,9 @@ typedef struct _user_classes {
 
 typedef struct _user_rights {
 	int	profile;	/* keyed to a global profile */
-	time_t	start_time;	/* when connection started */
-	time_t	end_time;	/* start_time + timeout */
+	time_t	start_time,	/* when connection started */
+		end_time,	/* start_time + timeout */
+		last_checked;	/* time of last check */
 } UserRights;
 
 UserRights *new_userrights(void);
