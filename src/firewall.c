@@ -294,7 +294,7 @@ node_find_by_ip(char *ip)
 	t_node *ptr;
 
 	ptr = firstnode;
-	while (NULL != ptr && NULL != ptr->next) {
+	while (NULL != ptr) {
 		if (0 == strcmp(ptr->ip, ip))
 			return ptr;
 		ptr = ptr->next;
@@ -309,7 +309,7 @@ node_find_by_token(char *token)
 	t_node *ptr;
 
 	ptr = firstnode;
-	while (NULL != ptr->next) {
+	while (NULL != ptr) {
 		if (0 == strcmp(ptr->token, token))
 			return ptr;
 		ptr = ptr->next;
