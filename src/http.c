@@ -25,7 +25,21 @@
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
  */
 
-#include "common.h"
+#define _GNU_SOURCE
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <string.h>
+#include <unistd.h>
+#include <syslog.h>
+
+#include "debug.h"
+#include "conf.h"
+#include "auth.h"
+#include "firewall.h"
+#include "http.h"
+#include "httpd.h"
 
 extern s_config config;
 

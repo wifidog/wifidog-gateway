@@ -22,45 +22,10 @@
 /** @file common.h
     @brief Common constants and other bits
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
-    @todo This file is evil, it should only contain constants, not includes.  Makes it very hard to find out what other files a code section uses.
 */
 
 #ifndef _COMMON_H_
 #define _COMMON_H_
-
-#define _GNU_SOURCE
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <string.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <stdarg.h>
-#include <time.h>
-#include <netdb.h>
-#include <fcntl.h>
-#include <errno.h>
-
-#include <syslog.h>
-#include <pthread.h>
-
-#include "config.h"
-
-#include "httpd.h"
-
-#include "gateway.h"
-#include "conf.h"
-#include "commandline.h"
-#include "debug.h"
-#include "iptables.h"
-#include "firewall.h"
-#include "http.h"
-#include "auth.h"
-#include "centralserver.h"
 
 #define MAX_BUF 4096
 

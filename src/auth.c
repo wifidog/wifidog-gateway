@@ -25,7 +25,24 @@
     @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>
 */
 
-#include "common.h"
+#define _GNU_SOURCE
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <string.h>
+#include <stdarg.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <syslog.h>
+
+#include "conf.h"
+#include "debug.h"
+#include "auth.h"
+#include "centralserver.h"
+#include "iptables.h"
+#include "firewall.h"
 
 pthread_mutex_t	nodes_mutex = PTHREAD_MUTEX_INITIALIZER;
 

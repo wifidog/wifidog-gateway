@@ -25,7 +25,12 @@
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
 */
 
-#include "common.h"
+#include <stdio.h>
+#include <errno.h>
+#include <syslog.h>
+#include <stdarg.h>
+
+#include "conf.h"
 
 extern s_config config;
 

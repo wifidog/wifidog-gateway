@@ -1,5 +1,8 @@
 # $Header$
 2004-05-07  Philippe April <wifidog@philippeapril.com>
+    * Cleaned up common.h from files
+
+2004-05-07  Philippe April <wifidog@philippeapril.com>
     * Made iptables' tables DEFINEs instead of being hardcoded
 
 2004-05-07  Philippe April <wifidog@philippeapril.com>

@@ -25,7 +25,25 @@
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <errno.h>
+#include <unistd.h>
+#include <netdb.h>
+#include <string.h>
+#include <syslog.h>
+
 #include "common.h"
+
+#include "auth.h"
+#include "conf.h"
+#include "debug.h"
+#include "centralserver.h"
 
 extern s_config config;
 

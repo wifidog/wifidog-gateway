@@ -25,7 +25,31 @@
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
  */
 
-#include "common.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <syslog.h>
+#include <pthread.h>
+#include <signal.h>
+#include <errno.h>
+#include <time.h>
+
+/* for fork() */
+#include <sys/types.h>
+#include <unistd.h>
+
+/* for strerror() */
+#include <string.h>
+
+/* for wait() */
+#include <sys/wait.h>
+
+#include "debug.h"
+#include "conf.h"
+#include "gateway.h"
+#include "firewall.h"
+#include "commandline.h"
+#include "auth.h"
+#include "http.h"
 
 extern s_config config;
 

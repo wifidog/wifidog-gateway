@@ -27,6 +27,8 @@
 #ifndef _HTTP_H_
 #define _HTTP_H_
 
+#include "httpd.h"
+
 void http_callback_404(httpd * webserver);
 void http_callback_about(httpd * webserver);
 void http_callback_auth(httpd * webserver);

@@ -28,7 +28,25 @@
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
  */
 
-#include "common.h"
+#define _GNU_SOURCE
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <syslog.h>
+#include <errno.h>
+#include <pthread.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/unistd.h>
+
+#include <string.h>
+
+#include "debug.h"
+#include "conf.h"
+#include "firewall.h"
+#include "iptables.h"
+#include "auth.h"
+#include "centralserver.h"
 
 extern s_config config;
 int fw_quiet = 0;

@@ -25,7 +25,15 @@
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
  */
 
-#include "common.h"
+#define _GNU_SOURCE
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+
+#include "conf.h"
+#include "iptables.h"
+#include "firewall.h"
 
 extern s_config config;
 extern int fw_quiet;
