@@ -284,7 +284,7 @@ node_find_by_ip(char *ip)
 	t_node *ptr;
 
 	ptr = firstnode;
-	while (NULL != ptr->next) {
+	while (NULL != ptr && NULL != ptr->next) {
 		if (0 == strcmp(ptr->ip, ip))
 			return ptr;
 		ptr = ptr->next;
