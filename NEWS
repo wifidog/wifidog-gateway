@@ -1,12 +1,41 @@
-WifiDog 1.0.2:
-	-Fix reversed incoming and outgoing connections in statistics reported to the auth server
-	-Will now gracefully handle auth servers changing IP adress.
-	-Fixes two bugs in byte counting. (Possible missed data, and incoming and outgoing were reversed.
-	-Fixed file descriptor leaks
-	-wdctl_status now returns all connected	users.
-	-worked around sed -i not being available on all platform
-	-ipkg no longuer overwrites config file
-	-Several code changes in thread handling and libhttpd to fix occasional hangs.
+WiFiDog 1.1.0_beta3:
+	- Completely re-did the iptables rules.  Most of the rules are now in the
+	filter table instead of the nat table.  Also DROPs are now replaced with
+	REJECTs to help tell the user connection refused instead of endless pauses
+    - wdctl status will return more informations
+    - Some error messages are now displayed by the auth server (used to
+    be done in a non-pretty way by wifidog)
+    - We now 'ping' authserver and detect when authservers are changing IPs
+    - Fixed memory leaks
+    - Incoming and outgoing counters were reversed
+    - More verbose debugging
+	- ICMP Ping the users everytime we check their counters to keep them alive
+	- Optional ExternalInterface
+	- Optional GatewayAddress
+	- /about URL now shows wifidog version
+	- Keep track of last times we successfully & unsuccessfully spoke to the
+	auth server/used DNS. Then, if we know we're not online, show a little
+	apology to the user instead of re-directing them to the auth server.
+	- When pinging auth server now also sends sys_uptime, sys_memfree
+	and sys_load
+	- Bugfix: Traffic from client to router was counted twice in the "outgoing"
+	bytecount since it increased both counters in mangle.* and filter.* - Got
+	rid of TABLE_WIFIDOG_WIFI_TO_GW completely since it's unneeded
+	- Do not update the last_updated field on incoming traffic - update it on
+	outgoing traffic only.  This should be a much more reliable indication of
+	client no longer being there
+	- WiFiDog status is now viewable with a web browser at
+	http://ip:port/wifidog/status
 
-WifiDog 1.0.0:
-	-Initial release
+WiFiDog 1.0.2:
+	- Fix reversed incoming and outgoing connections in statistics reported to the auth server
+	- Will now gracefully handle auth servers changing IP adress.
+	- Fixes two bugs in byte counting. (Possible missed data, and incoming and outgoing were reversed.
+	- Fixed file descriptor leaks
+	- wdctl_status now returns all connected	users.
+	- worked around sed -i not being available on all platform
+	- ipkg no longuer overwrites config file
+	- Several code changes in thread handling and libhttpd to fix occasional hangs.
+
+WiFiDog 1.0.0:
+	- Initial release
