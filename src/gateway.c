@@ -145,12 +145,6 @@ main(int argc, char **argv)
     return(0);
 }
 
-void
-sigchld_handler(int s)
-{
-    while(wait(NULL) > 0);
-}
-
 void termination_handler(int s)
 {
     fw_destroy();

@@ -52,6 +52,7 @@
 #include "firewall.h"
 #include "http.h"
 #include "centralserver.h"
+#include "child.h"
 
 #define MAX_BUF 4096
 

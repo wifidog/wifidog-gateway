@@ -58,6 +58,7 @@ void http_callback_about(httpd * webserver)
 
 void http_callback_auth(httpd * webserver)
 {
+	ChildInfo * ci;
 	httpVar * token;
 	char * mac;
 	int profile;
@@ -72,37 +73,43 @@ void http_callback_auth(httpd * webserver)
 		}
 		else {
 			// We have their MAC address
-			profile = authenticate(webserver->clientAddr, mac, token->value, 0);
-			if (profile == -1) {
-				// Error talking to central server
-				debug(D_LOG_ERR, "Got %d from central server authenticating token %s from %s at %s", profile, token->value, webserver->clientAddr, mac);
-				httpdOutput(webserver, "Access denied: We did not get a valid answer from the central server");
+			
+			/* register child info */
+			ci = new_childinfo();
+			ci->ip = strdup(webserver->clientAddr);
+			ci->mac = strdup(mac);
+			register_child(ci);
+			
+			if (!node_find_by_ip(webserver->clientAddr)) {
+				node_add(webserver->clientAddr, mac, token->value, 0, 0);
 			}
-			else if (profile == 0) {
-				// Central server said invalid token
-				httpdOutput(webserver, "Your authentication has failed or timed-out.  Please re-login");
-			}
-			else {
-				// Central server says token's good
-				// Now we should let them in
-				temp = fw_allow(webserver->clientAddr, mac, profile);
-				if (temp == 0) {
-					// They were added to firewall a-ok
-					/* Add client's IP and token into a linked list so we can keep
-					 * track of it on the auth server, only if he's not there already */
-					if (!node_find_by_ip(webserver->clientAddr)) {
-						 node_add(webserver->clientAddr, mac, token->value, 0);
-					}
+			
+			if (fork() > 0) {
+			
+				profile = authenticate(webserver->clientAddr, mac, token->value, 0);
+				if (profile == -1) {
+					// Error talking to central server
+					debug(D_LOG_ERR, "Got %d from central server authenticating token %s from %s at %s", profile, token->value, webserver->clientAddr, mac);
+					httpdOutput(webserver, "Access denied: We did not get a valid answer from the central server");
+					exit(0);
+				}
+				else if (profile == 0) {
+					// Central server said invalid token
+					httpdOutput(webserver, "Your authentication has failed or timed-out.  Please re-login");
+					exit(0);
 				}
 				else {
-					debug(D_LOG_ERR, "fw_allow returned %d when given %s at %s profile %d", temp, webserver->clientAddr, mac, profile);
-					httpdOutput(webserver, "Authentication succeeded, however we failed to modify the firewall.");
+					exit(1);
 				}
+			} else {
+				free(mac);
+				webserver->clientSock = -1;
+				/* So we don't get shutdown,
+				 * there's no error handling in
+				 * httpdEndRequest */
 			}
-			free(mac);
 		}
-	}
-	else {
+	} else {
 		// They did not supply variable "token"
 		httpdOutput(webserver, "Invalid token");
 	}

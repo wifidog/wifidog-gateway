@@ -19,35 +19,27 @@
 \********************************************************************/
 
 /* $Header$ */
-/** @file firewall.h
-    @brief Firewall update functions
-    @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
+/** @file child.h
+    @brief Function for handling child sub processes
+    @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>
 */
 
-#ifndef _FIREWALL_H_
-#define _FIREWALL_H_
+#ifndef _CHILD_H_
+#define _CHILD_H_
 
-typedef struct {
-    void *next;
-    char ip[16];
-    char mac[18];
-    char token[33];
-    int active; /* boolean */
-    long int counter;
-} t_node;
+/* Format still up in the air... */
+typedef struct _child_info {
+	pid_t	pid;
+	char	*mac,
+		*ip;
+	struct	_child_info	*next,
+				*prev;
+} ChildInfo;
 
-int fw_init(void);
-int fw_destroy(void);
-int fw_allow(char *ip, char *mac, int profile);
-int fw_deny(char *ip, char *mac, int profile);
-void fw_counter(void);
-int execute(char **argv);
-char *arp_get(char *req_ip);
+void sigchld_handler(int signal);
+void register_child(ChildInfo *ci);
 
-void node_init(void);
-t_node *node_add(char *ip, char *mac, char *token, long int counter,
-		 int active);
-t_node *node_find_by_ip(char *ip);
-t_node *node_find_by_token(char *token);
+ChildInfo *new_childinfo(void);
+void free_childinfo(ChildInfo *ci);
 
-#endif /* _FIREWALL_H_ */
+#endif /* _CHILD_H_ */

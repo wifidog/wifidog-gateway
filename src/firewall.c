@@ -193,8 +193,8 @@ fw_counter(void)
                  * Maybe this should be done on the auth server*/
 
                 p1 = node_find_by_ip(ip);
-                if (!(p1)) {
-                    debug(D_LOG_DEBUG, "Client %s not found in linked list", ip);
+                if (!(p1) || !(p1->active)) {
+                    debug(D_LOG_DEBUG, "Client %s not active", ip);
                 } else {
                     p1->counter = counter;
                     if ((profile = authenticate(p1->ip, p1->mac, p1->token, p1->counter)) == -1) {
@@ -216,7 +216,7 @@ node_init(void)
 }
 
 t_node *
-node_add(char *ip, char *mac, char *token, long int counter)
+node_add(char *ip, char *mac, char *token, long int counter, int active)
 {
     void *ptr;
 
@@ -225,7 +225,9 @@ node_add(char *ip, char *mac, char *token, long int counter)
     strcpy(curnode->ip, ip);
     strcpy(curnode->mac, mac);
     strcpy(curnode->token, token);
-    curnode->counter = 0;
+    curnode->counter = counter;
+    curnode->active = active;
+    
 
     curnode->next = (t_node *)malloc(sizeof(t_node));
     curnode = curnode->next;
