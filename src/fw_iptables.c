@@ -35,6 +35,8 @@
 #include <string.h>
 #include <pthread.h>
 
+#include "common.h"
+
 #include "conf.h"
 #include "fw_iptables.h"
 #include "firewall.h"
@@ -43,6 +45,8 @@
 #include "client_list.h"
 
 static int iptables_do_command(char *format, ...);
+static char *iptables_compile(char *, t_firewall_rule *);
+static void iptables_load_ruleset(char *, char *);
 
 extern pthread_mutex_t	client_list_mutex;
 extern pthread_mutex_t	config_mutex;
@@ -72,6 +76,73 @@ iptables_do_command(char *format, ...)
     return rc;
 }
 
+/**
+ * @internal
+ * Compiles a struct definition of a firewall rule into a valid iptables
+ * command.
+ * @arg chain Chain that the command will be (-A)ppended to.
+ * @arg rule Definition of a rule into a struct, from conf.c.
+ */
+static char *
+iptables_compile(char *chain, t_firewall_rule *rule)
+{
+    char	command[MAX_BUF],
+    		*mode;
+    
+    memset(command, 0, MAX_BUF);
+    
+    if (rule->block_allow == 1) {
+        mode = strdup("ACCEPT");
+    } else {
+        mode = strdup("DROP");
+    }
+    
+    snprintf(command, sizeof(command),  "-t nat -A %s ", chain);
+    if (rule->mask != NULL) {
+        snprintf((command + strlen(command)), (sizeof(command) - 
+                strlen(command)), "-d %s ", rule->mask);
+    }
+    if (rule->protocol != NULL) {
+        snprintf((command + strlen(command)), (sizeof(command) -
+                strlen(command)), "-p %s ", rule->protocol);
+    }
+    if (rule->port != NULL) {
+        snprintf((command + strlen(command)), (sizeof(command) -
+                strlen(command)), "--dport %s ", rule->port);
+    }
+    snprintf((command + strlen(command)), (sizeof(command) - 
+            strlen(command)), "-j %s", mode);
+    
+    free(mode);
+
+    /* XXX The buffer command, an automatic variable, will get cleaned
+     * off of the stack when we return, so we strdup() it. */
+    return(strdup(command));
+}
+
+/**
+ * @internal
+ * Load all the rules in a rule set.
+ * @arg ruleset Name of the ruleset
+ * @arg chain IPTables chain the rules go into
+ */
+static void
+iptables_load_ruleset(char *ruleset, char *chain)
+{
+	t_firewall_rule		*rules;
+	char			*cmd;
+
+	debug(LOG_DEBUG, "Load ruleset %s into chain %s", ruleset, chain);
+	
+	for (rules = get_ruleset(ruleset); rules != NULL; rules = rules->next) {
+		cmd = iptables_compile(chain, rules);
+		debug(LOG_DEBUG, "Loading rule \"%s\" into %s", cmd, chain);
+		iptables_do_command(cmd);
+	}
+
+	debug(LOG_DEBUG, "Ruleset %s loaded into %s", ruleset, chain);
+}
+
 void
 iptables_fw_clear_authservers(void)
 {
@@ -91,7 +162,12 @@ iptables_fw_set_authservers(void)
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_AUTHSERVERS);
     for (auth_server = config->auth_servers; auth_server != NULL;
 		    auth_server = auth_server->next) {
-        iptables_do_command("-t nat -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->authserv_hostname);
+	if (auth_server->last_ip == NULL ||
+                strcmp(auth_server->last_ip, "0.0.0.0") == 0) {
+            iptables_do_command("-t nat -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->authserv_hostname);
+        } else {
+            iptables_do_command("-t nat -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->last_ip);
+	}
     }
 
     UNLOCK_CONFIG();
@@ -118,19 +194,8 @@ iptables_fw_init(void)
     UNLOCK_CONFIG();
 
     /** Insert global rules BEFORE the "defaults" */
-    
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p udp --dport 67 -j ACCEPT");
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p tcp --dport 67 -j ACCEPT");
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p udp --dport 53 -j ACCEPT");
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p tcp --dport 80 -j ACCEPT");
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p tcp --dport 110 -j ACCEPT");
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p tcp --dport 995 -j ACCEPT");
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p tcp --dport 143 -j ACCEPT");
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p tcp --dport 993 -j ACCEPT");
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p tcp --dport 220 -j ACCEPT");
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p tcp --dport 993 -j ACCEPT");
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p tcp --dport 443 -j ACCEPT");
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -j DROP");
+    iptables_load_ruleset("global", TABLE_WIFIDOG_VALIDATE);
+    iptables_load_ruleset("validating-users", TABLE_WIFIDOG_VALIDATE);
 
     LOCK_CONFIG();
     
@@ -141,32 +206,24 @@ iptables_fw_init(void)
     UNLOCK_CONFIG();
     
     /** Insert global rules BEFORE the "defaults" */
-
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p udp --dport 67 -j ACCEPT");
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 67 -j ACCEPT");
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p udp --dport 53 -j ACCEPT");
-
+    iptables_load_ruleset("global", TABLE_WIFIDOG_UNKNOWN);
+    iptables_load_ruleset("unknown-users", TABLE_WIFIDOG_UNKNOWN);
     LOCK_CONFIG();
-    
+    /* XXX If there's a rule in global for port 80, it overrides this. */
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 80 -j REDIRECT --to-ports %d", config->gw_port);
-
     UNLOCK_CONFIG();
-    
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j DROP");
 
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_KNOWN);
-
     /** Insert global rules BEFORE the "defaults" */
-
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_KNOWN " -j ACCEPT");
+    iptables_load_ruleset("global", TABLE_WIFIDOG_KNOWN);
+    iptables_load_ruleset("known-users", TABLE_WIFIDOG_KNOWN);
 
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_LOCKED);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_LOCKED " -j DROP");
-
-    iptables_do_command("-t nat -N " TABLE_WIFIDOG_CLASS);
-
-    LOCK_CONFIG();
+    iptables_load_ruleset("locked-users", TABLE_WIFIDOG_KNOWN);
     
+    iptables_do_command("-t nat -N " TABLE_WIFIDOG_CLASS);
+    LOCK_CONFIG();
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_VALIDATE, config->gw_interface, FW_MARK_PROBATION);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_KNOWN, config->gw_interface, FW_MARK_KNOWN);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_LOCKED, config->gw_interface, FW_MARK_LOCKED);

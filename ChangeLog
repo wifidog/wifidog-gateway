@@ -1,4 +1,15 @@
 # $Header$
+
+2004-11-22 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* libhttpd/api.c: Fix leak in HttpdEndRequest().
+	* src/ping_thread.c: Fix auth_server IP change code with latest
+	  from previous branch.
+	* src/conf.h: Same as above.
+	* src/fw_iptables.c: Same as above.
+	* src/conf.[ch]: Firewall rule set parsing code.
+	* wifidog.conf: Default firewall rule set defined.
+	* src/fw_iptables.[ch]: Firewall rule set enacting code.
+
 2004-11-18 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/ping_thread.c: Merge phil's bug fixes from stable branch
 	* ipkg/rules:  Merge phil's bug fixes from stable branch

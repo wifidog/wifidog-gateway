@@ -96,7 +96,8 @@ ping(void)
 				done,
 				i;
 	t_auth_serv		*auth_server;
-	char			request[MAX_BUF];
+	char			request[MAX_BUF],
+				*tmp_addr;
 	struct in_addr		*h_addr;
 	struct sockaddr_in	their_addr;
 	fd_set			readfds;
@@ -126,22 +127,20 @@ ping(void)
 	}
 
 	if (auth_server->last_ip == NULL) {
-		auth_server->last_ip = (struct in_addr *)malloc(
-				sizeof(struct in_addr));
+		auth_server->last_ip = strdup(inet_ntoa(*h_addr));
 		if (auth_server->last_ip == NULL) {
 			debug(LOG_CRIT, "Could not allocate memory, Banzai!");
 			exit(-1);
 		}
-		memcpy(auth_server->last_ip, h_addr, sizeof(struct in_addr));
 	} else {
-	  
-		for (i = 0; i < sizeof(struct in_addr)
-				&& (*((char *)auth_server->last_ip + i)
-					== *((char *)h_addr + i)); i++);
-		if (i < sizeof(struct in_addr)) {
-		  memcpy(auth_server->last_ip, h_addr, sizeof(struct in_addr));
+		tmp_addr = strdup(inet_ntoa(*h_addr));
+		if (strcmp(auth_server->last_ip, tmp_addr) == 0) {
+			free(auth_server->last_ip);
+			auth_server->last_ip = tmp_addr;
 			fw_clear_authservers();
 			fw_set_authservers();
+		} else {
+			free(tmp_addr);
 		}
 	}
 

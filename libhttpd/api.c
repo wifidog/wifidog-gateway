@@ -601,9 +601,9 @@ int httpdReadRequest(httpd *server, request *r)
 void httpdEndRequest(request *r)
 {
 	_httpd_freeVariables(r->variables);
-	r->variables = NULL;
 	shutdown(r->clientSock,2);
 	close(r->clientSock);
+	free(r);
 }
 
 

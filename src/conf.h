@@ -61,7 +61,7 @@ typedef struct _auth_serv_t {
     int authserv_ssl_port;	/**< @brief Https port the central server
 				     listens on */
     int authserv_use_ssl;	/**< @brief Use SSL or not */
-    struct in_addr *last_ip;	/**< @brief Last ip used by authserver */
+    char *last_ip;	/**< @brief Last ip used by authserver */
     struct _auth_serv_t *next;
 } t_auth_serv;
 
@@ -75,6 +75,15 @@ typedef struct _firewall_rule_t {
     char *mask;			/**< @brief Mask for the rule *destination* */
     struct _firewall_rule_t *next;
 } t_firewall_rule;
+
+/**
+ * Firewall rulesets
+ */
+typedef struct _firewall_ruleset_t {
+    char			*name;
+    t_firewall_rule		*rules;
+    struct _firewall_ruleset_t	*next;
+} t_firewall_ruleset;
 
 /**
  * Configuration structure
@@ -107,7 +116,7 @@ typedef struct {
     int log_syslog;		/**< @brief boolean, wether to log to syslog */
     int syslog_facility;	/**< @brief facility to use when using syslog for
 				     logging */
-    t_firewall_rule	*rules;	/**< @brief firewall rules */
+    t_firewall_ruleset	*rulesets;	/**< @brief firewall rules */
 } s_config;
 
 /** @brief Get the current gateway configuration */
@@ -130,6 +139,9 @@ t_auth_serv *get_auth_server(void);
 
 /** @brief Bump server to bottom of the list */
 void mark_auth_server_bad(t_auth_serv *);
+
+/** @brief Fetch a firewall rule set. */
+t_firewall_rule *get_ruleset(char *);
 
 #define LOCK_CONFIG() do { \
 	debug(LOG_DEBUG, "Locking config"); \
