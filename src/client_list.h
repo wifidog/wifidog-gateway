@@ -30,8 +30,8 @@
 /** Counters struct for a client's bandwidth usage (in bytes)
  */
 typedef struct _t_counters {
-    long long	incoming;	/**< @brief Incoming data */
-    long long	outgoing;	/**< @brief Outgoing data */
+    unsigned long long	incoming;	/**< @brief Incoming data */
+    unsigned long long	outgoing;	/**< @brief Outgoing data */
     time_t	last_updated;	/**< @brief Last update of the counters */
 } t_counters;
 

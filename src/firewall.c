@@ -198,7 +198,7 @@ fw_counter(void)
     t_authresponse  authresponse;
     char            *token, *ip, *mac;
     t_client        *p1, *p2;
-    long long	    incoming, outgoing;
+    unsigned long long	    incoming, outgoing;
     s_config *config = config_get_config();
 
     if (-1 == iptables_fw_counters_update()) {

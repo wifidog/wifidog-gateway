@@ -35,7 +35,7 @@
 #define REQUEST_TYPE_COUNTERS  "counters"
 
 /** @brief Initiates a transaction with the auth server */
-int auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, char *mac, char *token, long int incoming, long int outgoing);
+int auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, char *mac, char *token, unsigned long long int incoming, unsigned long long int outgoing);
 
 /** @brief Tries really hard to connect to an auth server.  Returns a connected file descriptor or -1 on error */
 int connect_auth_server();

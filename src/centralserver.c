@@ -59,7 +59,7 @@ extern pthread_mutex_t	config_mutex;
 @param outgoing Current counter of the client's total outgoing traffic, in bytes 
 */
 int
-auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, char *mac, char *token, long int incoming, long int outgoing)
+auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, char *mac, char *token, unsigned long long int incoming, unsigned long long int outgoing)
 {
 	int sockfd;
 	size_t	numbytes, totalbytes;
@@ -80,14 +80,14 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	 * everywhere.
 	 */
 	memset(buf, 0, sizeof(buf));
-	snprintf(buf, (sizeof(buf) - 1), "GET %sauth/?stage=%s&ip=%s&mac=%s"
-		"&token=%s&incoming=%ld&outgoing=%ld HTTP/1.0\n"
+	snprintf(buf, (sizeof(buf) - 1), "GET %sauth/?stage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu HTTP/1.0\n"
                 "User-Agent: WiFiDog %s\n"
                 "Host: %s\n"
                 "\n",
-            config_get_config()->auth_servers->authserv_path, request_type, ip, mac, 
-	    token, incoming, outgoing, VERSION, 
-	    config_get_config()->auth_servers->authserv_hostname);
+            config_get_config()->auth_servers->authserv_path, request_type, ip, mac, token, incoming, outgoing,
+				VERSION, 
+	    config_get_config()->auth_servers->authserv_hostname
+		 );
 
 	debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", buf);
 	send(sockfd, buf, strlen(buf), 0);

@@ -261,8 +261,8 @@ wdctl_status(int fd)
 				first->ip, first->mac, first->token);
 		len = strlen(buffer);
 
-		snprintf((buffer + len), (sizeof(buffer) - len), "\tIn: %lld\t"
-				"Out: %lld\n" , first->counters.incoming,
+		snprintf((buffer + len), (sizeof(buffer) - len), "\tIn: %llu\t"
+				"Out: %llu\n" , first->counters.incoming,
 				first->counters.outgoing);
 		len = strlen(buffer);
 

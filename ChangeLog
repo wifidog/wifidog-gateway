@@ -17,6 +17,9 @@
 	depending on whether internet is down or just auth server is down
 	* Partial merge from CaptiveDNS branch: wdctl status now shows status of
 	is_online and is_auth_online
+	* Fixed several inconsistencies regarding the parity and size of
+	incoming/outgoing counters.  Standardized on "unsigned long long int" in
+	declarations and *printf/*scanf formats
 
 2005-02-16 Philippe April <philippe@ilesansfil.org>
 	* ipkg/rules - When we clean, forgot to delete ipkg-build-stamp
