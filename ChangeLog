@@ -1,5 +1,8 @@
 # $Header$
-
+2004-12-07 Benoit Grégoire  <bock@step.polymtl.ca>
+	* src/firewall.c: Fix reversed incoming and outgoing connections in statistics code
+	* bump version to alpha3
+	
 2004-11-29 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* wifidog.conf: Fixed firewall rule bug.
 	* src/fw_iptables.c: Unknown user default block rule not "REJECT"

@@ -180,8 +180,8 @@ fw_counter(void)
         ip = strdup(p1->ip);
         token = strdup(p1->token);
         mac = strdup(p1->mac);
-	outgoing = p1->counters.incoming;
-	incoming = p1->counters.outgoing;
+	outgoing = p1->counters.outgoing;
+	incoming = p1->counters.incoming;
 
 	UNLOCK_CLIENT_LIST();
         auth_server_request(&authresponse, REQUEST_TYPE_COUNTERS, ip, mac, token, incoming, outgoing);
