@@ -1,5 +1,8 @@
 # $Header$
 
+2005-01-05 Philippe April <philippe@philippeapril.com>
+	* Typo, fixed some spaces (mostly esthetic)
+
 2004-12-19 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* src/fw_iptables.c: Tweak of auth_server firewall rule setting
 	  code. (and promptly undone, fixing the cause is better then
