@@ -16,9 +16,11 @@ EXTRA_DIST = \
   wifidog.spec.in \
   wifidog.spec \
   config \
+  scripts \
   debian/rules \
   debian/control \
   debian/changelog \
+  ipkg/rules \
   wifidog.conf
 
 .PHONY: doc

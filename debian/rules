@@ -29,6 +29,9 @@ install: build
 	dh_installdirs
 
 	$(MAKE) DESTDIR=$(CURDIR)/debian/tmp install
+	mkdir -p $(CURDIR)/debian/tmp/etc
+	cp wifidog.conf $(CURDIR)/debian/tmp/etc
+	cp scripts/init.d/wifidog debian/wifidog.init
 
 # Build architecture-independent files here.
 binary-indep: build install
@@ -49,7 +52,7 @@ binary-arch: build install
 #	dh_installcatalogs
 #	dh_installpam
 #	dh_installmime
-#	dh_installinit
+	dh_installinit
 #	dh_installcron
 #	dh_installinfo
 #	dh_undocumented
