@@ -1,8 +1,7 @@
 # $Header$
 
 2005-02-12 Mina Naguib <mina@ilesansfil.org>
-	* Stricter format rules for all *scan* functions hunting for IPs and MAC
-	addresses
+	* Stricter format rules for all *scan* functions hunting for IPs and MAC addresses
 	* fw_iptables.c: Make sure scanned IP address is a valid IP address
 	* firewall.c: Fix memory leak in arp_get
 	* libhttpd/protocol.c: Abort connection if read non-ascii from client. This
@@ -10,6 +9,8 @@
 	non-http requests - this therefore ends the thread as early as possible
 	instead of having it lay around for a while trying to get a valid http
 	request and taking up resources
+	* ping_thread.c: When pinging auth server now also sends sys_uptime, sys_memfree
+	and sys_load
 	* -v commandline option now shows wifidog version
 
 2005-02-11 Philippe April <philippe@ilesansfil.org>

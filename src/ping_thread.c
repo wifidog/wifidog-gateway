@@ -102,6 +102,11 @@ ping(void)
 	struct sockaddr_in	their_addr;
 	fd_set			readfds;
 	struct timeval		timeout;
+	FILE * fh;
+	unsigned long int sys_uptime  = 0;
+	unsigned int      sys_memfree = 0;
+	float             sys_load    = 0;
+
 
 	debug(LOG_DEBUG, "Entering ping()");
 	
@@ -166,12 +171,40 @@ ping(void)
 		
 	mark_online();
 
-	snprintf(request, sizeof(request) - 1, "GET %sping/?gw_id=%s HTTP/1.0\n"
+	/*
+	 * Populate uptime, memfree and load
+	 */
+	if ((fh = fopen("/proc/uptime", "r"))) {
+		fscanf(fh, "%lu", &sys_uptime);
+		fclose(fh);
+	}
+	if ((fh = fopen("/proc/meminfo", "r"))) {
+		while (!feof(fh)) {
+			if (fscanf(fh, "MemFree: %u", &sys_memfree) == 0) {
+				/* Not on this line */
+				while (!feof(fh) && fgetc(fh) != '\n');
+			}
+			else {
+				/* Found it */
+				break;
+			}
+		}
+		fclose(fh);
+	}
+	if ((fh = fopen("/proc/loadavg", "r"))) {
+		fscanf(fh, "%*s %f", &sys_load);
+		fclose(fh);
+	}
+
+	snprintf(request, sizeof(request) - 1, "GET %sping/?gw_id=%s&sys_uptime=%lu&sys_memfree=%u&sys_load=%f HTTP/1.0\n"
 			"User-Agent: WiFiDog %s\n"
 			"Host: %s\n"
 			"\n",
 			auth_server->authserv_path,
 			config_get_config()->gw_id,
+			sys_uptime,
+			sys_memfree,
+			sys_load,
 			VERSION,
 			auth_server->authserv_hostname);
 
