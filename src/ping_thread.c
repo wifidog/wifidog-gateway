@@ -92,7 +92,7 @@ ping(void)
 	int			sockfd;
 	t_auth_serv		*auth_server;
 	char			request[MAX_BUF];
-	struct hostent		*he;
+	struct in_addr		*h_addr;
 	struct sockaddr_in	their_addr;
 
 	debug(LOG_DEBUG, "Entering ping()");
@@ -107,7 +107,7 @@ ping(void)
 	debug(LOG_DEBUG, "Using auth server %s",
 			auth_server->authserv_hostname);
 	
-	if ((he = gethostbyname(auth_server->authserv_hostname)) == NULL) {
+	if ((h_addr = wd_gethostbyname(auth_server->authserv_hostname)) == NULL) {
 		debug(LOG_ERR, "Failed to resolve %s via gethostbyname"
 				"(): %s", auth_server->authserv_hostname, 
 				strerror(errno));
@@ -119,7 +119,7 @@ ping(void)
 
 	their_addr.sin_family = AF_INET;
 	their_addr.sin_port = htons(auth_server->authserv_http_port);
-	their_addr.sin_addr = *((struct in_addr *)he->h_addr);
+	their_addr.sin_addr = *h_addr;
 	memset(&(their_addr.sin_zero), '\0', sizeof(their_addr.sin_zero));
 
 	debug(LOG_INFO, "Connecting to auth server %s on port %d", 
@@ -132,8 +132,10 @@ ping(void)
 		debug(LOG_ERR, "Bumping auth server to last in line.");
 		mark_auth_server_bad(auth_server);
 		close(sockfd);
+		free(h_addr);
 		return;
 	}
+	free(h_addr);
 		
 	snprintf(request, sizeof(request) - 1, "GET %sping/?gw_id=%s HTTP/1.0\n"
 			"User-Agent: WiFiDog %s\n"

@@ -30,6 +30,7 @@
 /** @brief Execute a shell command
  */
 int execute(char *cmd_line, int quiet);
+struct in_addr *wd_gethostbyname(const char *name);
 
 #endif /* _UTIL_H_ */
 

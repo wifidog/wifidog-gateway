@@ -1,4 +1,8 @@
 # $Header$
+2004-10-22 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* src/various: Added wd_gethostbyname, a thread-safe (serialized)
+	  version of gethostbyname.
+
 2004-10-15 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* src/auth.c: Fixed hard coded port.
 

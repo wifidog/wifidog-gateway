@@ -19,8 +19,7 @@
  \********************************************************************/
 
 /*
- * $Header: /cvsroot/wifidog/wifidog/src/firewall.c,v 1.32 2004/04/23
- * 11:37:43 aprilp Exp $
+ * $Header$
  */
 /**
   @file util.c
@@ -40,10 +39,14 @@
 #include <sys/unistd.h>
 
 #include <string.h>
+#include <pthread.h>
+#include <netdb.h>
 
 #include "util.h"
 #include "conf.h"
 #include "debug.h"
+
+static pthread_mutex_t ghbn_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /** Fork a child and execute a shell command, the parent
  * process waits for the child to return and returns the child's exit()
@@ -80,4 +83,35 @@ execute(char *cmd_line, int quiet)
     }
 
     return (WEXITSTATUS(status));
+}
+
+struct in_addr *
+wd_gethostbyname(const char *name)
+{
+	struct hostent *he;
+	struct in_addr *h_addr, *in_addr_temp;
+
+	/* XXX Calling function is reponsible for free() */
+
+	h_addr = (struct in_addr *)malloc(sizeof(struct in_addr));
+	
+	if (h_addr == NULL)
+		return NULL;
+	
+	pthread_mutex_lock(&ghbn_mutex);
+
+	he = gethostbyname(name);
+
+	if (he == NULL) {
+		free(h_addr);
+		pthread_mutex_unlock(&ghbn_mutex);
+		return NULL;
+	}
+
+	in_addr_temp = (struct in_addr *)he->h_addr_list[0];
+	h_addr->s_addr = in_addr_temp->s_addr;
+	
+	pthread_mutex_unlock(&ghbn_mutex);
+
+	return h_addr;
 }
