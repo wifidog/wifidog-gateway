@@ -116,6 +116,8 @@ main_loop(void)
 int
 main(int argc, char **argv)
 {
+	struct sigaction sa;
+
 	config_init();
 
 	parse_commandline(argc, argv);
@@ -134,7 +136,6 @@ main(int argc, char **argv)
 	}
 
 	if (config.daemon) {
-		struct sigaction sa;
 		int childPid;
 
 		debug(D_LOG_INFO, "Forking into background");
