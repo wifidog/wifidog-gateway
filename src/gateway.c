@@ -73,9 +73,9 @@ main_loop(void)
 			 * FIXME
 			 * An error occurred - should we abort? reboot the device ?
 			 */
-            /* FIXME remove firewall rules before exiting */
 			debug(D_LOG_ERR, "httpdGetConnection returned %d",
 				result);
+	        fw_destroy();
 			exit(1);
 		} else if (result > 0) {
 			/*
