@@ -29,6 +29,9 @@
 
 extern s_config config;
 
+/**
+ * Prints usage if wifidog is called with -h or with an unknown option
+ */
 void
 usage(void)
 {
@@ -42,6 +45,11 @@ usage(void)
     printf("\n");
 }
 
+/**
+ * @brief Parse the command line and set the config accordingly
+ *
+ * Uses getopt() to parse the command line and set configuration values
+ */
 void
 parse_commandline(int argc, char **argv)
 {

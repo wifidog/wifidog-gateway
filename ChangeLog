@@ -1,7 +1,7 @@
 # $Header$
 2004-04-16  Philippe April <papril777@yahoo.com>
     * Fixed CRLF/formatting in phpauth/login/index.php
-    * Added some documentation for firewall.c
+    * Added some documentation for firewall.c, commandline.c
 
 2004-04-15  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Changed the locking mechanism, now all access to t_node * structs
