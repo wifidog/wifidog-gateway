@@ -2,7 +2,10 @@
 
 2004-12-19 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* src/fw_iptables.c: Tweak of auth_server firewall rule setting
-	  code.
+	  code. (and promptly undone, fixing the cause is better then
+	  fixing the symptom)
+	* src/conf.c: NULL-fill auth_server struct so that
+	  auth_server->last_ip always equals NULL when first filled.
 
 2004-12-16 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/fw_iptables.c: Display iptables command that is run in debug mode.
