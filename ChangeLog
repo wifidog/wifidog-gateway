@@ -2,7 +2,8 @@
 2004-10-28 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* multiple files: Implemented a FirewallRule config command, it
 	  doesn't actually do anything yet.
-	* libhttpd: #if 0'd out lots of request parsing code
+	* libhttpd: #if 0'd out lots of request parsing code.
+	* libhttpd: changed URL parsing.
 
 2004-10-27 Philippe April <philippe@philippeapril.com>
 	* ipkg/rules: removed --build=mipsel from ./configure

@@ -336,16 +336,18 @@ void _httpd_storeData(server, query)
 {
         char    *cp,
 		*cp2,
-                var[50],
+                *var,
                 *val,
 		*tmpVal;
 
         if (!query)
                 return;
 
+	var = (char *)malloc(strlen(query));
+	
 	cp = query;
 	cp2 = var;
-        bzero(var,sizeof(var));
+        bzero(var, strlen(query));
 	val = NULL;
         while(*cp)
         {
@@ -387,6 +389,7 @@ void _httpd_storeData(server, query)
 	*cp = 0;
 	tmpVal = _httpd_unescape(val);
 	httpdAddVariable(server, var, tmpVal);
+	free(var);
 }
 
 
