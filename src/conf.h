@@ -43,6 +43,7 @@
 #define DEFAULT_SYSLOG_FACILITY LOG_DAEMON
 #define DEFAULT_WDCTL_SOCK "/tmp/wdctl.sock"
 #define DEFAULT_AUTHSERVPATH "/wifidog/auth"
+#define DEFAULT_AUTHSERVMAXTRIES 2
 /*@}*/ 
 
 typedef struct _auth_serv_t {
@@ -67,8 +68,11 @@ typedef struct {
     char *gw_address;		/**< @brief Internal IP address for our web
 				     server */
     int gw_port;		/**< @brief Port the webserver will run on */
+    
+    int authserv_maxtries;	/**< @brief Maximum number of auth server connection attempts before abandoning */
 
     t_auth_serv	*auth_servers;	/**< @brief Auth servers list */
+    
     char *authserv_path;	/**< @brief Path to the authentication script on
 				     the central server */
     char *authserv_loginurl;	/**< @brief Full URL to the login page */
@@ -100,5 +104,11 @@ void config_read(char *filename);
 
 /** @brief Check that the configuration is valid */
 void config_validate(void);
+
+/** @brief Get the active auth server */
+t_auth_serv *get_auth_server(void);
+
+/** @brief Bump server to bottom of the list */
+void mark_auth_server_bad(t_auth_serv *);
 
 #endif /* _CONFIG_H_ */

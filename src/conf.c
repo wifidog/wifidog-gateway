@@ -30,6 +30,8 @@
 #include <stdlib.h>
 #include <syslog.h>
 
+#include <pthread.h>
+
 #include <string.h>
 
 #include "common.h"
@@ -42,6 +44,11 @@
 /** @internal
  * Holds the current configuration of the gateway */
 static s_config config;
+
+/** @internal
+ * Mutex for the configuration file, used by the auth_servers related
+ * functions. */
+static pthread_mutex_t config_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /** @internal
  * A flag.  If set to 1, there are missing or empty mandatory parameters in the config
@@ -60,6 +67,7 @@ typedef enum {
 	oGatewayAddress,
 	oGatewayPort,
 	oAuthServer,
+	oAuthServMaxTries,
 	oAuthservPath,
 	oAuthservLoginUrl,
 	oHTTPDMaxConn,
@@ -85,6 +93,7 @@ static const struct {
 	{ "gatewayaddress",     oGatewayAddress },
 	{ "gatewayport",        oGatewayPort },
 	{ "authserver",         oAuthServer },
+	{ "authservmaxtries",   oAuthServMaxTries },
 	{ "authservpath",       oAuthservPath },
 	{ "authservloginurl",   oAuthservLoginUrl },
 	{ "httpdmaxconn",       oHTTPDMaxConn },
@@ -124,6 +133,7 @@ config_init(void)
 	config.gw_address = NULL;
 	config.gw_port = DEFAULT_GATEWAYPORT;
 	config.auth_servers = NULL;
+	config.authserv_maxtries = DEFAULT_AUTHSERVMAXTRIES;
 	config.authserv_path = strdup(DEFAULT_AUTHSERVPATH);
 	config.authserv_loginurl = NULL;
 	config.httpdname = NULL;
@@ -250,6 +260,9 @@ config_read(char *filename)
 				case oHTTPDMaxConn:
 					sscanf(p1, "%d", &config.httpdmaxconn);
 					break;
+				case oAuthServMaxTries:
+					sscanf(p1, "%d", &config.authserv_maxtries);
+					break;
 				case oAuthservPath:
 					free(config.authserv_path);
 					config.authserv_path = strdup(p1);
@@ -335,6 +348,9 @@ config_notnull(void *parm, char *parmname)
 
 /** @internal
     Register a new auth server.
+
+    @param host Hostname of the server
+    @param port Port of the server
 */
 static void
 new_auth_server(char *host, int port)
@@ -366,4 +382,42 @@ new_auth_server(char *host, int port)
 	}
 	
 	debug(LOG_DEBUG, "Auth server added");
+}
+
+/**
+ * This function returns the current (first auth_server)
+ */
+t_auth_serv *
+get_auth_server(void)
+{
+
+	/* This is as good as atomic */
+	return config.auth_servers;
+}
+
+/**
+ * This function marks the current auth_server, if it matches the argument,
+ * as bad. Basically, the "bad" server becomes the last one on the list.
+ */
+void
+mark_auth_server_bad(t_auth_serv *bad_server)
+{
+	t_auth_serv	*tmp;
+
+	/* lock mutex so two different threads both don't mark the same
+	 * server as bad */
+	pthread_mutex_lock(&config_mutex);
+
+	if (config.auth_servers == bad_server) {
+		/* Go to the last */
+		for (tmp = config.auth_servers; tmp->next != NULL; tmp = tmp->next);
+		/* Set bad server as last */
+		tmp->next = bad_server;
+		/* Remove bad server from start of list */
+		config.auth_servers = bad_server->next;
+		/* Set the next pointe to NULL in the last element */
+		bad_server->next = NULL;
+	}
+
+	pthread_mutex_unlock(&config_mutex);
 }
