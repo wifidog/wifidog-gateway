@@ -43,7 +43,7 @@ http_callback_404(httpd * webserver)
 		debug(LOG_ERR, "Failed to asprintf newlocation");
 		httpdOutput(webserver, "Internal error occurred");
 	} else {
-		// Re-direct them to auth server
+		/* Re-direct them to auth server */
 		httpdSetResponse(webserver, "307 Please authenticate yourself here");
 		httpdAddHeader(webserver, newlocation);
 		httpdPrintf(webserver, "<html><head><title>Redirection</title></head><body>"
@@ -80,15 +80,15 @@ http_callback_auth(httpd * webserver)
 	pthread_t tid;
 
 	if ((token = httpdGetVariableByName(webserver, "token"))) {
-		// They supplied variable "token"
+		/* They supplied variable "token" */
 		if (!(mac = arp_get(webserver->clientAddr))) {
-			// We could not get their MAC address
+			/* We could not get their MAC address */
 			debug(LOG_ERR, "Failed to retrieve MAC address for "
 				"ip %s", webserver->clientAddr);
 			httpdOutput(webserver, "Failed to retrieve your MAC "
 					"address");
 		} else {
-			// We have their MAC address
+			/* We have their MAC address */
 
 			pthread_mutex_lock(&nodes_mutex);
 			
@@ -122,7 +122,7 @@ http_callback_auth(httpd * webserver)
 			free(mac);
 		}
 	} else {
-		// They did not supply variable "token"
+		/* They did not supply variable "token" */
 		httpdOutput(webserver, "Invalid token");
 	}
 }
