@@ -1,3 +1,6 @@
+2004-04-17  Philippe April <papril777@yahoo.com>
+	* Fixed path returning to gateway in phpauth/login/index.php
+
 2004-04-16  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Merged in libhttpd into the source tree
 
