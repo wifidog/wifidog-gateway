@@ -171,6 +171,11 @@ init_userclasses(int remote_allowed)
 				       account with profile #0. */
 	insert_userclasses(tmp_uc);
 
+	/* First, fetch the remote rules, the local rules will override... */
+	if (remote_allowed) {
+	}
+	
+	/* XXX The parsing sucks. It'll do for now because it works. */
 	for (i = 0; i < 256; i++) {
 		timeout = active = 0;
 		if (*(config.userclasses + i) != NULL) {
