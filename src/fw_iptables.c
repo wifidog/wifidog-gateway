@@ -83,17 +83,19 @@ iptables_fw_init(void)
     config = config_get_config();
     fw_quiet = 0;
     
-    iptables_do_command("-t nat -N " TABLE_WIFIDOG_VALIDATE);
-    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", config->gw_address);
-
     LOCK_CONFIG();
     
+    iptables_do_command("-t nat -N " TABLE_WIFIDOG_AUTHSERVERS);
     for (auth_server = config->auth_servers; auth_server != NULL;
 		    auth_server = auth_server->next) {
-        iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", auth_server->authserv_hostname);
+        iptables_do_command("-t nat -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->authserv_hostname);
     }
 
     UNLOCK_CONFIG();
+
+    iptables_do_command("-t nat -N " TABLE_WIFIDOG_VALIDATE);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -j " TABLE_WIFIDOG_AUTHSERVERS);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", config->gw_address);
 
     /** Insert global rules BEFORE the "defaults" */
     
@@ -111,16 +113,8 @@ iptables_fw_init(void)
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -j DROP");
 
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_UNKNOWN);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j " TABLE_WIFIDOG_AUTHSERVERS);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", config->gw_address);
-
-    LOCK_CONFIG();
-    
-    for (auth_server = config->auth_servers; auth_server != NULL;
-		    auth_server = auth_server->next) {
-        iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", auth_server->authserv_hostname);
-    }
-
-    UNLOCK_CONFIG();
 
     /** Insert global rules BEFORE the "defaults" */
 
@@ -170,6 +164,7 @@ iptables_fw_destroy(void)
     iptables_do_command("-t mangle -F " TABLE_WIFIDOG_OUTGOING);
     iptables_do_command("-t mangle -F " TABLE_WIFIDOG_INCOMING);
 
+    iptables_do_command("-t nat -F " TABLE_WIFIDOG_AUTHSERVERS);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_VALIDATE);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_UNKNOWN);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_KNOWN);

@@ -34,6 +34,7 @@
 #define TABLE_WIFIDOG_CLASS     "WiFiDog_Class"
 #define TABLE_WIFIDOG_OUTGOING  "WiFiDog_Outgoing"
 #define TABLE_WIFIDOG_INCOMING  "WiFiDog_Incoming"
+#define TABLE_WIFIDOG_AUTHSERVERS "WiFiDog_AuthServers"
 #define TABLE_WIFIDOG_VALIDATE  "WiFiDog_Validate"
 #define TABLE_WIFIDOG_KNOWN     "WiFiDog_Known"
 #define TABLE_WIFIDOG_UNKNOWN   "WiFiDog_Unknown"

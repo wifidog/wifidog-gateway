@@ -1,5 +1,8 @@
 # $Header$
 
+2004-11-18 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* src/fw_iptables.[ch]: Merged in Phil's patch.
+
 2004-11-17 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* libhttpd/*: libhttpd has been taken behind the shed and shot in
 	  the back of the head. The replacement separates the request struct
