@@ -81,7 +81,7 @@ authenticate(t_authresponse *authresponse, char *stage, char *ip, char *mac, cha
 		return(-1); /* non-fatal */
 	}
 	sprintf(buf, "GET %s?stage=%s&ip=%s&mac=%s&token=%s&incoming=%ld&outgoing=%ld HTTP/1.1"
-		"\nHost: %s\n\n", stage, config.authserv_path, ip, mac, token,
+		"\nHost: %s\n\n", config.authserv_path, stage, ip, mac, token,
 		incoming, outgoing, config.authserv_hostname);
 	send(sockfd, buf, strlen(buf), 0);
 
