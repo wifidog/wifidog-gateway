@@ -44,7 +44,7 @@ main_loop(void)
 	node_init();
 
 	// Initialize the web server
-	debug(D_LOG_DEBUG, "Creating web server on %s:%d", 
+	debug(D_LOG_NOTICE, "Creating web server on %s:%d", 
 			config.gw_address, config.gw_port);
 	webserver = httpdCreate(config.gw_address, config.gw_port);
 	if (webserver == NULL) {
@@ -68,7 +68,7 @@ main_loop(void)
 	pthread_create(&tid, NULL, (void *)cleanup_thread, NULL);
 	pthread_detach(tid);
 	
-	debug(D_LOG_DEBUG, "Waiting for connections");
+	debug(D_LOG_NOTICE, "Waiting for connections");
 	while(1) {
 		tv.tv_sec = config.checkinterval;
 		tv.tv_usec = 0;
@@ -90,7 +90,7 @@ main_loop(void)
 			/*
 			 * We got a connection
 			 */
-			debug(D_LOG_DEBUG, "Received connection from %s",
+			debug(D_LOG_INFO, "Received connection from %s",
 				webserver->clientAddr);
 			if (httpdReadRequest(webserver) >=0) {
 				/*
@@ -168,7 +168,7 @@ termination_handler(int s)
 	
 	fw_destroy();
 
-	debug(D_LOG_INFO, "Exiting...");
+	debug(D_LOG_WARNING, "Exiting...");
 	exit(0);
 }
 

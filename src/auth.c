@@ -123,19 +123,19 @@ auth_thread(void *ptr)
 
 	/* If we get here, we've got a profile > 0 */
 	
-	debug(D_LOG_DEBUG, "Node %s with mac %s and profile "
+	debug(D_LOG_INFO, "Node %s with mac %s and profile "
 		"%d validated", node->ip, node->mac, profile);
 	
 	tmp_uc = find_userclasses(profile);
 	
 	if (tmp_uc == NULL) {
-		debug(D_LOG_DEBUG, "Profile %d undefined", profile);
+		debug(D_LOG_WARNING, "Profile %d undefined", profile);
 		_http_output(node->fd, "User Class not defined");
 		node->fd = 0;
 		pthread_mutex_unlock(&nodes_mutex);
 		return;
 	} else {
-		debug(D_LOG_DEBUG, "Profile %d UserClasses retrieved", profile);
+		debug(D_LOG_INFO, "Profile %d UserClasses retrieved", profile);
 	}
 	
 	if (tmp_uc->active) {

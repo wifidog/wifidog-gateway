@@ -55,7 +55,7 @@ authenticate(char *ip, char *mac, char *token, long int stats)
 	their_addr.sin_addr = *((struct in_addr *)he->h_addr);
 	memset(&(their_addr.sin_zero), '\0', 8);
 
-	debug(D_LOG_DEBUG, "Connecting to auth server %s on port %d", 
+	debug(D_LOG_INFO, "Connecting to auth server %s on port %d", 
 		config.authserv_hostname, config.authserv_port);
 
 	if (connect(sockfd, (struct sockaddr *)&their_addr,
@@ -81,11 +81,11 @@ authenticate(char *ip, char *mac, char *token, long int stats)
 
 	if ((p1 = strstr(buf, "Profile: "))) {
 		if (sscanf(p1, "Profile: %d", &profile) == 1) {
-			debug(D_LOG_DEBUG, "Auth server returned profile %d",
+			debug(D_LOG_INFO, "Auth server returned profile %d",
 				profile);
 			return(profile);
 		} else {
-			debug(D_LOG_DEBUG, "Auth server did not return "
+			debug(D_LOG_WARNING, "Auth server did not return "
 				"expected information");
 			return(-1);
 		}

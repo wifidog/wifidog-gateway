@@ -180,7 +180,7 @@ fw_init(void)
 		exit(1);
 	}
 
-	debug(D_LOG_INFO, "Setting firewall rules");
+	debug(D_LOG_NOTICE, "Setting firewall rules");
 
 	if ((rc = execute(command)) != 0) {
 		debug(D_LOG_ERR, "Could not setup firewall, exiting...");
@@ -212,7 +212,7 @@ fw_destroy(void)
 		return(1);
 	}
 
-	debug(D_LOG_INFO, "Flushing firewall rules");
+	debug(D_LOG_NOTICE, "Flushing firewall rules");
 
 	return(execute(command));
 }
@@ -247,7 +247,7 @@ fw_counter(void)
 
 				if (p1->counter == counter) {
 					/* expire clients for inactivity */
-					debug(D_LOG_DEBUG, "Client %s was "
+					debug(D_LOG_INFO, "Client %s was "
 						"inactive", ip);
 					fw_deny(p1->ip, p1->mac,
 						p1->rights->profile);
@@ -281,7 +281,7 @@ fw_counter(void)
 							"re-validated!");
 					} else if (profile <= 0) {
 						/* failed */
-						debug(D_LOG_DEBUG, "Auth "
+						debug(D_LOG_NOTICE, "Auth "
 							"failed for client %s",
 							ip);
 						fw_deny(p1->ip, p1->mac,
@@ -289,7 +289,7 @@ fw_counter(void)
 						node_delete(p1);
 					} else {
 						/* successful */
-						debug(D_LOG_DEBUG, "Updated "
+						debug(D_LOG_INFO, "Updated "
 							"client %s counter to "
 							"%ld bytes", ip,
 							counter);
@@ -341,7 +341,7 @@ node_add(char *ip, char *mac, char *token, long int counter, int active)
 	curnode = (t_node *)malloc(sizeof(t_node));
 
 	if (curnode == NULL) {
-		debug(D_LOG_DEBUG, "Out of memory");
+		debug(D_LOG_ERR, "Out of memory");
 		exit(-1);
 	}
 
@@ -359,7 +359,7 @@ node_add(char *ip, char *mac, char *token, long int counter, int active)
 		prevnode->next = curnode;
 	}
 
-	debug(D_LOG_DEBUG, "Added a new node to linked list: IP: %s Token: %s",
+	debug(D_LOG_INFO, "Added a new node to linked list: IP: %s Token: %s",
 		ip, token);
 	
 	return curnode;
@@ -464,7 +464,7 @@ int
 check_userrights(t_node *node)
 {
 	if (node->rights->end_time <= time(NULL)) {
-		debug(D_LOG_DEBUG, "Connection %s has expired", node->ip);
+		debug(D_LOG_INFO, "Connection %s has expired", node->ip);
 		return 0;
 	}
 
