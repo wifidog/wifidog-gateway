@@ -32,6 +32,9 @@
 int execute(char *cmd_line, int quiet);
 struct in_addr *wd_gethostbyname(const char *name);
 
+/* @brief Get IP address of an interface */
+char *get_iface_ip(char *ifname);
+
 #define LOCK_GHBN() do { \
 	debug(LOG_DEBUG, "Locking wd_gethostbyname()"); \
 	pthread_mutex_lock(&ghbn_mutex); \

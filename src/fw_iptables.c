@@ -237,7 +237,14 @@ iptables_fw_init(void)
     iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_OUTGOING, config->gw_interface);
 
     iptables_do_command("-t mangle -N " TABLE_WIFIDOG_INCOMING);
-    iptables_do_command("-t mangle -I FORWARD 1 -i %s -j " TABLE_WIFIDOG_INCOMING, config->external_interface);
+    if (config->external_interface) {
+        iptables_do_command("-t mangle -I FORWARD 1 -i %s -j " TABLE_WIFIDOG_INCOMING, config->external_interface);
+    } else {
+        iptables_do_command("-t mangle -I FORWARD 1 -j " TABLE_WIFIDOG_INCOMING);
+    }
+
+    iptables_do_command("-t filter -N " TABLE_WIFIDOG_WIFI_TO_GW);
+    iptables_do_command("-t filter -I INPUT 1 -i %s -j " TABLE_WIFIDOG_WIFI_TO_GW, config->gw_interface);
 
     UNLOCK_CONFIG();
     
@@ -255,6 +262,7 @@ iptables_fw_destroy(void)
     s_config *config = config_get_config();
 
     fw_quiet = 1;
+    iptables_do_command("-t filter -F " TABLE_WIFIDOG_WIFI_TO_GW);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_CLASS);
     iptables_do_command("-t mangle -F " TABLE_WIFIDOG_OUTGOING);
     iptables_do_command("-t mangle -F " TABLE_WIFIDOG_INCOMING);
@@ -281,13 +289,23 @@ iptables_fw_destroy(void)
 
     rc = 0;
     while (rc == 0) {
+        rc = iptables_do_command("-t filter -D INPUT -i %s -j " TABLE_WIFIDOG_WIFI_TO_GW, config->gw_interface);
+    }
+    iptables_do_command("-t filter -X " TABLE_WIFIDOG_WIFI_TO_GW);
+
+    rc = 0;
+    while (rc == 0) {
         rc = iptables_do_command("-t mangle -D PREROUTING -i %s -j " TABLE_WIFIDOG_OUTGOING, config->gw_interface);
     }
     iptables_do_command("-t mangle -X " TABLE_WIFIDOG_OUTGOING);
 
     rc = 0;
     while (rc == 0) {
-        rc = iptables_do_command("-t mangle -D FORWARD -i %s -j " TABLE_WIFIDOG_INCOMING, config->external_interface);
+        if (config->external_interface) {
+            rc = iptables_do_command("-t mangle -D FORWARD -i %s -j " TABLE_WIFIDOG_INCOMING, config->external_interface);
+        } else {
+            rc = iptables_do_command("-t mangle -D FORWARD -j " TABLE_WIFIDOG_INCOMING);
+        }
     }
     iptables_do_command("-t mangle -X " TABLE_WIFIDOG_INCOMING);
 
@@ -304,10 +322,12 @@ iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag)
 
     switch(type) {
         case FW_ACCESS_ALLOW:
+            iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_GW " -s %s -j ACCEPT", ip);
             iptables_do_command("-t mangle -A " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
             rc = iptables_do_command("-t mangle -A " TABLE_WIFIDOG_INCOMING " -d %s -j ACCEPT", ip);
             break;
         case FW_ACCESS_DENY:
+            iptables_do_command("-t filter -D " TABLE_WIFIDOG_WIFI_TO_GW " -s %s -j ACCEPT", ip);
             iptables_do_command("-t mangle -D " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
             rc = iptables_do_command("-t mangle -D " TABLE_WIFIDOG_INCOMING " -d %s -j ACCEPT", ip);
             break;
@@ -352,7 +372,39 @@ iptables_fw_counters_update(void)
                 if (p1->counters.outgoing < counter) {
                     p1->counters.outgoing = counter;
                     p1->counters.last_updated = time(NULL);
-                    debug(LOG_DEBUG, "%s - Updated counter to %ld bytes", ip, counter);
+                    debug(LOG_DEBUG, "%s - Updated outgoing counter to %ld bytes from outgoing chain", ip, counter);
+                }
+            } else {
+                debug(LOG_ERR, "Could not find %s in client list", ip);
+            }
+	    UNLOCK_CLIENT_LIST();
+        }
+    }
+    pclose(output);
+
+    /* Look for wifi-to-firewall traffic */
+    asprintf(&script, "%s %s", "iptables", "-v -x -t filter -L " TABLE_WIFIDOG_WIFI_TO_GW);
+    if (!(output = popen(script, "r"))) {
+        debug(LOG_ERR, "popen(): %s", strerror(errno));
+        return -1;
+    }
+    free(script);
+
+    /* skip the first two lines */
+    while (('\n' != fgetc(output)) && !feof(output))
+        ;
+    while (('\n' != fgetc(output)) && !feof(output))
+        ;
+    while (output && !(feof(output))) {
+        rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %s %*s %*s %*s %*s %*s 0x%*u", &counter, ip);
+        if (2 == rc && EOF != rc) {
+            debug(LOG_DEBUG, "WIFI2FW %s Bytes=%ld", ip, counter);
+	    LOCK_CLIENT_LIST();
+            if ((p1 = client_list_find_by_ip(ip))) {
+                if (p1->counters.togateway < counter) {
+                    p1->counters.togateway = counter;
+                    p1->counters.last_updated = time(NULL);
+                    debug(LOG_DEBUG, "%s - Updated togateway counter to %ld bytes from wifi2fw chain", ip, counter);
                 }
             } else {
                 debug(LOG_ERR, "Could not find %s in client list", ip);
@@ -396,4 +448,3 @@ iptables_fw_counters_update(void)
 
     return 1;
 }
-

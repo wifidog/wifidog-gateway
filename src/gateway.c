@@ -57,6 +57,7 @@
 #include "wdctl_thread.h"
 #include "ping_thread.h"
 #include "httpd_thread.h"
+#include "util.h"
 
 /** XXX Ugly hack 
 * @todo UGLY HACKS SHOULD BE DOCUMENTED! */
@@ -167,6 +168,16 @@ main_loop(void)
 
 	/* Initializes the linked list of connected clients */
 	client_list_init();
+
+    /* If we don't have the Gateway IP address, get it. Can't fail. */
+    if (!config->gw_address) {
+        debug(LOG_DEBUG, "Finding IP address of %s", config->gw_interface);
+        if ((config->gw_address = get_iface_ip(config->gw_interface)) == NULL) {
+		    debug(LOG_ERR, "Could not get IP address information of %s, exiting...", config->gw_interface);
+            exit(1);
+        }
+        debug(LOG_DEBUG, "%s = %s", config->gw_interface, config->gw_address);
+    }
 
 	/* Initializes the web server */
 	debug(LOG_NOTICE, "Creating web server on %s:%d", 

@@ -1,4 +1,13 @@
 # $Header$
+2005-02-03 Philippe April <isf_lists@philippeapril.com>
+	* Ping the users everytime we check their counters, that way we keep them
+	alive
+	* Optional ExternalInterface
+	* Optional GatewayAddress (we discover it. finally.)
+	* We check for the traffic from the clients to the firewall, to catch the
+	traffic the icmp ping is generating
+	* Bumped to alpha7
+
 2005-01-23 Philippe April <isf_lists@philippeapril.com>
 	* wdctl status will return the auth servers in the linked list
 	* We'll now forward to the auth server to display the used-to-be-ugly

@@ -134,7 +134,7 @@ ping(void)
 		}
 	} else {
 		tmp_addr = strdup(inet_ntoa(*h_addr));
-		if (strcmp(auth_server->last_ip, tmp_addr) == 0) {
+		if (strcmp(auth_server->last_ip, tmp_addr) != 0) {
 			free(auth_server->last_ip);
 			auth_server->last_ip = tmp_addr;
 			fw_clear_authservers();

@@ -32,6 +32,7 @@
 typedef struct _t_counters {
     long long	incoming;	/**< @brief Incoming data */
     long long	outgoing;	/**< @brief Outgoing data */
+    long long	togateway;	/**< @brief Data to gateway */
     time_t	last_updated;	/**< @brief Last update of the counters */
 } t_counters;
 

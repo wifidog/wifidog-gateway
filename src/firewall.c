@@ -41,6 +41,19 @@
 
 #include <string.h>
 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <net/ethernet.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+#include <netpacket/packet.h>
+#include <sys/uio.h>
+#include <fcntl.h>
+#include <netdb.h>
+#include <sys/time.h>
+
 #include "httpd.h"
 
 #include "debug.h"
@@ -52,6 +65,8 @@
 #include "client_list.h"
 
 extern pthread_mutex_t client_list_mutex;
+
+int icmp_fd = 0;
 
 /**
  * Allow a client access through the firewall by adding a rule in the firewall to MARK the user's packets with the proper
@@ -122,6 +137,18 @@ arp_get(char *req_ip)
 int
 fw_init(void)
 {
+    int flags, oneopt = 1, zeroopt = 0;
+
+    debug(LOG_INFO, "Creating ICMP socket");
+    if ((icmp_fd = socket (AF_INET, SOCK_RAW, IPPROTO_ICMP)) == -1 ||
+            (flags = fcntl(icmp_fd, F_GETFL, 0)) == -1 ||
+             fcntl(icmp_fd, F_SETFL, flags | O_NONBLOCK) == -1 ||
+             setsockopt(icmp_fd, SOL_SOCKET, SO_RCVBUF, &oneopt, sizeof(oneopt)) ||
+             setsockopt(icmp_fd, SOL_SOCKET, SO_DONTROUTE, &zeroopt, sizeof(zeroopt)) == -1) {
+        debug(LOG_ERR, "Cannot create ICMP raw socket.");
+        return;
+    }
+
     debug(LOG_INFO, "Initializing Firewall");
     return iptables_fw_init();
 }
@@ -151,6 +178,11 @@ fw_set_authservers(void)
 int
 fw_destroy(void)
 {
+    if (icmp_fd != 0) {
+        debug(LOG_INFO, "Closing ICMP socket");
+        close(icmp_fd);
+    }
+
     debug(LOG_INFO, "Removing Firewall rules");
     return iptables_fw_destroy();
 }
@@ -180,12 +212,15 @@ fw_counter(void)
         ip = strdup(p1->ip);
         token = strdup(p1->token);
         mac = strdup(p1->mac);
-	outgoing = p1->counters.outgoing;
-	incoming = p1->counters.incoming;
+	    outgoing = p1->counters.outgoing;
+	    incoming = p1->counters.incoming;
 
-	UNLOCK_CLIENT_LIST();
+	    UNLOCK_CLIENT_LIST();
+        /* Ping the client, if he responds it'll keep activity on the link */
+        icmp_ping(ip);
+        /* Update the counters on the remote server */
         auth_server_request(&authresponse, REQUEST_TYPE_COUNTERS, ip, mac, token, incoming, outgoing);
-	LOCK_CLIENT_LIST();
+	    LOCK_CLIENT_LIST();
 	
         if (!(p1 = client_list_find(ip, mac))) {
             debug(LOG_ERR, "Node %s was freed while being re-validated!", ip);
@@ -223,7 +258,7 @@ fw_counter(void)
                             debug(LOG_INFO, "%s - Access has changed, refreshing firewall and clearing counters", p1->ip);
                             fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
                             p1->fw_connection_state = FW_MARK_KNOWN;
-                            p1->counters.incoming = p1->counters.outgoing = 0;
+                            p1->counters.togateway = p1->counters.incoming = p1->counters.outgoing = 0;
                             fw_allow(p1->ip, p1->mac, p1->fw_connection_state);
                         }
                         break;
@@ -249,4 +284,72 @@ fw_counter(void)
         free(mac);
     }
     UNLOCK_CLIENT_LIST();
+}
+
+void icmp_ping(char *host) {
+  struct sockaddr_in saddr;
+  struct { 
+    struct ip ip;
+    struct icmp icmp;
+  } packet;
+  unsigned int i, j;
+  int opt = 2000;
+  unsigned short id = rand16();
+
+  saddr.sin_family = AF_INET;
+  saddr.sin_port = 0;
+  inet_aton(host, &saddr.sin_addr);
+#ifdef HAVE_SOCKADDR_SA_LEN
+  saddr.sin_len = sizeof(struct sockaddr_in);
+#endif
+
+  memset(&(saddr.sin_zero), '\0', sizeof(saddr.sin_zero));
+  
+  memset(&packet.icmp, 0, sizeof(packet.icmp));
+  packet.icmp.icmp_type = ICMP_ECHO;
+  packet.icmp.icmp_id = id;
+  for (j = 0, i = 0; i < sizeof(struct icmp) / 2; i++)
+    j += ((unsigned short *)&packet.icmp)[i];
+  while (j>>16)
+    j = (j & 0xffff) + (j >> 16);  
+  packet.icmp.icmp_cksum = (j == 0xffff) ? j : ~j;
+
+  if (setsockopt(icmp_fd, SOL_SOCKET, SO_RCVBUF, &opt, sizeof(opt)) == -1) {
+      debug(LOG_ERR, "setsockopt(): %s", strerror(errno));
+  }
+  if (sendto(icmp_fd, (char *)&packet.icmp, sizeof(struct icmp), 0, (struct sockaddr *)&saddr, sizeof(saddr)) == -1) {
+      debug(LOG_ERR, "sendto(): %s", strerror(errno));
+  }
+  opt = 1;
+  if (setsockopt(icmp_fd, SOL_SOCKET, SO_RCVBUF, &opt, sizeof(opt)) == -1) {
+      debug(LOG_ERR, "setsockopt(): %s", strerror(errno));
+  }
+
+  return;
+}
+
+unsigned short rand16(void) {
+  static int been_seeded = 0;
+
+  if (!been_seeded) {
+    int fd, n = 0;
+    unsigned int c = 0, seed = 0;
+    char sbuf[sizeof(seed)];
+    char *s;
+    struct timeval now;
+
+    /* not a very good seed but what the heck, it needs to be quickly acquired */
+    gettimeofday(&now, NULL);
+    seed = now.tv_sec ^ now.tv_usec ^ (getpid() << 16);
+
+    srand(seed);
+    been_seeded = 1;
+    }
+
+    /* Some rand() implementations have less randomness in low bits
+     * than in high bits, so we only pay attention to the high ones.
+     * But most implementations don't touch the high bit, so we 
+     * ignore that one.
+     **/
+      return( (unsigned short) (rand() >> 15) );
 }

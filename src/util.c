@@ -38,6 +38,8 @@
 #include <sys/types.h>
 #include <sys/unistd.h>
 #include <netinet/in.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
 
 #include <string.h>
 #include <pthread.h>
@@ -115,4 +117,30 @@ wd_gethostbyname(const char *name)
 	UNLOCK_GHBN();
 
 	return h_addr;
+}
+
+char *get_iface_ip(char *ifname) {
+    struct ifreq if_data;
+    struct in_addr in;
+    int sockd;
+    u_int32_t ip;
+
+    /* Create a socket */
+    if ((sockd = socket (AF_INET, SOCK_PACKET, htons(0x8086))) < 0) {
+        debug(LOG_ERR, "socket(): %s", strerror(errno));
+        return NULL;
+    }
+
+    /* Get IP of internal interface */
+    strcpy (if_data.ifr_name, ifname);
+
+    /* Get the IP address */
+    if (ioctl (sockd, SIOCGIFADDR, &if_data) < 0) {
+        debug(LOG_ERR, "ioctl(): SIOCGIFADDR %s", strerror(errno));
+        return NULL;
+    }
+    memcpy ((void *) &ip, (void *) &if_data.ifr_addr.sa_data + 2, 4);
+    in.s_addr = ip;
+
+    return (char *)inet_ntoa(in);
 }

@@ -238,10 +238,12 @@ wdctl_status(int fd)
 		len = strlen(buffer);
 
 		snprintf((buffer + len), (sizeof(buffer) - len), "\tIn: %lld\t"
-				"Out: %lld\n", first->counters.incoming,
-				first->counters.outgoing);
+				"Out: %lld\t"
+                "To GW: %lld\n", first->counters.incoming,
+				first->counters.outgoing,
+                first->counters.togateway);
 		len = strlen(buffer);
-		
+
 		count++;
 		first = first->next;
 	}
@@ -250,8 +252,11 @@ wdctl_status(int fd)
 
     LOCK_CONFIG();
     
+    snprintf((buffer + len), (sizeof(buffer) - len), "\nAuthentication servers:\n");
+    len = strlen(buffer);
+
     for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
-        snprintf((buffer + len), (sizeof(buffer) - len), "\nHostname: %s IP: %s\n", auth_server->authserv_hostname, auth_server->last_ip);
+        snprintf((buffer + len), (sizeof(buffer) - len), "  Host: %s (%s)\n", auth_server->authserv_hostname, auth_server->last_ip);
         len = strlen(buffer);
     }
 

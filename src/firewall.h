@@ -59,4 +59,10 @@ void fw_counter(void);
 /** @brief Get an IP's MAC address from the ARP cache.*/
 char *arp_get(char *req_ip);
 
+/** @brief ICMP Ping an IP */
+void icmp_ping(char *host);
+
+/** @brief cheap random */
+unsigned short rand16(void);
+
 #endif /* _FIREWALL_H_ */

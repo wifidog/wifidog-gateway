@@ -708,10 +708,8 @@ parse_boolean_value(char *line)
 void
 config_validate(void)
 {
-	config_notnull(config.external_interface, "ExternalInterface");
 	config_notnull(config.gw_id, "GatewayID");
 	config_notnull(config.gw_interface, "GatewayInterface");
-	config_notnull(config.gw_address, "GatewayAddress");
 	config_notnull(config.auth_servers, "AuthServer");
 
 	if (missing_parms) {

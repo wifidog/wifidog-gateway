@@ -99,7 +99,7 @@ client_list_append(char *ip, char *mac, char *token)
     curclient->ip = strdup(ip);
     curclient->mac = strdup(mac);
     curclient->token = strdup(token);
-    curclient->counters.incoming = curclient->counters.outgoing = 0;
+    curclient->counters.togateway = curclient->counters.incoming = curclient->counters.outgoing = 0;
     curclient->counters.last_updated = time(NULL);
 
     if (prevclient == NULL) {
