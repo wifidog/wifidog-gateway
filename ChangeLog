@@ -1,5 +1,9 @@
 # $Header$
 
+2004-10-31 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* configure.in: bumped version number to "1.0.2-pre1" since we
+	  already have ile sans fil hot spots advertising "1.0.1".
+
 2004-10-30 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* src/ping_thread.c: asynch read(). fixed bug in byte counting.
 
