@@ -1,5 +1,13 @@
 # $Header$
 
+2005-03-12 Mina Naguib <mina@ilesansfil.org>
+	* More debugging output
+	* Document ugly hack involving tid_fw_thread
+	* SIGPIPE now ignored (as it's comment said) instead of being sent to the
+	handler for SIGCHLD
+	* Bugfix firewall destruction not happening from termination handler - had
+	to move explicit thread kills after, not before, firewall destruction
+
 2005-03-11 Mina Naguib <mina@ilesansfil.org>
 	* If external interface was unspecified in the conf file, try to determine
 	it from the default route

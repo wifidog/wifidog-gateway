@@ -286,11 +286,14 @@ iptables_fw_destroy(void)
 {
     fw_quiet = 1;
 
+	 debug(LOG_DEBUG, "Destroying our iptables entries");
+
 	 /*
 	  *
 	  * Everything in the MANGLE table
 	  *
 	  */
+	 debug(LOG_DEBUG, "Destroying chains in the MANGLE table");
 	 iptables_fw_destroy_mention("mangle", "PREROUTING", TABLE_WIFIDOG_OUTGOING);
 	 iptables_fw_destroy_mention("mangle", "POSTROUTING", TABLE_WIFIDOG_INCOMING);
     iptables_do_command("-t mangle -F " TABLE_WIFIDOG_OUTGOING);
@@ -303,6 +306,7 @@ iptables_fw_destroy(void)
 	  * Everything in the NAT table
 	  *
 	  */
+	 debug(LOG_DEBUG, "Destroying chains in the NAT table");
 	 iptables_fw_destroy_mention("nat", "PREROUTING", TABLE_WIFIDOG_OUTGOING);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_OUTGOING);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_WIFI_TO_ROUTER);
@@ -318,6 +322,7 @@ iptables_fw_destroy(void)
 	  * Everything in the FILTER table
 	  *
 	  */
+	 debug(LOG_DEBUG, "Destroying chains in the FILTER table");
 	 iptables_fw_destroy_mention("filter", "FORWARD", TABLE_WIFIDOG_WIFI_TO_INTERNET);
 	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_WIFI_TO_INTERNET);
 	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_AUTHSERVERS);
@@ -356,6 +361,8 @@ iptables_fw_destroy_mention(
 	char rulenum[10];
 	int deleted = 0;
 
+	debug(LOG_DEBUG, "Attempting to destroy all mention of %s from %s.%s", mention, table, chain);
+
 	safe_asprintf(&command, "iptables -t %s -L %s -n --line-numbers -v", table, chain);
 
 	if ((p = popen(command, "r"))) {
@@ -369,6 +376,7 @@ iptables_fw_destroy_mention(
 				/* Found mention - Get the rule number into rulenum*/
 				if (sscanf(line, "%9[0-9]", rulenum) == 1) {
 					/* Delete the rule: */
+					debug(LOG_DEBUG, "Deleting rule %s from %s.%s because it mentions %s", rulenum, table, chain, mention);
 					safe_asprintf(&command2, "-t %s -D %s %s", table, chain, rulenum);
 					iptables_do_command(command2);
 					free(command2);

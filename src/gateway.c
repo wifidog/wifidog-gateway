@@ -60,8 +60,11 @@
 #include "util.h"
 
 /** XXX Ugly hack 
-* @todo UGLY HACKS SHOULD BE DOCUMENTED! */
-static pthread_t tid_fw_counter; 
+* We need to remember the thread IDs of threads that simulate wait with pthread_cond_timedwait
+* so we can explicitly kill them in the termination handler
+*/
+static pthread_t tid_fw_counter = 0;
+static pthread_t tid_ping = 0; 
 
 /**@internal
  * @brief Handles SIGCHLD signals to avoid zombie processes
@@ -85,20 +88,35 @@ termination_handler(int s)
 {
 	static	pthread_mutex_t	sigterm_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-	debug(LOG_DEBUG, "Caught signal %d, cleaning up and exiting", s);
-
-	/* XXX stupid openwrt bug */
-	pthread_kill(tid_fw_counter, SIGKILL);
+	debug(LOG_INFO, "Caught signal %d", s);
 
 	/* Makes sure we only call fw_destroy() once. */
-	if (pthread_mutex_trylock(&sigterm_mutex))
+	if (pthread_mutex_trylock(&sigterm_mutex)) {
+		debug(LOG_INFO, "Another thread already began global termination handler. I'm exiting");
 		pthread_exit(NULL);
-	
+	}
+	else {
+		debug(LOG_INFO, "Cleaning up and exiting");
+	}
+
 	debug(LOG_DEBUG, "Flushing firewall rules...");
 	fw_destroy();
 
+	/* XXX Hack
+	 * Aparently pthread_cond_timedwait under openwrt prevents signals (and therefore termination handler) from happening
+	 * so we need to explicitly kill the threads that use that
+	 */
+	if (tid_fw_counter) {
+		debug(LOG_INFO, "Explicitly killing the fw_counter thread");
+		pthread_kill(tid_fw_counter, SIGKILL);
+	}
+	if (tid_ping) {
+		debug(LOG_INFO, "Explicitly killing the ping thread");
+		pthread_kill(tid_ping, SIGKILL);
+	}
+
 	debug(LOG_DEBUG, "Exiting...");
-	exit(0);
+	exit(s == 0 ? 1 : 0);
 }
 
 /** @internal 
@@ -125,6 +143,7 @@ init_signals(void)
 	 * and do nothing. The alternative is to exit. SIGPIPE are harmless
 	 * if not desirable.
 	 */
+	sa.sa_handler = SIG_IGN;
 	if (sigaction(SIGPIPE, &sa, NULL) == -1) {
 		debug(LOG_ERR, "sigaction(): %s", strerror(errno));
 		exit(1);
@@ -220,12 +239,12 @@ main_loop(void)
 	pthread_detach(tid);
 	
 	/* start heartbeat thread */
-	result = pthread_create(&tid, NULL, (void *)thread_ping, NULL);
+	result = pthread_create(&tid_ping, NULL, (void *)thread_ping, NULL);
 	if (result != 0) {
 		debug(LOG_ERR, "FATAL: Failed to create a new thread (ping) - exiting");
 		termination_handler(0);
 	}
-	pthread_detach(tid);
+	pthread_detach(tid_ping);
 	
 	debug(LOG_NOTICE, "Waiting for connections");
 	while(1) {
@@ -243,8 +262,7 @@ main_loop(void)
 			 * An error occurred - should we abort?
 			 * reboot the device ?
 			 */
-			debug(LOG_ERR, "FATAL: httpdGetConnection returned unexpected value %d, exiting.",
-				       webserver->lastError);
+			debug(LOG_ERR, "FATAL: httpdGetConnection returned unexpected value %d, exiting.", webserver->lastError);
 			termination_handler(0);
 		}
 		else if (r != NULL) {
