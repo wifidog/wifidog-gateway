@@ -4,8 +4,8 @@
 
 bin_PROGRAMS = wifidog
  
-bin_SCRIPTS = fw.access fw.counters fw.destroy fw.init
-EXTRA_DIST = fw.access fw.counters fw.destroy fw.init
+bin_SCRIPTS = fw.counters
+EXTRA_DIST = fw.counters
 
 AM_CPPFLAGS = \
 	-I${top_srcdir}/libhttpd/
