@@ -44,7 +44,7 @@ extern pthread_mutex_t	nodes_mutex;
 extern s_config config;
 extern int fw_quiet;
 
-int
+static int
 iptables_do_command(char *format, ...)
 {
     va_list vlist;
