@@ -8,6 +8,7 @@
 	non-http requests - this therefore ends the thread as early as possible
 	instead of having it lay around for a while trying to get a valid http
 	request and taking up resources
+	* -v commandline option now shows wifidog version
 
 2005-02-11 Philippe April <philippe@ilesansfil.org>
 	* Tagged v1_1_0_beta1

@@ -31,6 +31,8 @@
 
 #include "conf.h"
 
+#include "../config.h"
+
 static void usage(void);
 
 /** @internal
@@ -49,6 +51,7 @@ usage(void)
     printf("  -s            Log to syslog\n");
     printf("  -w <path>     Wdctl socket path\n");
     printf("  -h            Print usage\n");
+    printf("  -v            Print version information\n");
     printf("\n");
 }
 
@@ -60,7 +63,7 @@ parse_commandline(int argc, char **argv)
     int c;
     s_config *config = config_get_config();
 
-    while (-1 != (c = getopt(argc, argv, "c:hfd:sw:"))) {
+    while (-1 != (c = getopt(argc, argv, "c:hfd:sw:v"))) {
         switch(c) {
             case 'h':
                 usage();
@@ -93,6 +96,11 @@ parse_commandline(int argc, char **argv)
             case 's':
                 config->log_syslog = 1;
                 break;
+
+				case 'v':
+					 printf("This is WiFiDog version " VERSION "\n");
+					 exit(1);
+					 break;
 
             default:
                 usage();
