@@ -58,7 +58,7 @@ typedef enum {
 	oHTTPDName,
 	oClientTimeout,
 	oCheckInterval,
-    oSyslogFacility,
+    oSyslogFacility
 } OpCodes;
 
 struct {

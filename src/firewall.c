@@ -180,9 +180,9 @@ void
 fw_counter(void)
 {
     FILE           *output;
-    long int        counter;
+    unsigned long int counter;
     t_authresponse  authresponse;
-    int             tag, rc;
+    unsigned int    tag, rc;
     char            ip[255],
                     mac[255],
                     *script,
@@ -205,7 +205,7 @@ fw_counter(void)
     while (('\n' != fgetc(output)) && !feof(output))
         ;
     while (output && !(feof(output))) {
-        rc = fscanf(output, "%*s %ld %*s %*s %*s %*s %*s %s %*s %*s %s %*s %*s 0x%u", &counter, ip, mac, &tag);
+        rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %s %*s %*s %s %*s %*s 0x%u", &counter, ip, mac, &tag);
         if (4 == rc && EOF != rc) {
             pthread_mutex_lock(&nodes_mutex);
 

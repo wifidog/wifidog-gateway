@@ -29,7 +29,7 @@
 
 typedef enum fw_access_t_ {
     FW_ACCESS_ALLOW,
-    FW_ACCESS_DENY,
+    FW_ACCESS_DENY
 } fw_access_t;
 
 int iptables_do_command(char *format, ...);

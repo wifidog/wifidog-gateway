@@ -34,7 +34,7 @@ typedef enum {
     AUTH_ALLOWED = 1,
     AUTH_VALIDATION = 5,
     AUTH_VALIDATION_FAILED = 6,
-    AUTH_LOCKED = 254,
+    AUTH_LOCKED = 254
 } t_authcode;
 
 typedef struct _t_authresponse {

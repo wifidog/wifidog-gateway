@@ -30,7 +30,7 @@
 typedef enum _t_marks {
     MARK_VALIDATION = 1,
     MARK_KNOWN = 2,
-    MARK_LOCKED = 254,
+    MARK_LOCKED = 254
 } t_marks;
 
 typedef struct _t_node {

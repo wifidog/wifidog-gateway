@@ -42,7 +42,7 @@ main_loop(void)
 	/* Initialize the linked list */
 	node_init();
 
-	// Initialize the web server
+	/* Initialize the web server */
 	debug(LOG_NOTICE, "Creating web server on %s:%d", 
 			config.gw_address, config.gw_port);
 	webserver = httpdCreate(config.gw_address, config.gw_port);
@@ -57,10 +57,10 @@ main_loop(void)
 			http_callback_auth);
 	httpdAddC404Content(webserver, http_callback_404);
 
-	// Init the signals to catch chld/quit/etc
+	/* Init the signals to catch chld/quit/etc */
 	init_signals();
 
-	// Reset the firewall
+	/* Reset the firewall */
 	fw_destroy();
 	fw_init();
 

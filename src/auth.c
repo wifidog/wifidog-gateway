@@ -102,7 +102,7 @@ auth_thread(void *ptr)
 	}
 
 	if (auth_response.authcode == AUTH_ERROR) {
-		// Error talking to central server
+		/* Error talking to central server */
 		debug(LOG_ERR, "Got %d from central server authenticating "
 			"token %s from %s at %s", auth_response, node->token,
 			node->ip, node->mac);
@@ -112,7 +112,7 @@ auth_thread(void *ptr)
 		pthread_mutex_unlock(&nodes_mutex);
 		return;
 	} else if (auth_response.authcode == AUTH_DENIED) {
-		// Central server said invalid token
+		/* Central server said invalid token */
 		_http_output(node->fd, "Access denied");
 		node->fd = 0;
 		pthread_mutex_unlock(&nodes_mutex);
@@ -149,8 +149,10 @@ auth_thread(void *ptr)
             break;
     }
 		
-	//_http_output(node->fd, "You are now good to go");
-	//_http_redirect(node->fd, "http://%s/wifidog/portal.php?gw_id=%s", config.authserv_hostname, config.gw_id);
+    /*
+	_http_output(node->fd, "You are now good to go");
+	_http_redirect(node->fd, "http://%s/wifidog/portal.php?gw_id=%s", config.authserv_hostname, config.gw_id);
+    */
 	
 	node->fd = 0;
 
