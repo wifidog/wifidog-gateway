@@ -47,6 +47,7 @@
 /*@}*/ 
 
 typedef struct _auth_serv_t {
+    char *authserv_protocol;	/**< @brief Http or Https??? */
     char *authserv_hostname;	/**< @brief Hostname of the central server */
     char *authserv_path;	/**< @brief Path where wifidog resides */
     int authserv_port;	    /**< @brief Port the central server listens on */
@@ -70,13 +71,9 @@ typedef struct {
 				     server */
     int gw_port;		/**< @brief Port the webserver will run on */
     
-    int authserv_maxtries;	/**< @brief Maximum number of auth server connection attempts before abandoning */
-
+    int authserv_maxtries;	/**< @brief Maximum number of auth server
+				     connection attempts before abandoning */
     t_auth_serv	*auth_servers;	/**< @brief Auth servers list */
-    
-    char *authserv_path;	/**< @brief Path to the authentication script on
-				     the central server */
-    char *authserv_loginurl;	/**< @brief Full URL to the login page */
     char *httpdname;		/**< @brief Name the web server will return when
 				     replying to a request */
     int httpdmaxconn;		/**< @brief Used by libhttpd, not sure what it

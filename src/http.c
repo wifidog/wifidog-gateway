@@ -48,9 +48,14 @@ http_callback_404(httpd * webserver)
 {
 	char *newlocation;
 	s_config *config = config_get_config();
-
-	if ((asprintf(&newlocation, "Location: %s?gw_address=%s&gw_port=%d&"
-			"gw_id=%s", config->authserv_loginurl, 
+	t_auth_serv *auth_server = get_auth_server();
+	
+	if ((asprintf(&newlocation, "Location: %s://%s:%d%s/login?"
+			"gw_address=%s&gw_port=%d&gw_id=%s",
+			auth_server->authserv_protocol,
+			auth_server->authserv_hostname,
+			auth_server->authserv_port,
+			auth_server->authserv_path,
 			config->gw_address, config->gw_port, 
 			config->gw_id)) == -1) {
 		debug(LOG_ERR, "Failed to asprintf newlocation");
@@ -60,9 +65,14 @@ http_callback_404(httpd * webserver)
 		httpdSetResponse(webserver, "307 Please authenticate yourself here");
 		httpdAddHeader(webserver, newlocation);
 		httpdPrintf(webserver, "<html><head><title>Redirection</title></head><body>"
-				"Please <a href='%s?gw_address=%s&gw_port=%d"
-				"&gw_id=%s'>click here</a> to login", 
-				config->authserv_loginurl, config->gw_address, 
+				"Please <a href='%s://%s:%d%s/login?gw_address"
+				"=%s&gw_port=%d&gw_id=%s'>click here</a> to "
+				"login",
+				auth_server->authserv_protocol,
+				auth_server->authserv_hostname,
+				auth_server->authserv_port,
+				auth_server->authserv_path,
+				config->gw_address, 
 				config->gw_port, config->gw_id);
 		debug(LOG_INFO, "Captured %s and re-directed them to login "
 			"page", webserver->clientAddr);

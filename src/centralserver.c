@@ -115,7 +115,7 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
                 "User-Agent: WiFiDog %s\n"
                 "Host: %s\n"
                 "\n",
-            config->authserv_path, request_type, ip, mac, 
+            auth_server->authserv_path, request_type, ip, mac, 
 	    token, incoming, outgoing, VERSION, 
 	    auth_server->authserv_hostname);
 	send(sockfd, buf, strlen(buf), 0);

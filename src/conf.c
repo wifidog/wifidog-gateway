@@ -68,8 +68,6 @@ typedef enum {
 	oGatewayPort,
 	oAuthServer,
 	oAuthServMaxTries,
-	oAuthservPath,
-	oAuthservLoginUrl,
 	oHTTPDMaxConn,
 	oHTTPDName,
 	oClientTimeout,
@@ -94,8 +92,6 @@ static const struct {
 	{ "gatewayport",        oGatewayPort },
 	{ "authserver",         oAuthServer },
 	{ "authservmaxtries",   oAuthServMaxTries },
-	{ "authservpath",       oAuthservPath },
-	{ "authservloginurl",   oAuthservLoginUrl },
 	{ "httpdmaxconn",       oHTTPDMaxConn },
 	{ "httpdname",          oHTTPDName },
 	{ "clienttimeout",      oClientTimeout },
@@ -108,7 +104,8 @@ static const struct {
 static OpCodes config_parse_token(const char *cp, const char *filename, int linenum);
 static void config_notnull(void *parm, char *parmname);
 static int parse_boolean_value(char *);
-static void new_auth_server(char *, char *, int);
+static void new_auth_server(char *, char *, char *, int);
+static void parse_auth_server(char *, char *);
 
 /** Accessor for the current gateway configuration
 @return:  A pointer to the current config.  The pointer isn't opaque, but should be treated as READ-ONLY
@@ -134,8 +131,6 @@ config_init(void)
 	config.gw_port = DEFAULT_GATEWAYPORT;
 	config.auth_servers = NULL;
 	config.authserv_maxtries = DEFAULT_AUTHSERVMAXTRIES;
-	config.authserv_path = strdup(DEFAULT_AUTHSERVPATH);
-	config.authserv_loginurl = NULL;
 	config.httpdname = NULL;
 	config.clienttimeout = DEFAULT_CLIENTTIMEOUT;
 	config.checkinterval = DEFAULT_CHECKINTERVAL;
@@ -171,6 +166,48 @@ config_parse_token(const char *cp, const char *filename, int linenum)
 	return oBadOption;
 }
 
+static void
+parse_auth_server(char *p1, char *p2)
+{
+	char	*host,
+		*protocol,
+		*path;
+
+	protocol = p1;
+		
+	/* Check for the presence of more then
+	 * one argument. */
+	if (p2 != NULL && (*(p2 + 1) != '\n') && (*(p2 + 1) != '\0')) {
+		p2++;
+		host = p2;
+		
+		p2 = strchr(p2, ' ' );
+		
+		if (p2 != NULL && (*p2 != '\n') && (*p2 != '\0')) {
+			*p2 = '\0';
+			p2++;
+			
+			path = p2;
+
+			p2 = strchr(p2, ' ');
+			if (p2 != NULL && (*p2 != '\n') && (*p2 != '\0')) {
+				*p2 = '\0';
+				p2++;
+				
+				new_auth_server(host, protocol, path, atoi(p2));
+			} else {
+				new_auth_server(host, protocol, path,
+						DEFAULT_AUTHSERVPORT);
+			}
+		} else {
+			debug(LOG_ERR, "No auth server path specified "
+					"for %s", host);
+		}
+	} else {
+		debug(LOG_ERR, "No auth server host specified");
+	}
+}
+
 /**
 @param filename Full path of the configuration file to be read 
 */
@@ -178,7 +215,7 @@ void
 config_read(char *filename)
 {
 	FILE *fd;
-	char line[MAX_BUF], *s, *p1, *p2, *path;
+	char line[MAX_BUF], *s, *p1, *p2;
 	int linenum = 0, opcode, value;
 
 	debug(LOG_INFO, "Reading configuration file '%s'", filename);
@@ -244,32 +281,7 @@ config_read(char *filename)
 					sscanf(p1, "%d", &config.gw_port);
 					break;
 				case oAuthServer:
-					/* Check for the presence of more then
-					 * one argument. */
-					if (p2 != NULL && (*(p2 + 1) != '\n')
-						       && (*(p2 + 1) != '\0')) {
-						p2++;
-						path = p2;
-						p2 = strchr(p2, ' ' );
-						if (p2 != NULL
-							    && (*p2 != '\n')
-							    && (*p2 != '\0')) {
-							*p2 = '\0';
-							p2++;
-							new_auth_server(p1,
-								path,
-								atoi(p2));
-						} else {
-							p2 = strchr(path, '\n');
-							if (p2 != NULL)
-								*p2 = '\0';
-							new_auth_server(p1, 
-								path,
-								DEFAULT_AUTHSERVPORT);
-						}
-					} else {
-						debug(LOG_ERR, "No auth server path specified for %s", p1);
-					}
+					parse_auth_server(p1, p2);
 					break;
 				case oHTTPDName:
 					config.httpdname = strdup(p1);
@@ -279,13 +291,6 @@ config_read(char *filename)
 					break;
 				case oAuthServMaxTries:
 					sscanf(p1, "%d", &config.authserv_maxtries);
-					break;
-				case oAuthservPath:
-					free(config.authserv_path);
-					config.authserv_path = strdup(p1);
-					break;
-				case oAuthservLoginUrl:
-					config.authserv_loginurl = strdup(p1);
 					break;
 				case oBadOption:
                     debug(LOG_ERR, "Exiting...");
@@ -343,7 +348,6 @@ config_validate(void)
 	config_notnull(config.gw_interface, "GatewayInterface");
 	config_notnull(config.gw_address, "GatewayAddress");
 	config_notnull(config.auth_servers, "AuthServer");
-	config_notnull(config.authserv_loginurl, "AuthservLoginUrl");
 
 	if (missing_parms) {
 		debug(LOG_ERR, "Configuration is not complete, exiting...");
@@ -370,12 +374,12 @@ config_notnull(void *parm, char *parmname)
     @param port Port of the server
 */
 static void
-new_auth_server(char *host, char *path, int port)
+new_auth_server(char *host, char *protocol, char *path, int port)
 {
 	t_auth_serv	*new, *tmp;
 
-	debug(LOG_DEBUG, "Adding %s:%d%s to the auth server list",
-			host, port, path);
+	debug(LOG_DEBUG, "Adding %s://%s:%d%s to the auth server list",
+			protocol, host, port, path);
 
 	/* Allocate memory */
 	new = (t_auth_serv *)malloc(sizeof(t_auth_serv));
@@ -387,6 +391,7 @@ new_auth_server(char *host, char *path, int port)
 	
 	/* Fill in struct */
 	new->authserv_hostname = strdup(host);
+	new->authserv_protocol = strdup(protocol);
 	new->authserv_path = strdup(path);
 	new->authserv_port = port;
 	new->next = NULL;
