@@ -2,12 +2,15 @@
 # $Header$
 #
 
+SUBFOLDERS = src
+
 all:
-
-
-install:
-
+	for target in $(SUBFOLDERS); do \
+		$(MAKE) -C $$target; \
+	done
 
 clean:
-
+	for target in $(SUBFOLDERS); do \
+		$(MAKE) -C $$target clean; \
+	done
 
