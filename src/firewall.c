@@ -192,7 +192,7 @@ fw_counter(void)
     t_node         *p1;
 
     /* FIXME make iptables a DEFINE or something */
-    asprintf(&script, "%s %s", "iptables", "-v -x -t mangle -L wifidog_mark");
+    asprintf(&script, "%s %s", "iptables", "-v -x -t mangle -L " TABLE_WIFIDOG_MARK);
 
     if (!(output = popen(script, "r"))) {
         debug(LOG_ERR, "popen(): %s", strerror(errno));

@@ -59,42 +59,42 @@ int
 iptables_fw_init(void)
 {
     fw_quiet = 0;
-    iptables_do_command("-t nat -N wifidog_validate");
-    iptables_do_command("-t nat -A wifidog_validate -d %s -j ACCEPT", config.gw_address);
-    iptables_do_command("-t nat -A wifidog_validate -d %s -j ACCEPT", config.authserv_hostname);
-    iptables_do_command("-t nat -A wifidog_validate -p udp --dport 67 -j ACCEPT");
-    iptables_do_command("-t nat -A wifidog_validate -p tcp --dport 67 -j ACCEPT");
-    iptables_do_command("-t nat -A wifidog_validate -p udp --dport 53 -j ACCEPT");
-    iptables_do_command("-t nat -A wifidog_validate -p tcp --dport 80 -j ACCEPT");
-    iptables_do_command("-t nat -A wifidog_validate -p tcp --dport 443 -j ACCEPT");
-    iptables_do_command("-t nat -A wifidog_validate -j DROP");
+    iptables_do_command("-t nat -N " TABLE_WIFIDOG_VALIDATE);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", config.gw_address);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", config.authserv_hostname);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p udp --dport 67 -j ACCEPT");
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p tcp --dport 67 -j ACCEPT");
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p udp --dport 53 -j ACCEPT");
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p tcp --dport 80 -j ACCEPT");
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -p tcp --dport 443 -j ACCEPT");
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -j DROP");
 
-    iptables_do_command("-t nat -N wifidog_unknown");
-    iptables_do_command("-t nat -A wifidog_unknown -d %s -j ACCEPT", config.gw_address);
-    iptables_do_command("-t nat -A wifidog_unknown -d %s -j ACCEPT", config.authserv_hostname);
-    iptables_do_command("-t nat -A wifidog_unknown -p udp --dport 67 -j ACCEPT");
-    iptables_do_command("-t nat -A wifidog_unknown -p tcp --dport 67 -j ACCEPT");
-    iptables_do_command("-t nat -A wifidog_unknown -p udp --dport 53 -j ACCEPT");
-    iptables_do_command("-t nat -A wifidog_unknown -p tcp --dport 80 -j REDIRECT --to-ports %d", config.gw_port);
-    iptables_do_command("-t nat -A wifidog_unknown -j DROP");
+    iptables_do_command("-t nat -N " TABLE_WIFIDOG_UNKNOWN);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", config.gw_address);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", config.authserv_hostname);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p udp --dport 67 -j ACCEPT");
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 67 -j ACCEPT");
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p udp --dport 53 -j ACCEPT");
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 80 -j REDIRECT --to-ports %d", config.gw_port);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j DROP");
 
-    iptables_do_command("-t nat -N wifidog_known");
-    iptables_do_command("-t nat -A wifidog_known -j ACCEPT");
+    iptables_do_command("-t nat -N " TABLE_WIFIDOG_KNOWN);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_KNOWN " -j ACCEPT");
 
-    iptables_do_command("-t nat -N wifidog_locked");
-    iptables_do_command("-t nat -A wifidog_locked -j DROP");
+    iptables_do_command("-t nat -N " TABLE_WIFIDOG_LOCKED);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_LOCKED " -j DROP");
 
-    iptables_do_command("-t nat -N wifidog_class");
-    iptables_do_command("-t nat -A wifidog_class -i %s -m mark --mark 0x%u -j wifidog_validate", config.gw_interface, MARK_VALIDATION);
-    iptables_do_command("-t nat -A wifidog_class -i %s -m mark --mark 0x%u -j wifidog_known", config.gw_interface, MARK_KNOWN);
-    iptables_do_command("-t nat -A wifidog_class -i %s -m mark --mark 0x%u -j wifidog_locked", config.gw_interface, MARK_LOCKED);
-    iptables_do_command("-t nat -A wifidog_class -i %s -j wifidog_unknown", config.gw_interface);
+    iptables_do_command("-t nat -N " TABLE_WIFIDOG_CLASS);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_VALIDATE, config.gw_interface, MARK_VALIDATION);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_KNOWN, config.gw_interface, MARK_KNOWN);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -m mark --mark 0x%u -j " TABLE_WIFIDOG_LOCKED, config.gw_interface, MARK_LOCKED);
+    iptables_do_command("-t nat -A " TABLE_WIFIDOG_CLASS " -i %s -j " TABLE_WIFIDOG_UNKNOWN, config.gw_interface);
 
-    iptables_do_command("-t mangle -N wifidog_mark");
+    iptables_do_command("-t mangle -N " TABLE_WIFIDOG_MARK);
 
-    iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j wifidog_mark", config.gw_interface);
+    iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_MARK, config.gw_interface);
 
-    iptables_do_command("-t nat -I PREROUTING 1 -i %s -j wifidog_class", config.gw_interface);
+    iptables_do_command("-t nat -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_CLASS, config.gw_interface);
 
     return 1;
 }
@@ -112,32 +112,32 @@ iptables_fw_destroy(void)
     int rc, tries;
 
     fw_quiet = 1;
-    iptables_do_command("-t nat -F wifidog_class");
-    iptables_do_command("-t mangle -F wifidog_mark");
+    iptables_do_command("-t nat -F " TABLE_WIFIDOG_CLASS);
+    iptables_do_command("-t mangle -F " TABLE_WIFIDOG_MARK);
 
-    iptables_do_command("-t nat -F wifidog_validate");
-    iptables_do_command("-t nat -F wifidog_unknown");
-    iptables_do_command("-t nat -F wifidog_known");
-    iptables_do_command("-t nat -F wifidog_locked");
-    iptables_do_command("-t nat -X wifidog_validate");
-    iptables_do_command("-t nat -X wifidog_unknown");
-    iptables_do_command("-t nat -X wifidog_known");
-    iptables_do_command("-t nat -X wifidog_locked");
+    iptables_do_command("-t nat -F " TABLE_WIFIDOG_VALIDATE);
+    iptables_do_command("-t nat -F " TABLE_WIFIDOG_UNKNOWN);
+    iptables_do_command("-t nat -F " TABLE_WIFIDOG_KNOWN);
+    iptables_do_command("-t nat -F " TABLE_WIFIDOG_LOCKED);
+    iptables_do_command("-t nat -X " TABLE_WIFIDOG_VALIDATE);
+    iptables_do_command("-t nat -X " TABLE_WIFIDOG_UNKNOWN);
+    iptables_do_command("-t nat -X " TABLE_WIFIDOG_KNOWN);
+    iptables_do_command("-t nat -X " TABLE_WIFIDOG_LOCKED);
 
     /* We loop in case wifidog has crashed and left some unwanted rules,
      * maybe we shouldn't loop forever, we'll give it 10 tries
      */
     rc = 0;
     for (tries = 0; tries < 10 && rc == 0; tries++) {
-        rc = iptables_do_command("-t nat -D PREROUTING -i %s -j wifidog_class", config.gw_interface);
+        rc = iptables_do_command("-t nat -D PREROUTING -i %s -j " TABLE_WIFIDOG_CLASS, config.gw_interface);
     }
-    iptables_do_command("-t nat -X wifidog_class");
+    iptables_do_command("-t nat -X " TABLE_WIFIDOG_CLASS);
 
     rc = 0;
     for (tries = 0; tries < 10 && rc == 0; tries++) {
-        rc = iptables_do_command("-t mangle -D PREROUTING -i %s -j wifidog_mark", config.gw_interface);
+        rc = iptables_do_command("-t mangle -D PREROUTING -i %s -j " TABLE_WIFIDOG_MARK, config.gw_interface);
     }
-    iptables_do_command("-t mangle -X wifidog_mark");
+    iptables_do_command("-t mangle -X " TABLE_WIFIDOG_MARK);
 
     return 1;
 }
@@ -149,10 +149,10 @@ iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag)
 
     switch(type) {
         case FW_ACCESS_ALLOW:
-            return iptables_do_command("-t mangle -A wifidog_mark -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
+            return iptables_do_command("-t mangle -A " TABLE_WIFIDOG_MARK " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
             break;
         case FW_ACCESS_DENY:
-            return iptables_do_command("-t mangle -D wifidog_mark -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
+            return iptables_do_command("-t mangle -D " TABLE_WIFIDOG_MARK " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
             break;
         default:
             return -1;

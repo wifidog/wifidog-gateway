@@ -27,6 +27,14 @@
 #ifndef _IPTABLES_H_
 #define _IPTABLES_H_
 
+#define TABLE_WIFIDOG_MARK      "WiFiDog_Mark"
+#define TABLE_WIFIDOG_CLASS     "WiFiDog_Class"
+
+#define TABLE_WIFIDOG_VALIDATE  "WiFiDog_Validate"
+#define TABLE_WIFIDOG_KNOWN     "WiFiDog_Known"
+#define TABLE_WIFIDOG_UNKNOWN   "WiFiDog_Unknown"
+#define TABLE_WIFIDOG_LOCKED    "WiFiDog_Locked"
+
 typedef enum fw_access_t_ {
     FW_ACCESS_ALLOW,
     FW_ACCESS_DENY

@@ -1,5 +1,8 @@
 # $Header$
 2004-05-07  Philippe April <wifidog@philippeapril.com>
+    * Made iptables' tables DEFINEs instead of being hardcoded
+
+2004-05-07  Philippe April <wifidog@philippeapril.com>
     * Fixed typo
 
 2004-05-06  Philippe April <papril777@yahoo.com>
