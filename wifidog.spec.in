@@ -52,7 +52,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,0755)
-%doc AUTHORS COPYING ChangeLog INSTALL NEWS README doc/html
+%doc AUTHORS COPYING ChangeLog INSTALL NEWS README FAQ doc/html
 %config /etc/wifidog.conf 
 %config /etc/rc.d/init.d/wifidog
 %{_bindir}/*

@@ -10,6 +10,7 @@ doc_DATA = \
   INSTALL \
   NEWS \
   README \
+  FAQ \
   ChangeLog
   
 EXTRA_DIST = \
