@@ -45,8 +45,6 @@
 #include "centralserver.h"
 #include "../config.h"
 
-/* Defined in conf.h */
-
 /** Initiates a transaction with the auth server, either to authenticate or to update the traffic counters at the server
 @param authresponse Returns the information given by the central server 
 @param request_type Use the REQUEST_TYPE_* #defines in centralserver.h
@@ -59,38 +57,53 @@
 int
 auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, char *mac, char *token, long int incoming, long int outgoing)
 {
-	int sockfd;
+	int sockfd, num_tries, done;
         size_t	numbytes, totalbytes;
 	char buf[MAX_BUF];
 	struct hostent *he;
 	struct sockaddr_in their_addr;
 	char *tmp;
 	s_config *config = config_get_config();
-
-	if ((he = gethostbyname(config->auth_servers->authserv_hostname)) == NULL) {
-		debug(LOG_ERR, "Failed to resolve %s via gethostbyname(): "
-			"%s", config->auth_servers->authserv_hostname, strerror(errno));
-		return(-1);
-	}
+	t_auth_serv *auth_server;
 
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		debug(LOG_ERR, "socket(): %s", strerror(errno));
 		exit(1);
 	}
 
-	their_addr.sin_family = AF_INET;
-	their_addr.sin_port = htons(config->auth_servers->authserv_port);
-	their_addr.sin_addr = *((struct in_addr *)he->h_addr);
-	memset(&(their_addr.sin_zero), '\0', sizeof(their_addr.sin_zero));
+	num_tries = 0;
+	done = 0;
+	while (!done && ((auth_server = get_auth_server()) != NULL)) {
+		if ((he = gethostbyname(auth_server->authserv_hostname)) == NULL) {
+			debug(LOG_ERR, "Failed to resolve %s via gethostbyname"
+				"(): %s", auth_server->authserv_hostname, 
+				strerror(errno));
+			return(-1);
+		}
+	
+		their_addr.sin_family = AF_INET;
+		their_addr.sin_port = htons(auth_server->authserv_port);
+		their_addr.sin_addr = *((struct in_addr *)he->h_addr);
+		memset(&(their_addr.sin_zero), '\0', sizeof(their_addr.sin_zero));
 
-	debug(LOG_INFO, "Connecting to auth server %s on port %d", 
-		config->auth_servers->authserv_hostname, 
-		config->auth_servers->authserv_port);
+		debug(LOG_INFO, "Connecting to auth server %s on port %d", 
+			auth_server->authserv_hostname, 
+			auth_server->authserv_port);
 
-	if (connect(sockfd, (struct sockaddr *)&their_addr,
-				sizeof(struct sockaddr)) == -1) {
-		debug(LOG_ERR, "connect(): %s", strerror(errno));
-		return(-1); /* non-fatal */
+		if (connect(sockfd, (struct sockaddr *)&their_addr,
+					sizeof(struct sockaddr)) == -1) {
+			debug(LOG_ERR, "connect(): %s", strerror(errno));
+			debug(LOG_ERR, "Trying next Auth Server (if any)");
+			if (num_tries++ < config->authserv_maxtries) {
+				mark_auth_server_bad(auth_server);
+			} else {
+				mark_auth_server_bad(auth_server);
+				debug(LOG_ERR, "Aborting request");
+				return(-1); /* non-fatal */
+			}
+		} else {
+			done = 1;
+		}
 	}
 	/**
 	 * TODO: XXX change the PHP so we can harmonize stage as request_type
