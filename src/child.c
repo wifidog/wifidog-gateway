@@ -128,13 +128,11 @@ void
 free_childinfo(ChildInfo *ci)
 {
 
-	if (ci->mac != NULL) {
+	if (ci->mac != NULL)
 		free(ci->mac);
-	}
 	
-	if (ci->ip != NULL) {
+	if (ci->ip != NULL)
 		free(ci->ip);
-	}
 
 	free(ci);
 }

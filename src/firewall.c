@@ -29,9 +29,7 @@
 
 extern s_config config;
 
-t_node list;
-t_node *firstnode;
-t_node *curnode;
+t_node *firstnode = NULL;
 
 int
 fw_allow(char *ip, char *mac, int profile)
@@ -219,30 +217,47 @@ fw_counter(void)
 void
 node_init(void)
 {
-    firstnode = curnode = &list;
-    firstnode->next = NULL;
+    firstnode = NULL;
 }
 
 t_node *
 node_add(char *ip, char *mac, char *token, long int counter, int active)
 {
-    void *ptr;
+    t_node *curnode,
+           *prevnode;
 
-    ptr = curnode;
+    prevnode = NULL;
+    curnode = firstnode;
 
-    strcpy(curnode->ip, ip);
-    strcpy(curnode->mac, mac);
-    strcpy(curnode->token, token);
+    while (curnode != NULL) {
+	    prevnode = curnode;
+	    curnode = curnode->next;
+    }
+
+    curnode = (t_node *)malloc(sizeof(t_node));
+    
+    if (curnode == NULL) {
+	    debug(D_LOG_DEBUG, "Out of memory");
+	    exit(-1);
+    }
+
+    memset(curnode, 0, sizeof(t_node));
+
+    curnode->ip = strdup(ip);
+    curnode->mac = strdup(mac);
+    curnode->token = strdup(token);
     curnode->counter = counter;
     curnode->active = active;
+
+    if (prevnode == NULL) {
+	    firstnode = curnode;
+    } else {
+	    prevnode->next = curnode;
+    }
     
-
-    curnode->next = (t_node *)malloc(sizeof(t_node));
-    curnode = curnode->next;
-
     debug(D_LOG_DEBUG, "Added a new node to linked list: IP: %s Token: %s", ip, token);
 
-    return ptr;
+    return curnode;
 }
 
 t_node *
@@ -279,7 +294,14 @@ void
 free_node(t_node *node)
 {
 
-	/* The ip, mac and token maybe shouldn't be fixed-length strings... */
+	if (node->mac != NULL)
+		free(node->mac);
+
+	if (node->ip != NULL)
+		free(node->ip);
+
+	if (node->token != NULL)
+		free(node->token);
 	
 	free(node);
 }

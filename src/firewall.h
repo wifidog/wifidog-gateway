@@ -29,9 +29,9 @@
 
 typedef struct {
     void *next;
-    char ip[16];
-    char mac[18];
-    char token[33];
+    char *ip,
+         *mac,
+	 *token;
     int active; /* boolean */
     long int counter;
 } t_node;
