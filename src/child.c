@@ -39,7 +39,11 @@ sigchld_handler(int signal)
 	UserRights	*tmp_ur;
 	UserClasses	*tmp_uc;
 	
+	debug(D_LOG_DEBUG, "Entering SIGCHLD handler");
+	
 	pid = wait(&status);
+
+	debug(D_LOG_DEBUG, "Got exit code %d for pid %d", status, (int)pid);
 
 	if (child_list == NULL)
 		return; /* If we're not waiting for a pid, we still have

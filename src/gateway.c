@@ -165,6 +165,8 @@ init_signals(void)
 {
 	struct sigaction sa;
 
+	debug(D_LOG_DEBUG, "Initializing signal handlers");
+	
 	sa.sa_handler = sigchld_handler;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART;
