@@ -1,4 +1,8 @@
 # $Header$
+2004-04-15  Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Connection now closed if counter hasn't change for one full
+	period.
+
 2004-04-14  Philippe April <papril777@yahoo.com>
 	* Fixed shell script hardcoded interface
 
