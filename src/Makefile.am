@@ -16,7 +16,10 @@ wifidog_SOURCES = commandline.c \
 	centralserver.c \
 	http.c \
 	auth.c \
-	userclasses.c
+	userclasses.c \
+	httpd_api.c \
+	httpd_proto.c \
+	httpd_acl.c
 
 noinst_HEADERS = commandline.h \
 	common.h \
@@ -27,7 +30,9 @@ noinst_HEADERS = commandline.h \
 	centralserver.h \
 	http.h \
 	auth.h \
-	userclasses.h
+	userclasses.h \
+	httpd_priv.h \
+	httpd.h
 
 #AM_CPPFLAGS = \
 #	-I${top_srcdir}/inc

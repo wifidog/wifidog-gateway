@@ -1,4 +1,6 @@
-# $Header$
+2004-04-16  Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Merged in libhttpd into the source tree
+
 2004-04-16  Philippe April <papril777@yahoo.com>
     * Fixed CRLF/formatting in phpauth/login/index.php
     * Added some documentation for firewall.c, commandline.c
