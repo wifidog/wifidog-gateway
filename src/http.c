@@ -138,7 +138,7 @@ http_callback_auth(httpd * webserver)
 		} else {
 			/* We have their MAC address */
 
-			pthread_mutex_lock(&client_list_mutex);
+			LOCK_CLIENT_LIST();
 			
 			if ((client = client_list_find(webserver->clientAddr, mac)) == NULL) {
 				debug(LOG_DEBUG, "New client for %s",
@@ -154,7 +154,7 @@ http_callback_auth(httpd * webserver)
 			client->fd = webserver->clientSock;
 			webserver->clientSock = -1;
 
-			pthread_mutex_unlock(&client_list_mutex);
+			UNLOCK_CLIENT_LIST();
 
 			/* That clientAddr may be freed prior to the thread
 			 * finishing. XXX The duplicated string will be freed

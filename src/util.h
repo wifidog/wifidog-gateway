@@ -32,5 +32,17 @@
 int execute(char *cmd_line, int quiet);
 struct in_addr *wd_gethostbyname(const char *name);
 
+#define LOCK_GHBN() do { \
+	debug(LOG_DEBUG, "Locking wd_gethostbyname()"); \
+	pthread_mutex_lock(&ghbn_mutex); \
+	debug(LOG_DEBUG, "wd_gethostbyname() locked"); \
+} while (0)
+
+#define UNLOCK_CONFIG() do { \
+	debug(LOG_DEBUG, "Unlocking wd_gethostbyname()"); \
+	pthread_mutex_unlock(&ghbn_mutex); \
+	debug(LOG_DEBUG, "wd_gethostbyname() unlocked"); \
+} while (0)
+
 #endif /* _UTIL_H_ */
 

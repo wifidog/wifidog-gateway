@@ -152,7 +152,7 @@ fw_counter(void)
         return;
     }
 
-    pthread_mutex_lock(&client_list_mutex);
+    LOCK_CLIENT_LIST();
 
     for (p1 = p2 = client_get_first_client(); NULL != p1; p1 = p2) {
         p2 = p1->next;
@@ -163,10 +163,10 @@ fw_counter(void)
 	outgoing = p1->counters.incoming;
 	incoming = p1->counters.outgoing;
 
-        pthread_mutex_unlock(&client_list_mutex);
+	UNLOCK_CLIENT_LIST();
         auth_server_request(&authresponse, REQUEST_TYPE_COUNTERS, ip, mac, token, incoming, outgoing);
-        pthread_mutex_lock(&client_list_mutex);
-
+	LOCK_CLIENT_LIST();
+	
         if (!(p1 = client_list_find(ip, mac))) {
             debug(LOG_ERR, "Node %s was freed while being re-validated!", ip);
         } else {
@@ -179,9 +179,9 @@ fw_counter(void)
                 client_list_delete(p1);
 
                 /* Advertise the logout */
-                pthread_mutex_unlock(&client_list_mutex);
+		UNLOCK_CLIENT_LIST();
                 auth_server_request(&authresponse, REQUEST_TYPE_LOGOUT, ip, mac, token, 0, 0);
-                pthread_mutex_lock(&client_list_mutex);
+		LOCK_CLIENT_LIST();
             } else {
                 /*
                  * This handles any change in
@@ -228,5 +228,5 @@ fw_counter(void)
         free(ip);
         free(mac);
     }
-    pthread_mutex_unlock(&client_list_mutex);
+    UNLOCK_CLIENT_LIST();
 }

@@ -77,5 +77,16 @@ t_client *client_list_find_by_token(char *token);
 /** @brief Deletes a client from the connections list */
 void client_list_delete(t_client *client);
 
-#endif /* _CLIENT_LIST_H_ */
+#define LOCK_CLIENT_LIST() do { \
+	debug(LOG_DEBUG, "Locking client list"); \
+	pthread_mutex_lock(&client_list_mutex); \
+	debug(LOG_DEBUG, "Client list locked"); \
+} while (0)
 
+#define UNLOCK_CLIENT_LIST() do { \
+	debug(LOG_DEBUG, "Unlocking client list"); \
+	pthread_mutex_unlock(&client_list_mutex); \
+	debug(LOG_DEBUG, "Client list unlocked"); \
+} while (0)
+
+#endif /* _CLIENT_LIST_H_ */

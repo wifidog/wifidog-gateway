@@ -203,7 +203,7 @@ wdctl_status(int fd)
 	snprintf(buffer, (sizeof(buffer) - len), "WiFiDog status\n\n");
 	len = strlen(buffer);
 
-	pthread_mutex_lock(&client_list_mutex);
+	LOCK_CLIENT_LIST();
 	
 	first = client_get_first_client();
 	
@@ -239,7 +239,7 @@ wdctl_status(int fd)
 		first = first->next;
 	}
 	
-	pthread_mutex_unlock(&client_list_mutex);
+	UNLOCK_CLIENT_LIST();
 	
 	write(fd, buffer, len);
 }
@@ -261,8 +261,7 @@ wdctl_reset(int fd, char *arg)
 
 	debug(LOG_DEBUG, "Entering wdctl_reset...");
 	
-	pthread_mutex_lock(&client_list_mutex);
-
+	LOCK_CLIENT_LIST();
 	debug(LOG_DEBUG, "Argument: %s (@%x)", arg, arg);
 	
 	/* We get the node or return... */
@@ -270,7 +269,7 @@ wdctl_reset(int fd, char *arg)
 	else if ((node = client_list_find_by_mac(arg)) != NULL);
 	else {
 		debug(LOG_DEBUG, "Client not found.");
-		pthread_mutex_unlock(&client_list_mutex);
+		UNLOCK_CLIENT_LIST();
 		write(fd, "No", 2);
 		return;
 	}
@@ -283,7 +282,7 @@ wdctl_reset(int fd, char *arg)
 	fw_deny(node->ip, node->mac, node->fw_connection_state);
 	client_list_delete(node);
 	
-	pthread_mutex_unlock(&client_list_mutex);
+	UNLOCK_CLIENT_LIST();
 	
 	write(fd, "Yes", 3);
 	

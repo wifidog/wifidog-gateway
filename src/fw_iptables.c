@@ -86,14 +86,14 @@ iptables_fw_init(void)
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_VALIDATE);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", config->gw_address);
 
-    pthread_mutex_lock(&config_mutex);
+    LOCK_CONFIG();
     
     for (auth_server = config->auth_servers; auth_server != NULL;
 		    auth_server = auth_server->next) {
         iptables_do_command("-t nat -A " TABLE_WIFIDOG_VALIDATE " -d %s -j ACCEPT", auth_server->authserv_hostname);
     }
-    
-    pthread_mutex_unlock(&config_mutex);
+
+    UNLOCK_CONFIG();
 
     /** Insert global rules BEFORE the "defaults" */
     
@@ -113,14 +113,14 @@ iptables_fw_init(void)
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_UNKNOWN);
     iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", config->gw_address);
 
-    pthread_mutex_lock(&config_mutex);
+    LOCK_CONFIG();
     
     for (auth_server = config->auth_servers; auth_server != NULL;
 		    auth_server = auth_server->next) {
         iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -d %s -j ACCEPT", auth_server->authserv_hostname);
     }
 
-    pthread_mutex_unlock(&config_mutex);
+    UNLOCK_CONFIG();
 
     /** Insert global rules BEFORE the "defaults" */
 
@@ -256,7 +256,7 @@ iptables_fw_counters_update(void)
         rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %s %*s %*s %*s %*s %*s 0x%*u", &counter, ip);
         if (2 == rc && EOF != rc) {
             debug(LOG_DEBUG, "Outgoing %s Bytes=%ld", ip, counter);
-            pthread_mutex_lock(&client_list_mutex);
+	    LOCK_CLIENT_LIST();
             if ((p1 = client_list_find_by_ip(ip))) {
                 if (p1->counters.outgoing < counter) {
                     p1->counters.outgoing = counter;
@@ -266,7 +266,7 @@ iptables_fw_counters_update(void)
             } else {
                 debug(LOG_ERR, "Could not find %s in client list", ip);
             }
-            pthread_mutex_unlock(&client_list_mutex);
+	    UNLOCK_CLIENT_LIST();
         }
     }
     pclose(output);
@@ -288,7 +288,7 @@ iptables_fw_counters_update(void)
         rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %*s %s", &counter, ip);
         if (2 == rc && EOF != rc) {
             debug(LOG_DEBUG, "Incoming %s Bytes=%ld", ip, counter);
-            pthread_mutex_lock(&client_list_mutex);
+	    LOCK_CLIENT_LIST();
             if ((p1 = client_list_find_by_ip(ip))) {
                 if (p1->counters.incoming < counter) {
                     p1->counters.incoming = counter;
@@ -298,7 +298,7 @@ iptables_fw_counters_update(void)
             } else {
                 debug(LOG_ERR, "Could not find %s in client list", ip);
             }
-            pthread_mutex_unlock(&client_list_mutex);
+	    UNLOCK_CLIENT_LIST();
         }
     }
     pclose(output);

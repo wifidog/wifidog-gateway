@@ -130,4 +130,16 @@ t_auth_serv *get_auth_server(void);
 /** @brief Bump server to bottom of the list */
 void mark_auth_server_bad(t_auth_serv *);
 
+#define LOCK_CONFIG() do { \
+	debug(LOG_DEBUG, "Locking config"); \
+	pthread_mutex_lock(&config_mutex); \
+	debug(LOG_DEBUG, "Config locked"); \
+} while (0)
+
+#define UNLOCK_CONFIG() do { \
+	debug(LOG_DEBUG, "Unlocking config"); \
+	pthread_mutex_unlock(&config_mutex); \
+	debug(LOG_DEBUG, "Config unlocked"); \
+} while (0)
+
 #endif /* _CONFIG_H_ */

@@ -63,6 +63,7 @@ thread_ping(void *arg)
 	while (1) {
 		/* Make sure we check the servers at the very begining */
 		/** @todo  Note that this will only help if the second server responds.  The logic of the ping itslef should be changed so it iterates in the list until it finds one that responds ox exausts the list */
+		debug(LOG_DEBUG, "Running ping()");
 		ping();
 		
 		/* Sleep for config.checkinterval seconds... */
@@ -107,6 +108,7 @@ ping(void)
 	debug(LOG_DEBUG, "Using auth server %s",
 			auth_server->authserv_hostname);
 	
+	debug(LOG_DEBUG, "Resolving IP");
 	if ((h_addr = (struct in_addr *)wd_gethostbyname(auth_server->authserv_hostname)) == NULL) {
 		debug(LOG_ERR, "Failed to resolve %s via gethostbyname"
 				"(): %s", auth_server->authserv_hostname, 
@@ -154,8 +156,13 @@ ping(void)
 	
 	numbytes = totalbytes = 0;
 	while ((numbytes = read(sockfd, request + totalbytes, 
-				MAX_BUF - (totalbytes + 1))) > 0)
+				MAX_BUF - (totalbytes + 1))) > 0) {
 		totalbytes =+ numbytes;
+		debug(LOG_DEBUG, "Read %d bytes, total now %d", numbytes,
+				totalbytes);
+	}
+
+	debug(LOG_DEBUG, "Done reading reply, total %d bytes", totalbytes);
 	
 	if (numbytes == -1) {
 		debug(LOG_ERR, "read(): %s", strerror(errno));

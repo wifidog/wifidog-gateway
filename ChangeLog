@@ -1,4 +1,9 @@
 # $Header$
+
+2004-10-29 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* src/ping_thread.c: Much new debugging information
+	* multiple files: Logging for all mutexes
+
 2004-10-28 Philippe April <philippe@philippeapril.com>
 	* ipkg/rules: building ipkg-tools before packaging
 

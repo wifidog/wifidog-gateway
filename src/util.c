@@ -99,20 +99,20 @@ wd_gethostbyname(const char *name)
 	if (h_addr == NULL)
 		return NULL;
 	
-	pthread_mutex_lock(&ghbn_mutex);
+	LOCK_GHBN();
 
 	he = gethostbyname(name);
 
 	if (he == NULL) {
 		free(h_addr);
-		pthread_mutex_unlock(&ghbn_mutex);
+		UNLOCK_GHBN();
 		return NULL;
 	}
 
 	in_addr_temp = (struct in_addr *)he->h_addr_list[0];
 	h_addr->s_addr = in_addr_temp->s_addr;
 	
-	pthread_mutex_unlock(&ghbn_mutex);
+	UNLOCK_GHBN();
 
 	return h_addr;
 }
