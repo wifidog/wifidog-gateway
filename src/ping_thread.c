@@ -90,11 +90,15 @@ ping(void)
 {
 	size_t			numbytes,
 				totalbytes;
-	int			sockfd;
+	int			sockfd,
+				nfds,
+				done;
 	t_auth_serv		*auth_server;
 	char			request[MAX_BUF];
 	struct in_addr		*h_addr;
 	struct sockaddr_in	their_addr;
+	fd_set			readfds;
+	struct timeval		timeout;
 
 	debug(LOG_DEBUG, "Entering ping()");
 	
@@ -155,21 +159,47 @@ ping(void)
 	debug(LOG_DEBUG, "Reading response");
 	
 	numbytes = totalbytes = 0;
-	while ((numbytes = read(sockfd, request + totalbytes, 
-				MAX_BUF - (totalbytes + 1))) > 0) {
-		totalbytes =+ numbytes;
-		debug(LOG_DEBUG, "Read %d bytes, total now %d", numbytes,
-				totalbytes);
-	}
+	done = 0;
+	do {
+		FD_ZERO(&readfds);
+		FD_SET(sockfd, &readfds);
+		timeout.tv_sec = 30; /* XXX magic... 30 second */
+		timeout.tv_usec = 0;
+		nfds = sockfd + 1;
+
+		nfds = select(nfds, &readfds, NULL, NULL, &timeout);
+
+		if (nfds > 0) {
+			/** We don't have to use FD_ISSET() because there
+			 *  was only one fd. */
+			numbytes = read(sockfd, request + totalbytes, 8);
+					//MAX_BUF - (totalbytes + 1));
+			if (numbytes < 0) {
+				debug(LOG_ERR, "read(): %s", strerror(errno));
+				mark_auth_server_bad(auth_server);
+				close(sockfd);
+				return;
+			} else if (numbytes == 0) {
+				done = 1;
+			} else {
+				totalbytes += numbytes;
+				debug(LOG_DEBUG, "Read %d bytes, total now %d",
+						numbytes, totalbytes);
+			}
+		} else if (nfds == 0) {
+			debug(LOG_ERR, "select() timed out");
+			mark_auth_server_bad(auth_server);
+			close(sockfd);
+			return;
+		} else if (nfds < 0) {
+			debug(LOG_ERR, "select(): %s", strerror(errno));
+			mark_auth_server_bad(auth_server);
+			close(sockfd);
+			return;
+		}
+	} while (!done);
 
 	debug(LOG_DEBUG, "Done reading reply, total %d bytes", totalbytes);
-	
-	if (numbytes == -1) {
-		debug(LOG_ERR, "read(): %s", strerror(errno));
-		mark_auth_server_bad(auth_server);
-		close(sockfd);
-		return;
-	}
 
 	numbytes = totalbytes;
 	
