@@ -2,6 +2,8 @@
 2004-04-12  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Changed child return value handling, again. Now it's actually
 	using the real value instead of the flag.
+	* The http.c authentication code now closes the http connection
+	from the user.
 
 2004-04-11  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Added extra debugging information.

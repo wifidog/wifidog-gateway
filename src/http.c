@@ -115,6 +115,7 @@ http_callback_auth(httpd * webserver)
 						"We did not get a valid "
 						"answer from the central "
 						"server");
+					httpdEndRequest(webserver);
 					exit(0);
 				}
 				else if (profile == 0) {
@@ -122,10 +123,13 @@ http_callback_auth(httpd * webserver)
 					httpdOutput(webserver, "Your "
 						"authentication has failed or "
 						"timed-out.  Please re-login");
+					httpdEndRequest(webserver);
 					exit(0);
 				}
 				else {
-					exit(1);
+					// Successfull, what do we do here?
+					httpdEndRequest(webserver);
+					exit(profile);
 				}
 			} else {
 				debug(D_LOG_DEBUG, "Forked sub process with "
