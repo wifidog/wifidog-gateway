@@ -63,6 +63,7 @@ clean:
 	rm -rf $(TMP_DIR)
 	rm -f build-wifidog-stamp
 	rm -f build-iptables-stamp
+	rm -f build-ipkg-utils-stamp
 
 install: build install-wifidog install-iptables install-kernel-modules install-pthread
 	mkdir -p $(TMP_DIR)/etc

@@ -1,4 +1,6 @@
 # $Header$
+2005-02-16 Philippe April <philippe@ilesansfil.org>
+	* ipkg/rules - When we clean, forgot to delete ipkg-build-stamp
 
 2005-02-15 Mina Naguib <mina@ilesansfil.org>
 	* Now also reports wifidog_uptime when it pings the server, as well as
