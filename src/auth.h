@@ -43,6 +43,7 @@ typedef struct _t_authresponse {
 
 void auth_thread(void *ptr);
 void cleanup_thread(void *ptr);
-void _http_redirect(int fd, char *format, ...);
+static void _http_output(int fd, char *msg);
+static void _http_redirect(int fd, char *format, ...);
 
 #endif

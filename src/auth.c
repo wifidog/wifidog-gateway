@@ -48,8 +48,6 @@ pthread_mutex_t	nodes_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 s_config config;
 
-static void _http_output(int fd, char *msg);
-
 void
 cleanup_thread(void *ptr)
 {
@@ -186,7 +184,7 @@ _http_output(int fd, char *msg)
 	close(fd);
 }
 
-void
+static void
 _http_redirect(int fd, char *format, ...)
 {
 	char *response, *url;
