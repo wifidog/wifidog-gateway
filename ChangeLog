@@ -9,6 +9,7 @@
 	* src/conf.[ch]: Firewall rule set parsing code.
 	* wifidog.conf: Default firewall rule set defined.
 	* src/fw_iptables.[ch]: Firewall rule set enacting code.
+	* configure.in: bumped version to 1.1.0-alpha2
 
 2004-11-18 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/ping_thread.c: Merge phil's bug fixes from stable branch
