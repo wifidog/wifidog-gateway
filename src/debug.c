@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <syslog.h>
 #include <stdarg.h>
+#include <time.h>
 
 #include "conf.h"
 
@@ -36,18 +37,24 @@ Do not use directly, use the debug macro */
 void
 _debug(char *filename, int line, int level, char *format, ...)
 {
+    char buf[28];
     va_list vlist;
     s_config *config = config_get_config();
+    time_t ts;
+
+    time(&ts);
 
     if (config->debuglevel >= level) {
         va_start(vlist, format);
 
         if (level <= LOG_WARNING) {
-            fprintf(stderr, "[%d](%s:%d) ", level, filename, line);
+            fprintf(stderr, "[%d][%.24s](%s:%d) ", level, ctime_r(&ts, buf),
+			    filename, line);
             vfprintf(stderr, format, vlist);
             fputc('\n', stderr);
         } else if (!config->daemon) {
-            fprintf(stdout, "[%d](%s:%d) ", level, filename, line);
+            fprintf(stdout, "[%d][%.24s](%s:%d) ", level, ctime_r(&ts, buf),
+			    filename, line);
             vfprintf(stdout, format, vlist);
             fputc('\n', stdout);
             fflush(stdout);

@@ -10,6 +10,7 @@
 	auth_server_request() is no longer an undefined authresponse.
 	* src/util.c: Fixed typo in logging.
 	* src/wdctl_thread.c: Added logging when socket path is too long.
+	* src/debug.c: Debug now logs the time of an event.
 
 2004-08-30 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* wifidog.conf: Corrected an example
