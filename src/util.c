@@ -102,8 +102,10 @@ wd_gethostbyname(const char *name)
 
 	h_addr = (struct in_addr *)malloc(sizeof(struct in_addr));
 	
-	if (h_addr == NULL)
-		return NULL;
+	if (h_addr == NULL) {
+		debug(LOG_CRIT, "Failed to allocate memory for in_addr");
+		exit(1);
+	}
 	
 	LOCK_GHBN();
 

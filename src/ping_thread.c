@@ -192,11 +192,14 @@ ping(void)
 		fclose(fh);
 	}
 	if ((fh = fopen("/proc/loadavg", "r"))) {
-		fscanf(fh, "%*s %f", &sys_load);
+		fscanf(fh, "%f", &sys_load);
 		fclose(fh);
 	}
 
-	snprintf(request, sizeof(request) - 1, "GET %sping/?gw_id=%s&sys_uptime=%lu&sys_memfree=%u&sys_load=%f HTTP/1.0\n"
+	/*
+	 * Prep & send request
+	 */
+	snprintf(request, sizeof(request) - 1, "GET %sping/?gw_id=%s&sys_uptime=%lu&sys_memfree=%u&sys_load=%.2f HTTP/1.0\n"
 			"User-Agent: WiFiDog %s\n"
 			"Host: %s\n"
 			"\n",

@@ -109,36 +109,25 @@ char           *
 arp_get(char *req_ip)
 {
     FILE           *proc;
-    char            *ip, *mac;
+	 char ip[16];
+	 char mac[18];
 	 char * reply;
 
     if (!(proc = fopen("/proc/net/arp", "r"))) {
         return NULL;
     }
-    if (!(ip = malloc(16))) {
-		 debug(LOG_CRIT, "Cannot allocate 16 bytes of memory for IP, Banzai!");
-		 exit(1);
-	 }
-    if (!(mac = malloc(18))) {
-		 debug(LOG_CRIT, "Cannot allocate 18 bytes of memory for MAC, Banzai!");
-		 exit(1);
-	 }
 
     /* Skip first line */
 	 while (!feof(proc) && fgetc(proc) != '\n');
 
-	 /* Find ip, put mac in reply */
+	 /* Find ip, copy mac in reply */
 	 reply = NULL;
     while (!feof(proc) && (fscanf(proc, " %15[0-9.] %*s %*s %17[A-F0-9:] %*s %*s", ip, mac) == 2)) {
 		  if (strcmp(ip, req_ip) == 0) {
-				reply = mac;
+				reply = strdup(mac);
 				break;
 		  }
     }
-
-    free(ip);
-	 if (!reply)
-		 free(mac);
 
     fclose(proc);
 
