@@ -25,7 +25,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <errno.h>
 
 #if defined(_WIN32)
 #include <winsock2.h>
@@ -49,7 +48,6 @@
 #  include <varargs.h>
 #endif
 
-extern int errno;
 
 char *httpdUrlEncode(str)
 	char	*str;
@@ -326,52 +324,30 @@ int httpdGetConnection(server, timeout)
 	struct  sockaddr_in     addr;
 	size_t  addrLen;
 	char	*ipaddr;
-	FILE	*log_file;
-	
-	log_file = fopen("httpdGetConnection.log", "a");
-	
-	fprintf(log_file, "------\n");
-	fprintf(log_file, "Entering httpdGetConnection\n");
-	
+
 	FD_ZERO(&fds);
 	FD_SET(server->serverSock, &fds);
 	result = 0;
 	while(result == 0)
 	{
-		fprintf(log_file, "Executing select()\n");
 		result = select(server->serverSock + 1, &fds, 0, 0, timeout);
 		if (result < 0)
 		{
-			
-			fprintf(log_file, "Select returned an error: %s\n",
-					strerror(errno));
-			fclose(log_file);
 			return(-1);
 		}
 		if (timeout != 0 && result == 0)
 		{
-			fprintf(log_file, "Select timed out.\n");
-			fclose(log_file);
 			return(0);
 		}
 		if (result > 0)
 		{
-			fprintf(log_file, "Select returned with %d fds.\n",
-					result);
 			break;
 		}
 	}
 	bzero(&addr, sizeof(addr));
 	addrLen = sizeof(addr);
-	fprintf(log_file, "Accept()ing the connection.\n");
 	server->clientSock = accept(server->serverSock,(struct sockaddr *)&addr,
 		&addrLen);
-	if (server->clientSock == -1) {
-		fprintf(log_file, "Accept() failed: %s\n", strerror(errno));
-		fclose(log_file);
-		return(-3);
-	}
-	fprintf(log_file, "Setting the ASCII ip into server->clientAddr.\n");
 	ipaddr = inet_ntoa(addr.sin_addr);
 	if (ipaddr)
 		strncpy(server->clientAddr, ipaddr, HTTP_IP_ADDR_LEN);
@@ -383,21 +359,14 @@ int httpdGetConnection(server, timeout)
 	/*
 	** Check the default ACL
 	*/
-	fprintf(log_file, "Checking the ACLs.\n");
 	if (server->defaultAcl)
 	{
 		if (httpdCheckAcl(server, server->defaultAcl) == HTTP_ACL_DENY)
 		{
-			fprintf(log_file, "ACL Check failed.\n");
 			httpdEndRequest(server);
-			fprintf(log_file, "Connection closed.\n");
-			fclose(log_file);
 			return(-2);
 		}
-		fprintf(log_file, "ACL Check successful.\n");
 	}
-	fprintf(log_file, "Returning success.\n");
-	fclose(log_file);
 	return(1);
 }
 
