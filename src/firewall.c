@@ -18,7 +18,10 @@
  *                                                                  *
  \********************************************************************/
 
-/* $Header$ */
+/*
+ * $Header: /cvsroot/wifidog/wifidog/src/firewall.c,v 1.32 2004/04/23
+ * 11:37:43 aprilp Exp $
+ */
 /** @internal
   @file firewall.c
   @brief Firewall update functions
@@ -29,9 +32,9 @@
 
 extern s_config config;
 
-pthread_mutex_t	nodes_mutex;
+pthread_mutex_t nodes_mutex;
 
-t_node *firstnode = NULL;
+t_node         *firstnode = NULL;
 
 /**
  * @brief Allow a user through the firewall
@@ -48,24 +51,23 @@ t_node *firstnode = NULL;
 int
 fw_allow(char *ip, char *mac, int tag)
 {
-	char s_tag[16];
-	char script[MAX_BUF];
-	struct stat st;
-	char *command[] = {script, "allow", ip, mac, s_tag, NULL};
+    char            s_tag[16];
+    char            script[MAX_BUF];
+    struct stat     st;
+    char           *command[] = {script, "allow", ip, mac, s_tag, NULL};
 
-	sprintf(s_tag, "%-10d", tag);
-	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, 
-		SCRIPT_FWACCESS);
+    sprintf(s_tag, "%-10d", tag);
+    sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype,
+        SCRIPT_FWACCESS);
 
     debug(LOG_DEBUG, "Allowing ip %s mac %s with MARK %s", ip, mac, s_tag);
 
-	if (-1 == (stat(script, &st))) {
-		debug(LOG_ERR, "Could not find %s: %s", script,
-			strerror(errno));
-		return(1);
-	}
-
-	return(execute(command));
+    if (-1 == (stat(script, &st))) {
+        debug(LOG_ERR, "Could not find %s: %s", script,
+              strerror(errno));
+        return (1);
+    }
+    return (execute(command));
 }
 
 /**
@@ -82,24 +84,23 @@ fw_allow(char *ip, char *mac, int tag)
 int
 fw_deny(char *ip, char *mac, int tag)
 {
-	char s_tag[16];
-	char script[MAX_BUF];
-	struct stat st;
-	char *command[] = {script, "deny", ip, mac, s_tag, NULL};
+    char            s_tag[16];
+    char            script[MAX_BUF];
+    struct stat     st;
+    char           *command[] = {script, "deny", ip, mac, s_tag, NULL};
 
-	sprintf(s_tag, "%-10d", tag);
-	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype,
-		SCRIPT_FWACCESS);
+    sprintf(s_tag, "%-10d", tag);
+    sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype,
+        SCRIPT_FWACCESS);
 
     debug(LOG_DEBUG, "Denying ip %s mac %s with MARK %s", ip, mac, s_tag);
 
-	if (-1 == (stat(script, &st))) {
-		debug(LOG_ERR, "Could not find %s: %s", script, 
-			strerror(errno));
-		return(1);
-	}
-
-	return(execute(command));
+    if (-1 == (stat(script, &st))) {
+        debug(LOG_ERR, "Could not find %s: %s", script,
+              strerror(errno));
+        return (1);
+    }
+    return (execute(command));
 }
 
 /** @brief Execute a shell command
@@ -112,25 +113,25 @@ fw_deny(char *ip, char *mac, int tag)
 int
 execute(char **argv)
 {
-	int pid, status, rc;
+    int             pid, status, rc;
 
-	debug(LOG_DEBUG, "Executing '%s'", argv[0]);
+    debug(LOG_DEBUG, "Executing '%s'", argv[0]);
 
-	if ((pid = fork()) < 0) {     /* fork a child process           */
-		debug(LOG_ERR, "fork(): %s", strerror(errno));
-		exit(1);
-	} else if (pid == 0) {          /* for the child process:         */
-		if (execvp(*argv, argv) < 0) {     /* execute the command  */
-			debug(LOG_ERR, "fork(): %s", strerror(errno));
-			exit(1);
-		}
-	} else {                                  /* for the parent:      */
-		do {
-			rc = wait(&status);
-		} while (rc != pid && rc != -1);        /* wait for completion  */
-	}
+    if ((pid = fork()) < 0) {    /* fork a child process           */
+        debug(LOG_ERR, "fork(): %s", strerror(errno));
+        exit(1);
+    } else if (pid == 0) {    /* for the child process:         */
+        if (execvp(*argv, argv) < 0) {    /* execute the command  */
+            debug(LOG_ERR, "fork(): %s", strerror(errno));
+            exit(1);
+        }
+    } else {        /* for the parent:      */
+        do {
+            rc = wait(&status);
+        } while (rc != pid && rc != -1);    /* wait for completion  */
+    }
 
-	return(status);
+    return (status);
 }
 
 /**
@@ -140,30 +141,29 @@ execute(char **argv)
  * IP address and return the MAC address bound to it.
  * @todo Make this function portable (using shell scripts?)
  */
-char *
+char           *
 arp_get(char *req_ip)
 {
-	FILE *proc;
-	char ip[16], *mac;
+    FILE           *proc;
+    char            ip[16], *mac;
 
-	if (!(proc = fopen("/proc/net/arp", "r"))) {
-		return NULL;
-	}
+    if (!(proc = fopen("/proc/net/arp", "r"))) {
+        return NULL;
+    }
+    /* Skip first line */
+    fscanf(proc, "%*s %*s %*s %*s %*s %*s %*s %*s %*s");
+    mac = (char *) malloc(18);
+    while (!feof(proc)) {
+        fscanf(proc, "%15s %*s %*s %17s %*s %*s", ip, mac);
+        if (strcmp(ip, req_ip) == 0) {
+            return mac;
+        }
+    }
+    fclose(proc);
 
-	/* Skip first line */
-	fscanf(proc, "%*s %*s %*s %*s %*s %*s %*s %*s %*s");
-	mac = (char *)malloc(18);
-	while(!feof(proc)) {
-		fscanf(proc, "%15s %*s %*s %17s %*s %*s", ip, mac);
-		if (strcmp(ip, req_ip) == 0) {
-			return mac;
-		}
-	}
-	fclose(proc);
+    free(mac);
 
-	free(mac);
-
-	return NULL;
+    return NULL;
 }
 
 /**
@@ -176,32 +176,30 @@ arp_get(char *req_ip)
 int
 fw_init(void)
 {
-	char port[16];
-	char script[MAX_BUF];
-	int rc;
-	struct stat st;
-	char *command[] = {script, config.gw_interface, config.gw_address, 
-				port, config.authserv_hostname, NULL};
+    char            port[16];
+    char            script[MAX_BUF];
+    int             rc;
+    struct stat     st;
+    char           *command[] = {script, config.gw_interface, config.gw_address,
+    port, config.authserv_hostname, NULL};
 
-	sprintf(port, "%-5d", config.gw_port);
-	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, 
-		SCRIPT_FWINIT);
+    sprintf(port, "%-5d", config.gw_port);
+    sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype,
+        SCRIPT_FWINIT);
 
-	if (-1 == (stat(script, &st))) {
-		debug(LOG_ERR, "Could not find %s: %s", script, 
-			strerror(errno));
-		debug(LOG_ERR, "Exiting...");
-		exit(1);
-	}
+    if (-1 == (stat(script, &st))) {
+        debug(LOG_ERR, "Could not find %s: %s", script,
+              strerror(errno));
+        debug(LOG_ERR, "Exiting...");
+        exit(1);
+    }
+    debug(LOG_NOTICE, "Setting firewall rules");
 
-	debug(LOG_NOTICE, "Setting firewall rules");
-
-	if ((rc = execute(command)) != 0) {
-		debug(LOG_ERR, "Could not setup firewall, exiting...");
-		exit(1);
-	}
-
-	return(rc);
+    if ((rc = execute(command)) != 0) {
+        debug(LOG_ERR, "Could not setup firewall, exiting...");
+        exit(1);
+    }
+    return (rc);
 }
 
 /**
@@ -214,22 +212,21 @@ fw_init(void)
 int
 fw_destroy(void)
 {
-	char script[MAX_BUF];
-	struct stat st;
-	char *command[] = {script, config.gw_interface, NULL };
+    char            script[MAX_BUF];
+    struct stat     st;
+    char           *command[] = {script, config.gw_interface, NULL};
 
-	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, 
-		SCRIPT_FWDESTROY);
+    sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype,
+        SCRIPT_FWDESTROY);
 
-	if (-1 == (stat(script, &st))) {
-		debug(LOG_ERR, "Could not find %s: %s", script, 
-			strerror(errno));
-		return(1);
-	}
+    if (-1 == (stat(script, &st))) {
+        debug(LOG_ERR, "Could not find %s: %s", script,
+              strerror(errno));
+        return (1);
+    }
+    debug(LOG_NOTICE, "Flushing firewall rules");
 
-	debug(LOG_NOTICE, "Flushing firewall rules");
-
-	return(execute(command));
+    return (execute(command));
 }
 
 /**
@@ -238,102 +235,103 @@ fw_destroy(void)
 void
 fw_counter(void)
 {
-	FILE	*output;
-	long	int	counter;
-    t_authresponse authresponse;
-	int	tag,
-		rc;
-	char	ip[255],
-		mac[255],
-		script[MAX_BUF],
-		*token;
-	t_node *p1;
+    FILE           *output;
+    long int        counter;
+    t_authresponse  authresponse;
+    int             tag, rc;
+    char            ip[255], mac[255], script[MAX_BUF], *token;
+    t_node         *p1;
 
-	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, 
-		SCRIPT_FWCOUNTERS);
+    sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype,
+        SCRIPT_FWCOUNTERS);
 
-	if (!(output = popen(script, "r"))) {
-		debug(LOG_ERR, "popen(): %s", strerror(errno));
-	} else {
-		while (!(feof(output)) && output) {
-			rc = fscanf(output, "%ld %s %s %d", &counter, ip, 
-					mac, &tag);
-			if (rc == 4 && rc != EOF) {
+    if (!(output = popen(script, "r"))) {
+        debug(LOG_ERR, "popen(): %s", strerror(errno));
+    } else {
+        while (!(feof(output)) && output) {
+            rc = fscanf(output, "%ld %s %s %d", &counter, ip,
+                    mac, &tag);
+            if (rc == 4 && rc != EOF) {
 
-				pthread_mutex_lock(&nodes_mutex);
+                pthread_mutex_lock(&nodes_mutex);
 
-				p1 = node_find_by_ip(ip);
+                p1 = node_find_by_ip(ip);
 
                 if (p1) {
-					token = strdup(p1->token);
+                    token = strdup(p1->token);
 
-					pthread_mutex_unlock(&nodes_mutex);
-					authenticate(&authresponse, ip, mac, token, counter);
-					pthread_mutex_lock(&nodes_mutex);
+                    pthread_mutex_unlock(&nodes_mutex);
+                    authenticate(&authresponse, ip, mac, token, counter);
+                    pthread_mutex_lock(&nodes_mutex);
 
-					free(token);
+                    free(token);
 
-					p1 = node_find_by_ip(ip);
-					if (p1 == NULL) {	
-						debug(LOG_DEBUG, "Node was "
-							"freed while being "
-							"re-validated!");
+                    p1 = node_find_by_ip(ip);
+                    if (p1 == NULL) {
+                        debug(LOG_DEBUG, "Node was "
+                              "freed while being "
+                              "re-validated!");
                     }
-
                     debug(LOG_INFO, "User %s counter currently %d, new counter %d", p1->ip, p1->counter, counter);
                     if (counter > p1->counter) {
                         p1->counter = counter;
-						    debug(LOG_INFO, "Updated "
-    						"client %s counter to "
-    						"%ld bytes", ip,
-    						counter);
+                        debug(LOG_INFO, "Updated "
+                              "client %s counter to "
+                              "%ld bytes", ip,
+                              counter);
                         p1->noactivity = time(NULL);
                     } else {
-				        debug(LOG_INFO, "No activity recorded %s", p1->ip);
+                        debug(LOG_INFO, "No activity recorded %s", p1->ip);
                     }
                     if (p1->noactivity +
-                       (config.checkinterval * config.clienttimeout)
-                       <= time(NULL)) {
+                        (config.checkinterval * config.clienttimeout)
+                        <= time(NULL)) {
                         /* Timing out user */
-    			        debug(LOG_INFO, "Client %s was inactive for %d seconds, removing node and denying in firewall", ip,
-                            config.checkinterval * config.clienttimeout);
-        	    		fw_deny(p1->ip, p1->mac, p1->tag);
-        	    		node_delete(p1);
-    			    } else {
-                        /* This handles any change in the status
-                         * this allows us to change the status of a
-                         * user while he's connected */
-                        switch(authresponse.authcode) {
-                            case AUTH_DENIED:
-                            case AUTH_VALIDATION_FAILED:
-    						    debug(LOG_NOTICE, "Client %s now denied, removing node", ip);
-        						fw_deny(p1->ip, p1->mac, p1->tag);
-        						node_delete(p1);
-                                break;
-                            case AUTH_ALLOWED:
-                                if (p1->tag != MARK_KNOWN) {
-                                    debug(LOG_INFO, "Access has changed, refreshing firewall and clearing counters");
-                                    fw_deny(p1->ip, p1->mac, p1->tag);
-                                    p1->tag = MARK_KNOWN;
-                                    p1->counter = 0;
-                                    fw_allow(p1->ip, p1->mac, p1->tag);
-                                }
-                                break;
-                            case AUTH_VALIDATION:
-                                /* Do nothing, user is in validation period */
-                                break;
-                            default:
-                                debug(LOG_DEBUG, "I do not know about type %d", authresponse.authcode);
-                                break;
+                        debug(LOG_INFO, "Client %s was inactive for %d seconds, removing node and denying in firewall", ip,
+                              config.checkinterval * config.clienttimeout);
+                        fw_deny(p1->ip, p1->mac, p1->tag);
+                        node_delete(p1);
+                    } else {
+                        /*
+                         * This handles any change in
+                         * the status this allows us
+                         * to change the status of a
+                         * user while he's connected
+                         */
+                        switch (authresponse.authcode) {
+                        case AUTH_DENIED:
+                        case AUTH_VALIDATION_FAILED:
+                            debug(LOG_NOTICE, "Client %s now denied, removing node", ip);
+                            fw_deny(p1->ip, p1->mac, p1->tag);
+                            node_delete(p1);
+                            break;
+                        case AUTH_ALLOWED:
+                            if (p1->tag != MARK_KNOWN) {
+                                debug(LOG_INFO, "Access has changed, refreshing firewall and clearing counters");
+                                fw_deny(p1->ip, p1->mac, p1->tag);
+                                p1->tag = MARK_KNOWN;
+                                p1->counter = 0;
+                                fw_allow(p1->ip, p1->mac, p1->tag);
+                            }
+                            break;
+                        case AUTH_VALIDATION:
+                            /*
+                             * Do nothing, user
+                             * is in validation
+                             * period
+                             */
+                            break;
+                        default:
+                            debug(LOG_DEBUG, "I do not know about type %d", authresponse.authcode);
+                            break;
                         }
                     }
                 }
-				
-				pthread_mutex_unlock(&nodes_mutex);
-			}
-		}
-		pclose(output);
-	}
+                pthread_mutex_unlock(&nodes_mutex);
+            }
+        }
+        pclose(output);
+    }
 }
 
 /**
@@ -344,7 +342,7 @@ fw_counter(void)
 void
 node_init(void)
 {
-	firstnode = NULL;
+    firstnode = NULL;
 }
 
 /**
@@ -359,45 +357,43 @@ node_init(void)
  * @param active Is the node active, or not
  * @return Pointer to the node we just created
  */
-t_node *
+t_node         *
 node_add(char *ip, char *mac, char *token, long int counter, int active)
 {
-	t_node	*curnode,
-		*prevnode;
+    t_node         *curnode, *prevnode;
 
-	prevnode = NULL;
-	curnode = firstnode;
+    prevnode = NULL;
+    curnode = firstnode;
 
-	while (curnode != NULL) {
-		prevnode = curnode;
-		curnode = curnode->next;
-	}
+    while (curnode != NULL) {
+        prevnode = curnode;
+        curnode = curnode->next;
+    }
 
-	curnode = (t_node *)malloc(sizeof(t_node));
+    curnode = (t_node *) malloc(sizeof(t_node));
 
-	if (curnode == NULL) {
-		debug(LOG_ERR, "Out of memory");
-		exit(-1);
-	}
+    if (curnode == NULL) {
+        debug(LOG_ERR, "Out of memory");
+        exit(-1);
+    }
+    memset(curnode, 0, sizeof(t_node));
 
-	memset(curnode, 0, sizeof(t_node));
+    curnode->ip = strdup(ip);
+    curnode->mac = strdup(mac);
+    curnode->token = strdup(token);
+    curnode->counter = counter;
+    curnode->active = active;
 
-	curnode->ip = strdup(ip);
-	curnode->mac = strdup(mac);
-	curnode->token = strdup(token);
-	curnode->counter = counter;
-	curnode->active = active;
+    if (prevnode == NULL) {
+        firstnode = curnode;
+    } else {
+        prevnode->next = curnode;
+    }
 
-	if (prevnode == NULL) {
-		firstnode = curnode;
-	} else {
-		prevnode->next = curnode;
-	}
+    debug(LOG_INFO, "Added a new node to linked list: IP: %s Token: %s",
+          ip, token);
 
-	debug(LOG_INFO, "Added a new node to linked list: IP: %s Token: %s",
-		ip, token);
-	
-	return curnode;
+    return curnode;
 }
 
 /**
@@ -408,19 +404,19 @@ node_add(char *ip, char *mac, char *token, long int counter, int active)
  * @param ip IP we are looking for in the linked list
  * @return Pointer to the node, or NULL if not found
  */
-t_node *
+t_node         *
 node_find_by_ip(char *ip)
 {
-	t_node *ptr;
-	
-	ptr = firstnode;
-	while (NULL != ptr) {
-		if (0 == strcmp(ptr->ip, ip))
-			return ptr;
-		ptr = ptr->next;
-	}
+    t_node         *ptr;
 
-	return NULL;
+    ptr = firstnode;
+    while (NULL != ptr) {
+        if (0 == strcmp(ptr->ip, ip))
+            return ptr;
+        ptr = ptr->next;
+    }
+
+    return NULL;
 }
 
 /**
@@ -430,19 +426,19 @@ node_find_by_ip(char *ip)
  * @param token Token we are looking for in the linked list
  * @return Pointer to the node, or NULL if not found
  */
-t_node *
+t_node         *
 node_find_by_token(char *token)
 {
-	t_node *ptr;
+    t_node         *ptr;
 
-	ptr = firstnode;
-	while (NULL != ptr) {
-		if (0 == strcmp(ptr->token, token))
-			return ptr;
-		ptr = ptr->next;
-	} 
+    ptr = firstnode;
+    while (NULL != ptr) {
+        if (0 == strcmp(ptr->token, token))
+            return ptr;
+        ptr = ptr->next;
+    }
 
-	return NULL;
+    return NULL;
 }
 
 /**
@@ -453,19 +449,19 @@ node_find_by_token(char *token)
  * @param node Points to the node to be freed
  */
 void
-free_node(t_node *node)
+free_node(t_node * node)
 {
 
-	if (node->mac != NULL)
-		free(node->mac);
+    if (node->mac != NULL)
+        free(node->mac);
 
-	if (node->ip != NULL)
-		free(node->ip);
+    if (node->ip != NULL)
+        free(node->ip);
 
-	if (node->token != NULL)
-		free(node->token);
+    if (node->token != NULL)
+        free(node->token);
 
-	free(node);
+    free(node);
 }
 
 /**
@@ -476,22 +472,21 @@ free_node(t_node *node)
  * @param node Points to the node to be deleted
  */
 void
-node_delete(t_node *node)
+node_delete(t_node * node)
 {
-	t_node	*ptr;
-	
-	ptr = firstnode;
+    t_node         *ptr;
 
-	if (ptr == node) {
-		firstnode = ptr->next;
-		free_node(node);
-	} else {
-		while (ptr->next != NULL && ptr != node) {
-			if (ptr->next == node) {
-				ptr->next = node->next;
-				free_node(node);
-			}
-		}
-	}
+    ptr = firstnode;
+
+    if (ptr == node) {
+        firstnode = ptr->next;
+        free_node(node);
+    } else {
+        while (ptr->next != NULL && ptr != node) {
+            if (ptr->next == node) {
+                ptr->next = node->next;
+                free_node(node);
+            }
+        }
+    }
 }
-
