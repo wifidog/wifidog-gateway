@@ -1,4 +1,7 @@
 # $Header$
+2004-05-28 Benoit Grégoire  <papril777@yahoo.com>
+    * Fixed bugs implemented after major changes
+
 2004-05-27 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Massive Doxygen update in all files.  IMPORTANT: The new convention is:  @brief in the .h, long description and parameters in the .c
 	* Cleaned up some more issues in my notes taken at the formal review

@@ -59,13 +59,13 @@ t_client *client_get_first_client(void);
 void client_list_init(void);
 
 /** @brief Adds a new client to the connections list */
-t_client *client_list_add(char *ip, char *mac, char *token);
+t_client *client_list_append(char *ip, char *mac, char *token);
 
 /** @brief Finds a client by its IP and MAC */
 t_client *client_list_find(char *ip, char *mac);
 
 /** @brief Finds a client only by its IP */
-t_client *client_list_find_by_ip(char *ip); /* needed by iptables.c */
+t_client *client_list_find_by_ip(char *ip); /* needed by iptables.c and auth.c */
 
 /** @brief Finds a client by its token */
 t_client *client_list_find_by_token(char *token);

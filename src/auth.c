@@ -134,11 +134,10 @@ thread_authenticate_client(void *arg)
 
 	pthread_mutex_lock(&client_list_mutex);
 
-	client = client_list_find(ip, mac);
+	client = client_list_find_by_ip(ip);
 
 	if (client == NULL) {
-		debug(LOG_ERR, "Could not find client client for %s (%s)",
-				ip, mac);
+		debug(LOG_ERR, "Could not find client client for %s", ip);
 		pthread_mutex_unlock(&client_list_mutex);
 		return; /* Implicit pthread_exit() */
 	}

@@ -132,7 +132,7 @@ iptables_fw_init(void)
 int
 iptables_fw_destroy(void)
 {
-    int rc, tries;
+    int rc;
     s_config *config = config_get_config();
 
     fw_quiet = 1;
@@ -183,11 +183,11 @@ iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag)
 
     switch(type) {
         case FW_ACCESS_ALLOW:
-            iptables_do_command("-t mangle -A " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j FW_MARK --set-mark %d", ip, mac, tag);
+            iptables_do_command("-t mangle -A " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
             rc = iptables_do_command("-t mangle -A " TABLE_WIFIDOG_INCOMING " -d %s -j ACCEPT", ip);
             break;
         case FW_ACCESS_DENY:
-            iptables_do_command("-t mangle -D " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j FW_MARK --set-mark %d", ip, mac, tag);
+            iptables_do_command("-t mangle -D " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
             rc = iptables_do_command("-t mangle -D " TABLE_WIFIDOG_INCOMING " -d %s -j ACCEPT", ip);
             break;
         default:

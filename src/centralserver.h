@@ -35,6 +35,6 @@
 #define REQUEST_TYPE_COUNTERS  "counters"
 
 /** @brief Initiates a transaction with the auth server */
-int auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, char *mac, char *token, long long incoming, long long outgoing);
+int auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, char *mac, char *token, long int incoming, long int outgoing);
 
 #endif /* _CENTRALSERVER_H_ */

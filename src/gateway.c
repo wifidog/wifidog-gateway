@@ -50,6 +50,7 @@
 #include "commandline.h"
 #include "auth.h"
 #include "http.h"
+#include "client_list.h"
 
 /**@internal
  * @brief Handles SIGCHLD signals to avoid zombie processes
