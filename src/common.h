@@ -53,6 +53,7 @@
 #include "http.h"
 #include "centralserver.h"
 #include "child.h"
+#include "userclasses.h"
 
 #define MAX_BUF 4096
 

@@ -15,7 +15,8 @@ wifidog_SOURCES = commandline.c \
 	gateway.c \
 	centralserver.c \
 	http.c \
-	child.c
+	child.c \
+	userclasses.c
 
 noinst_HEADERS = commandline.h \
 	common.h \
@@ -25,7 +26,8 @@ noinst_HEADERS = commandline.h \
 	gateway.h \
 	centralserver.h \
 	http.h \
-	child.h
+	child.h \
+	userclasses.h
 
 #AM_CPPFLAGS = \
 #	-I${top_srcdir}/inc

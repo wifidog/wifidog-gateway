@@ -59,6 +59,7 @@ typedef enum {
 	oCheckInterval,
 	oFWScriptsPath,
 	oFWType,
+	oUserClass,
 } OpCodes;
 
 struct {
@@ -82,6 +83,7 @@ struct {
 	{ "checkinterval",      oCheckInterval },
 	{ "fwscriptspath",      oFWScriptsPath },
 	{ "fwtype",             oFWType },
+	{ "userclass",		oUserClass },
 	{ NULL,                 oBadOption },
 };
 
@@ -107,6 +109,8 @@ config_init(void)
 	config.checkinterval = DEFAULT_CHECKINTERVAL;
 	config.fwscripts_path = DEFAULT_FWSCRIPTS_PATH;
 	config.fwtype = DEFAULT_FWTYPE;
+	config.userclasses = (char **)malloc(sizeof(char *) * 256);
+	memset(config.userclasses, 0, sizeof(char *) * 256);
 }
 
 OpCodes
@@ -172,6 +176,10 @@ config_read(char *filename)
 				opcode = parse_token(s, filename, linenum);
 
 				switch(opcode) {
+				case oUserClass:
+					add_userclass((int)strtol(p1, NULL, 10),
+							++p2);
+					break;
 				case oDaemon:
 					if (((value = parse_value(p1)) != -1)) {
 						config.daemon = value;
@@ -242,15 +250,31 @@ parse_value(char *line)
 	return -1;
 }
 
-	char *
+char *
 get_string(char *ptr)
 {
 	char *buf;
 
-	buf = (char *)malloc(MAX_BUF);
-
-	strncpy(buf, ptr, MAX_BUF);
+	buf = strdup(ptr);
 	return buf;
+}
+
+char *
+add_userclass(int profile, char *ptr)
+{
+	char *tmp_str;
+
+	if (profile > 255 || profile < 0)
+		return NULL;
+
+	if (*(config.userclasses + profile) != NULL)
+		free(*(config.userclasses + profile));
+
+	tmp_str = strdup(ptr);
+
+	*(config.userclasses + profile) = tmp_str;
+
+	return tmp_str;
 }
 
 void

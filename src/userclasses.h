@@ -19,41 +19,34 @@
 \********************************************************************/
 
 /* $Header$ */
-/** @file conf.h
-    @brief Config file parsing
-    @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
+/** @file userclasses.h
+    @brief Function for handling user classes
+    @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>
 */
 
-#ifndef _CONFIG_H_
-#define _CONFIG_H_
+#ifndef _USERCLASSES_H_
+#define _USERCLASSES_H_
 
-void config_init(void);
-void config_read(char *filename);
-void config_validate(void);
-void config_notnull(void *parm, char *parmname);
-int parse_value(char *);
-char *get_string(char *ptr);
-char *add_userclass(int profile, char *ptr);
+/* Format still up in the air... */
+typedef struct _user_classes {
+	int	profile;	/* 0-255, limited by exit() return values */
+	int	timeout;	/* In minutes */
+	int	active;		/* User active, boolean */
+	struct	_user_classes	*next,
+				*prev;
+} UserClasses;
 
-typedef struct {
-    char *configfile;
-    int daemon;
-    int debuglevel;
-    char *gw_id;
-    char *gw_interface;
-    char *gw_address;
-    int gw_port;
-    char *authserv_hostname;
-    int authserv_port;
-    char *authserv_path;
-    char *authserv_loginurl;
-    char *httpdname;
-    int httpdmaxconn;
-    int clienttimeout;
-    int checkinterval;
-    char *fwscripts_path;
-    char *fwtype;
-    char **userclasses;
-} s_config;
+typedef struct _user_rights {
+} UserRights;
 
-#endif /* _CONFIG_H_ */
+UserRights *new_userrights(void);
+void free_userrights(UserRights *rights);
+
+UserClasses *new_userclasses(void);
+void free_userclasses(UserClasses *class);
+void insert_userclasses(UserClasses *class);
+UserClasses *find_userclasses(int profile);
+UserClasses *remove_userclasses(int profile);
+int init_userclasses(int remote_allowed); /* Arg is boolean */
+
+#endif /* _USERCLASSES_H_ */

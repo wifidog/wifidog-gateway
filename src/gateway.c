@@ -119,6 +119,8 @@ main(int argc, char **argv)
 	config_read(config.configfile);
 	config_validate();
 
+	init_userclasses(0);
+	
 	if (config.daemon) {
 		struct sigaction sa;
 		int childPid;
