@@ -217,7 +217,7 @@ fw_counter(void)
         ip = strdup(p1->ip);
         token = strdup(p1->token);
         pthread_mutex_unlock(&nodes_mutex);
-        authenticate(&authresponse, p1->ip, p1->mac, token, p1->counters.incoming, p1->counters.outgoing);
+        authenticate(&authresponse, STAGE_COUNTERS, p1->ip, p1->mac, token, p1->counters.incoming, p1->counters.outgoing);
         pthread_mutex_lock(&nodes_mutex);
 
         if (!(p1 = node_find_by_ip(ip))) {

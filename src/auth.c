@@ -101,7 +101,7 @@ auth_thread(void *ptr)
 	
 	pthread_mutex_unlock(&nodes_mutex);
 		
-	authenticate(&auth_response, ip, mac, token, 0, 0);
+	authenticate(&auth_response, STAGE_LOGIN, ip, mac, token, 0, 0);
 	
 	pthread_mutex_lock(&nodes_mutex);
 	
