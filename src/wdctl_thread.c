@@ -73,11 +73,11 @@ thread_wdctl(void *arg)
 
 	debug(LOG_DEBUG, "Starting wdctl.");
 
+	memset(&sa_un, 0, sizeof(sa_un));
 	sock_name = (char *)arg;
 	debug(LOG_DEBUG, "Socket name: %s", sock_name);
 
-	/* 104 is magic */
-	if (strlen(sock_name) > 103) {
+	if (strlen(sock_name) > (sizeof(sa_un.sun_path) - 1)) {
 		/* TODO: Die handler with logging.... */
 		exit(1);
 	}
@@ -92,7 +92,8 @@ thread_wdctl(void *arg)
 	unlink(sock_name);
 
 	debug(LOG_DEBUG, "Filling sockaddr_un");
-	strcpy(sa_un.sun_path, sock_name);
+	strcpy(sa_un.sun_path, sock_name); /* XXX No size check because we
+					    * check a few lines before. */
 	sa_un.sun_family = AF_UNIX;
 	
 	debug(LOG_DEBUG, "Binding socket (%s) (%d)", sa_un.sun_path,
@@ -106,7 +107,7 @@ thread_wdctl(void *arg)
 		pthread_exit(NULL);
 	}
 
-	if (listen(sock, 16)) {
+	if (listen(sock, 5)) {
 		debug(LOG_ERR, "Could not listen on control socket: %s",
 				strerror(errno));
 		pthread_exit(NULL);

@@ -81,7 +81,8 @@ static void
 init_config(void)
 {
 
-	strncpy(config.socket, DEFAULT_SOCK, sizeof(config.socket));
+	config.socket = strdup(DEFAULT_SOCK);
+	config.command = WDCTL_UNDEF;
 }
 
 /** @internal
@@ -103,7 +104,8 @@ parse_commandline(int argc, char **argv)
 
             case 's':
                 if (optarg) {
-                    strncpy(config.socket, optarg, sizeof(config.socket));
+		    free(config.socket);
+		    config.socket = strdup(optarg);
                 }
                 break;
 
@@ -119,7 +121,6 @@ parse_commandline(int argc, char **argv)
 	    exit(1);
     }
 
-    config.command = WDCTL_UNDEF;
     if (strcmp(*(argv + optind), "status") == 0) {
 	    config.command = WDCTL_STATUS;
     } else if (strcmp(*(argv + optind), "stop") == 0) {
@@ -150,8 +151,9 @@ connect_to_server(char *sock_name)
 	
 	/* Connect to socket */
 	sock = socket(AF_UNIX, SOCK_STREAM, 0);
+	memset(&sa_un, 0, sizeof(sa_un));
 	sa_un.sun_family = AF_UNIX;
-	strcpy(sa_un.sun_path, sock_name);
+	strncpy(sa_un.sun_path, sock_name, (sizeof(sa_un.sun_path) - 1));
 
 	if (connect(sock, (struct sockaddr *)&sa_un, 
 			strlen(sa_un.sun_path) + sizeof(sa_un.sun_family))) {

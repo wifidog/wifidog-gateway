@@ -34,11 +34,8 @@
 #define WDCTL_STOP	2
 #define WDCTL_KILL	3
 
-/** Struct is 104 char long for unix domain socket path */
-#define MAX_SOCK_NAME_LEN 103
-
 typedef struct {
-	char	socket[MAX_SOCK_NAME_LEN];
+	char	*socket;
 	int	command;
 	char	*param;
 } s_config;
