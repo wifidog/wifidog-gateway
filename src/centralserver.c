@@ -80,7 +80,7 @@ authenticate(t_authresponse *authresponse, char *ip, char *mac, char *token, lon
 
 	if ((p1 = strstr(buf, "Auth: "))) {
 		if (sscanf(p1, "Auth: %d", &authresponse->authcode) == 1) {
-			debug(LOG_INFO, "Auth server returned authentcation code %d",
+			debug(LOG_INFO, "Auth server returned authentication code %d",
 				authresponse->authcode);
 			return(authresponse->authcode);
 		} else {
