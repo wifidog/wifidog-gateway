@@ -110,26 +110,39 @@ arp_get(char *req_ip)
 {
     FILE           *proc;
     char            *ip, *mac;
+	 char * reply;
 
     if (!(proc = fopen("/proc/net/arp", "r"))) {
         return NULL;
     }
+    if (!(ip = malloc(16))) {
+		 debug(LOG_CRIT, "Cannot allocate 16 bytes of memory for IP, Banzai!");
+		 exit(1);
+	 }
+    if (!(mac = malloc(18))) {
+		 debug(LOG_CRIT, "Cannot allocate 18 bytes of memory for MAC, Banzai!");
+		 exit(1);
+	 }
+
     /* Skip first line */
-    fscanf(proc, "%*s %*s %*s %*s %*s %*s %*s %*s %*s");
-    ip = (char *) malloc(16);
-    mac = (char *) malloc(18);
-    while (!feof(proc)) {
-        fscanf(proc, "%15s %*s %*s %17s %*s %*s", ip, mac);
-        if (strcmp(ip, req_ip) == 0) {
-            return mac;
-        }
+	 while (!feof(proc) && fgetc(proc) != '\n');
+
+	 /* Find ip, put mac in reply */
+	 reply = NULL;
+    while (!feof(proc) && (fscanf(proc, " %15[0-9.] %*s %*s %17[A-F0-9:] %*s %*s", ip, mac) == 2)) {
+		  if (strcmp(ip, req_ip) == 0) {
+				reply = mac;
+				break;
+		  }
     }
-    fclose(proc);
 
     free(ip);
-    free(mac);
+	 if (!reply)
+		 free(mac);
 
-    return NULL;
+    fclose(proc);
+
+    return reply;
 }
 
 /** Initialize the firewall rules

@@ -1,8 +1,10 @@
 # $Header$
 
 2005-02-12 Mina Naguib <mina@ilesansfil.org>
-	* fw_iptables.c: Extra sanity checking the ip we read from the iptables
-	output
+	* Stricter format rules for all *scan* functions hunting for IPs and MAC
+	addresses
+	* fw_iptables.c: Make sure scanned IP address is a valid IP address
+	* firewall.c: Fix memory leak in arp_get
 	* libhttpd/protocol.c: Abort connection if read non-ascii from client. This
 	is often a telltale sign of a program such as skype using port 80 for
 	non-http requests - this therefore ends the thread as early as possible

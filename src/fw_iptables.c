@@ -369,7 +369,7 @@ iptables_fw_counters_update(void)
     while (('\n' != fgetc(output)) && !feof(output))
         ;
     while (output && !(feof(output))) {
-        rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %15[0123456789.] %*s %*s %*s %*s %*s 0x%*u", &counter, ip);
+        rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %15[0-9.] %*s %*s %*s %*s %*s 0x%*u", &counter, ip);
         if (2 == rc && EOF != rc) {
 			  /* Sanity*/
 			  if (!inet_aton(ip, &tempaddr)) {
@@ -406,7 +406,7 @@ iptables_fw_counters_update(void)
     while (('\n' != fgetc(output)) && !feof(output))
         ;
     while (output && !(feof(output))) {
-        rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %15[0123456789.] %*s", &counter, ip);
+        rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %15[0-9.] %*s", &counter, ip);
         if (2 == rc && EOF != rc) {
 			  /* Sanity*/
 			  if (!inet_aton(ip, &tempaddr)) {
@@ -443,7 +443,7 @@ iptables_fw_counters_update(void)
     while (('\n' != fgetc(output)) && !feof(output))
         ;
     while (output && !(feof(output))) {
-        rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %*s %15[0123456789.]", &counter, ip);
+        rc = fscanf(output, "%*s %lu %*s %*s %*s %*s %*s %*s %15[0-9.]", &counter, ip);
         if (2 == rc && EOF != rc) {
 			  /* Sanity*/
 			  if (!inet_aton(ip, &tempaddr)) {
