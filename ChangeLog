@@ -1,5 +1,6 @@
 # $Header$
 2004-08-30 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* wifidog.conf: Corrected an example
 	* README.openwrt: Typo fixed, editorial changes
 	* ChangeLog: Benoit's last update entry was set in the future ;-).
 	* All over src/: Compiled with -Wall and fixed all nagging.
