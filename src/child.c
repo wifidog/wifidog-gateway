@@ -75,11 +75,13 @@ sigchld_handler(int signal)
 	 */
 	
 	if (status > 0) {
+        debug(D_LOG_DEBUG, "Allowing %s with mac %s and profile %d", tmp_ci->ip, tmp_ci->mac, status);
 		fw_allow(tmp_ci->ip, tmp_ci->mac, status);
 		if (tmp_node = node_find_by_ip(tmp_ci->ip)) {
 			tmp_node->active = 1;
 		}
 	} else {
+        debug(D_LOG_DEBUG, "Denying %s with mac %s and profile %d", tmp_ci->ip, tmp_ci->mac, status);
 		if (tmp_node = node_find_by_ip(tmp_ci->ip)) {
 			fw_deny(tmp_ci->ip, tmp_ci->mac, status);
 			node_delete(tmp_node);

@@ -36,6 +36,7 @@ debug(int level, char *format, ...)
 
     if (config.debuglevel >= level) {
         va_start(vlist, format);
+        fprintf(stderr, "[debug %d] ", level);
         vfprintf(stderr, format, vlist);
         fputc('\n', stderr);
         fflush(stderr);
