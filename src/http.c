@@ -40,6 +40,7 @@
 #include "http.h"
 #include "httpd.h"
 #include "client_list.h"
+#include "common.h"
 
 extern pthread_mutex_t	client_list_mutex;
 
@@ -47,7 +48,9 @@ void
 http_callback_404(httpd * webserver)
 {
 	char		*newlocation,
-			protocol[6];
+			protocol[6],
+			tmp_url[MAX_BUF],
+			*url;
 	int		port;
 	s_config	*config = config_get_config();
 	t_auth_serv	*auth_server = get_auth_server();
@@ -59,16 +62,25 @@ http_callback_404(httpd * webserver)
 		strcpy(protocol, "http");
 		port = auth_server->authserv_http_port;
 	}
+
+	memset(tmp_url, 0, sizeof(tmp_url));
+	snprintf(tmp_url, (sizeof(tmp_url) - 1), "http://%s%s",
+			webserver->request.host,
+			webserver->request.path);
+	url = httpdUrlEncode(tmp_url);
 	
 	if ((asprintf(&newlocation, "Location: %s://%s:%d%s/login?"
-			"gw_address=%s&gw_port=%d&gw_id=%s",
+			"gw_address=%s&gw_port=%d&gw_id=%s&url=%s",
 			protocol,
 			auth_server->authserv_hostname,
 			port,
 			auth_server->authserv_path,
 			config->gw_address, config->gw_port, 
-			config->gw_id)) == -1) {
+			config->gw_id,
+			url)) == -1) {
 		debug(LOG_ERR, "Failed to asprintf newlocation");
+		free(url);
+		free(newlocation);
 		httpdOutput(webserver, "Internal error occurred");
 	} else {
 		/* Re-direct them to auth server */
@@ -76,16 +88,19 @@ http_callback_404(httpd * webserver)
 		httpdAddHeader(webserver, newlocation);
 		httpdPrintf(webserver, "<html><head><title>Redirection</title></head><body>"
 				"Please <a href='%s://%s:%d%s/login?gw_address"
-				"=%s&gw_port=%d&gw_id=%s'>click here</a> to "
+				"=%s&gw_port=%d&gw_id=%s&url=%s'>click here</a> to "
 				"login",
 				protocol,
 				auth_server->authserv_hostname,
 				port,
 				auth_server->authserv_path,
 				config->gw_address, 
-				config->gw_port, config->gw_id);
+				config->gw_port,
+				config->gw_id,
+				url);
 		debug(LOG_INFO, "Captured %s and re-directed them to login "
 			"page", webserver->clientAddr);
+		free(url);
 		free(newlocation);
 	}
 }

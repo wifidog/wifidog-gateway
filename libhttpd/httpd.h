@@ -5,7 +5,7 @@
 ** Terms under which this software may be used or copied are
 ** provided in the  specific license associated with this product.
 **
-** Hughes Technologies disclaims all warranties with regard to this
+** hUghes Technologies disclaims all warranties with regard to this
 ** software, including all implied warranties of merchantability and
 ** fitness, in no event shall Hughes Technologies be liable for any
 ** special, indirect or consequential damages or any damages whatsoever
@@ -98,6 +98,8 @@ typedef	struct {
 		contentLength,
 		authLength;
 	char	path[HTTP_MAX_URL],
+		host[HTTP_MAX_URL], /* acv@acv.ca/wifidog: Added decoding
+				       of host: header if present. */
 		userAgent[HTTP_MAX_URL],
 		referer[HTTP_MAX_URL],
 		ifModified[HTTP_MAX_URL],

@@ -3,6 +3,7 @@
 2004-08-20 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Debug output of all HTTP transactions and their responses.
 	* Changed ipkg to use wifidog.conf from the base tree
+	* Send url to central server for link back out
 
 2004-08-19 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Sort of fixed the hanging thread (with an explicit thread kill)

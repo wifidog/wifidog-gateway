@@ -518,6 +518,18 @@ int httpdReadRequest(server)
 						HTTP_MAX_URL);
 				}
 			}
+			/* acv@acv.ca/wifidog: Added decoding of host: if
+			 * present. */
+			if (strncasecmp(buf,"Host: ",6) == 0)
+			{
+				cp = index(buf,':') + 2;
+				if(cp)
+				{
+					strncpy(server->request.host,cp,
+						HTTP_MAX_URL);
+				}
+			}
+			/* End modification */
 			if (strncasecmp(buf,"If-Modified-Since: ",19) == 0)
 			{
 				cp = index(buf,':') + 2;
