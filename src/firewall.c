@@ -244,19 +244,19 @@ fw_counter(void)
 				pthread_mutex_lock(&nodes_mutex);
 
 				p1 = node_find_by_ip(ip);
-
-				if (p1->counter == counter) {
+				
+				if (!(p1) || (p1->rights->last_checked +
+					(config.checkinterval *
+					 config.clienttimeout)) > time(NULL)) {
+					/* Do nothing */
+				} else if (p1->counter == counter) {
 					/* expire clients for inactivity */
 					debug(LOG_INFO, "Client %s was "
 						"inactive", ip);
 					fw_deny(p1->ip, p1->mac,
 						p1->rights->profile);
 					node_delete(p1);
-				} else if (!(!(p1) || !(p1->active) ||
-					(p1->rights->last_checked +
-					(config.checkinterval *
-					 config.clienttimeout)) > time(NULL))) {
-
+				} else if (!(p1->active)) {
 					p1->rights->last_checked = time(NULL);
 					p1->counter = counter;
 					
