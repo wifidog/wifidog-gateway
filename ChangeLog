@@ -1,4 +1,7 @@
 # $Header$
+2004-07-21 Philippe April <wifidog@philippeapril.com>
+    * Cleaned up the ipkg makefile
+    * Added makefile to build on Debian
 
 2004-07-19 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Build script for OpenWRT ipkg

@@ -1,6 +1,6 @@
-OpenWRT specific README
-
 $Header$
+
+OpenWRT specific README
 
 In order to compile OpenWRT for the linksys WRT54G, you must first
 obtain and install the OpenWRT build environement from the OpenWRT
@@ -10,22 +10,13 @@ Once you have successfully built a full toolchain according to the
 instructions for OpwnWRT, you can compile binaries for the MIPS_EL
 platform.
 
-For WiFiDog, you must do:
+To complete with the creation of an 'ipkg' for OpenWRT:
 
-$ ./autogen.sh BUILDROOT=$HOME/buildroot
-$ make
+$ ./ipkg/rules BUILDROOT=<path_to_openwrt_buildroot>
 
-This example assumes that you have installed the OpenWRT buildroot
-in your home directory. You must run autogen.sh from the directory
-containing the WiFiDog root. You might need to give autogen.sh the
-execute permission.
+If your OpenWRT buildroot is compiled and the toolchain is complete,
+you should now have an 'ipkg' in the parent directory of where you
+have WiFiDog.
 
-Then, to build the ipkg for use on the OpenWRT, you do the following:
-
-$ cd openwrt
-$ make BUILDROOT=$HOME/buildroot
-
-This will fail if you don't have an already compiled OpenWRT buildroot
-with the complete toolchain. The Makefile will compile things that aren't
-compiled by default and import all the binaries in the right places in
-the ipkg tree.
+The Makefile will compile iptables that is not compiled by default
+and import all the binaries in the right places in the ipkg tree.
