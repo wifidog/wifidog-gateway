@@ -1,4 +1,7 @@
 # $Header$
+2004-05-14  Philippe April <papril777@yahoo.com>
+    * Fixed crash when receiving SIGPIPE signal with write() would fail
+
 2004-05-13  Philippe April <papril777@yahoo.com>
     * Advertise to the central server when we logged out a user
 

@@ -208,6 +208,12 @@ init_signals(void)
 		exit(1);
 	}
 
+	/* Trap SIGPIPE */
+	if (sigaction(SIGPIPE, &sa, NULL) == -1) {
+		debug(LOG_ERR, "sigaction(): %s", strerror(errno));
+		exit(1);
+	}
+
 	sa.sa_handler = termination_handler;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART;
