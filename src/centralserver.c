@@ -58,7 +58,7 @@ extern pthread_mutex_t	config_mutex;
 @param incoming Current counter of the client's total incoming traffic, in bytes 
 @param outgoing Current counter of the client's total outgoing traffic, in bytes 
 */
-int
+t_authcode
 auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, char *mac, char *token, unsigned long long int incoming, unsigned long long int outgoing)
 {
 	int sockfd;
@@ -66,13 +66,13 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	char buf[MAX_BUF];
 	char *tmp;
 
-	/* Blanket default is failed. */
-	authresponse->authcode = AUTH_VALIDATION_FAILED;
+	/* Blanket default is error. */
+	authresponse->authcode = AUTH_ERROR;
 	
 	sockfd = connect_auth_server();
 	if (sockfd == -1) {
 		/* Could not connect to any auth server */
-		return (-1);
+		return (AUTH_ERROR);
 	}
 
 	/**
@@ -93,14 +93,13 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	send(sockfd, buf, strlen(buf), 0);
 
 	numbytes = totalbytes = 0;
-	while ((numbytes = read(sockfd, buf + totalbytes, 
-				MAX_BUF - (totalbytes + 1))) > 0)
-		totalbytes =+ numbytes;
+	while ((numbytes = read(sockfd, buf + totalbytes, MAX_BUF - (totalbytes + 1))) > 0)
+		totalbytes += numbytes;
 	
 	if (numbytes == -1) {
 		debug(LOG_ERR, "Error reading from auth server: %s", strerror(errno));
 		close(sockfd);
-		return(-1);
+		return(AUTH_ERROR);
 	}
 	close(sockfd);
 
@@ -115,7 +114,8 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 			debug(LOG_WARNING, "Auth server did not return expected authentication code");
 			return(AUTH_ERROR);
 		}
-	} else {
+	}
+	else {
 		return(AUTH_ERROR);
 	}
 

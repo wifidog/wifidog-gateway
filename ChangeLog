@@ -1,4 +1,11 @@
 # $Header$
+
+2005-02-24 Mina Naguib <mina@ilesansfil.org>
+	* auth_server_request now returns AUTH_ERROR on error instead of AUTH_VALIDATION_FAILED
+	* centralserver.c: Fix typo (was =+, made it +=) that made the response
+	from the auth server corrupted in memory if the entire response would not
+	fit in 1 packet and retrieved with 1 read() call
+
 2005-02-22 Philippe April <philippe@ilesansfil.org>
 	* Tagged v1_1_0_beta2
 
