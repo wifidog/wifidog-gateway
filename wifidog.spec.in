@@ -1,0 +1,61 @@
+# $Header$
+
+%define name wifidog
+%define version @VERSION@
+%define release 1
+%define prefix /usr/local
+
+Summary: The WiFi Guard Dog project will be a complete and embeedable captive portal solution for wireless community groups or individuals who wish to open a free HotSpot while still preventing abuse of their Internet connection.
+Name: %{name}
+Version: %{version}
+Release: %{release}
+Source: http://download.sourceforge.net/wifidog/%{name}-%{version}.tar.gz
+Requires: 
+Group:	Libraries/System
+Copyright: GPL
+Packager: Benoit Grégoire <bock@step.polymtl.ca>
+BuildRoot: %{_tmppath}/%{name}-%{version}-root
+Prereq: /sbin/ldconfig
+
+%description
+The WiFi Guard Dog project will be a complete and embeedable captive portal solution for wireless community groups or individuals who wish to open a free HotSpot while still preventing abuse of their Internet connection.
+
+%prep
+%setup -q
+
+%build
+./configure --prefix=%{_prefix} \
+            --libdir=%{_libdir} --datadir=%{_datadir} \
+            --includedir=%{_includedir}
+
+make RPM_OPT_FLAGS="$RPM_OPT_FLAGS"
+
+%install
+rm -rf $RPM_BUILD_ROOT
+mkdir -p $RPM_BUILD_ROOT%{prefix}
+
+LIBRARY_PATH=$RPM_BUILD_ROOT%{_libdir} make prefix=$RPM_BUILD_ROOT%{_prefix} \
+    libdir=$RPM_BUILD_ROOT%{_libdir} \
+    datadir=$RPM_BUILD_ROOT%{_datadir} \
+    includedir=$RPM_BUILD_ROOT%{_includedir} install
+
+%makeinstall
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+
+%files
+%defattr(-,root,root)
+%doc AUTHORS COPYING ChangeLog INSTALL NEWS README totest.txt doc/html doc/implementation_notes.txt
+%{_bindir}/*
+%{_libdir}/*.a
+%{_libdir}/*.la
+%{_libdir}/*.so
+%{_libdir}/*.so*
+%{_includedir}/*
+%{_datadir}/libofx/dtd/*
+
+%changelog
+* Sat March 8 2004 Benoit Grégoire <bock@step.polymtl.ca>
+- Created spec file

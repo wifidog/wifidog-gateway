@@ -1,0 +1,75 @@
+#!/bin/sh
+
+#*******************************************************************\
+# This program is free software; you can redistribute it and/or    *
+# modify it under the terms of the GNU General Public License as   *
+# published by the Free Software Foundation; either version 2 of   *
+# the License, or (at your option) any later version.              *
+#                                                                  *
+# This program is distributed in the hope that it will be useful,  *
+# but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+# GNU General Public License for more details.                     *
+#                                                                  *
+# You should have received a copy of the GNU General Public License*
+# along with this program; if not, contact:                        *
+#                                                                  *
+# Free Software Foundation           Voice:  +1-617-542-5942       *
+# 59 Temple Place - Suite 330        Fax:    +1-617-542-2652       *
+# Boston, MA  02111-1307,  USA       gnu@gnu.org                   *
+#                                                                  *
+#*******************************************************************/
+
+# $Header$ 
+
+#    @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
+
+IPTABLES=/sbin/iptables
+
+function usage {
+    echo "Usage: $0 <gw_interface> <gw_ip> <gw_port> <authserv_ip>"
+    echo
+}
+
+if [ ! $4 ]; then
+    usage
+    exit 1
+fi
+
+GW_INTERFACE=$1
+GW_IP=$2
+GW_PORT=$3
+AUTHSERV_IP=$4
+
+${IPTABLES} -t nat -N wifidog_p1
+${IPTABLES} -t nat -A wifidog_p1 -d ${GW_IP} -j ACCEPT
+${IPTABLES} -t nat -A wifidog_p1 -d ${AUTHSERV_IP} -j ACCEPT
+${IPTABLES} -t nat -A wifidog_p1 -p udp --dport 53 -j ACCEPT
+${IPTABLES} -t nat -A wifidog_p1 -p tcp --dport 80 -j REDIRECT --to-ports ${GW_PORT}
+${IPTABLES} -t nat -A wifidog_p1 -j DROP
+
+${IPTABLES} -t nat -N wifidog_p2
+${IPTABLES} -t nat -A wifidog_p2 -j ACCEPT
+
+${IPTABLES} -t nat -N wifidog_p3
+${IPTABLES} -t nat -A wifidog_p3 -j ACCEPT
+
+${IPTABLES} -t nat -N wifidog_p4
+${IPTABLES} -t nat -A wifidog_p4 -j ACCEPT
+
+${IPTABLES} -t nat -N wifidog_p5
+${IPTABLES} -t nat -A wifidog_p5 -j ACCEPT
+
+${IPTABLES} -t nat -N wifidog_class
+${IPTABLES} -t nat -A wifidog_class -i ${GW_INTERFACE} -m mark --mark 0x1 -j wifidog_p1
+${IPTABLES} -t nat -A wifidog_class -i ${GW_INTERFACE} -m mark --mark 0x2 -j wifidog_p2
+${IPTABLES} -t nat -A wifidog_class -i ${GW_INTERFACE} -m mark --mark 0x3 -j wifidog_p3
+${IPTABLES} -t nat -A wifidog_class -i ${GW_INTERFACE} -m mark --mark 0x4 -j wifidog_p4
+${IPTABLES} -t nat -A wifidog_class -i ${GW_INTERFACE} -m mark --mark 0x5 -j wifidog_p5
+
+${IPTABLES} -t mangle -N wifidog_mark
+${IPTABLES} -t mangle -A wifidog_mark -j MARK --set-mark 0x1
+
+${IPTABLES} -t mangle -I PREROUTING 1 -i eth1 -j wifidog_mark
+${IPTABLES} -t nat -I PREROUTING 1 -i eth1 -j wifidog_class
+

@@ -1,0 +1,54 @@
+#!/bin/sh
+
+#*******************************************************************\
+# This program is free software; you can redistribute it and/or    *
+# modify it under the terms of the GNU General Public License as   *
+# published by the Free Software Foundation; either version 2 of   *
+# the License, or (at your option) any later version.              *
+#                                                                  *
+# This program is distributed in the hope that it will be useful,  *
+# but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+# GNU General Public License for more details.                     *
+#                                                                  *
+# You should have received a copy of the GNU General Public License*
+# along with this program; if not, contact:                        *
+#                                                                  *
+# Free Software Foundation           Voice:  +1-617-542-5942       *
+# 59 Temple Place - Suite 330        Fax:    +1-617-542-2652       *
+# Boston, MA  02111-1307,  USA       gnu@gnu.org                   *
+#                                                                  *
+#*******************************************************************/
+
+# $Header$ 
+
+#    @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
+
+
+IPTABLES=/sbin/iptables
+
+function usage {
+    echo "Usage: $0 <allow|deny> <ip> <mac> <profile>"
+    echo
+}
+
+if [ ! $4 ]; then
+    usage
+    exit 1
+fi
+
+case "$1" in
+    allow)
+        ${IPTABLES} -t mangle -A wifidog_mark -s $2 -m mac --mac-source $3 -j MARK --set-mark $4
+        ;;
+
+    deny)
+        ${IPTABLES} -t mangle -D wifidog_mark -s $2 -m mac --mac-source $3 -j MARK --set-mark $4
+        ;;
+
+    *)
+        usage
+        exit
+        ;;
+esac
+
