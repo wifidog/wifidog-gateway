@@ -151,7 +151,6 @@ connect_to_server(char *sock_name)
 	/* Connect to socket */
 	sock = socket(AF_UNIX, SOCK_STREAM, 0);
 	sa_un.sun_family = AF_UNIX;
-	sa_un.sun_len = strlen(sock_name);
 	strcpy(sa_un.sun_path, sock_name);
 	/* XXX Again, the + 2 is magical on OS X.... */
 	if (connect(sock, (struct sockaddr *)&sa_un, 

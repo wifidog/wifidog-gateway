@@ -1,6 +1,11 @@
 # $Header$
+
+2004-08-03 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Fixed broken sockaddr_un usage in wdctl.c and wdctl_thread.c
+
 2004-08-01 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Delete everything in phpauth, it will now live in it's own module (wifidog-auth)
+
 2004-08-01 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Added wdctl facility
 

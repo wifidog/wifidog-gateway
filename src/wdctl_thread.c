@@ -93,11 +93,10 @@ thread_wdctl(void *arg)
 
 	debug(LOG_DEBUG, "Filling sockaddr_un");
 	strcpy(sa_un.sun_path, sock_name);
-	sa_un.sun_len = strlen(sock_name);
 	sa_un.sun_family = AF_UNIX;
 	
-	debug(LOG_DEBUG, "Binding socket (%s) (%d/%d)", sa_un.sun_path,
-			sa_un.sun_len, strlen(sock_name));
+	debug(LOG_DEBUG, "Binding socket (%s) (%d)", sa_un.sun_path,
+			strlen(sock_name));
 	/* Which to use, AF_UNIX, PF_UNIX, AF_LOCAL, PF_LOCAL? */
 	/* XXX That +2 seems to be needed in OS X. Not sure why. */
 	if (bind(sock, (struct sockaddr *)&sa_un, strlen(sock_name) + 2)) {
