@@ -46,15 +46,25 @@ extern pthread_mutex_t	client_list_mutex;
 void
 http_callback_404(httpd * webserver)
 {
-	char *newlocation;
-	s_config *config = config_get_config();
-	t_auth_serv *auth_server = get_auth_server();
+	char		*newlocation,
+			protocol[6];
+	int		port;
+	s_config	*config = config_get_config();
+	t_auth_serv	*auth_server = get_auth_server();
+	
+	if (auth_server->authserv_use_ssl) {
+		strcpy(protocol, "https");
+		port = auth_server->authserv_ssl_port;
+	} else {
+		strcpy(protocol, "http");
+		port = auth_server->authserv_http_port;
+	}
 	
 	if ((asprintf(&newlocation, "Location: %s://%s:%d%s/login?"
 			"gw_address=%s&gw_port=%d&gw_id=%s",
-			auth_server->authserv_protocol,
+			protocol,
 			auth_server->authserv_hostname,
-			auth_server->authserv_port,
+			port,
 			auth_server->authserv_path,
 			config->gw_address, config->gw_port, 
 			config->gw_id)) == -1) {
@@ -68,9 +78,9 @@ http_callback_404(httpd * webserver)
 				"Please <a href='%s://%s:%d%s/login?gw_address"
 				"=%s&gw_port=%d&gw_id=%s'>click here</a> to "
 				"login",
-				auth_server->authserv_protocol,
+				protocol,
 				auth_server->authserv_hostname,
-				auth_server->authserv_port,
+				port,
 				auth_server->authserv_path,
 				config->gw_address, 
 				config->gw_port, config->gw_id);

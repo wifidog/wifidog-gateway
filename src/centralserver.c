@@ -82,13 +82,13 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 		}
 	
 		their_addr.sin_family = AF_INET;
-		their_addr.sin_port = htons(auth_server->authserv_port);
+		their_addr.sin_port = htons(auth_server->authserv_http_port);
 		their_addr.sin_addr = *((struct in_addr *)he->h_addr);
 		memset(&(their_addr.sin_zero), '\0', sizeof(their_addr.sin_zero));
 
 		debug(LOG_INFO, "Connecting to auth server %s on port %d", 
 			auth_server->authserv_hostname, 
-			auth_server->authserv_port);
+			auth_server->authserv_http_port);
 
 		if (connect(sockfd, (struct sockaddr *)&their_addr,
 					sizeof(struct sockaddr)) == -1) {

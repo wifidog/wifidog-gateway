@@ -75,7 +75,9 @@ thread_ping(void *arg)
 
 		/* No longer needs to be locked */
 		pthread_mutex_unlock(&cond_mutex);
-	
+
+		fprintf(stderr, "BANG\n");
+		
 		ping();
 	}
 }
@@ -107,23 +109,25 @@ ping(void)
 				strerror(errno));
 		debug(LOG_ERR, "Bumping auth server to last in line.");
 		mark_auth_server_bad(auth_server);
+		close(sockfd);
 		return;
 	}
 
 	their_addr.sin_family = AF_INET;
-	their_addr.sin_port = htons(auth_server->authserv_port);
+	their_addr.sin_port = htons(auth_server->authserv_http_port);
 	their_addr.sin_addr = *((struct in_addr *)he->h_addr);
 	memset(&(their_addr.sin_zero), '\0', sizeof(their_addr.sin_zero));
 
 	debug(LOG_INFO, "Connecting to auth server %s on port %d", 
 			auth_server->authserv_hostname, 
-			auth_server->authserv_port);
+			auth_server->authserv_http_port);
 
 	if (connect(sockfd, (struct sockaddr *)&their_addr,
 				sizeof(struct sockaddr)) == -1) {
 		debug(LOG_ERR, "connect(): %s", strerror(errno));
 		debug(LOG_ERR, "Bumping auth server to last in line.");
 		mark_auth_server_bad(auth_server);
+		close(sockfd);
 		return;
 	}
 

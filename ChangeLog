@@ -1,7 +1,8 @@
 # $Header$
 2004-08-13 Alexandre Carmel-Veilleux <acv@acv.ca>
-	* All Auth Server configuration now handled by the "AuthServer"
-	  directive.
+	* All Auth Server configuration now handled by the "AuthServer" 
+	directive.
+	* The "AuthServer" directive is now multi line.
 
 2004-08-11 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Added code to do heartbeat.

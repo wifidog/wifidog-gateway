@@ -67,6 +67,11 @@ typedef enum {
 	oGatewayAddress,
 	oGatewayPort,
 	oAuthServer,
+	oAuthServHostname,
+	oAuthServSSLAvailable,
+	oAuthServSSLPort,
+	oAuthServHTTPPort,
+	oAuthServPath,
 	oAuthServMaxTries,
 	oHTTPDMaxConn,
 	oHTTPDName,
@@ -98,14 +103,18 @@ static const struct {
 	{ "checkinterval",      oCheckInterval },
 	{ "syslogfacility", 	oSyslogFacility },
 	{ "wdctlsocket", 	oWdctlSocket },
+	{ "hostname",		oAuthServHostname },
+	{ "sslavailable",	oAuthServSSLAvailable },
+	{ "sslport",		oAuthServSSLPort },
+	{ "httpport",		oAuthServHTTPPort },
+	{ "path",		oAuthServPath },
 	{ NULL,                 oBadOption },
 };
 
 static OpCodes config_parse_token(const char *cp, const char *filename, int linenum);
 static void config_notnull(void *parm, char *parmname);
 static int parse_boolean_value(char *);
-static void new_auth_server(char *, char *, char *, int);
-static void parse_auth_server(char *, char *);
+static void parse_auth_server(FILE *, char *, int *);
 
 /** Accessor for the current gateway configuration
 @return:  A pointer to the current config.  The pointer isn't opaque, but should be treated as READ-ONLY
@@ -167,45 +176,132 @@ config_parse_token(const char *cp, const char *filename, int linenum)
 }
 
 static void
-parse_auth_server(char *p1, char *p2)
+parse_auth_server(FILE *file, char *filename, int *linenum)
 {
-	char	*host,
-		*protocol,
-		*path;
+	char		*host = NULL,
+			*path = NULL,
+			line[MAX_BUF],
+			*p1,
+			*p2;
+	int		http_port,
+			ssl_port,
+			ssl_available,
+			opcode;
+	t_auth_serv	*new,
+			*tmp;
 
-	protocol = p1;
-		
-	/* Check for the presence of more then
-	 * one argument. */
-	if (p2 != NULL && (*(p2 + 1) != '\n') && (*(p2 + 1) != '\0')) {
-		p2++;
-		host = p2;
-		
-		p2 = strchr(p2, ' ' );
-		
-		if (p2 != NULL && (*p2 != '\n') && (*p2 != '\0')) {
+	/* Defaults */
+	path = strdup(DEFAULT_AUTHSERVPATH);
+	http_port = DEFAULT_AUTHSERVPORT;
+	ssl_port = DEFAULT_AUTHSERVSSLPORT;
+	ssl_available = 0;
+	
+	/* Read first line */	
+	memset(line, 0, MAX_BUF);
+	fgets(line, MAX_BUF - 1, file);
+	(*linenum)++; /* increment line counter. */
+
+	/* Parsing loop */
+	while ((line[0] != '\0') && (strchr(line, '}') == NULL)) {
+		/* skip leading blank spaces */
+		for (p1 = line; isblank(*p1); p1++);
+
+		/* End at end of line */
+		if ((p2 = strchr(p1, '#')) != NULL) {
+			*p2 = '\0';
+		} else if ((p2 = strchr(p1, '\r')) != NULL) {
+			*p2 = '\0';
+		} else if ((p2 = strchr(p1, '\n')) != NULL) {
+			*p2 = '\0';
+		}
+
+		/* next, we coopt the parsing of the regular config */
+		if (strlen(p1) > 0) {
+			p2 = p1;
+			/* keep going until word boundary is found. */
+			while ((*p2 != '\0') && (!isblank(*p2)))
+				p2++;
+
+			/* Terminate first word. */
 			*p2 = '\0';
 			p2++;
-			
-			path = p2;
 
-			p2 = strchr(p2, ' ');
-			if (p2 != NULL && (*p2 != '\n') && (*p2 != '\0')) {
-				*p2 = '\0';
+			/* skip all further blanks. */
+			while (isblank(*p2))
 				p2++;
-				
-				new_auth_server(host, protocol, path, atoi(p2));
-			} else {
-				new_auth_server(host, protocol, path,
-						DEFAULT_AUTHSERVPORT);
+			
+			/* Get opcode */
+			opcode = config_parse_token(p1, filename, *linenum);
+			
+			switch (opcode) {
+				case oAuthServHostname:
+					host = strdup(p2);
+					break;
+				case oAuthServPath:
+					free(path);
+					path = strdup(p2);
+					break;
+				case oAuthServSSLPort:
+					ssl_port = atoi(p2);
+					break;
+				case oAuthServHTTPPort:
+					http_port = atoi(p2);
+					break;
+				case oAuthServSSLAvailable:
+					ssl_available = parse_boolean_value(p2);
+					if (ssl_available < 0)
+						ssl_available = 0;
+					break;
+				case oBadOption:
+				default:
+					debug(LOG_ERR, "Bad option on line %d "
+							"in %s.", *linenum,
+							filename);
+					debug(LOG_ERR, "Exiting...");
+					exit(-1);
+					break;
 			}
-		} else {
-			debug(LOG_ERR, "No auth server path specified "
-					"for %s", host);
 		}
-	} else {
-		debug(LOG_ERR, "No auth server host specified");
+
+		/* Read next line */
+		memset(line, 0, MAX_BUF);
+		fgets(line, MAX_BUF - 1, file);
+		(*linenum)++; /* increment line counter. */
 	}
+
+	/* only proceed if we have an host and a path */
+	if (host == NULL)
+		return;
+	
+	debug(LOG_DEBUG, "Adding %s:%d (SSL: %d) %s to the auth server list",
+			host, http_port, ssl_port, path);
+
+	/* Allocate memory */
+	new = (t_auth_serv *)malloc(sizeof(t_auth_serv));
+	if (new == NULL) {
+		debug(LOG_ERR, "Could not allocate memory for auth server "
+				"configuration");
+		exit(1);
+	}
+	
+	/* Fill in struct */
+	new->authserv_hostname = host;
+	new->authserv_use_ssl = ssl_available;
+	new->authserv_path = path;
+	new->authserv_http_port = http_port;
+	new->authserv_ssl_port = ssl_port;
+	new->next = NULL;
+	
+	/* If it's the first, add to config, else append to last server */
+	if (config.auth_servers == NULL) {
+		config.auth_servers = new;
+	} else {
+		for (tmp = config.auth_servers; tmp->next != NULL;
+				tmp = tmp->next);
+		tmp->next = new;
+	}
+	
+	debug(LOG_DEBUG, "Auth server added");
 }
 
 /**
@@ -227,6 +323,7 @@ config_read(char *filename)
 	}
 
 	while (!feof(fd) && fgets(line, MAX_BUF, fd)) {
+		linenum++;
 		s = line;
 
 		if (s[strlen(s) - 1] == '\n')
@@ -281,7 +378,8 @@ config_read(char *filename)
 					sscanf(p1, "%d", &config.gw_port);
 					break;
 				case oAuthServer:
-					parse_auth_server(p1, p2);
+					parse_auth_server(fd, filename,
+							&linenum);
 					break;
 				case oHTTPDName:
 					config.httpdname = strdup(p1);
@@ -293,7 +391,10 @@ config_read(char *filename)
 					sscanf(p1, "%d", &config.authserv_maxtries);
 					break;
 				case oBadOption:
-                    debug(LOG_ERR, "Exiting...");
+					debug(LOG_ERR, "Bad option on line %d "
+							"in %s.", linenum,
+							filename);
+					debug(LOG_ERR, "Exiting...");
 					exit(-1);
 					break;
 				case oCheckInterval:
@@ -365,47 +466,6 @@ config_notnull(void *parm, char *parmname)
 		debug(LOG_ERR, "%s is not set", parmname);
 		missing_parms = 1;
 	}
-}
-
-/** @internal
-    Register a new auth server.
-
-    @param host Hostname of the server
-    @param port Port of the server
-*/
-static void
-new_auth_server(char *host, char *protocol, char *path, int port)
-{
-	t_auth_serv	*new, *tmp;
-
-	debug(LOG_DEBUG, "Adding %s://%s:%d%s to the auth server list",
-			protocol, host, port, path);
-
-	/* Allocate memory */
-	new = (t_auth_serv *)malloc(sizeof(t_auth_serv));
-	if (new == NULL) {
-		debug(LOG_ERR, "Could not allocate memory for auth server "
-				"configuration");
-		exit(1);
-	}
-	
-	/* Fill in struct */
-	new->authserv_hostname = strdup(host);
-	new->authserv_protocol = strdup(protocol);
-	new->authserv_path = strdup(path);
-	new->authserv_port = port;
-	new->next = NULL;
-	
-	/* If it's the first, add to config, else append to last server */
-	if (config.auth_servers == NULL) {
-		config.auth_servers = new;
-	} else {
-		for (tmp = config.auth_servers; tmp->next != NULL;
-				tmp = tmp->next);
-		tmp->next = new;
-	}
-	
-	debug(LOG_DEBUG, "Auth server added");
 }
 
 /**

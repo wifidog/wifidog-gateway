@@ -36,6 +36,7 @@
 #define DEFAULT_GATEWAYID "default"
 #define DEFAULT_GATEWAYPORT 2060
 #define DEFAULT_AUTHSERVPORT 80
+#define DEFAULT_AUTHSERVSSLPORT 443
 #define DEFAULT_HTTPDNAME "WiFiDog"
 #define DEFAULT_CLIENTTIMEOUT 5
 #define DEFAULT_CHECKINTERVAL 5
@@ -47,10 +48,13 @@
 /*@}*/ 
 
 typedef struct _auth_serv_t {
-    char *authserv_protocol;	/**< @brief Http or Https??? */
     char *authserv_hostname;	/**< @brief Hostname of the central server */
     char *authserv_path;	/**< @brief Path where wifidog resides */
-    int authserv_port;	    /**< @brief Port the central server listens on */
+    int authserv_http_port;	/**< @brief Http port the central server
+				     listens on */
+    int authserv_ssl_port;	/**< @brief Https port the central server
+				     listens on */
+    int authserv_use_ssl;	/**< @brief Use SSL or not */
     struct _auth_serv_t *next;
 } t_auth_serv;
 
