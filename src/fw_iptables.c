@@ -216,17 +216,20 @@ iptables_fw_init(void)
 	  */
 
 	 		/* Create new chains */
+			iptables_do_command("-t nat -N " TABLE_WIFIDOG_OUTGOING);
 			iptables_do_command("-t nat -N " TABLE_WIFIDOG_WIFI_TO_ROUTER);
 			iptables_do_command("-t nat -N " TABLE_WIFIDOG_WIFI_TO_INTERNET);
 			iptables_do_command("-t nat -N " TABLE_WIFIDOG_UNKNOWN);
 
 			/* Assign links and rules to these new chains */
-			iptables_do_command("-t nat -I PREROUTING 1 -i %s -d %s -j " TABLE_WIFIDOG_WIFI_TO_ROUTER, gw_interface, gw_address);
+			iptables_do_command("-t nat -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_OUTGOING, gw_interface);
+
+			iptables_do_command("-t nat -A " TABLE_WIFIDOG_OUTGOING " -d %s -j " TABLE_WIFIDOG_WIFI_TO_ROUTER, gw_address);
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_ROUTER " -j ACCEPT");
 
-			iptables_do_command("-t nat -I PREROUTING 2 -i %s -j " TABLE_WIFIDOG_WIFI_TO_INTERNET, gw_interface);
-			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j RETURN", FW_MARK_KNOWN);
-			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j RETURN", FW_MARK_PROBATION);
+			iptables_do_command("-t nat -A " TABLE_WIFIDOG_OUTGOING " -j " TABLE_WIFIDOG_WIFI_TO_INTERNET);
+			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j ACCEPT", FW_MARK_KNOWN);
+			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j ACCEPT", FW_MARK_PROBATION);
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_UNKNOWN);
 
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 80 -j REDIRECT --to-ports %d", gw_port);
@@ -300,11 +303,12 @@ iptables_fw_destroy(void)
 	  * Everything in the NAT table
 	  *
 	  */
-	 iptables_fw_destroy_mention("nat", "PREROUTING", TABLE_WIFIDOG_WIFI_TO_ROUTER);
-	 iptables_fw_destroy_mention("nat", "PREROUTING", TABLE_WIFIDOG_WIFI_TO_INTERNET);
+	 iptables_fw_destroy_mention("nat", "PREROUTING", TABLE_WIFIDOG_OUTGOING);
+    iptables_do_command("-t nat -F " TABLE_WIFIDOG_OUTGOING);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_WIFI_TO_ROUTER);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_WIFI_TO_INTERNET);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_UNKNOWN);
+    iptables_do_command("-t nat -X " TABLE_WIFIDOG_OUTGOING);
     iptables_do_command("-t nat -X " TABLE_WIFIDOG_WIFI_TO_ROUTER);
     iptables_do_command("-t nat -X " TABLE_WIFIDOG_WIFI_TO_INTERNET);
     iptables_do_command("-t nat -X " TABLE_WIFIDOG_UNKNOWN);
