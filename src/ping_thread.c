@@ -172,8 +172,8 @@ ping(void)
 		if (nfds > 0) {
 			/** We don't have to use FD_ISSET() because there
 			 *  was only one fd. */
-			numbytes = read(sockfd, request + totalbytes, 8);
-					//MAX_BUF - (totalbytes + 1));
+			numbytes = read(sockfd, request + totalbytes,
+					MAX_BUF - (totalbytes + 1));
 			if (numbytes < 0) {
 				debug(LOG_ERR, "read(): %s", strerror(errno));
 				mark_auth_server_bad(auth_server);
