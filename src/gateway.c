@@ -189,10 +189,10 @@ main_loop(void)
 		exit(1);
 	}
 	debug(LOG_DEBUG, "Assigning callbacks to web server");
-	httpdAddCContent(webserver, "/wifidog", "about", 0, NULL,
-			http_callback_about);
-	httpdAddCContent(webserver, "/wifidog", "auth", 0, NULL,
-			http_callback_auth);
+	httpdAddCContent(webserver, "/", "wifidog", 0, NULL, http_callback_wifidog);
+	httpdAddCContent(webserver, "/wifidog", "about", 0, NULL, http_callback_about);
+	httpdAddCContent(webserver, "/wifidog", "status", 0, NULL, http_callback_status);
+	httpdAddCContent(webserver, "/wifidog", "auth", 0, NULL, http_callback_auth);
 	httpdAddC404Content(webserver, http_callback_404);
 
 	/* Init the signals to catch chld/quit/etc */

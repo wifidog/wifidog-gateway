@@ -1,5 +1,14 @@
 # $Header$
 
+2005-02-28 Mina Naguib <mina@ilesansfil.org>
+	* Do not update the last_updated field on incoming traffic - update it on
+	outgoing traffic only.  This should be a much more reliable indication of
+	client no longer being there
+	* WifiDog status is now viewable with a web browser at
+	http://ip:port/wifidog/status
+	* Added new web hook for http://ip:port/wifidog
+	* Beautified web interface at http://ip:port/wifidog/*
+
 2005-02-24 Mina Naguib <mina@ilesansfil.org>
 	* auth_server_request now returns AUTH_ERROR on error instead of AUTH_VALIDATION_FAILED
 	* centralserver.c: Fix typo (was =+, made it +=) that made the response

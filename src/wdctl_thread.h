@@ -29,8 +29,6 @@
 
 #define DEFAULT_WDCTL_SOCK	"/tmp/wdctl.sock"
 
-#define STATUS_BUF_SIZ	16384
-
 /** @brief Listen for WiFiDog control messages on a unix domain socket */
 void thread_wdctl(void *arg);
 

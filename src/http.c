@@ -133,17 +133,32 @@ http_callback_404(httpd *webserver, request *r)
 }
 
 void 
+http_callback_wifidog(httpd *webserver, request *r)
+{
+	http_wifidog_header(r, "WiFiDog");
+	httpdOutput(r, "Please use the menu on the left to navigate the features of this WiFiDog installation.");
+	http_wifidog_footer(r);
+}
+
+void 
 http_callback_about(httpd *webserver, request *r)
 {
-	httpdOutput(r, "<html><head><title>About WiFiDog</title></head><body><h1>About WiFiDog:</h1>");
+	http_wifidog_header(r, "About WiFiDog");
 	httpdOutput(r, "This is WiFiDog version <b>" VERSION "</b>");
-	httpdOutput(r, "<p>");
-	httpdOutput(r, "Copyright (C) 2004-2005.  This software is released under the GNU GPL license.");
-	httpdOutput(r, "<p>");
-	httpdOutput(r, "For more information visit <a href='http://"
-			"www.ilesansfil.org/wiki/WiFiDog'>http://www."
-			"ilesansfil.org/wiki/WiFiDog</a>");
-	httpdOutput(r, "</body></html>");
+	http_wifidog_footer(r);
+}
+
+void 
+http_callback_status(httpd *webserver, request *r)
+{
+	char * status = NULL;
+	status = get_status_text();
+	http_wifidog_header(r, "WiFiDog Status");
+	httpdOutput(r, "<pre>");
+	httpdOutput(r, status);
+	httpdOutput(r, "</pre>");
+	http_wifidog_footer(r);
+	free(status);
 }
 
 void 
@@ -157,22 +172,20 @@ http_callback_auth(httpd *webserver, request *r)
 		/* They supplied variable "token" */
 		if (!(mac = arp_get(r->clientAddr))) {
 			/* We could not get their MAC address */
-			debug(LOG_ERR, "Failed to retrieve MAC address for "
-				"ip %s", r->clientAddr);
-			httpdOutput(r, "Failed to retrieve your MAC "
-					"address");
+			debug(LOG_ERR, "Failed to retrieve MAC address for ip %s", r->clientAddr);
+			http_wifidog_header(r, "WiFiDog Error");
+			httpdOutput(r, "Failed to retrieve your MAC address");
+			http_wifidog_footer(r);
 		} else {
 			/* We have their MAC address */
 
 			LOCK_CLIENT_LIST();
 			
 			if ((client = client_list_find(r->clientAddr, mac)) == NULL) {
-				debug(LOG_DEBUG, "New client for %s",
-					r->clientAddr);
+				debug(LOG_DEBUG, "New client for %s", r->clientAddr);
 				client_list_append(r->clientAddr, mac, token->value);
 			} else {
-				debug(LOG_DEBUG, "Node for %s already "
-					"exists", client->ip);
+				debug(LOG_DEBUG, "Node for %s already exists", client->ip);
 			}
 
 			UNLOCK_CLIENT_LIST();
@@ -182,6 +195,46 @@ http_callback_auth(httpd *webserver, request *r)
 		}
 	} else {
 		/* They did not supply variable "token" */
+		http_wifidog_header(r, "WiFiDog Error");
 		httpdOutput(r, "Invalid token");
+		http_wifidog_footer(r);
 	}
+}
+
+void
+http_wifidog_header(request *r, char *title)
+{
+	httpdOutput(r, "<html>\n");
+	httpdOutput(r, "<head>\n");
+	httpdPrintf(r, "<title>%s</title>\n", title);
+	httpdOutput(r, "</head>\n");
+	httpdOutput(r, "<body bgcolor=white text=#628C53 link=blue alink=blue vlink=blue>\n");
+	httpdOutput(r, "<table width=100%% border=0 cellpadding=12>\n");
+	httpdOutput(r, "<tr>\n");
+	httpdOutput(r, "<td valign=top align=right width=30%% bgcolor=#e1f5da>\n");
+	httpdOutput(r, "&nbsp;<p>\n");
+	httpdOutput(r, "&nbsp;<p>\n");
+	httpdOutput(r, "<a href='/wifidog/status'>WiFiDog Status</a>\n");
+	httpdOutput(r, "<p>\n");
+	httpdOutput(r, "<a href='/wifidog/about'>About WiFiDog</a>\n");
+	httpdOutput(r, "</td>\n");
+	httpdOutput(r, "<td valign=top align=left>\n");
+	httpdPrintf(r, "<h1>%s</h1>\n", title);
+	httpdOutput(r, "<hr>\n");
+}
+
+void
+http_wifidog_footer(request *r)
+{
+	httpdOutput(r, "</td>\n");
+	httpdOutput(r, "</tr>\n");
+	httpdOutput(r, "</table>\n");
+	httpdOutput(r, "<hr>\n");
+	httpdOutput(r, "<center><font size=1>\n");
+	httpdOutput(r, "Copyright (C) 2004-2005.  This software is released under the GNU GPL license.\n");
+	httpdOutput(r, "<p>\n");
+	httpdOutput(r, "For more information visit <a href='http://www.ilesansfil.org/wiki/WiFiDog'>http://www.ilesansfil.org/wiki/WiFiDog</a>\n");
+	httpdOutput(r, "</font></center>\n");
+	httpdOutput(r, "</body>\n");
+	httpdOutput(r, "</html>\n");
 }

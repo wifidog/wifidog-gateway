@@ -27,6 +27,8 @@
 #ifndef _UTIL_H_
 #define _UTIL_H_
 
+#define STATUS_BUF_SIZ	16384
+
 /** @brief Execute a shell command
  */
 int execute(char *cmd_line, int quiet);
@@ -48,6 +50,11 @@ void mark_auth_online();
 void mark_auth_offline();
 /* @brief Returns a guess (true or false) on whether we're an auth server is online or not based on previous calls to mark_auth_online and mark_auth_offline */
 int is_auth_online();
+
+/*
+ * @brief Creates a human-readable paragraph of the status of wifidog
+ */
+char * get_status_text();
 
 #define LOCK_GHBN() do { \
 	debug(LOG_DEBUG, "Locking wd_gethostbyname()"); \

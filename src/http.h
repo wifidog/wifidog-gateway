@@ -32,9 +32,17 @@
 /**@brief Callback for libhttpd */
 void http_callback_404(httpd *webserver, request *r);
 /**@brief Callback for libhttpd */
+void http_callback_wifidog(httpd *webserver, request *r);
+/**@brief Callback for libhttpd */
 void http_callback_about(httpd *webserver, request *r);
+/**@brief Callback for libhttpd */
+void http_callback_status(httpd *webserver, request *r);
 /**@brief Callback for libhttpd */
 void http_callback_auth(httpd *webserver, request *r);
 
+/** @brief Sends HTML header+menu to web browser */
+void http_wifidog_header(request *r, char *title);
+/** @brief Sends HTML footer to web browser */
+void http_wifidog_footer(request *r);
 
 #endif /* _HTTP_H_ */

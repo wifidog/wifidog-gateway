@@ -40,7 +40,7 @@
 #include <errno.h>
 
 #include "httpd.h"
-
+#include "util.h"
 #include "conf.h"
 #include "debug.h"
 #include "auth.h"
@@ -53,9 +53,6 @@
 /* Defined in clientlist.c */
 extern	pthread_mutex_t	client_list_mutex;
 extern	pthread_mutex_t	config_mutex;
-
-/* Defined in ping_thread.c */
-extern time_t started_time;
 
 static void *thread_wdctl_handler(void *);
 static void wdctl_status(int);
@@ -200,91 +197,15 @@ thread_wdctl_handler(void *arg)
 static void
 wdctl_status(int fd)
 {
-    s_config *config;
-    t_auth_serv *auth_server;
-	char		buffer[STATUS_BUF_SIZ];
-	ssize_t		len;
-	t_client	*first;
-	int		count;
-	unsigned long int uptime = 0;
-	unsigned int days = 0, hours = 0, minutes = 0, seconds = 0;
+	char * status = NULL;
+	int len = 0;
 
-    config = config_get_config();
-	
-	len = 0;
-	snprintf(buffer, (sizeof(buffer) - len), "WiFiDog status\n\n");
-	len = strlen(buffer);
+	status = get_status_text();
+	len = strlen(status);
 
+	write(fd, status, len);
 
-	uptime = time(NULL) - started_time;
-	days    = uptime / (24 * 60 * 60);
-	uptime -= days * (24 * 60 * 60);
-	hours   = uptime / (60 * 60);
-	uptime -= hours * (60 * 60);
-	minutes = uptime / 60;
-	uptime -= minutes * 60;
-	seconds = uptime;
-
-	snprintf((buffer + len), (sizeof(buffer) - len), "Uptime: %ud %uh %um %us\n", days, hours, minutes, seconds);
-	len = strlen(buffer);
-	
-	snprintf((buffer + len), (sizeof(buffer) - len), "is_online: %s\n", (is_online() ? "yes" : "no"));
-	len = strlen(buffer);
-	
-	snprintf((buffer + len), (sizeof(buffer) - len), "is_auth_online: %s\n\n", (is_auth_online() ? "yes" : "no"));
-	len = strlen(buffer);
-
-	LOCK_CLIENT_LIST();
-	
-	first = client_get_first_client();
-	
-	if (first == NULL) {
-		count = 0;
-	} else {
-		count = 1;
-		while (first->next != NULL) {
-			first = first->next;
-			count++;
-		}
-	}
-	
-	snprintf((buffer + len), (sizeof(buffer) - len), "%d clients "
-			"connected.\n", count);
-	len = strlen(buffer);
-
-	first = client_get_first_client();
-
-	count = 0;
-	while (first != NULL) {
-		snprintf((buffer + len), (sizeof(buffer) - len), "Client %d\t"
-				"Ip: %s\tMac: %s\tToken: %s\n", count, 
-				first->ip, first->mac, first->token);
-		len = strlen(buffer);
-
-		snprintf((buffer + len), (sizeof(buffer) - len), "\tIn: %llu\t"
-				"Out: %llu\n" , first->counters.incoming,
-				first->counters.outgoing);
-		len = strlen(buffer);
-
-		count++;
-		first = first->next;
-	}
-	
-	UNLOCK_CLIENT_LIST();
-
-    LOCK_CONFIG();
-    
-    snprintf((buffer + len), (sizeof(buffer) - len), "\nAuthentication servers:\n");
-    len = strlen(buffer);
-
-    for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
-        snprintf((buffer + len), (sizeof(buffer) - len), "  Host: %s (%s)\n", auth_server->authserv_hostname, auth_server->last_ip);
-        len = strlen(buffer);
-    }
-
-    UNLOCK_CONFIG();
-
-	write(fd, buffer, len);
+	free(status);
 }
 
 /** A bit of an hack, self kills.... */
