@@ -55,7 +55,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*
 
 %changelog
-* Sat Mar 8 2004 Benoit Grégoire <bock@step.polymtl.ca>
-- Created spec file
 * Sun Aug 29 2004 Guillaume Beaudoin <isf@soli.ca>
 - Littles fixes and libofx leftover.
+* Sat Mar 8 2004 Benoit Grégoire <bock@step.polymtl.ca>
+- Created spec file

@@ -1,5 +1,8 @@
 # $Header$
 2004-08-29 Guillaume Beaudoin <isf@soli.ca>
+	* wifidog.spec.in: Must be in decending chronological order.
+
+2004-08-29 Guillaume Beaudoin <isf@soli.ca>
 	* wifidog.spec.in: Remove some leftover from libOFX.
 	* Makefile.am: Include debian/* files.
 	* We should now be able to package .deb and .rpm from dist.
