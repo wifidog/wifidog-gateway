@@ -40,6 +40,7 @@
 
 #include "common.h"
 
+#include "safe.h"
 #include "conf.h"
 #include "fw_iptables.h"
 #include "firewall.h"
@@ -68,13 +69,17 @@ iptables_do_command(char *format, ...)
     int rc;
 
     va_start(vlist, format);
-    vasprintf(&fmt_cmd, format, vlist);
-    asprintf(&cmd, "iptables %s", fmt_cmd);
+    safe_vasprintf(&fmt_cmd, format, vlist);
+	 va_end(vlist);
+
+    safe_asprintf(&cmd, "iptables %s", fmt_cmd);
+
+    free(fmt_cmd);
+
     debug(LOG_DEBUG, "Executing command: %s", cmd);
 	
     rc = execute(cmd, fw_quiet);
 
-    free(fmt_cmd);
     free(cmd);
 
     return rc;
@@ -96,9 +101,9 @@ iptables_compile(char *chain, t_firewall_rule *rule)
     memset(command, 0, MAX_BUF);
     
     if (rule->block_allow == 1) {
-        mode = strdup("ACCEPT");
+        mode = safe_strdup("ACCEPT");
     } else {
-        mode = strdup("REJECT");
+        mode = safe_strdup("REJECT");
     }
     
     snprintf(command, sizeof(command),  "-t filter -A %s ", chain);
@@ -121,7 +126,7 @@ iptables_compile(char *chain, t_firewall_rule *rule)
 
     /* XXX The buffer command, an automatic variable, will get cleaned
      * off of the stack when we return, so we strdup() it. */
-    return(strdup(command));
+    return(safe_strdup(command));
 }
 
 /**
@@ -188,7 +193,7 @@ iptables_fw_init(void)
 
     config = config_get_config();
 	 LOCK_CONFIG();
-	 gw_interface = strdup(config->gw_interface);
+	 gw_interface = safe_strdup(config->gw_interface);
 	 gw_port = config->gw_port;
 	 UNLOCK_CONFIG();
     
@@ -342,7 +347,7 @@ iptables_fw_destroy_mention(
 	char rulenum[10];
 	int deleted = 0;
 
-	asprintf(&command, "iptables -t %s -L %s -n --line-numbers -v", table, chain);
+	safe_asprintf(&command, "iptables -t %s -L %s -n --line-numbers -v", table, chain);
 
 	if ((p = popen(command, "r"))) {
 		/* Skip first 2 lines */
@@ -355,7 +360,7 @@ iptables_fw_destroy_mention(
 				/* Found mention - Get the rule number into rulenum*/
 				if (sscanf(line, "%9[0-9]", rulenum) == 1) {
 					/* Delete the rule: */
-					asprintf(&command2, "-t %s -D %s %s", table, chain, rulenum);
+					safe_asprintf(&command2, "-t %s -D %s %s", table, chain, rulenum);
 					iptables_do_command(command2);
 					free(command2);
 					deleted = 1;
@@ -415,12 +420,13 @@ iptables_fw_counters_update(void)
 	 struct in_addr tempaddr;
 
     /* Look for outgoing traffic */
-    asprintf(&script, "%s %s", "iptables", "-v -n -x -t mangle -L " TABLE_WIFIDOG_OUTGOING);
-    if (!(output = popen(script, "r"))) {
+    safe_asprintf(&script, "%s %s", "iptables", "-v -n -x -t mangle -L " TABLE_WIFIDOG_OUTGOING);
+    output = popen(script, "r");
+    free(script);
+    if (!output) {
         debug(LOG_ERR, "popen(): %s", strerror(errno));
         return -1;
     }
-    free(script);
 
     /* skip the first two lines */
     while (('\n' != fgetc(output)) && !feof(output))
@@ -452,12 +458,13 @@ iptables_fw_counters_update(void)
     pclose(output);
 
     /* Look for incoming traffic */
-    asprintf(&script, "%s %s", "iptables", "-v -n -x -t mangle -L " TABLE_WIFIDOG_INCOMING);
-    if (!(output = popen(script, "r"))) {
+    safe_asprintf(&script, "%s %s", "iptables", "-v -n -x -t mangle -L " TABLE_WIFIDOG_INCOMING);
+    output = popen(script, "r");
+    free(script);
+    if (!output) {
         debug(LOG_ERR, "popen(): %s", strerror(errno));
         return -1;
     }
-    free(script);
 
     /* skip the first two lines */
     while (('\n' != fgetc(output)) && !feof(output))

@@ -45,6 +45,7 @@
 #include <pthread.h>
 #include <netdb.h>
 
+#include "safe.h"
 #include "util.h"
 #include "conf.h"
 #include "debug.h"
@@ -100,12 +101,7 @@ wd_gethostbyname(const char *name)
 
 	/* XXX Calling function is reponsible for free() */
 
-	h_addr = (struct in_addr *)malloc(sizeof(struct in_addr));
-	
-	if (h_addr == NULL) {
-		debug(LOG_CRIT, "Failed to allocate memory for in_addr");
-		exit(1);
-	}
+	h_addr = safe_malloc(sizeof(struct in_addr));
 	
 	LOCK_GHBN();
 
@@ -153,7 +149,7 @@ char *get_iface_ip(char *ifname) {
     in.s_addr = ip;
 
     ip_str = (char *)inet_ntoa(in);
-    return strdup(ip_str);
+    return safe_strdup(ip_str);
 }
 
 void mark_online() {

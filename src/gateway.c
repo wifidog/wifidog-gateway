@@ -45,7 +45,7 @@
 #include <sys/wait.h>
 
 #include "httpd.h"
-
+#include "safe.h"
 #include "debug.h"
 #include "conf.h"
 #include "gateway.h"
@@ -207,8 +207,7 @@ main_loop(void)
 	pthread_detach(tid_fw_counter);
 
 	/* start control thread */
-	pthread_create(&tid, NULL, (void *)thread_wdctl, 
-			(void *)strdup(config->wdctl_sock));
+	pthread_create(&tid, NULL, (void *)thread_wdctl, (void *)safe_strdup(config->wdctl_sock));
 	pthread_detach(tid);
 	
 	/* start heartbeat thread */
@@ -246,7 +245,7 @@ main_loop(void)
 				" worker thread", r->clientAddr);
 			/* The void**'s are a simulation of the normal C
 			 * function calling sequence. */
-			params = (void **)malloc(2 * sizeof(void *));
+			params = safe_malloc(2 * sizeof(void *));
 			*params = webserver;
 			*(params + 1) = r;
 

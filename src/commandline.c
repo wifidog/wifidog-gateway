@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "safe.h"
 #include "conf.h"
 
 #include "../config.h"
@@ -79,7 +80,7 @@ parse_commandline(int argc, char **argv)
 	    case 'w':
 		if (optarg) {
 		    free(config->wdctl_sock);
-		    config->wdctl_sock = strdup(optarg);
+		    config->wdctl_sock = safe_strdup(optarg);
 		}
 		break;
 

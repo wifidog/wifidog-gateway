@@ -1,4 +1,11 @@
 # $Header$
+
+2005-02-20 Mina Naguib <mina@ilesansfil.org>
+	* New safe.c with safe_malloc, safe_strdup, safe_asprintf and
+	safe_vasprintf with propper logging and exit when error. Replaced all
+	instances of original with safe versions in all files
+	* Fix memory leak in iptables_fw_counters_update
+
 2005-02-16 Philippe April <philippe@ilesansfil.org>
 	* ipkg/rules - When we clean, forgot to delete ipkg-build-stamp
 

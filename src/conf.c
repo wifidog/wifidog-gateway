@@ -36,7 +36,7 @@
 #include <ctype.h>
 
 #include "common.h"
-
+#include "safe.h"
 #include "debug.h"
 #include "conf.h"
 #include "http.h"
@@ -156,7 +156,7 @@ config_init(void)
 	config.syslog_facility = DEFAULT_SYSLOG_FACILITY;
 	config.daemon = -1;
 	config.log_syslog = DEFAULT_LOG_SYSLOG;
-	config.wdctl_sock = strdup(DEFAULT_WDCTL_SOCK);
+	config.wdctl_sock = safe_strdup(DEFAULT_WDCTL_SOCK);
 	config.rulesets = NULL;
 }
 
@@ -205,7 +205,7 @@ parse_auth_server(FILE *file, char *filename, int *linenum)
 			*tmp;
 
 	/* Defaults */
-	path = strdup(DEFAULT_AUTHSERVPATH);
+	path = safe_strdup(DEFAULT_AUTHSERVPATH);
 	http_port = DEFAULT_AUTHSERVPORT;
 	ssl_port = DEFAULT_AUTHSERVSSLPORT;
 	ssl_available = DEFAULT_AUTHSERVSSLAVAILABLE;
@@ -249,11 +249,11 @@ parse_auth_server(FILE *file, char *filename, int *linenum)
 			
 			switch (opcode) {
 				case oAuthServHostname:
-					host = strdup(p2);
+					host = safe_strdup(p2);
 					break;
 				case oAuthServPath:
 					free(path);
-					path = strdup(p2);
+					path = safe_strdup(p2);
 					break;
 				case oAuthServSSLPort:
 					ssl_port = atoi(p2);
@@ -291,12 +291,7 @@ parse_auth_server(FILE *file, char *filename, int *linenum)
 			host, http_port, ssl_port, path);
 
 	/* Allocate memory */
-	new = (t_auth_serv *)malloc(sizeof(t_auth_serv));
-	if (new == NULL) {
-		debug(LOG_ERR, "Could not allocate memory for auth server "
-				"configuration");
-		exit(1);
-	}
+	new = safe_malloc(sizeof(t_auth_serv));
 	
 	/* Fill in struct */
 	memset(new, 0, sizeof(t_auth_serv)); /*< Fill all with NULL */
@@ -500,27 +495,26 @@ parse_firewall_rule(char *ruleset, char *leftover)
 	}
 
 	/* Generate rule record */
-	tmp = (t_firewall_rule *)malloc(sizeof(t_firewall_rule));
+	tmp = safe_malloc(sizeof(t_firewall_rule));
 	memset((void *)tmp, 0, sizeof(t_firewall_rule));
 	tmp->block_allow = block_allow;
 	if (protocol != NULL)
-		tmp->protocol = strdup(protocol);
+		tmp->protocol = safe_strdup(protocol);
 	if (port != NULL)
-		tmp->port = strdup(port);
+		tmp->port = safe_strdup(port);
 	if (mask == NULL)
-		tmp->mask = strdup("0.0.0.0/0");
+		tmp->mask = safe_strdup("0.0.0.0/0");
 	else
-		tmp->mask = strdup(mask);
+		tmp->mask = safe_strdup(mask);
 
 	debug(LOG_DEBUG, "Adding Firewall Rule %s %s port %s to %s",
 			token, tmp->protocol, tmp->port, tmp->mask);
 	
 	/* Append the rule record */
 	if (config.rulesets == NULL) {
-		config.rulesets = (t_firewall_ruleset *)malloc(
-					sizeof(t_firewall_ruleset));
+		config.rulesets = safe_malloc(sizeof(t_firewall_ruleset));
 		memset(config.rulesets, 0, sizeof(t_firewall_ruleset));
-		config.rulesets->name = strdup(ruleset);
+		config.rulesets->name = safe_strdup(ruleset);
 		tmpr = config.rulesets;
 	} else {
 		tmpr2 = tmpr = config.rulesets;
@@ -530,10 +524,9 @@ parse_firewall_rule(char *ruleset, char *leftover)
 		}
 		if (tmpr == NULL) {
 			/* Rule did not exist */
-			tmpr = (t_firewall_ruleset *)malloc(
-						sizeof(t_firewall_ruleset));
+			tmpr = safe_malloc(sizeof(t_firewall_ruleset));
 			memset(tmpr, 0, sizeof(t_firewall_ruleset));
-			tmpr->name = strdup(ruleset);
+			tmpr->name = safe_strdup(ruleset);
 			tmpr2->next = tmpr;
 		}
 	}
@@ -625,16 +618,16 @@ config_read(char *filename)
 					}
 					break;
 				case oExternalInterface:
-					config.external_interface = strdup(p1);
+					config.external_interface = safe_strdup(p1);
 					break;
 				case oGatewayID:
-					config.gw_id = strdup(p1);
+					config.gw_id = safe_strdup(p1);
 					break;
 				case oGatewayInterface:
-					config.gw_interface = strdup(p1);
+					config.gw_interface = safe_strdup(p1);
 					break;
 				case oGatewayAddress:
-					config.gw_address = strdup(p1);
+					config.gw_address = safe_strdup(p1);
 					break;
 				case oGatewayPort:
 					sscanf(p1, "%d", &config.gw_port);
@@ -648,7 +641,7 @@ config_read(char *filename)
 							filename, &linenum);
 					break;
 				case oHTTPDName:
-					config.httpdname = strdup(p1);
+					config.httpdname = safe_strdup(p1);
 					break;
 				case oHTTPDMaxConn:
 					sscanf(p1, "%d", &config.httpdmaxconn);
@@ -668,7 +661,7 @@ config_read(char *filename)
 					break;
 				case oWdctlSocket:
 					free(config.wdctl_sock);
-					config.wdctl_sock = strdup(p1);
+					config.wdctl_sock = safe_strdup(p1);
 					break;
 				case oClientTimeout:
 					sscanf(p1, "%d", &config.clienttimeout);

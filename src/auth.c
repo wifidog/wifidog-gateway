@@ -38,6 +38,7 @@
 
 #include "httpd.h"
 
+#include "safe.h"
 #include "conf.h"
 #include "debug.h"
 #include "auth.h"
@@ -85,19 +86,21 @@ _http_redirect(int fd, char *format, ...)
 	va_list vlist;
 
 	va_start(vlist, format);
+	safe_vasprintf(&url, format, vlist);
+	va_end(vlist);
 
-	vasprintf(&url, format, vlist);
+	safe_asprintf(&response, "HTTP/1.1 307 Please authenticate yourself here\r\nLocation: %s\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<html><head><title>Redirection</title></head><body>Please <a href='%s'>Click here</a> if you're not redirected.", url, url);
 
-	asprintf(&response, "HTTP/1.1 307 Please authenticate yourself here\r\nLocation: %s\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<html><head><title>Redirection</title></head><body>Please <a href='%s'>Click here</a> if you're not redirected.", url, url);
+	free(url);
 
 	debug(LOG_DEBUG, "HTTP Redirect: [%s]", response);
 	
 	send(fd, response, strlen(response), 0);
-	shutdown(fd, 2);
-	close(fd);
 
 	free(response);
-	free(url);
+
+	shutdown(fd, 2);
+	close(fd);
 }
 
 /** Launches a thread that periodically checks if any of the connections has timed out
@@ -153,8 +156,8 @@ authenticate_client(request *r)
 		return; /* Implicit pthread_exit() */
 	}
 	
-	mac = strdup(client->mac);
-	token = strdup(client->token);
+	mac = safe_strdup(client->mac);
+	token = safe_strdup(client->token);
 	
 	pthread_mutex_unlock(&client_list_mutex);
 		

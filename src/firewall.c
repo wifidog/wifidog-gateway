@@ -55,7 +55,7 @@
 #include <sys/time.h>
 
 #include "httpd.h"
-
+#include "safe.h"
 #include "debug.h"
 #include "conf.h"
 #include "firewall.h"
@@ -124,7 +124,7 @@ arp_get(char *req_ip)
 	 reply = NULL;
     while (!feof(proc) && (fscanf(proc, " %15[0-9.] %*s %*s %17[A-F0-9:] %*s %*s", ip, mac) == 2)) {
 		  if (strcmp(ip, req_ip) == 0) {
-				reply = strdup(mac);
+				reply = safe_strdup(mac);
 				break;
 		  }
     }
@@ -211,9 +211,9 @@ fw_counter(void)
     for (p1 = p2 = client_get_first_client(); NULL != p1; p1 = p2) {
         p2 = p1->next;
 
-        ip = strdup(p1->ip);
-        token = strdup(p1->token);
-        mac = strdup(p1->mac);
+        ip = safe_strdup(p1->ip);
+        token = safe_strdup(p1->token);
+        mac = safe_strdup(p1->mac);
 	    outgoing = p1->counters.outgoing;
 	    incoming = p1->counters.incoming;
 

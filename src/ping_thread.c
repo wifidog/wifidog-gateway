@@ -42,6 +42,7 @@
 #include <errno.h>
 
 #include "../config.h"
+#include "safe.h"
 #include "common.h"
 #include "conf.h"
 #include "debug.h"
@@ -137,13 +138,9 @@ ping(void)
 	}
 
 	if (auth_server->last_ip == NULL) {
-		auth_server->last_ip = strdup(inet_ntoa(*h_addr));
-		if (auth_server->last_ip == NULL) {
-			debug(LOG_CRIT, "Could not allocate memory, Banzai!");
-			exit(-1);
-		}
+		auth_server->last_ip = safe_strdup(inet_ntoa(*h_addr));
 	} else {
-		tmp_addr = strdup(inet_ntoa(*h_addr));
+		tmp_addr = safe_strdup(inet_ntoa(*h_addr));
 		if (strcmp(auth_server->last_ip, tmp_addr) != 0) {
 			free(auth_server->last_ip);
 			auth_server->last_ip = tmp_addr;

@@ -39,6 +39,7 @@
 
 #include <string.h>
 
+#include "safe.h"
 #include "debug.h"
 #include "conf.h"
 #include "client_list.h"
@@ -88,17 +89,12 @@ client_list_append(char *ip, char *mac, char *token)
         curclient = curclient->next;
     }
 
-    curclient = (t_client *) malloc(sizeof(t_client));
-
-    if (curclient == NULL) {
-        debug(LOG_ERR, "Out of memory");
-        exit(-1);
-    }
+    curclient = safe_malloc(sizeof(t_client));
     memset(curclient, 0, sizeof(t_client));
 
-    curclient->ip = strdup(ip);
-    curclient->mac = strdup(mac);
-    curclient->token = strdup(token);
+    curclient->ip = safe_strdup(ip);
+    curclient->mac = safe_strdup(mac);
+    curclient->token = safe_strdup(token);
     curclient->counters.incoming = curclient->counters.outgoing = 0;
     curclient->counters.last_updated = time(NULL);
 

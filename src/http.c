@@ -35,6 +35,7 @@
 
 #include "httpd.h"
 
+#include "safe.h"
 #include "debug.h"
 #include "conf.h"
 #include "auth.h"
@@ -87,19 +88,17 @@ http_callback_404(httpd *webserver, request *r)
 		httpdOutput(r, "</body></html>");
 		debug(LOG_INFO, "Sent %s an apology since I am not online - no point sending them to auth server", r->clientAddr);
 	}
-	else if ((asprintf(&newlocation, "Location: %s://%s:%d%slogin?"
-			"gw_address=%s&gw_port=%d&gw_id=%s&url=%s",
+	else {
+		/* Re-direct them to auth server */
+		safe_asprintf(&newlocation, "Location: %s://%s:%d%slogin?gw_address=%s&gw_port=%d&gw_id=%s&url=%s",
 			protocol,
 			auth_server->authserv_hostname,
 			port,
 			auth_server->authserv_path,
-			config->gw_address, config->gw_port, 
+			config->gw_address,
+			config->gw_port, 
 			config->gw_id,
-			url)) == -1) {
-		debug(LOG_ERR, "Failed to asprintf newlocation");
-		httpdOutput(r, "Internal error occurred");
-	} else {
-		/* Re-direct them to auth server */
+			url);
 		httpdSetResponse(r, "307 Please authenticate yourself here\n");
 		httpdAddHeader(r, newlocation);
 		httpdPrintf(r, "<html><head><title>Redirection</title></head><body>"
