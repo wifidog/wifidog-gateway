@@ -106,6 +106,7 @@ binary: build install
 	echo "Priority: optional" >> $(TMP_DIR)/CONTROL/control
 	echo "Description: The WiFiDog project is a complete and embeedable captive portal solution for wireless community groups or individuals who wish to open a free HotSpot while still preventing abuse of their Internet connection." >> $(TMP_DIR)/CONTROL/control
 	echo "Source: http://www.ilesansfil.org/wiki/WiFiDog" >> $(TMP_DIR)/CONTROL/control
+	echo "/etc/wifidog.conf" >> $(TMP_DIR)/CONTROL/conffiles
 	$(IPKG_BUILD) -c -o root -g root $(TMP_DIR) $(CURDIR)
 
 .PHONY: all clean build install binary

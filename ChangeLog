@@ -1,5 +1,8 @@
 # $Header$
 
+2004-10-29 Philippe April <philippe@philippeapril.com>
+	* ipkg/rules: added conffiles so it does not overwrite config files
+
 2004-10-29 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* src/ping_thread.c: Much new debugging information
 	* multiple files: Logging for all mutexes
