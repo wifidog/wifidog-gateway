@@ -29,7 +29,8 @@
 
 extern s_config config;
 
-void main_loop(void)
+void
+main_loop(void)
 {
 	struct timeval tv;
 	time_t last_checked;
@@ -69,9 +70,10 @@ void main_loop(void)
 		result = httpdGetConnection(webserver, &tv);
 		if (result < 0) {
 			/*
-			 * fixme
+			 * FIXME
 			 * An error occurred - should we abort? reboot the device ?
 			 */
+            /* FIXME remove firewall rules before exiting */
 			debug(D_LOG_ERR, "httpdGetConnection returned %d",
 				result);
 			exit(1);
@@ -107,7 +109,7 @@ void main_loop(void)
 	fw_destroy();
 }
 
-	int
+int
 main(int argc, char **argv)
 {
 	config_init();
@@ -152,7 +154,8 @@ main(int argc, char **argv)
 	return(0);
 }
 
-void termination_handler(int s)
+void
+termination_handler(int s)
 {
 	fw_destroy();
 
@@ -160,7 +163,8 @@ void termination_handler(int s)
 	exit(0);
 }
 
-void init_signals()
+void
+init_signals()
 {
 	struct sigaction sa;
 
