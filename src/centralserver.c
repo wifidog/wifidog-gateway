@@ -67,7 +67,7 @@ authenticate(t_authresponse *authresponse, char *ip, char *mac, char *token, lon
 		stats, config.authserv_hostname);
 	send(sockfd, buf, strlen(buf), 0);
 
-	debug(LOG_DEBUG, "Sending HTTP request:\n#####\n%s\n#####", buf);
+	debug(LOG_DEBUG, "Sending HTTP request to auth server: %s\n", buf);
 
 	if ((numbytes = recv(sockfd, buf, MAX_BUF - 1, 0)) == -1) {
 		debug(LOG_ERR, "recv(): %s", strerror(errno));
@@ -80,12 +80,11 @@ authenticate(t_authresponse *authresponse, char *ip, char *mac, char *token, lon
 
 	if ((p1 = strstr(buf, "Auth: "))) {
 		if (sscanf(p1, "Auth: %d", &authresponse->authcode) == 1) {
-			debug(LOG_INFO, "Auth server returned response %d",
+			debug(LOG_INFO, "Auth server returned authentcation code %d",
 				authresponse->authcode);
 			return(authresponse->authcode);
 		} else {
-			debug(LOG_WARNING, "Auth server did not return "
-				"expected information");
+			debug(LOG_WARNING, "Auth server did not return expected information");
 			return(AUTH_ERROR);
 		}
 	} else {

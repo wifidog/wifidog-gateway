@@ -183,7 +183,7 @@ _http_redirect(int fd, char *format, ...)
 
     vasprintf(&url, format, vlist);
 
-    asprintf(&response, "HTTP/1.1 307 Please authenticate yourself here\r\nLocation: %s\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<html><head>Redirection</head><body>Please <a href='%s'>Click here</a> if you're not redirected.", url, url);
+    asprintf(&response, "HTTP/1.1 307 Please authenticate yourself here\r\nLocation: %s\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<html><head><title>Redirection</title></head><body>Please <a href='%s'>Click here</a> if you're not redirected.", url, url);
 
 	send(fd, response, strlen(response), 0);
 	shutdown(fd, 2);

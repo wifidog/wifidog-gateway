@@ -46,7 +46,7 @@ http_callback_404(httpd * webserver)
 		// Re-direct them to auth server
 		httpdSetResponse(webserver, "307 Please authenticate yourself here");
 		httpdAddHeader(webserver, newlocation);
-		httpdPrintf(webserver, "<html><head>Redirection</head><body>"
+		httpdPrintf(webserver, "<html><head><title>Redirection</title></head><body>"
 				"Please <a href='%s?gw_address=%s&gw_port=%d"
 				"&gw_id=%s'>click here</a> to login", 
 				config.authserv_loginurl, config.gw_address, 
