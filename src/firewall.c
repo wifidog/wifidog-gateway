@@ -122,13 +122,14 @@ char           *
 arp_get(char *req_ip)
 {
     FILE           *proc;
-    char            ip[16], *mac;
+    char            *ip, *mac;
 
     if (!(proc = fopen("/proc/net/arp", "r"))) {
         return NULL;
     }
     /* Skip first line */
     fscanf(proc, "%*s %*s %*s %*s %*s %*s %*s %*s %*s");
+    ip = (char *) malloc(16);
     mac = (char *) malloc(18);
     while (!feof(proc)) {
         fscanf(proc, "%15s %*s %*s %17s %*s %*s", ip, mac);
@@ -138,6 +139,7 @@ arp_get(char *req_ip)
     }
     fclose(proc);
 
+    free(ip);
     free(mac);
 
     return NULL;
