@@ -248,20 +248,24 @@ fw_counter(void)
     long int        counter;
     t_authresponse  authresponse;
     int             tag, rc;
-    char            ip[255], mac[255], script[MAX_BUF], *token;
+    char            ip[255],
+                    mac[255],
+                    script[MAX_BUF],
+                    tmp[MAX_BUF],
+                    *token;
     t_node         *p1;
 
-    sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype,
-        SCRIPT_FWCOUNTERS);
+    sprintf(script, "%s %s", "iptables", "-v -x -t mangle -L wifidog_mark");
 
     if (!(output = popen(script, "r"))) {
         debug(LOG_ERR, "popen(): %s", strerror(errno));
     } else {
+        /* skip the first two lines */
+        fgets(tmp, MAX_BUF, output);
+        fgets(tmp, MAX_BUF, output);
         while (!(feof(output)) && output) {
-            rc = fscanf(output, "%ld %s %s %d", &counter, ip,
-                    mac, &tag);
+            rc = fscanf(output, "%*s %ld %*s %*s %*s %*s %*s %s %*s %*s %s %*s %*s 0x%u", &counter, ip, mac, &tag);
             if (rc == 4 && rc != EOF) {
-
                 pthread_mutex_lock(&nodes_mutex);
 
                 p1 = node_find_by_ip(ip);

@@ -64,6 +64,4 @@
 
 #define MAX_BUF 4096
 
-#define SCRIPT_FWCOUNTERS   "fw.counters"
-
 #endif /* _COMMON_H_ */
