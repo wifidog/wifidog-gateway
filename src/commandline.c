@@ -31,6 +31,8 @@
 
 #include "conf.h"
 
+static void usage(void);
+
 extern s_config config;
 
 /**
@@ -38,7 +40,7 @@ extern s_config config;
  *
  * Prints usage, called when wifidog is run with -h or with an unknown option
  */
-void
+static void
 usage(void)
 {
     printf("Usage: wifidog [options]\n");

@@ -58,7 +58,7 @@ static char *get_string(char *ptr);
 #define DEFAULT_SYSLOG_FACILITY LOG_DAEMON
 
 s_config config;
-int missing_parms;
+static int missing_parms;
 
 typedef enum {
 	oBadOption,

@@ -51,11 +51,14 @@
 #include "auth.h"
 #include "http.h"
 
+static void init_signals(void);
+static void main_loop(void);
+
 extern s_config config;
 
 pthread_mutex_t	sigterm_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-void
+static void
 main_loop(void)
 {
 	struct timeval tv;
@@ -193,7 +196,7 @@ termination_handler(int s)
 	exit(0);
 }
 
-void
+static void
 init_signals(void)
 {
 	struct sigaction sa;

@@ -29,7 +29,6 @@
 
 void termination_handler(int s);
 void sigchld_handler(int s);
-void init_signals(void);
 void check_counters(void);
 void fork_counter_checker(void);
 
