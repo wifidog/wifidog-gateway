@@ -76,6 +76,7 @@ http_callback_auth(httpd * webserver)
 	char * mac;
 	int profile;
 	int temp;
+	pid_t pid;
 
 	if (token = httpdGetVariableByName(webserver, "token")) {
 		// They supplied variable "token"
@@ -100,7 +101,7 @@ http_callback_auth(httpd * webserver)
 						token->value, 0, 0);
 			}
 
-			if (fork() == 0) {
+			if ((pid = fork()) == 0) {
 				profile = authenticate(webserver->clientAddr, 
 						mac, token->value, 0);
 				if (profile == -1) {
@@ -127,6 +128,8 @@ http_callback_auth(httpd * webserver)
 					exit(1);
 				}
 			} else {
+				debug(D_LOG_DEBUG, "Forked sub process with "
+					"pid %d", (int)pid);
 				free(mac);
 				free_childinfo(ci);
 				webserver->clientSock = -1;

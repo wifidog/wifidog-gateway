@@ -186,6 +186,7 @@ fw_counter(void)
 	char script[MAX_BUF];
 	t_node *p1;
 	ChildInfo	*ci;
+	pid_t	pid;
 
 	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, 
 		SCRIPT_FWCOUNTERS);
@@ -215,7 +216,7 @@ fw_counter(void)
 					ci->mac = strdup(p1->mac);
 					register_child(ci);
 
-					if (fork() == 0) {
+					if ((pid = fork()) == 0) {
 						profile = authenticate(p1->ip,
 								p1->mac, 
 								p1->token,
@@ -230,6 +231,8 @@ fw_counter(void)
 						 * afterwards */
 						exit(profile);
 					}
+					debug(D_LOG_DEBUG, "Forked sub-process"
+						" with pid %d", (int)pid);
 					debug(D_LOG_DEBUG, "Updated client %s "
 						"counter to %ld bytes", ip, 
 						counter);
