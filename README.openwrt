@@ -20,3 +20,7 @@ have WiFiDog.
 
 The Makefile will compile iptables that is not compiled by default
 and import all the binaries in the right places in the ipkg tree.
+
+IMPORTANT:  Before you run wifidog, you must run:
+
+insmod ipt_mac

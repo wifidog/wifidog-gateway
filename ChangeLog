@@ -1,4 +1,9 @@
 # $Header$
+2004-08-01 Benoit Grégoire  <bock@step.polymtl.ca>
+	* Delete everything in phpauth, it will now live in it's own module (wifidog-auth)
+2004-08-01 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Added wdctl facility
+
 2004-07-21 Philippe April <wifidog@philippeapril.com>
     * Cleaned up the ipkg makefile
     * Added makefile to build on Debian
