@@ -33,8 +33,10 @@ int
 fw_allow(char *ip, char *mac, int profile)
 {
     char buf[MAX_BUF];
-    sprintf(buf, "%d", profile);
     char *command[] = {"./fw.access", "allow", ip, mac, buf, NULL};
+
+    sprintf(buf, "%d", profile);
+
     return(execute(command));
 }
 
@@ -42,8 +44,10 @@ int
 fw_deny(char *ip, char *mac, int profile)
 {
     char buf[MAX_BUF];
-    sprintf(buf, "%d", profile);
     char *command[] = {"./fw.access", "deny", ip, mac, buf, NULL};
+
+    sprintf(buf, "%d", profile);
+
     return(execute(command));
 }
 
@@ -100,10 +104,10 @@ int
 fw_init(void)
 {
     char port[255];
+    char *command[] = {"./fw.init", config.gw_interface, config.gw_address, port, config.authserv_hostname, NULL};
 
     sprintf(port, "%d", config.gw_port);
 
-    char *command[] = {"./fw.init", config.gw_interface, config.gw_address, port, config.authserv_hostname, NULL};
 
     debug(D_LOG_INFO, "Setting firewall rules");
 
