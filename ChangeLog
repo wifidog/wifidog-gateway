@@ -1,4 +1,7 @@
 # $Header$
+2004-04-14  Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Switched to threads. Alpha quality build, at best
+
 2004-04-12  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Changed child return value handling, again. Now it's actually
 	using the real value instead of the flag.

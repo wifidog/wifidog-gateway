@@ -19,27 +19,16 @@
 \********************************************************************/
 
 /* $Header$ */
-/** @file child.h
-    @brief Function for handling child sub processes
+/** @internal
+    @file auth.h
+    @brief Authentication handling thread
     @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>
 */
 
-#ifndef _CHILD_H_
-#define _CHILD_H_
+#ifndef _AUTH_H_
+#define _AUTH_H_
 
-/* Format still up in the air... */
-typedef struct _child_info {
-	pid_t	pid;
-	char	*mac,
-		*ip;
-	struct	_child_info	*next,
-				*prev;
-} ChildInfo;
+void auth_thread(void *ptr);
+void cleanup_thread(void *ptr);
 
-void sigchld_handler(int signal);
-void register_child(ChildInfo *ci);
-
-ChildInfo *new_childinfo(void);
-void free_childinfo(ChildInfo *ci);
-
-#endif /* _CHILD_H_ */
+#endif

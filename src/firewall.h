@@ -28,11 +28,12 @@
 #define _FIREWALL_H_
 
 typedef struct _t_node {
-	void	*next;
+	struct	_t_node	*next;
 	char	*ip,
 		*mac,
 		*token;
-	int	active; /* boolean */
+	int	active, /* boolean */
+		fd;	/* socket */
 	long	int	counter;
 	UserRights	*rights;
 } t_node;
@@ -52,5 +53,7 @@ t_node *node_find_by_ip(char *ip);
 t_node *node_find_by_token(char *token);
 void node_delete(t_node *node);
 void free_node(t_node *node);
+
+int check_userrights(t_node *node);
 
 #endif /* _FIREWALL_H_ */

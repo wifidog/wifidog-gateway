@@ -71,12 +71,12 @@ http_callback_about(httpd * webserver)
 void 
 http_callback_auth(httpd * webserver)
 {
-	ChildInfo * ci;
+	t_node	*node;
 	httpVar * token;
 	char * mac;
 	int profile;
 	int temp;
-	pid_t pid;
+	pthread_t tid;
 
 	if (token = httpdGetVariableByName(webserver, "token")) {
 		// They supplied variable "token"
@@ -90,61 +90,25 @@ http_callback_auth(httpd * webserver)
 		else {
 			// We have their MAC address
 
-			/* register child info */
-			ci = new_childinfo();
-			ci->ip = strdup(webserver->clientAddr);
-			ci->mac = strdup(mac);
-			register_child(ci);
-
 			if (!node_find_by_ip(webserver->clientAddr)) {
 				node_add(webserver->clientAddr, mac, 
 						token->value, 0, 0);
 			}
 
-			if ((pid = fork()) == 0) {
-				profile = authenticate(webserver->clientAddr, 
-						mac, token->value, 0);
-				if (profile == -1) {
-					// Error talking to central server
-					debug(D_LOG_ERR, "Got %d from central "
-						"server authenticating token "
-						"%s from %s at %s", profile, 
-						token->value, 
-						webserver->clientAddr, mac);
-					httpdOutput(webserver, "Access denied:"
-						"We did not get a valid "
-						"answer from the central "
-						"server");
-					httpdEndRequest(webserver);
-					exit(0);
-				}
-				else if (profile == 0) {
-					// Central server said invalid token
-					httpdOutput(webserver, "Your "
-						"authentication has failed or "
-						"timed-out.  Please re-login");
-					httpdEndRequest(webserver);
-					exit(0);
-				}
-				else {
-					// Successfull, what do we do here?
-					httpdEndRequest(webserver);
-					exit(profile);
-				}
-			} else {
-				debug(D_LOG_DEBUG, "Forked sub process with "
-					"pid %d", (int)pid);
-				free(mac);
-				free_childinfo(ci);
-				webserver->clientSock = -1;
-				/* So we don't get shutdown,
-				 * there's no error handling in
-				 * httpdEndRequest */
-			}
+			node = node_find_by_ip(webserver->clientAddr);
+
+			node->fd = webserver->clientSock;
+			webserver->clientSock = -1;
+
+			/* start sub process */
+			pthread_create(&tid, NULL, (void *)auth_thread,
+					(void *)node);
+			pthread_detach(tid);
+
+			free(mac);
 		}
 	} else {
 		// They did not supply variable "token"
 		httpdOutput(webserver, "Invalid token");
 	}
 }
-

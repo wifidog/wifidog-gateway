@@ -36,6 +36,7 @@ main_loop(void)
 	time_t last_checked;
 	httpd * webserver;
 	int result;
+	pthread_t	tid;
 
 	/* Initialize the linked list */
 	node_init();
@@ -61,8 +62,10 @@ main_loop(void)
 	// Reset the firewall
 	fw_init();
 
-	last_checked = time(NULL);
-
+	/* start clean up thread */
+	pthread_create(&tid, NULL, (void *)cleanup_thread, NULL);
+	pthread_detach(tid);
+	
 	debug(D_LOG_DEBUG, "Waiting for connections");
 	while(1) {
 		tv.tv_sec = config.checkinterval;
@@ -102,11 +105,6 @@ main_loop(void)
 			debug(D_LOG_DEBUG, "Closing connection with %s",
 				webserver->clientAddr);
 			httpdEndRequest(webserver);
-		}
-
-		if (time(NULL) - last_checked > config.checkinterval) {
-			fw_counter();
-			last_checked = time(NULL);
 		}
 	}
 
@@ -149,6 +147,14 @@ main(int argc, char **argv)
 	}
 
 	return(0);
+}
+
+void
+sigchld_handler(int s)
+{
+	int	status;
+	
+	wait(&status);
 }
 
 void

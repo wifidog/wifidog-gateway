@@ -27,6 +27,8 @@
 
 #include "common.h"
 
+pthread_mutex_t	nodes_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 extern s_config config;
 
 t_node *firstnode = NULL;
@@ -185,8 +187,6 @@ fw_counter(void)
 	char ip[255], mac[255];
 	char script[MAX_BUF];
 	t_node *p1;
-	ChildInfo	*ci;
-	pid_t	pid;
 
 	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, 
 		SCRIPT_FWCOUNTERS);
@@ -211,32 +211,32 @@ fw_counter(void)
 				} else {
 					p1->counter = counter;
 
-					ci = new_childinfo();
-					ci->ip = strdup(p1->ip);
-					ci->mac = strdup(p1->mac);
-					register_child(ci);
-
-					if ((pid = fork()) == 0) {
-						profile = authenticate(p1->ip,
+					profile =  authenticate(p1->ip,
 								p1->mac, 
 								p1->token,
 								p1->counter);
-						
-						/* no negatives */
-						if (profile <= 0)
-							profile = 0;
-						
-						/* SIGCHLD handler will
-						 * clean up the mess
-						 * afterwards */
-						exit(profile);
+					
+					if (profile <= 0) {
+						/* failed */
+						debug(D_LOG_DEBUG, "Auth "
+							"failed for client %s",
+							ip);
+						fw_deny(p1->ip, p1->mac,
+							p1->rights->profile);
+						node_delete(p1);
+					} else {
+						/* successful */
+						debug(D_LOG_DEBUG, "Updated "
+							"client %s counter to "
+							"%ld bytes", ip,
+							counter);
+
+						if (!check_userrights(p1)) {
+							fw_deny(p1->ip, p1->mac,
+							   p1->rights->profile);
+							node_delete(p1);
+						}
 					}
-					debug(D_LOG_DEBUG, "Forked sub-process"
-						" with pid %d", (int)pid);
-					debug(D_LOG_DEBUG, "Updated client %s "
-						"counter to %ld bytes", ip, 
-						counter);
-					free_childinfo(ci);
 				}
 			}
 		}
@@ -247,15 +247,20 @@ fw_counter(void)
 void
 node_init(void)
 {
+
+	pthread_mutex_lock(&nodes_mutex);
 	firstnode = NULL;
+	pthread_mutex_unlock(&nodes_mutex);
 }
 
 t_node *
 node_add(char *ip, char *mac, char *token, long int counter, int active)
 {
-	t_node *curnode,
-	*prevnode;
+	t_node	*curnode,
+		*prevnode;
 
+	pthread_mutex_lock(&nodes_mutex);
+	
 	prevnode = NULL;
 	curnode = firstnode;
 
@@ -287,6 +292,8 @@ node_add(char *ip, char *mac, char *token, long int counter, int active)
 
 	debug(D_LOG_DEBUG, "Added a new node to linked list: IP: %s Token: %s",
 		ip, token);
+	
+	pthread_mutex_unlock(&nodes_mutex);
 
 	return curnode;
 }
@@ -295,13 +302,19 @@ t_node *
 node_find_by_ip(char *ip)
 {
 	t_node *ptr;
+	
+	pthread_mutex_lock(&nodes_mutex);
 
 	ptr = firstnode;
 	while (NULL != ptr) {
-		if (0 == strcmp(ptr->ip, ip))
+		if (0 == strcmp(ptr->ip, ip)) {
+			pthread_mutex_unlock(&nodes_mutex);
 			return ptr;
+		}
 		ptr = ptr->next;
-	} 
+	}
+
+	pthread_mutex_unlock(&nodes_mutex);
 
 	return NULL;
 }
@@ -311,13 +324,19 @@ node_find_by_token(char *token)
 {
 	t_node *ptr;
 
+	pthread_mutex_lock(&nodes_mutex);
+
 	ptr = firstnode;
 	while (NULL != ptr) {
-		if (0 == strcmp(ptr->token, token))
+		if (0 == strcmp(ptr->token, token)) {
+			pthread_mutex_unlock(&nodes_mutex);
 			return ptr;
+		}
 		ptr = ptr->next;
 	} 
 
+	pthread_mutex_unlock(&nodes_mutex);
+			
 	return NULL;
 }
 
@@ -344,6 +363,8 @@ void
 node_delete(t_node *node)
 {
 	t_node	*ptr;
+	
+	pthread_mutex_lock(&nodes_mutex);
 
 	ptr = firstnode;
 
@@ -358,4 +379,18 @@ node_delete(t_node *node)
 			}
 		}
 	}
+
+	pthread_mutex_unlock(&nodes_mutex);
 }
+
+int
+check_userrights(t_node *node)
+{
+	if (node->rights->end_time <= time(NULL)) {
+		debug(D_LOG_DEBUG, "Connection %s has expired", node->ip);
+		return 0;
+	}
+
+	return 1;
+}
+

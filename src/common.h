@@ -43,6 +43,8 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include <pthread.h>
+
 #include "httpd.h"
 
 #include "gateway.h"
@@ -53,7 +55,7 @@
 #include "firewall.h"
 #include "http.h"
 #include "centralserver.h"
-#include "child.h"
+#include "auth.h"
 
 #define MAX_BUF 4096
 
