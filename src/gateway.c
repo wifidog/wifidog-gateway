@@ -204,15 +204,27 @@ main_loop(void)
 	fw_init();
 
 	/* start clean up thread */
-	pthread_create(&tid_fw_counter, NULL, (void *)thread_client_timeout_check, NULL);
+	result = pthread_create(&tid_fw_counter, NULL, (void *)thread_client_timeout_check, NULL);
+	if (result != 0) {
+		debug(LOG_ERR, "FATAL: Failed to create a new thread (fw_counter) - exiting");
+		termination_handler(0);
+	}
 	pthread_detach(tid_fw_counter);
 
 	/* start control thread */
-	pthread_create(&tid, NULL, (void *)thread_wdctl, (void *)safe_strdup(config->wdctl_sock));
+	result = pthread_create(&tid, NULL, (void *)thread_wdctl, (void *)safe_strdup(config->wdctl_sock));
+	if (result != 0) {
+		debug(LOG_ERR, "FATAL: Failed to create a new thread (wdctl) - exiting");
+		termination_handler(0);
+	}
 	pthread_detach(tid);
 	
 	/* start heartbeat thread */
-	pthread_create(&tid, NULL, (void *)thread_ping, NULL);
+	result = pthread_create(&tid, NULL, (void *)thread_ping, NULL);
+	if (result != 0) {
+		debug(LOG_ERR, "FATAL: Failed to create a new thread (ping) - exiting");
+		termination_handler(0);
+	}
 	pthread_detach(tid);
 	
 	debug(LOG_NOTICE, "Waiting for connections");
@@ -224,36 +236,38 @@ main_loop(void)
 		if (webserver->lastError == -1) {
 			/* Interrupted system call */
 			continue; /* restart loop */
-		} else if (webserver->lastError < -1) {
+		}
+		else if (webserver->lastError < -1) {
 			/*
 			 * FIXME
 			 * An error occurred - should we abort?
 			 * reboot the device ?
 			 */
-			debug(LOG_ERR, "FATAL: httpdGetConnection returned "
-				       "unexpected value %d, exiting.",
+			debug(LOG_ERR, "FATAL: httpdGetConnection returned unexpected value %d, exiting.",
 				       webserver->lastError);
-			termination_handler(0); /* the 0 is a place holder
-						   because termination_handler
-						   takes an int as argument. */
-		} else if (r != NULL) {
+			termination_handler(0);
+		}
+		else if (r != NULL) {
 			/*
 			 * We got a connection
 			 *
 			 * We should fork another thread
 			 */
-			debug(LOG_INFO, "Received connection from %s, spawning"
-				" worker thread", r->clientAddr);
+			debug(LOG_INFO, "Received connection from %s, spawning worker thread", r->clientAddr);
 			/* The void**'s are a simulation of the normal C
 			 * function calling sequence. */
 			params = safe_malloc(2 * sizeof(void *));
 			*params = webserver;
 			*(params + 1) = r;
 
-			pthread_create(&tid, NULL, (void *)thread_httpd,
-					(void *)params);
+			result = pthread_create(&tid, NULL, (void *)thread_httpd, (void *)params);
+			if (result != 0) {
+				debug(LOG_ERR, "FATAL: Failed to create a new thread (httpd) - exiting");
+				termination_handler(0);
+			}
 			pthread_detach(tid);
-		} else {
+		}
+		else {
 			/* webserver->lastError should be 2 */
 			/* XXX We failed an ACL.... No handling because
 			 * we don't set any... */

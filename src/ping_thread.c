@@ -75,7 +75,6 @@ thread_ping(void *arg)
 
 	while (1) {
 		/* Make sure we check the servers at the very begining */
-		/** @todo  Note that this will only help if the second server responds.  The logic of the ping itslef should be changed so it iterates in the list until it finds one that responds ox exausts the list */
 		debug(LOG_DEBUG, "Running ping()");
 		ping();
 		

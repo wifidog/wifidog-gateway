@@ -239,10 +239,11 @@ fw_counter(void)
                 client_list_delete(p1);
 
                 /* Advertise the logout */
-		UNLOCK_CLIENT_LIST();
-                auth_server_request(&authresponse, REQUEST_TYPE_LOGOUT, ip, mac, token, 0, 0);
-		LOCK_CLIENT_LIST();
-            } else {
+					UNLOCK_CLIENT_LIST();
+					auth_server_request(&authresponse, REQUEST_TYPE_LOGOUT, ip, mac, token, 0, 0);
+					LOCK_CLIENT_LIST();
+            }
+				else {
                 /*
                  * This handles any change in
                  * the status this allows us
@@ -251,6 +252,10 @@ fw_counter(void)
                  */
                 switch (authresponse.authcode) {
                     case AUTH_DENIED:
+                        debug(LOG_NOTICE, "%s - Denied. Removing client and firewall rules", p1->ip);
+                        fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
+                        client_list_delete(p1);
+                        break;
 
                     case AUTH_VALIDATION_FAILED:
                         debug(LOG_NOTICE, "%s - Validation timeout, now denied. Removing client and firewall rules", p1->ip);
@@ -260,7 +265,7 @@ fw_counter(void)
 
                     case AUTH_ALLOWED:
                         if (p1->fw_connection_state != FW_MARK_KNOWN) {
-                            debug(LOG_INFO, "%s - Access has changed, refreshing firewall and clearing counters", p1->ip);
+                            debug(LOG_INFO, "%s - Access has changed to allowed, refreshing firewall and clearing counters", p1->ip);
                             fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
                             p1->fw_connection_state = FW_MARK_KNOWN;
                             p1->counters.incoming = p1->counters.outgoing = 0;

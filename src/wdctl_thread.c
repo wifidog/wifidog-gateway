@@ -71,6 +71,7 @@ thread_wdctl(void *arg)
 		len;
 	char	*sock_name;
 	struct 	sockaddr_un	sa_un;
+	int result;
 	pthread_t	tid;
 
 	debug(LOG_DEBUG, "Starting wdctl.");
@@ -122,10 +123,12 @@ thread_wdctl(void *arg)
 			debug(LOG_ERR, "Accept failed on control socket: %s",
 					strerror(errno));
 		} else {
-			debug(LOG_DEBUG, "Accepted connection on wdctl "
-					"socket %d (%s)", fd, sa_un.sun_path);
-			pthread_create(&tid, NULL, &thread_wdctl_handler,
-					(void *)fd);
+			debug(LOG_DEBUG, "Accepted connection on wdctl socket %d (%s)", fd, sa_un.sun_path);
+			result = pthread_create(&tid, NULL, &thread_wdctl_handler, (void *)fd);
+			if (result != 0) {
+				debug(LOG_ERR, "FATAL: Failed to create a new thread (wdctl handler) - exiting");
+				termination_handler(0);
+			}
 			pthread_detach(tid);
 		}
 	}

@@ -186,8 +186,8 @@ iptables_fw_init(void)
    
     fw_quiet = 0;
 
-    config = config_get_config();
 	 LOCK_CONFIG();
+    config = config_get_config();
 	 gw_interface = safe_strdup(config->gw_interface);
 	 gw_port = config->gw_port;
 	 UNLOCK_CONFIG();
@@ -410,7 +410,7 @@ iptables_fw_counters_update(void)
     char *script,
         ip[16],
         rc;
-    unsigned long int counter;
+    unsigned long long int counter;
     t_client *p1;
 	 struct in_addr tempaddr;
 

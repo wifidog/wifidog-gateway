@@ -57,20 +57,24 @@ extern	pthread_mutex_t	client_list_mutex;
 static void
 _http_output(int fd, char *msg)
 {
-	char header[] = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-"
-			  "Type: text/html\r\nCache-control: private, no-cache"
-			  ", must-revalidate\r\nExpires: Mon, 26 Jul 1997 \r\n"
-			  "05:00:00 GMT\r\nPragma: no-cache\r\n\r\n<html><head>"
-			  "\n<meta http-equiv=\"Pragma\" CONTENT=\"no-cache\">"
-			  "\n<meta http-equiv=\"Expires\" CONTENT=\"-1\">\n"
-			  "</head>\n<body>\n";
+	char header[] = "HTTP/1.1 200 OK\r\n"
+		"Connection: close\r\n"
+		"Content-Type: text/html\r\n"
+		"Cache-control: private, no-cache, must-revalidate\r\n"
+		"Expires: Mon, 26 Jul 1997 05:00:00 GMT\r\n"
+		"Pragma: no-cache\r\n"
+		"\r\n"
+		"<html><head>\n"
+		"<meta http-equiv=\"Pragma\" CONTENT=\"no-cache\">\n"
+		"<meta http-equiv=\"Expires\" CONTENT=\"-1\">\n"
+		"</head>\n<body>\n";
 	char footer[] = "</body></html>";
 	
 	debug(LOG_DEBUG, "HTTP Response: [%s%s%s]", header, msg, footer);
 	
-	send(fd, header, sizeof(header), 0);
+	send(fd, header, strlen(header), 0);
 	send(fd, msg, strlen(msg), 0);
-	send(fd, footer, sizeof(footer), 0);
+	send(fd, footer, strlen(footer), 0);
 	shutdown(fd, 2);
 	close(fd);
 }
@@ -135,7 +139,8 @@ thread_client_timeout_check(void *arg)
 	}
 }
 
-/**Launches a thread to authenticate a single client against the central server and dies when done
+/** Authenticates a single client against the central server and returns when done
+ * Alters the firewall rules depending on what the auth server says
 @param r httpd request struct */
 void
 authenticate_client(request *r)
@@ -146,33 +151,31 @@ authenticate_client(request *r)
 		*mac,
 		*token;
 
-	pthread_mutex_lock(&client_list_mutex);
+	LOCK_CLIENT_LIST();
 
 	client = client_list_find_by_ip(r->clientAddr);
 
 	if (client == NULL) {
 		debug(LOG_ERR, "Could not find client client for %s", ip);
-		pthread_mutex_unlock(&client_list_mutex);
-		return; /* Implicit pthread_exit() */
+		UNLOCK_CLIENT_LIST();
+		return;
 	}
 	
 	mac = safe_strdup(client->mac);
 	token = safe_strdup(client->token);
 	
-	pthread_mutex_unlock(&client_list_mutex);
+	UNLOCK_CLIENT_LIST();
 		
-	auth_server_request(&auth_response, REQUEST_TYPE_LOGIN, r->clientAddr,
-			mac, token, 0, 0);
+	auth_server_request(&auth_response, REQUEST_TYPE_LOGIN, r->clientAddr, mac, token, 0, 0);
 	
-	pthread_mutex_lock(&client_list_mutex);
+	LOCK_CLIENT_LIST();
 	
 	/* can't trust the client to still exist */
 	client = client_list_find(r->clientAddr, mac);
 	
 	if (client == NULL) {
-		debug(LOG_ERR, "Could not find client node for %s (%s)",
-				r->clientAddr, mac);
-		pthread_mutex_unlock(&client_list_mutex);
+		debug(LOG_ERR, "Could not find client node for %s (%s)", r->clientAddr, mac);
+		UNLOCK_CLIENT_LIST();
 		free(token);
 		free(mac);
 		return;
@@ -185,11 +188,8 @@ authenticate_client(request *r)
 
 	case AUTH_ERROR:
 		/* Error talking to central server */
-		debug(LOG_ERR, "Got %d from central server authenticating "
-			"token %s from %s at %s", auth_response, client->token,
-			client->ip, client->mac);
-		_http_output(client->fd, "Access denied: We did not get a "
-			"valid answer from the central server");
+		debug(LOG_ERR, "Got %d from central server authenticating token %s from %s at %s", auth_response, client->token, client->ip, client->mac);
+		_http_output(client->fd, "Access denied: We did not get a valid answer from the central server");
 		break;
 
 	case AUTH_DENIED:
@@ -236,7 +236,7 @@ authenticate_client(request *r)
 
 	}
 
-	pthread_mutex_unlock(&client_list_mutex);
+	UNLOCK_CLIENT_LIST();
 	return;
 }
 

@@ -271,8 +271,6 @@ char * get_status_text() {
 	int		count;
 	unsigned long int uptime = 0;
 	unsigned int days = 0, hours = 0, minutes = 0, seconds = 0;
-
-	config = config_get_config();
 	
 	len = 0;
 	snprintf(buffer, (sizeof(buffer) - len), "WiFiDog status\n\n");
@@ -333,12 +331,13 @@ char * get_status_text() {
 	}
 	
 	UNLOCK_CLIENT_LIST();
-
-	LOCK_CONFIG();
     
 	snprintf((buffer + len), (sizeof(buffer) - len), "\nAuthentication servers:\n");
 	len = strlen(buffer);
 
+	LOCK_CONFIG();
+
+	config = config_get_config();
 	for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
 		snprintf((buffer + len), (sizeof(buffer) - len), "  Host: %s (%s)\n", auth_server->authserv_hostname, auth_server->last_ip);
 		len = strlen(buffer);
