@@ -43,6 +43,13 @@ sigchld_handler(int signal)
 	
 	pid = wait(&status);
 
+	/* Signal killed the child */
+	if (WIFSIGNALED(status)) {
+		debug(D_LOG_DEBUG, "Child %d exited with signal %d", pid,
+			WTERMSIG(status));
+		return;
+	}
+	
 	if (WIFEXITED(status))
 		status = WEXITSTATUS(status);
 	else
