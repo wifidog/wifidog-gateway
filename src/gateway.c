@@ -125,19 +125,19 @@ main(int argc, char **argv)
 
 	init_userclasses(0);
 	
+	sa.sa_handler = sigchld_handler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART;
+	if (sigaction(SIGCHLD, &sa, NULL) == -1) {
+		debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
+		exit(1);
+	}
+
 	if (config.daemon) {
 		struct sigaction sa;
 		int childPid;
 
 		debug(D_LOG_INFO, "Forking into background");
-
-		sa.sa_handler = sigchld_handler;
-		sigemptyset(&sa.sa_mask);
-		sa.sa_flags = SA_RESTART;
-		if (sigaction(SIGCHLD, &sa, NULL) == -1) {
-			debug(D_LOG_ERR, "sigaction(): %s", strerror(errno));
-			exit(1);
-		}
 
 		switch((childPid = fork())) {
 		case -1: /* error */
