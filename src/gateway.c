@@ -49,7 +49,7 @@ void main_loop(void)
     debug(D_LOG_DEBUG, "Assigning callbacks to web server");
 	 httpdAddCContent(webserver, "/wifidog", "about", 0, NULL, http_callback_about);
 	 httpdAddCContent(webserver, "/wifidog", "auth", 0, NULL, http_callback_auth);
-	 httpdAddCWildcardContent(webserver, "/", NULL, http_callback_404);
+	 httpdAddC404Content(webserver, http_callback_404);
 
 	 // Init the signals to catch chld/quit/etc
 	 init_signals();
