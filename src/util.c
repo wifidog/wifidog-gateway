@@ -129,6 +129,7 @@ wd_gethostbyname(const char *name)
 char *get_iface_ip(char *ifname) {
     struct ifreq if_data;
     struct in_addr in;
+    char *ip_str;
     int sockd;
     u_int32_t ip;
 
@@ -149,7 +150,8 @@ char *get_iface_ip(char *ifname) {
     memcpy ((void *) &ip, (void *) &if_data.ifr_addr.sa_data + 2, 4);
     in.s_addr = ip;
 
-    return (char *)inet_ntoa(in);
+    ip_str = (char *)inet_ntoa(in);
+    return strdup(ip_str);
 }
 
 void mark_online() {
