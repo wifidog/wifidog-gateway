@@ -224,7 +224,7 @@ wdctl_status(int fd)
 	first = client_get_first_client();
 
 	count = 0;
-	if (first != NULL) {
+	while (first != NULL) {
 		snprintf((buffer + len), (sizeof(buffer) - len), "Client %d\t"
 				"Ip: %s\tMac: %s\tToken: %s\n", count, 
 				first->ip, first->mac, first->token);

@@ -1,4 +1,8 @@
 # $Header$
+2004-10-08 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* src/wdctl_thread.c: Fix wdctl_status to return all connected
+	users.
+
 2004-10-07 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* src/conf.c: Fixed mark_auth_server_bad() for the case where there
 	is only one auth server.
