@@ -1,15 +1,20 @@
 #
 # $Header$
 #
-The WiFi Guard Dog project will be a complete and embedable captive portal
+
+The WiFi Guard Dog project is a complete and embedable captive portal
 solution for wireless community groups or individuals who wish to open a
 free HotSpot while still preventing abuse of their Internet connection.
 
-The project maintains a Wiki at http://ilesansfil.org/wiki/WiFiDog
-and a mailing list which can be found here:
-http://isf.waglo.com/mailman/listinfo/wifidog_isf.waglo.com
+The project's homepage is:
+	http://www.ilesansfil.org/wiki/WiFiDog
 
-Note that the mailing list interface is in french and that there's a drop
-down menu to choose the language on the right hand side. "Visualiser en"
-translates to "View in" and "Francais" is french for French while
-"Anglais (E-U)" stands for "English (US)."
+SourceForge project page:
+	http://sourceforge.net/projects/wifidog/
+
+Mailing list interface:
+	http://listes.ilesansfil.org/cgi-bin/mailman/listinfo/wifidog
+
+
+The project's software is released under the GPL license and is copyright it's respective owners.
+
