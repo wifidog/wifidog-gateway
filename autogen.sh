@@ -3,8 +3,14 @@
 
 echo "Running mkdir -p config"
 mkdir -p config
-echo "Running libtoolize --force"
-libtoolize --force
+if [ "X"`uname` = "XDarwin" ]
+then
+	echo "Running glibtoolize --force"
+	glibtoolize --force
+else
+	echo "Running libtoolize --force"
+	libtoolize --force
+fi
 echo "Running aclocal"
 aclocal
 echo "Running autoheader"
