@@ -31,7 +31,7 @@ extern s_config config;
 
 t_node *firstnode = NULL;
 
-	int
+int
 fw_allow(char *ip, char *mac, int profile)
 {
 	char s_profile[16];
@@ -50,7 +50,7 @@ fw_allow(char *ip, char *mac, int profile)
 	return(execute(command));
 }
 
-	int
+int
 fw_deny(char *ip, char *mac, int profile)
 {
 	char s_profile[16];
@@ -69,7 +69,7 @@ fw_deny(char *ip, char *mac, int profile)
 	return(execute(command));
 }
 
-	int
+int
 execute(char **argv)
 {
 	int pid, status, rc;
@@ -93,7 +93,7 @@ execute(char **argv)
 	return(status);
 }
 
-	char *
+char *
 arp_get(char *req_ip)
 {
 	FILE *proc;
@@ -120,7 +120,7 @@ arp_get(char *req_ip)
 	return NULL;
 }
 
-	int
+int
 fw_init(void)
 {
 	char port[16];
@@ -148,7 +148,7 @@ fw_init(void)
 	return(rc);
 }
 
-	int
+int
 fw_destroy(void)
 {
 	char script[MAX_BUF];
@@ -167,7 +167,7 @@ fw_destroy(void)
 	return(execute(command));
 }
 
-	void
+void
 fw_counter(void)
 {
 	FILE *output;
@@ -207,6 +207,7 @@ fw_counter(void)
 						/* exit() is in authenticate(); */
 					}
 					debug(D_LOG_DEBUG, "Updated client %s counter to %ld bytes", ip, counter);
+					free_childinfo(ci);
 				}
 			}
 		}
@@ -214,13 +215,13 @@ fw_counter(void)
 	}
 }
 
-	void
+void
 node_init(void)
 {
 	firstnode = NULL;
 }
 
-	t_node *
+t_node *
 node_add(char *ip, char *mac, char *token, long int counter, int active)
 {
 	t_node *curnode,
@@ -260,7 +261,7 @@ node_add(char *ip, char *mac, char *token, long int counter, int active)
 	return curnode;
 }
 
-	t_node *
+t_node *
 node_find_by_ip(char *ip)
 {
 	t_node *ptr;
@@ -275,7 +276,7 @@ node_find_by_ip(char *ip)
 	return NULL;
 }
 
-	t_node *
+t_node *
 node_find_by_token(char *token)
 {
 	t_node *ptr;
@@ -290,7 +291,7 @@ node_find_by_token(char *token)
 	return NULL;
 }
 
-	void
+void
 free_node(t_node *node)
 {
 
@@ -306,7 +307,7 @@ free_node(t_node *node)
 	free(node);
 }
 
-	void
+void
 node_delete(t_node *node)
 {
 	t_node	*ptr;
