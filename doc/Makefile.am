@@ -5,7 +5,6 @@ docdir = ${prefix}/share/doc/wifidog-@VERSION@
 EXTRA_DIST = \
 	doxygen.cfg \
 	doxygen.cfg.in \
-	LICENSE.txt \
 	README.developers.txt
 
 all:
