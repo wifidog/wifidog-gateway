@@ -94,8 +94,6 @@ authenticate(char *ip, char *mac, char *token, long int stats)
 		return(-1);
 	}
 
-	close(sockfd);
-
 	return(-1);
 }
 

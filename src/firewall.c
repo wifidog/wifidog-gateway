@@ -216,9 +216,19 @@ fw_counter(void)
 					register_child(ci);
 
 					if (fork() == 0) {
-						authenticate(p1->ip, p1->mac, 
-							p1->token, p1->counter);
-						/* exit() is in authenticate(); */
+						profile = authenticate(p1->ip,
+								p1->mac, 
+								p1->token,
+								p1->counter);
+						
+						/* no negatives */
+						if (profile <= 0)
+							profile = 0;
+						
+						/* SIGCHLD handler will
+						 * clean up the mess
+						 * afterwards */
+						exit(profile);
 					}
 					debug(D_LOG_DEBUG, "Updated client %s "
 						"counter to %ld bytes", ip, 
