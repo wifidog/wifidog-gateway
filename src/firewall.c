@@ -282,6 +282,7 @@ fw_counter(void)
 
         free(token);
         free(ip);
+        free(mac);
     }
     pthread_mutex_unlock(&nodes_mutex);
 }
