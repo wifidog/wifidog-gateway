@@ -40,10 +40,12 @@ fw_allow(char *ip, char *mac, int profile)
 	char *command[] = {script, "allow", ip, mac, s_profile, NULL};
 
 	sprintf(s_profile, "%-10d", profile);
-	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, SCRIPT_FWACCESS);
+	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, 
+		SCRIPT_FWACCESS);
 
 	if (-1 == (stat(script, &st))) {
-		debug(D_LOG_ERR, "Could not find %s: %s", script, strerror(errno));
+		debug(D_LOG_ERR, "Could not find %s: %s", script,
+			strerror(errno));
 		return(1);
 	}
 
@@ -59,10 +61,12 @@ fw_deny(char *ip, char *mac, int profile)
 	char *command[] = {script, "deny", ip, mac, s_profile, NULL};
 
 	sprintf(s_profile, "%-10d", profile);
-	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, SCRIPT_FWACCESS);
+	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype,
+		SCRIPT_FWACCESS);
 
 	if (-1 == (stat(script, &st))) {
-		debug(D_LOG_ERR, "Could not find %s: %s", script, strerror(errno));
+		debug(D_LOG_ERR, "Could not find %s: %s", script, 
+			strerror(errno));
 		return(1);
 	}
 
@@ -127,13 +131,16 @@ fw_init(void)
 	char script[MAX_BUF];
 	int rc;
 	struct stat st;
-	char *command[] = {script, config.gw_interface, config.gw_address, port, config.authserv_hostname, NULL};
+	char *command[] = {script, config.gw_interface, config.gw_address, 
+				port, config.authserv_hostname, NULL};
 
 	sprintf(port, "%-5d", config.gw_port);
-	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, SCRIPT_FWINIT);
+	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, 
+		SCRIPT_FWINIT);
 
 	if (-1 == (stat(script, &st))) {
-		debug(D_LOG_ERR, "Could not find %s: %s", script, strerror(errno));
+		debug(D_LOG_ERR, "Could not find %s: %s", script, 
+			strerror(errno));
 		debug(D_LOG_ERR, "Exiting...");
 		exit(1);
 	}
@@ -155,10 +162,12 @@ fw_destroy(void)
 	struct stat st;
 	char *command[] = {script, NULL};
 
-	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, SCRIPT_FWDESTROY);
+	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, 
+		SCRIPT_FWDESTROY);
 
 	if (-1 == (stat(script, &st))) {
-		debug(D_LOG_ERR, "Could not find %s: %s", script, strerror(errno));
+		debug(D_LOG_ERR, "Could not find %s: %s", script, 
+			strerror(errno));
 		return(1);
 	}
 
@@ -178,22 +187,26 @@ fw_counter(void)
 	t_node *p1;
 	ChildInfo	*ci;
 
-	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, SCRIPT_FWCOUNTERS);
+	sprintf(script, "%s/%s/%s", config.fwscripts_path, config.fwtype, 
+		SCRIPT_FWCOUNTERS);
 
 	if (!(output = popen(script, "r"))) {
 		debug(D_LOG_ERR, "popen(): %s", strerror(errno));
 	} else {
 		while (!(feof(output)) && output) {
-			rc = fscanf(output, "%ld %s %s %d", &counter, ip, mac, &profile);
+			rc = fscanf(output, "%ld %s %s %d", &counter, ip, 
+					mac, &profile);
 			if (rc == 4 && rc != EOF) {
 
-				/* TODO If the client is not active for x seconds
-				 * timeout the client and destroy token.
-				 * Maybe this should be done on the auth server*/
+				/* TODO If the client is not active for x
+				 * seconds timeout the client and destroy token.
+				 * Maybe this should be done on the auth
+				 * server */
 
 				p1 = node_find_by_ip(ip);
 				if (!(p1) || !(p1->active)) {
-					debug(D_LOG_DEBUG, "Client %s not active", ip);
+					debug(D_LOG_DEBUG, "Client %s not "
+						"active", ip);
 				} else {
 					p1->counter = counter;
 
@@ -203,10 +216,13 @@ fw_counter(void)
 					register_child(ci);
 
 					if (fork() == 0) {
-						authenticate(p1->ip, p1->mac, p1->token, p1->counter);
+						authenticate(p1->ip, p1->mac, 
+							p1->token, p1->counter);
 						/* exit() is in authenticate(); */
 					}
-					debug(D_LOG_DEBUG, "Updated client %s counter to %ld bytes", ip, counter);
+					debug(D_LOG_DEBUG, "Updated client %s "
+						"counter to %ld bytes", ip, 
+						counter);
 					free_childinfo(ci);
 				}
 			}
@@ -256,7 +272,8 @@ node_add(char *ip, char *mac, char *token, long int counter, int active)
 		prevnode->next = curnode;
 	}
 
-	debug(D_LOG_DEBUG, "Added a new node to linked list: IP: %s Token: %s", ip, token);
+	debug(D_LOG_DEBUG, "Added a new node to linked list: IP: %s Token: %s",
+		ip, token);
 
 	return curnode;
 }
