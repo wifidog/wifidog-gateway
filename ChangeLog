@@ -1,4 +1,7 @@
 # $Header$
+2004-05-11  Philippe April <papril777@yahoo.com>
+    * Now tracking the hotspot id and ip in database
+
 2004-05-07  Philippe April <wifidog@philippeapril.com>
     * Now we store both incoming and outgoing counters on server
     and expire if no activity at all on both

@@ -120,16 +120,15 @@ main_loop(void)
 				/*
 				 * We read the request fine
 				 */
-				debug(LOG_DEBUG, "Processing request from "
-					"%s", webserver->clientAddr);
+				debug(LOG_DEBUG, "Processing request from %s", webserver->clientAddr);
+				debug(LOG_DEBUG, "Calling httpdProcessRequest() for %s", webserver->clientAddr);
 				httpdProcessRequest(webserver);
+				debug(LOG_DEBUG, "Returned from httpdProcessRequest() for %s", webserver->clientAddr);
 			}
 			else {
-				debug(LOG_ERR, "No valid request received "
-					"from %s", webserver->clientAddr);
+				debug(LOG_ERR, "No valid request received from %s", webserver->clientAddr);
 			}
-			debug(LOG_DEBUG, "Closing connection with %s",
-				webserver->clientAddr);
+			debug(LOG_DEBUG, "Closing connection with %s", webserver->clientAddr);
 			httpdEndRequest(webserver);
 		}
 	}
