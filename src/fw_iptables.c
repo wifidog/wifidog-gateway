@@ -163,7 +163,12 @@ iptables_fw_set_authservers(void)
     iptables_do_command("-t nat -N " TABLE_WIFIDOG_AUTHSERVERS);
     for (auth_server = config->auth_servers; auth_server != NULL;
 		    auth_server = auth_server->next) {
-        iptables_do_command("-t nat -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->authserv_hostname);
+	if (auth_server->last_ip == NULL ||
+	                  strcmp(auth_server->last_ip, "0.0.0.0") == 0) {
+	    iptables_do_command("-t nat -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->authserv_hostname);
+	} else {
+	    iptables_do_command("-t nat -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->last_ip);
+	}
     }
 
     UNLOCK_CONFIG();

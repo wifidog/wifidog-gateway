@@ -302,6 +302,7 @@ parse_auth_server(FILE *file, char *filename, int *linenum)
 	new->authserv_path = path;
 	new->authserv_http_port = http_port;
 	new->authserv_ssl_port = ssl_port;
+	new->last_ip = NULL;
 	new->next = NULL;
 	
 	/* If it's the first, add to config, else append to last server */
