@@ -3,6 +3,7 @@
 2005-03-04 Mina Naguib <mina@ilesansfil.org>
 	* Bugfix huge uptime pointed out to be by Philippe - was caused when the
 	date is set (with ntpclient for example) after wifidog starts
+	* Beautified "Uh oh!" apology screens and redirection screen
 
 2005-03-02 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Ifdef'd out the bits that are Linux specific if __linux__ is not

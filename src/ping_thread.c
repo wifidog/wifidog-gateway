@@ -64,8 +64,14 @@ thread_ping(void *arg)
 	pthread_mutex_t		cond_mutex = PTHREAD_MUTEX_INITIALIZER;
 	struct	timespec	timeout;
 	
-	if (!started_time || started_time < MINIMUM_STARTED_TIME)
+	if (!started_time) {
+		debug(LOG_INFO, "Setting started_time");
 		started_time = time(NULL);
+	}
+	else if (started_time < MINIMUM_STARTED_TIME) {
+		debug(LOG_WARNING, "Detected possible clock skew - re-setting started_time");
+		started_time = time(NULL);
+	}
 
 	while (1) {
 		/* Make sure we check the servers at the very begining */
@@ -74,8 +80,7 @@ thread_ping(void *arg)
 		ping();
 		
 		/* Sleep for config.checkinterval seconds... */
-		timeout.tv_sec = time(NULL) +
-				config_get_config()->checkinterval;
+		timeout.tv_sec = time(NULL) + config_get_config()->checkinterval;
 		timeout.tv_nsec = 0;
 
 		/* Mutex must be locked for pthread_cond_timedwait... */

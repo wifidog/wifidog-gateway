@@ -78,7 +78,7 @@ http_callback_404(httpd *webserver, request *r)
 	
 	if (!is_online()) {
 		/* The internet connection is down at the moment  - apologize and do not redirect anywhere */
-		httpdOutput(r, "<html><head><title>Internet access currently unavailable</title></head><body><h1>Uh oh!</h1>");
+		http_wifidog_header(r, "Uh oh! Internet access unavailable");
 		httpdOutput(r, "We apologize, but it seems that the internet connection that powers this hotspot is temporarily unavailable.");
 		httpdOutput(r, "<p>");
 		httpdOutput(r, "If at all possible, please notify the owners of this hotspot that the internet connection is out of service.");
@@ -86,18 +86,18 @@ http_callback_404(httpd *webserver, request *r)
 		httpdOutput(r, "The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.");
 		httpdOutput(r, "<p>");
 		httpdPrintf(r, "In a while please <a href='%s'>click here</a> to try your request again.", tmp_url);
-		httpdOutput(r, "</body></html>");
+		http_wifidog_footer(r);
 		debug(LOG_INFO, "Sent %s an apology since I am not online - no point sending them to auth server", r->clientAddr);
 	}
 	else if (!is_auth_online()) {
 		/* The auth server is down at the moment - apologize and do not redirect anywhere */
-		httpdOutput(r, "<html><head><title>Login screen currently unavailable</title></head><body><h1>Uh oh!</h1>");
+		http_wifidog_header(r, "Uh oh! Login screen unavailable");
 		httpdOutput(r, "We apologize, but it seems that we are currently unable to re-direct you to the login screen.");
 		httpdOutput(r, "<p>");
 		httpdOutput(r, "The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.");
 		httpdOutput(r, "<p>");
 		httpdPrintf(r, "In a couple of minutes please <a href='%s'>click here</a> to try your request again.", tmp_url);
-		httpdOutput(r, "</body></html>");
+		http_wifidog_footer(r);
 		debug(LOG_INFO, "Sent %s an apology since auth server not online - no point sending them to auth server", r->clientAddr);
 	}
 	else {
@@ -113,10 +113,8 @@ http_callback_404(httpd *webserver, request *r)
 			url);
 		httpdSetResponse(r, "307 Please authenticate yourself here\n");
 		httpdAddHeader(r, newlocation);
-		httpdPrintf(r, "<html><head><title>Redirection</title></head><body>"
-				"Please <a href='%s://%s:%d%slogin?gw_address"
-				"=%s&gw_port=%d&gw_id=%s&url=%s'>click here</a> to "
-				"login",
+		http_wifidog_header(r, "Redirection");
+		httpdPrintf(r, "Please <a href='%s://%s:%d%slogin?gw_address=%s&gw_port=%d&gw_id=%s&url=%s'>click here</a> to login",
 				protocol,
 				auth_server->authserv_hostname,
 				port,
@@ -125,6 +123,7 @@ http_callback_404(httpd *webserver, request *r)
 				config->gw_port,
 				config->gw_id,
 				url);
+		http_wifidog_footer(r);
 		debug(LOG_INFO, "Captured %s and re-directed them to login page", r->clientAddr);
 		free(newlocation);
 	}
