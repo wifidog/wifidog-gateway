@@ -55,7 +55,12 @@ static void
 _http_output(int fd, char *msg)
 {
 	char header[] = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-"
-			  "Type: text/html\r\n\r\n<html><body>";
+			  "Type: text/html\r\nCache-control: private, no-cache"
+			  ", must-revalidate\r\nExpires: Mon, 26 Jul 1997 \r\n"
+			  "05:00:00 GMT\r\nPragma: no-cache\r\n\r\n<html><head>"
+			  "\n<meta http-equiv=\"Pragma\" CONTENT=\"no-cache\">"
+			  "\n<meta http-equiv=\"Expires\" CONTENT=\"-1\">\n"
+			  "</head>\n<body>\n";
 	char footer[] = "</body></html>";
 	
 	send(fd, header, sizeof(header), 0);

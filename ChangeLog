@@ -1,4 +1,8 @@
 # $Header$
+
+2004-07-06 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Added cache control to default error message returned.
+
 2004-07-05 Philippe April <papril777@yahoo.com>
     * Fixed an endless loop in client_list_delete
 
