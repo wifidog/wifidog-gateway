@@ -1,4 +1,6 @@
 # $Header$
+2005-02-22 Philippe April <philippe@ilesansfil.org>
+	* Tagged v1_1_0_beta2
 
 2005-02-20 Mina Naguib <mina@ilesansfil.org>
 	* New safe.c with safe_malloc, safe_strdup, safe_asprintf and
