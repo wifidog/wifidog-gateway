@@ -33,6 +33,7 @@
 #include <pthread.h>
 
 #include <string.h>
+#include <ctype.h>
 
 #include "common.h"
 

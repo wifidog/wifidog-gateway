@@ -64,7 +64,7 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	struct sockaddr_in their_addr;
 	char *tmp;
 	s_config *config = config_get_config();
-	t_auth_serv *auth_server;
+	t_auth_serv *auth_server = NULL;
 
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		debug(LOG_ERR, "socket(): %s", strerror(errno));
@@ -141,7 +141,7 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", buf);
 	
 	if ((tmp = strstr(buf, "Auth: "))) {
-		if (sscanf(tmp, "Auth: %d", &authresponse->authcode) == 1) {
+		if (sscanf(tmp, "Auth: %d", (int *)&authresponse->authcode) == 1) {
 			debug(LOG_INFO, "Auth server returned authentication code %d",
 				authresponse->authcode);
 			return(authresponse->authcode);

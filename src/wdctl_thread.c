@@ -186,6 +186,8 @@ thread_wdctl_handler(void *arg)
 	shutdown(fd, 2);
 	close(fd);
 	debug(LOG_DEBUG, "Exiting thread_wdctl_handler....");
+
+	return NULL;
 }
 
 static void
@@ -227,8 +229,8 @@ wdctl_status(int fd)
 				first->ip, first->mac, first->token);
 		len = strlen(buffer);
 
-		snprintf((buffer + len), (sizeof(buffer) - len), "\tIn: %d\t"
-				"Out: %d\n", first->counters.incoming,
+		snprintf((buffer + len), (sizeof(buffer) - len), "\tIn: %lld\t"
+				"Out: %lld\n", first->counters.incoming,
 				first->counters.outgoing);
 		len = strlen(buffer);
 		

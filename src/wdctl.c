@@ -269,8 +269,7 @@ wdctl_reset(void)
 int
 main(int argc, char **argv)
 {
-	int	sock;
-	
+
 	/* Init configuration */
 	init_config();
 	parse_commandline(argc, argv);
