@@ -100,7 +100,7 @@ http_callback_auth(httpd * webserver)
 						token->value, 0, 0);
 			}
 
-			if (fork() > 0) {
+			if (fork() == 0) {
 				profile = authenticate(webserver->clientAddr, 
 						mac, token->value, 0);
 				if (profile == -1) {
