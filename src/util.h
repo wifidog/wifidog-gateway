@@ -38,7 +38,7 @@ struct in_addr *wd_gethostbyname(const char *name);
 	debug(LOG_DEBUG, "wd_gethostbyname() locked"); \
 } while (0)
 
-#define UNLOCK_CONFIG() do { \
+#define UNLOCK_GHBN() do { \
 	debug(LOG_DEBUG, "Unlocking wd_gethostbyname()"); \
 	pthread_mutex_unlock(&ghbn_mutex); \
 	debug(LOG_DEBUG, "wd_gethostbyname() unlocked"); \
