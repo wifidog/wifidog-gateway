@@ -1,0 +1,13 @@
+#
+# $Header$
+#
+
+all:
+
+
+install:
+
+
+clean:
+
+
