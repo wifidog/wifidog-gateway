@@ -199,7 +199,9 @@ thread_authenticate_client(void *arg)
         case AUTH_ALLOWED:
 		client->fw_connection_state = FW_MARK_KNOWN;
         	fw_allow(client->ip, client->mac, FW_MARK_KNOWN);
-	        _http_redirect(client->fd, "http://%s/wifidog/portal/?gw_id=%s", config_get_config()->auth_servers->authserv_hostname, config_get_config()->gw_id);
+	        _http_redirect(client->fd, "http://%s/%s/portal/?gw_id=%s", config_get_config()->auth_servers->authserv_hostname, 
+		config_get_config()->auth_servers->authserv_path,
+		config_get_config()->gw_id);
 		break;
         case AUTH_VALIDATION_FAILED:
 	        _http_output(client->fd, "You have failed to validate your account in 15 minutes");
