@@ -112,7 +112,6 @@ wd_gethostbyname(const char *name)
 	if (he == NULL) {
 		free(h_addr);
 		UNLOCK_GHBN();
-		mark_offline();
 		return NULL;
 	}
 
@@ -155,23 +154,34 @@ char *get_iface_ip(char *ifname) {
 }
 
 void mark_online() {
-	int isonline;
-	isonline = is_online();
+	int before;
+	int after;
+
+	before = is_online();
 	time(&last_online_time);
-	if (!isonline) {
-		debug(LOG_INFO, "ONLINE status changed to ON");
+	after = is_online();
+
+	if (before != after) {
+		debug(LOG_INFO, "ONLINE status became %s", (after ? "ON" : "OFF"));
 	}
+
 }
 
 void mark_offline() {
-	int isonline;
-	isonline = is_online();
+	int before;
+	int after;
+
+	before = is_online();
 	time(&last_offline_time);
+	after = is_online();
+
+	if (before != after) {
+		debug(LOG_INFO, "ONLINE status became %s", (after ? "ON" : "OFF"));
+	}
+
 	/* If we're offline it definately means the auth server is offline */
 	mark_auth_offline();
-	if (isonline) {
-		debug(LOG_INFO, "ONLINE status changed to OFF");
-	}
+
 }
 
 int is_online() {
@@ -186,23 +196,34 @@ int is_online() {
 }
 
 void mark_auth_online() {
-	int isauthonline;
-	isauthonline = is_auth_online();
+	int before;
+	int after;
+
+	before = is_auth_online();
 	time(&last_auth_online_time);
+	after = is_auth_online();
+
+	if (before != after) {
+		debug(LOG_INFO, "AUTH_ONLINE status became %s", (after ? "ON" : "OFF"));
+	}
+
 	/* If auth server is online it means we're definately online */
 	mark_online();
-	if (!isauthonline) {
-		debug(LOG_INFO, "AUTH_ONLINE status changed to ON");
-	}
+
 }
 
 void mark_auth_offline() {
-	int isauthonline;
-	isauthonline = is_auth_online();
+	int before;
+	int after;
+
+	before = is_auth_online();
 	time(&last_auth_offline_time);
-	if (isauthonline) {
-		debug(LOG_INFO, "AUTH_ONLINE status changed to OFF");
+	after = is_auth_online();
+
+	if (before != after) {
+		debug(LOG_INFO, "AUTH_ONLINE status became %s", (after ? "ON" : "OFF"));
 	}
+
 }
 
 int is_auth_online() {

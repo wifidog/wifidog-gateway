@@ -274,6 +274,10 @@ fw_counter(void)
                         debug(LOG_INFO, "%s - User in validation period", p1->ip);
                         break;
 
+						  case AUTH_ERROR:
+								debug(LOG_WARNING, "Error communicating with auth server - leaving %s as-is for now", p1->ip);
+								break;
+
                     default:
                         debug(LOG_DEBUG, "I do not know about authentication code %d", authresponse.authcode);
                         break;

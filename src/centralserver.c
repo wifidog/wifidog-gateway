@@ -228,6 +228,7 @@ int _connect_auth_server(int level) {
 			 * It's probably safe to assume that the internet connection is malfunctioning
 			 * and nothing we can do will make it work
 			 */
+			mark_offline();
 			debug(LOG_DEBUG, "Level %d: Failed to resolve auth server and all popular servers. The internet connection is probably down", level);
 			return(-1);
 		}

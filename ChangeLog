@@ -5,6 +5,7 @@
 	* centralserver.c: Fix typo (was =+, made it +=) that made the response
 	from the auth server corrupted in memory if the entire response would not
 	fit in 1 packet and retrieved with 1 read() call
+	* Better logging of details and calling of mark_* (auth+online/offline)
 
 2005-02-22 Philippe April <philippe@ilesansfil.org>
 	* Tagged v1_1_0_beta2
