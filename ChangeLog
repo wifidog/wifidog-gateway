@@ -1,4 +1,8 @@
 # $Header$
+2004-05-15  Philippe April <papril777@yahoo.com>
+    * Commented out cookie handling in libhttpd because it segfaults if
+    you pass a particular formatting/buggy one
+
 2004-05-14  Philippe April <papril777@yahoo.com>
     * Fixed crash when receiving SIGPIPE signal with write() would fail
 

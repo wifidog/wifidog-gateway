@@ -457,6 +457,10 @@ int httpdReadRequest(server)
 				inHeaders = 0;
 				break;
 			}
+            /**
+             * Philippe commenting this out, it crashed with a
+             * particular pattern sent from the browser
+             * and we don't need it
 			if (strncasecmp(buf,"Cookie: ",7) == 0)
 			{
 				char	*var,
@@ -477,6 +481,7 @@ int httpdReadRequest(server)
 					var = end;
 				}
 			}
+            */
 			if (strncasecmp(buf,"Authorization: ",15) == 0)
 			{
 				cp = index(buf,':') + 2;
