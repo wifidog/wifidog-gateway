@@ -41,7 +41,6 @@ usage(void)
     printf("\n");
     printf("  -c [filename] Use this config file\n");
     printf("  -f            Run in foreground\n");
-    printf("  -p            TCP port to listen on\n");
     printf("  -d <level>    Debug level\n");
     printf("  -s            Log to syslog\n");
     printf("  -h            Print usage\n");
@@ -58,7 +57,7 @@ parse_commandline(int argc, char **argv)
 {
     int c;
 
-    while (-1 != (c = getopt(argc, argv, "c:hfp:d:s"))) {
+    while (-1 != (c = getopt(argc, argv, "c:hfd:s"))) {
         switch(c) {
             case 'h':
                 usage();
@@ -73,12 +72,6 @@ parse_commandline(int argc, char **argv)
 
             case 'f':
                 config.daemon = 0;
-                break;
-
-            case 'p':
-                if (optarg) {
-                    config.gw_port = atoi(optarg);
-                }
                 break;
 
             case 'd':
