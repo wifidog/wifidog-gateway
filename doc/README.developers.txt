@@ -3,9 +3,10 @@ $Header$
 
 This file contains some small notes on developing the WiFiDog application.
 
-The application's home page is http://sourceforge.net/projects/wifidog/
+The application's home page is http://www.ilesansfil.org/wiki/WiFiDog
+The application's sourceforge page is http://sourceforge.net/projects/wifidog/
 
-As a developer, you must subscriber to sourceforge as a "developer" under WiFiDog, as well as subscribe to the WiFiDog mailing list located at http://isf.waglo.com/mailman/listinfo/wifidog_isf.waglo.com
+As a developer, you must subscribe to sourceforge as a "developer" under WiFiDog, as well as subscribe to the WiFiDog mailing list located at http://isf.waglo.com/mailman/listinfo/wifidog_isf.waglo.com
 
 SOURCE CODE:
 	- Please do not contribute unless you agree with the GPL license and are contributing your portion under that license.  See the included LICENSE.txt
