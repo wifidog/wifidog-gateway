@@ -1,5 +1,8 @@
 # $Header$
 
+2004-07-19 Alexandre Carmel-Veilleux <acv@acv.ca>
+	* Build script for OpenWRT ipkg
+
 2004-07-06 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Added cache control to default error message returned.
 

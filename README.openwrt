@@ -3,7 +3,7 @@ OpenWRT specific README
 $Header$
 
 In order to compile OpenWRT for the linksys WRT54G, you must first
-obtain and install the OpenWRT build environement from thw OpenWRT
+obtain and install the OpenWRT build environement from the OpenWRT
 project: http://openwrt.ksilebo.net/
 
 Once you have successfully built a full toolchain according to the
@@ -20,5 +20,12 @@ in your home directory. You must run autogen.sh from the directory
 containing the WiFiDog root. You might need to give autogen.sh the
 execute permission.
 
-Details on how to build an ipkg and how to install all the modules
-that WiFiDog requires will be added here in the near future.
+Then, to build the ipkg for use on the OpenWRT, you do the following:
+
+$ cd openwrt
+$ make BUILDROOT=$HOME/buildroot
+
+This will fail if you don't have an already compiled OpenWRT buildroot
+with the complete toolchain. The Makefile will compile things that aren't
+compiled by default and import all the binaries in the right places in
+the ipkg tree.
