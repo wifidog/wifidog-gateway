@@ -1,5 +1,8 @@
 # $Header$
 
+2005-02-04 Mina Naguib <mina@ilesansfil.org>
+	* Partially bugfix apology when offline
+
 2005-02-03 Mina Naguib <mina@ilesansfil.org>
 	* Keep track of last times we successfully & unsuccessfully spoke to the
 	auth server/used DNS. Then, if we know we're not online, show a little

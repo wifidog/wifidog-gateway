@@ -83,7 +83,7 @@ http_callback_404(httpd *webserver, request *r)
 		httpdOutput(r, "<p>");
 		httpdOutput(r, "The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.");
 		httpdOutput(r, "<p>");
-		httpdPrintf(r, "In a while please <a href='%s'>click here</a> to try again.", url);
+		httpdPrintf(r, "In a while please <a href='%s'>click here</a> to try again.", tmp_url);
 		httpdOutput(r, "</body></html>");
 		debug(LOG_INFO, "Sent %s an apology since I am not online - no point sending them to auth server", r->clientAddr);
 	}
