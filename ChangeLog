@@ -6,6 +6,8 @@
 	* src/ping_thread.c: Fixed file descriptor leak.
 	* src/centralserver.c: Fixed many file descriptor leaks.
 	* src/centralserver.c: Failure of read() no longer fatal.
+	* src/centralserver.c: In case of failure, return from
+	auth_server_request() is no longer an undefined authresponse.
 
 2004-08-30 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* wifidog.conf: Corrected an example

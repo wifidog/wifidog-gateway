@@ -66,6 +66,9 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	s_config *config = config_get_config();
 	t_auth_serv *auth_server = NULL;
 
+	/* Blanket default is failed. */
+	authresponse->authcode = AUTH_VALIDATION_FAILED;
+	
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		debug(LOG_ERR, "socket(): %s", strerror(errno));
 		exit(1);
