@@ -16,14 +16,14 @@
  * 59 Temple Place - Suite 330        Fax:    +1-617-542-2652       *
  * Boston, MA  02111-1307,  USA       gnu@gnu.org                   *
  *                                                                  *
-\********************************************************************/
+ \********************************************************************/
 
 /* $Header$ */
 /** @internal
-    @file conf.c
-    @brief Config file parsing
-    @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
-*/
+  @file conf.c
+  @brief Config file parsing
+  @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
+ */
 #include "common.h"
 
 #define DEFAULT_CONFIGFILE "/etc/wifidog.conf"
@@ -44,27 +44,27 @@ int missing_parms;
 typedef enum {
 	oBadOption,
 	oDaemon,
-    oDebugLevel,
-    oGatewayID,
-    oGatewayInterface,
-    oGatewayAddress,
-    oGatewayPort,
-    oAuthservHostname,
-    oAuthservPort,
-    oAuthservPath,
-    oAuthservLoginUrl,
-    oHTTPDMaxConn,
-    oHTTPDName,
-    oClientTimeout,
-    oCheckInterval,
-    oFWScriptsPath,
-    oFWType,
+	oDebugLevel,
+	oGatewayID,
+	oGatewayInterface,
+	oGatewayAddress,
+	oGatewayPort,
+	oAuthservHostname,
+	oAuthservPort,
+	oAuthservPath,
+	oAuthservLoginUrl,
+	oHTTPDMaxConn,
+	oHTTPDName,
+	oClientTimeout,
+	oCheckInterval,
+	oFWScriptsPath,
+	oFWType,
 } OpCodes;
 
 struct {
 	const char *name;
 	OpCodes opcode;
-    int required;
+	int required;
 } keywords[] = {
 	{ "daemon",             oDaemon },
 	{ "debuglevel",         oDebugLevel },
@@ -79,34 +79,34 @@ struct {
 	{ "httpdmaxconn",       oHTTPDMaxConn },
 	{ "httpdname",          oHTTPDName },
 	{ "clienttimeout",      oClientTimeout },
-    { "checkinterval",      oCheckInterval },
-    { "fwscriptspath",      oFWScriptsPath },
-    { "fwtype",             oFWType },
-    { NULL,                 oBadOption },
+	{ "checkinterval",      oCheckInterval },
+	{ "fwscriptspath",      oFWScriptsPath },
+	{ "fwtype",             oFWType },
+	{ NULL,                 oBadOption },
 };
 
 void
 config_init(void)
 {
-    debug(D_LOG_DEBUG, "Setting default config parameters");
-    config.configfile = (char *)malloc(255);
-    strcpy(config.configfile, DEFAULT_CONFIGFILE);
-    config.daemon = 1;
-    config.debuglevel = DEFAULT_DEBUGLEVEL;
-    config.httpdmaxconn = DEFAULT_HTTPDMAXCONN;
-    config.gw_id = DEFAULT_GATEWAYID;
-    config.gw_interface = NULL;
-    config.gw_address = NULL;
-    config.gw_port = DEFAULT_GATEWAYPORT;
-    config.authserv_hostname = NULL;
-    config.authserv_port = DEFAULT_AUTHSERVPORT;
-    config.authserv_path = NULL;
-    config.authserv_loginurl = NULL;
-    config.httpdname = NULL;
-    config.clienttimeout = DEFAULT_CLIENTTIMEOUT;
-    config.checkinterval = DEFAULT_CHECKINTERVAL;
-    config.fwscripts_path = DEFAULT_FWSCRIPTS_PATH;
-    config.fwtype = DEFAULT_FWTYPE;
+	debug(D_LOG_DEBUG, "Setting default config parameters");
+	config.configfile = (char *)malloc(255);
+	strcpy(config.configfile, DEFAULT_CONFIGFILE);
+	config.daemon = 1;
+	config.debuglevel = DEFAULT_DEBUGLEVEL;
+	config.httpdmaxconn = DEFAULT_HTTPDMAXCONN;
+	config.gw_id = DEFAULT_GATEWAYID;
+	config.gw_interface = NULL;
+	config.gw_address = NULL;
+	config.gw_port = DEFAULT_GATEWAYPORT;
+	config.authserv_hostname = NULL;
+	config.authserv_port = DEFAULT_AUTHSERVPORT;
+	config.authserv_path = NULL;
+	config.authserv_loginurl = NULL;
+	config.httpdname = NULL;
+	config.clienttimeout = DEFAULT_CLIENTTIMEOUT;
+	config.checkinterval = DEFAULT_CHECKINTERVAL;
+	config.fwscripts_path = DEFAULT_FWSCRIPTS_PATH;
+	config.fwtype = DEFAULT_FWTYPE;
 }
 
 OpCodes
@@ -116,160 +116,165 @@ parse_token(const char *cp, const char *filename, int linenum)
 
 	for (i = 0; keywords[i].name; i++)
 		if (strcasecmp(cp, keywords[i].name) == 0)
-            return keywords[i].opcode;
+			return keywords[i].opcode;
 
-	debug(D_LOG_ERR, "%s: line %d: Bad configuration option: %s", filename, linenum, cp);
+	debug(D_LOG_ERR, "%s: line %d: Bad configuration option: %s", 
+			filename, linenum, cp);
 	return oBadOption;
 }
 
 void
 config_read(char *filename)
 {
-    FILE *fd;
-    char line[MAX_BUF], *s, *p1, *p2;
-    int linenum = 0, opcode, value;
+	FILE *fd;
+	char line[MAX_BUF], *s, *p1, *p2;
+	int linenum = 0, opcode, value;
 
-    debug(D_LOG_INFO, "Reading configuration file '%s'", filename);
+	debug(D_LOG_INFO, "Reading configuration file '%s'", filename);
 
-    if (!(fd = fopen(filename, "r"))) {
-        debug(D_LOG_ERR, "Could not open configuration file '%s', exiting...", filename);
-        exit(1);
-    }
+	if (!(fd = fopen(filename, "r"))) {
+		debug(D_LOG_ERR, "Could not open configuration file '%s', "
+				"exiting...", filename);
+		exit(1);
+	}
 
-    while (!feof(fd) && fgets(line, MAX_BUF, fd)) {
-	    s = line;
+	while (!feof(fd) && fgets(line, MAX_BUF, fd)) {
+		s = line;
 
-        if (s[strlen(s) - 1] == '\n')
-            s[strlen(s) - 1] = '\0';
+		if (s[strlen(s) - 1] == '\n')
+			s[strlen(s) - 1] = '\0';
 
-        if ((p1 = strchr(s, ' '))) {
-            p1[0] = '\0';
-        } else if ((p1 = strchr(s, '\t'))) {
-            p1[0] = '\0';
-        }
+		if ((p1 = strchr(s, ' '))) {
+			p1[0] = '\0';
+		} else if ((p1 = strchr(s, '\t'))) {
+			p1[0] = '\0';
+		}
 
-        if (p1) {
-            p1++;
+		if (p1) {
+			p1++;
 
-            if ((p2 = strchr(p1, ' '))) {
-                p2[0] = '\0';
-            } else if ((p2 = strstr(p1, "\r\n"))) {
-                p2[0] = '\0';
-            } else if ((p2 = strchr(p1, '\n'))) {
-                p2[0] = '\0';
-            }
-        }
+			if ((p2 = strchr(p1, ' '))) {
+				p2[0] = '\0';
+			} else if ((p2 = strstr(p1, "\r\n"))) {
+				p2[0] = '\0';
+			} else if ((p2 = strchr(p1, '\n'))) {
+				p2[0] = '\0';
+			}
+		}
 
-        if (p1 && p1[0] != '\0') {
-            /* Strip trailing spaces */
-            /* Strip tailing spaces */
+		if (p1 && p1[0] != '\0') {
+			/* Strip trailing spaces */
+			/* Strip tailing spaces */
 
-	        if ((strncmp(s, "#", 1)) != 0) {
-                debug(D_LOG_DEBUG, "Parsing token: %s, value: %s", s, p1);
-                opcode = parse_token(s, filename, linenum);
+			if ((strncmp(s, "#", 1)) != 0) {
+				debug(D_LOG_DEBUG, "Parsing token: %s, "
+						"value: %s", s, p1);
+				opcode = parse_token(s, filename, linenum);
 
-                switch(opcode) {
-                    case oDaemon:
-                        if (((value = parse_value(p1)) != -1)) {
-                            config.daemon = value;
-                        }
-                        break;
-                    case oGatewayID:
-                        config.gw_id = get_string(p1);
-                        break;
-                    case oGatewayInterface:
-                        config.gw_interface = get_string(p1);
-                        break;
-                    case oGatewayAddress:
-                        config.gw_address = get_string(p1);
-                        break;
-                    case oGatewayPort:
-                        sscanf(p1, "%d", &config.gw_port);
-                        break;
-                    case oAuthservHostname:
-                        config.authserv_hostname = get_string(p1);
-                        break;
-                    case oHTTPDName:
-                        config.httpdname = get_string(p1);
-                        break;
-                    case oHTTPDMaxConn:
-                        sscanf(p1, "%d", &config.httpdmaxconn);
-                        break;
-                    case oAuthservPath:
-                        config.authserv_path = get_string(p1);
-                        break;
-                    case oAuthservLoginUrl:
-                        config.authserv_loginurl = get_string(p1);
-                        break;
-                    case oBadOption:
-                        exit(-1);
-                        break;
-                    case oCheckInterval:
-                        sscanf(p1, "%d", &config.checkinterval);
-                        break;
-                    case oClientTimeout:
-                        sscanf(p1, "%d", &config.clienttimeout);
-                        break;
-                }
-            }
-        }
-    }
+				switch(opcode) {
+				case oDaemon:
+					if (((value = parse_value(p1)) != -1)) {
+						config.daemon = value;
+					}
+					break;
+				case oGatewayID:
+					config.gw_id = get_string(p1);
+					break;
+				case oGatewayInterface:
+					config.gw_interface = get_string(p1);
+					break;
+				case oGatewayAddress:
+					config.gw_address = get_string(p1);
+					break;
+				case oGatewayPort:
+					sscanf(p1, "%d", &config.gw_port);
+					break;
+				case oAuthservHostname:
+					config.authserv_hostname = 
+						get_string(p1);
+					break;
+				case oHTTPDName:
+					config.httpdname = get_string(p1);
+					break;
+				case oHTTPDMaxConn:
+					sscanf(p1, "%d", &config.httpdmaxconn);
+					break;
+				case oAuthservPath:
+					config.authserv_path = get_string(p1);
+					break;
+				case oAuthservLoginUrl:
+					config.authserv_loginurl = 
+						get_string(p1);
+					break;
+				case oBadOption:
+					exit(-1);
+					break;
+				case oCheckInterval:
+					sscanf(p1, "%d", &config.checkinterval);
+					break;
+				case oClientTimeout:
+					sscanf(p1, "%d", &config.clienttimeout);
+					break;
+				}
+			}
+		}
+	}
 
-    fclose(fd);
+	fclose(fd);
 }
 
 int
 parse_value(char *line)
 {
-    if (strcasecmp(line, "yes") == 0) {
-        return 1;
-    }
-    if (strcasecmp(line, "no") == 0) {
-        return 0;
-    }
-    if (strcmp(line, "1") == 0) {
-        return 1;
-    }
-    if (strcmp(line, "0") == 0) {
-        return 0;
-    }
+	if (strcasecmp(line, "yes") == 0) {
+		return 1;
+	}
+	if (strcasecmp(line, "no") == 0) {
+		return 0;
+	}
+	if (strcmp(line, "1") == 0) {
+		return 1;
+	}
+	if (strcmp(line, "0") == 0) {
+		return 0;
+	}
 
-    return -1;
+	return -1;
 }
 
-char *
+	char *
 get_string(char *ptr)
 {
-    char *buf;
+	char *buf;
 
-    buf = (char *)malloc(MAX_BUF);
+	buf = (char *)malloc(MAX_BUF);
 
-    strncpy(buf, ptr, MAX_BUF);
-    return buf;
+	strncpy(buf, ptr, MAX_BUF);
+	return buf;
 }
 
 void
 config_validate(void)
 {
-    config_notnull(config.gw_id, "GatewayID");
-    config_notnull(config.gw_interface, "GatewayInterface");
-    config_notnull(config.gw_address, "GatewayAddress");
-    config_notnull(config.authserv_hostname, "AuthservHostname");
-    config_notnull(config.authserv_path, "AuthservPath");
-    config_notnull(config.authserv_loginurl, "AuthservLoginUrl");
+	config_notnull(config.gw_id, "GatewayID");
+	config_notnull(config.gw_interface, "GatewayInterface");
+	config_notnull(config.gw_address, "GatewayAddress");
+	config_notnull(config.authserv_hostname, "AuthservHostname");
+	config_notnull(config.authserv_path, "AuthservPath");
+	config_notnull(config.authserv_loginurl, "AuthservLoginUrl");
 
-    if (missing_parms) {
-        debug(D_LOG_ERR, "Configuration is not complete, exiting...");
-        exit(-1);
-    }
+	if (missing_parms) {
+		debug(D_LOG_ERR, "Configuration is not complete, exiting...");
+		exit(-1);
+	}
 }
 
 void
 config_notnull(void *parm, char *parmname)
 {
-    if (parm == NULL) {
-        debug(D_LOG_ERR, "%s is not set", parmname);
-        missing_parms = 1;
-    }
+	if (parm == NULL) {
+		debug(D_LOG_ERR, "%s is not set", parmname);
+		missing_parms = 1;
+	}
 }
 
