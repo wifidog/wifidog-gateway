@@ -51,9 +51,7 @@ t_node         *firstnode = NULL;
 int
 fw_allow(char *ip, char *mac, int tag)
 {
-    iptables_do_command("-t mangle -A wifidog_mark -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
-
-    return 1;
+    return iptables_do_command("-t mangle -A wifidog_mark -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
 }
 
 /**
@@ -70,9 +68,7 @@ fw_allow(char *ip, char *mac, int tag)
 int
 fw_deny(char *ip, char *mac, int tag)
 {
-    iptables_do_command("-t mangle -D wifidog_mark -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
-
-    return 1;
+    return iptables_do_command("-t mangle -D wifidog_mark -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
 }
 
 /** @brief Execute a shell command
@@ -208,7 +204,7 @@ fw_init(void)
 int
 fw_destroy(void)
 {
-    int rc, tries, fd;
+    int rc, tries;
 
     debug(LOG_INFO, "Removing Firewall rules");
 

@@ -27,10 +27,6 @@
 
 #include "common.h"
 
-/* global new argv and argc */
-static char *newargv[255];
-static int newargc;
-
 extern s_config config;
 
 int
