@@ -44,6 +44,10 @@
 #include "client_list.h"
 #include "common.h"
 
+#include "util.h"
+
+#include "../config.h"
+
 extern pthread_mutex_t	client_list_mutex;
 
 void
@@ -57,6 +61,19 @@ http_callback_404(httpd *webserver, request *r)
 	s_config	*config = config_get_config();
 	t_auth_serv	*auth_server = get_auth_server();
 	
+	if (!is_online()) {
+		/* No point re-directing them to the auth server if we haven't been able to talk
+		 * to it for a while */
+		httpdOutput(r, "<html><head><title>Currently unavailable</title></head><body><h1>Uh oh!</h1>");
+		httpdOutput(r, "We apologize, but it seems that we are currently unable to re-direct you to the login screen.");
+		httpdOutput(r, "<p>");
+		httpdOutput(r, "The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.");
+		httpdOutput(r, "<p>");
+		httpdOutput(r, "Please try again another time.");
+		httpdOutput(r, "</body></html>");
+		return;
+	}
+
 	if (auth_server->authserv_use_ssl) {
 		strcpy(protocol, "https");
 		port = auth_server->authserv_ssl_port;
@@ -110,9 +127,10 @@ http_callback_404(httpd *webserver, request *r)
 void 
 http_callback_about(httpd *webserver, request *r)
 {
-	httpdOutput(r, "<html><body><h1>About:</h1>");
-	httpdOutput(r, "This is WiFiDog. Copyright (C) 2004 and "
-			"released under the GNU GPL license.");
+	httpdOutput(r, "<html><head><title>About WiFiDog</title></head><body><h1>About WiFiDog:</h1>");
+	httpdOutput(r, "This is WiFiDog version <b>" VERSION "</b>");
+	httpdOutput(r, "<p>");
+	httpdOutput(r, "Copyright (C) 2004-2005.  This software is released under the GNU GPL license.");
 	httpdOutput(r, "<p>");
 	httpdOutput(r, "For more information visit <a href='http://"
 			"www.ilesansfil.org/wiki/WiFiDog'>http://www."
@@ -148,8 +166,6 @@ http_callback_auth(httpd *webserver, request *r)
 				debug(LOG_DEBUG, "Node for %s already "
 					"exists", client->ip);
 			}
-
-			client = client_list_find(r->clientAddr, mac);
 
 			UNLOCK_CLIENT_LIST();
 

@@ -139,6 +139,7 @@ iptables_load_ruleset(char *ruleset, char *chain)
 		cmd = iptables_compile(chain, rules);
 		debug(LOG_DEBUG, "Loading rule \"%s\" into %s", cmd, chain);
 		iptables_do_command(cmd);
+		free(cmd);
 	}
 
 	debug(LOG_DEBUG, "Ruleset %s loaded into %s", ruleset, chain);

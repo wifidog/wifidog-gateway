@@ -51,6 +51,10 @@
 
 static pthread_mutex_t ghbn_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+/* XXX Do these need to be locked ? */
+static time_t last_online_time = 0;
+static time_t last_offline_time = 0;
+
 /** Fork a child and execute a shell command, the parent
  * process waits for the child to return and returns the child's exit()
  * value.
@@ -107,9 +111,12 @@ wd_gethostbyname(const char *name)
 
 	if (he == NULL) {
 		free(h_addr);
+		mark_offline();
 		UNLOCK_GHBN();
 		return NULL;
 	}
+
+	mark_online();
 
 	in_addr_temp = (struct in_addr *)he->h_addr_list[0];
 	h_addr->s_addr = in_addr_temp->s_addr;
@@ -144,3 +151,23 @@ char *get_iface_ip(char *ifname) {
 
     return (char *)inet_ntoa(in);
 }
+
+void mark_online() {
+	time(&last_online_time);
+}
+
+void mark_offline() {
+	time(&last_offline_time);
+}
+
+int is_online() {
+	if (last_online_time == 0 || (last_offline_time - last_online_time) >= (config_get_config()->checkinterval * 2) ) {
+		/* We're probably offline */
+		return (0);
+	}
+	else {
+		/* We're probably online */
+		return (1);
+	}
+}
+

@@ -167,7 +167,7 @@ authenticate_client(request *r)
 	client = client_list_find(r->clientAddr, mac);
 	
 	if (client == NULL) {
-		debug(LOG_ERR, "Could not find client client for %s (%s)",
+		debug(LOG_ERR, "Could not find client node for %s (%s)",
 				r->clientAddr, mac);
 		pthread_mutex_unlock(&client_list_mutex);
 		free(token);

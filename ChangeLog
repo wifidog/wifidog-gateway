@@ -1,4 +1,18 @@
 # $Header$
+
+2005-02-03 Mina Naguib <mina@ilesansfil.org>
+	* Keep track of last times we successfully & unsuccessfully spoke to the
+	auth server/used DNS. Then, if we know we're not online, show a little
+	apology to the user instead of re-directing them to the auth server.
+	* ipkg/rules: Added some extra version detection to auto-detect versions
+	of kernel, iptables and ipkg-utils instead of having them hardcoded.  This
+	makes creating ipkg's work with different OpenWRT releases
+	* fw_iptables.c: Fixed memory leak caused by not freeing return from
+	iptables_compile in iptables_load_ruleset
+	* http.c: Deleted unused call to client_list_find
+	* http.c: /about URL now shows wifidog version
+	* Cosmetic typo fixes
+
 2005-02-03 Philippe April <isf_lists@philippeapril.com>
 	* Ping the users everytime we check their counters, that way we keep them
 	alive

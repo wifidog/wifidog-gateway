@@ -43,6 +43,8 @@
 #include "auth.h"
 #include "firewall.h"
 
+#include "util.h"
+
 /** @internal
  * Holds the current configuration of the gateway */
 static s_config config;
@@ -764,6 +766,8 @@ mark_auth_server_bad(t_auth_serv *bad_server)
 		/* Set the next pointe to NULL in the last element */
 		bad_server->next = NULL;
 	}
+
+	mark_offline();
 
 	pthread_mutex_unlock(&config_mutex);
 

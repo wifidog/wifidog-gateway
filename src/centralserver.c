@@ -100,10 +100,8 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 					sizeof(struct sockaddr)) == -1) {
 			debug(LOG_ERR, "connect(): %s", strerror(errno));
 			debug(LOG_ERR, "Trying next Auth Server (if any)");
-			if (num_tries++ < config->authserv_maxtries) {
-				mark_auth_server_bad(auth_server);
-			} else {
-				mark_auth_server_bad(auth_server);
+			mark_auth_server_bad(auth_server);
+			if (++num_tries > config->authserv_maxtries) {
 				debug(LOG_ERR, "Aborting request");
 				free(h_addr);
 				close(sockfd);
@@ -114,6 +112,9 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 		}
 		free(h_addr);
 	}
+
+	mark_online();
+
 	/**
 	 * TODO: XXX change the PHP so we can harmonize stage as request_type
 	 * everywhere.

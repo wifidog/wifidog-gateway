@@ -14,9 +14,10 @@ VERSION=$(WIFIDOG_MAJOR_VERSION).$(WIFIDOG_MINOR_VERSION).$(WIFIDOG_MICRO_VERSIO
 BUILD_DIR:=$(CURDIR)/ipkg
 TMP_DIR:=$(BUILD_DIR)/tmp
 STAGING_DIR=$(BUILDROOT)/build_$(ARCH)/staging_dir
-IPTABLES_DIR := $(BUILDROOT)/build_$(ARCH)/iptables-1.2.9
-IPKG_DIR := $(BUILDROOT)/build_$(ARCH)/ipkg-utils-1.7
-KERNEL_MODULES_DIR := $(BUILDROOT)/build_$(ARCH)/WRT54GS/release/src/linux/linux/modules/lib/modules/2.4.20
+IPTABLES_DIR := $(wildcard $(BUILDROOT)/build_$(ARCH)/iptables-*/)
+IPKG_DIR := $(wildcard $(BUILDROOT)/build_$(ARCH)/ipkg-utils-*/)
+KERNEL_VERSION := $(shell awk '$$1 == "\#define" && $$2 == "UTS_RELEASE" {gsub(/["]/, "", $$3); print $$3}' $(BUILDROOT)/build_$(ARCH)/WRT54GS/release/src/linux/linux/include/linux/version.h)
+KERNEL_MODULES_DIR := $(BUILDROOT)/build_$(ARCH)/WRT54GS/release/src/linux/linux/modules/lib/modules/$(KERNEL_VERSION)
 UCLIBC_DIR := $(BUILDROOT)/build_$(ARCH)/uClibc
 
 GNU_TARGET_NAME=$(ARCH)-linux
@@ -87,8 +88,8 @@ install-iptables:
 	cp $(IPTABLES_DIR)/extensions/libipt_{mac,mark,MARK}.so $(TMP_DIR)/usr/lib/iptables
 
 install-kernel-modules:
-	mkdir -p $(TMP_DIR)/lib/modules/2.4.20/kernel/net/ipv4/netfilter
-	cp $(KERNEL_MODULES_DIR)/kernel/net/ipv4/netfilter/ipt_mac.o $(TMP_DIR)/lib/modules/2.4.20/kernel/net/ipv4/netfilter
+	mkdir -p $(TMP_DIR)/lib/modules/$(KERNEL_VERSION)/kernel/net/ipv4/netfilter
+	cp $(KERNEL_MODULES_DIR)/kernel/net/ipv4/netfilter/ipt_mac.o $(TMP_DIR)/lib/modules/$(KERNEL_VERSION)/kernel/net/ipv4/netfilter
 
 install-pthread:
 	mkdir -p $(TMP_DIR)/lib

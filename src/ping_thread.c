@@ -164,6 +164,8 @@ ping(void)
 	}
 	free(h_addr);
 		
+	mark_online();
+
 	snprintf(request, sizeof(request) - 1, "GET %sping/?gw_id=%s HTTP/1.0\n"
 			"User-Agent: WiFiDog %s\n"
 			"Host: %s\n"
