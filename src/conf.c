@@ -314,8 +314,13 @@ parse_auth_server(FILE *file, char *filename, int *linenum)
 }
 
 /**
-@param token first keyword
-@param leftover rest of the line
+Advance to the next word
+@param s string to parse, this is the next_word pointer, the value of s
+	 when the macro is called is the current word, after the macro
+	 completes, s contains the beginning of the NEXT word, so you
+	 need to save s to something else before doing TO_NEXT_WORD
+@param e should be 0 when calling TO_NEXT_WORD(), it'll be changed to 1
+	 if the end of the string is reached.
 */
 #define TO_NEXT_WORD(s, e) do { \
 	while (*s != '\0' && !isblank(*s)) { \
