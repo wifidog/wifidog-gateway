@@ -14,7 +14,7 @@ VERSION=$(WIFIDOG_MAJOR_VERSION).$(WIFIDOG_MINOR_VERSION).$(WIFIDOG_MICRO_VERSIO
 BUILD_DIR:=$(CURDIR)/ipkg
 TMP_DIR:=$(BUILD_DIR)/tmp
 STAGING_DIR=$(BUILDROOT)/build_$(ARCH)/staging_dir
-IPTABLES_DIR := $(BUILDROOT)/build_$(ARCH)/WRT54GS/release/src/router/iptables
+IPTABLES_DIR := $(BUILDROOT)/build_$(ARCH)/iptables-1.2.9
 KERNEL_MODULES_DIR := $(BUILDROOT)/build_$(ARCH)/WRT54GS/release/src/linux/linux/modules/lib/modules/2.4.20
 UCLIBC_DIR := $(BUILDROOT)/build_$(ARCH)/uClibc
 
