@@ -137,6 +137,8 @@ ping(void)
 			VERSION,
 			auth_server->authserv_hostname);
 
+	debug(LOG_DEBUG, "HTTP Request to Server: [%s]", request);
+	
 	send(sockfd, request, strlen(request), 0);
 
 	numbytes = totalbytes = 0;
@@ -155,6 +157,8 @@ ping(void)
 
 	close(sockfd);
 
+	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", request);
+	
 	if (!strstr(request, "Pong")) {
 		debug(LOG_ERR, "Primary auth server offline");
 		debug(LOG_ERR, "Bumping auth server to last in line.");

@@ -120,7 +120,7 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	    auth_server->authserv_hostname);
 	send(sockfd, buf, strlen(buf), 0);
 
-	debug(LOG_DEBUG, "Sending HTTP request to auth server: %s\n", buf);
+	debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", buf);
 
 	numbytes = totalbytes = 0;
 	while ((numbytes = read(sockfd, buf + totalbytes, 
@@ -138,6 +138,8 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 
 	close(sockfd);
 
+	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", buf);
+	
 	if ((tmp = strstr(buf, "Auth: "))) {
 		if (sscanf(tmp, "Auth: %d", &authresponse->authcode) == 1) {
 			debug(LOG_INFO, "Auth server returned authentication code %d",

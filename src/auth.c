@@ -63,6 +63,8 @@ _http_output(int fd, char *msg)
 			  "</head>\n<body>\n";
 	char footer[] = "</body></html>";
 	
+	debug(LOG_DEBUG, "HTTP Response: [%s%s%s]", header, msg, footer);
+	
 	send(fd, header, sizeof(header), 0);
 	send(fd, msg, strlen(msg), 0);
 	send(fd, footer, sizeof(footer), 0);
@@ -86,6 +88,8 @@ _http_redirect(int fd, char *format, ...)
 
 	asprintf(&response, "HTTP/1.1 307 Please authenticate yourself here\r\nLocation: %s\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<html><head><title>Redirection</title></head><body>Please <a href='%s'>Click here</a> if you're not redirected.", url, url);
 
+	debug(LOG_DEBUG, "HTTP Redirect: [%s]", response);
+	
 	send(fd, response, strlen(response), 0);
 	shutdown(fd, 2);
 	close(fd);
