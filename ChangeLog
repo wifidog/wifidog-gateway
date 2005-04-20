@@ -1,4 +1,11 @@
 # $Header$
+2005-04-20 Philippe April <philippe@ilesansfil.org>
+	* fw_iptables.c: Insert ourselves at the end of filter.FORWARD instead of
+	at the beginning since important FW instructions are located there on the
+	WRT54Gs when used with some DSL providers and we never execute them
+	otherwise.
+	* Released 1.1.2_beta1
+
 2005-04-03 Philippe April <philippe@ilesansfil.org>
 	* Fixed issue with FAQ
 	* ipkg/rules: If autogen.sh doesn't exist, it's ok. 'configure' will.

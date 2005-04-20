@@ -255,7 +255,7 @@ iptables_fw_init(void)
 			iptables_do_command("-t filter -N " TABLE_WIFIDOG_UNKNOWN);
 
 			/* Assign links and rules to these new chains */
-			iptables_do_command("-t filter -I FORWARD 1 -i %s -j " TABLE_WIFIDOG_WIFI_TO_INTERNET, gw_interface);
+			iptables_do_command("-t filter -A FORWARD -i %s -j " TABLE_WIFIDOG_WIFI_TO_INTERNET, gw_interface);
 			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_AUTHSERVERS);
 			iptables_fw_set_authservers();
 
