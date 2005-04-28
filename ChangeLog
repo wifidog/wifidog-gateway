@@ -1,4 +1,9 @@
 # $Header$
+
+2005-04-28 Mina Naguib <mina@ilesansfil.org>
+	* wifidog.conf: Make the default ruleset for validating users = allow all
+	(except sending SMTP)
+
 2005-04-20 Philippe April <philippe@ilesansfil.org>
 	* fw_iptables.c: Insert ourselves at the end of filter.FORWARD instead of
 	at the beginning since important FW instructions are located there on the
