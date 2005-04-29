@@ -1,4 +1,6 @@
 # $Header$
+2005-04-28 Philippe April <philippe@ilesansfil.org>
+	* Released 1.1.2_beta2
 
 2005-04-28 Mina Naguib <mina@ilesansfil.org>
 	* wifidog.conf: Make the default ruleset for validating users = allow all
