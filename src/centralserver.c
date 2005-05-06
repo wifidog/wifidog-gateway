@@ -80,10 +80,10 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	 * everywhere.
 	 */
 	memset(buf, 0, sizeof(buf));
-	snprintf(buf, (sizeof(buf) - 1), "GET %sauth/?stage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu HTTP/1.0\n"
-                "User-Agent: WiFiDog %s\n"
-                "Host: %s\n"
-                "\n",
+	snprintf(buf, (sizeof(buf) - 1), "GET %sauth/?stage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu HTTP/1.0\r\n"
+                "User-Agent: WiFiDog %s\r\n"
+                "Host: %s\r\n"
+                "\r\n",
             config_get_config()->auth_servers->authserv_path, request_type, ip, mac, token, incoming, outgoing,
 				VERSION, 
 	    config_get_config()->auth_servers->authserv_hostname

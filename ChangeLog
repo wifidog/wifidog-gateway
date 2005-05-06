@@ -1,4 +1,9 @@
 # $Header$
+
+2005-05-06 Mina Naguib <mina@ilesansfil.org>
+	* Bugfix non-RFC compliant HTTP requests using \n instead of \r\n as line
+	terminations as per email from ludocornut@users.sourceforge.net
+
 2005-04-28 Philippe April <philippe@ilesansfil.org>
 	* Released 1.1.2_beta2
 

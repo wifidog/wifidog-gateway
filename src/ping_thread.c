@@ -149,10 +149,10 @@ ping(void)
 	/*
 	 * Prep & send request
 	 */
-	snprintf(request, sizeof(request) - 1, "GET %sping/?gw_id=%s&sys_uptime=%lu&sys_memfree=%u&sys_load=%.2f&wifidog_uptime=%lu HTTP/1.0\n"
-			"User-Agent: WiFiDog %s\n"
-			"Host: %s\n"
-			"\n",
+	snprintf(request, sizeof(request) - 1, "GET %sping/?gw_id=%s&sys_uptime=%lu&sys_memfree=%u&sys_load=%.2f&wifidog_uptime=%lu HTTP/1.0\r\n"
+			"User-Agent: WiFiDog %s\r\n"
+			"Host: %s\r\n"
+			"\r\n",
 			config_get_config()->auth_servers->authserv_path,
 			config_get_config()->gw_id,
 			sys_uptime,
