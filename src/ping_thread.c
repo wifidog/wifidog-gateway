@@ -182,8 +182,7 @@ ping(void)
 		if (nfds > 0) {
 			/** We don't have to use FD_ISSET() because there
 			 *  was only one fd. */
-			numbytes = read(sockfd, request + totalbytes,
-					MAX_BUF - (totalbytes + 1));
+			numbytes = read(sockfd, request + totalbytes, MAX_BUF - (totalbytes + 1));
 			if (numbytes < 0) {
 				debug(LOG_ERR, "An error occurred while reading from auth server: %s", strerror(errno));
 				/* FIXME */

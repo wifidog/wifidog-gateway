@@ -1,5 +1,10 @@
 # $Header$
 
+2005-05-16 Mina Naguib <mina@ilesansfil.org>
+	* centralserver.c: read()s from central server in auth_server_request() are
+	now timed-out (via select).  This is hopefully a bugfix to the
+	thread-freezing problem.
+
 2005-05-06 Mina Naguib <mina@ilesansfil.org>
 	* Bugfix non-RFC compliant HTTP requests using \n instead of \r\n as line
 	terminations as per email from ludocornut@users.sourceforge.net

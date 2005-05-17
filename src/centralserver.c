@@ -65,6 +65,9 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	size_t	numbytes, totalbytes;
 	char buf[MAX_BUF];
 	char *tmp;
+	int done, nfds;
+	fd_set			readfds;
+	struct timeval		timeout;
 
 	/* Blanket default is error. */
 	authresponse->authcode = AUTH_ERROR;
@@ -81,26 +84,61 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	 */
 	memset(buf, 0, sizeof(buf));
 	snprintf(buf, (sizeof(buf) - 1), "GET %sauth/?stage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu HTTP/1.0\r\n"
-                "User-Agent: WiFiDog %s\r\n"
-                "Host: %s\r\n"
-                "\r\n",
-            config_get_config()->auth_servers->authserv_path, request_type, ip, mac, token, incoming, outgoing,
-				VERSION, 
-	    config_get_config()->auth_servers->authserv_hostname
-		 );
+		"User-Agent: WiFiDog %s\r\n"
+		"Host: %s\r\n"
+		"\r\n",
+		config_get_config()->auth_servers->authserv_path, request_type, ip, mac, token, incoming, outgoing,
+		VERSION, 
+		config_get_config()->auth_servers->authserv_hostname
+	);
 
 	debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", buf);
 	send(sockfd, buf, strlen(buf), 0);
 
+	debug(LOG_DEBUG, "Reading response");
 	numbytes = totalbytes = 0;
-	while ((numbytes = read(sockfd, buf + totalbytes, MAX_BUF - (totalbytes + 1))) > 0)
-		totalbytes += numbytes;
-	
-	if (numbytes == -1) {
-		debug(LOG_ERR, "Error reading from auth server: %s", strerror(errno));
-		close(sockfd);
-		return(AUTH_ERROR);
-	}
+	done = 0;
+	do {
+		FD_ZERO(&readfds);
+		FD_SET(sockfd, &readfds);
+		timeout.tv_sec = 30; /* XXX magic... 30 second */
+		timeout.tv_usec = 0;
+		nfds = sockfd + 1;
+
+		nfds = select(nfds, &readfds, NULL, NULL, &timeout);
+
+		if (nfds > 0) {
+			/** We don't have to use FD_ISSET() because there
+			 *  was only one fd. */
+			numbytes = read(sockfd, buf + totalbytes, MAX_BUF - (totalbytes + 1));
+			if (numbytes < 0) {
+				debug(LOG_ERR, "An error occurred while reading from auth server: %s", strerror(errno));
+				/* FIXME */
+				close(sockfd);
+				return (AUTH_ERROR);
+			}
+			else if (numbytes == 0) {
+				done = 1;
+			}
+			else {
+				totalbytes += numbytes;
+				debug(LOG_DEBUG, "Read %d bytes, total now %d", numbytes, totalbytes);
+			}
+		}
+		else if (nfds == 0) {
+			debug(LOG_ERR, "Timed out reading data via select() from auth server");
+			/* FIXME */
+			close(sockfd);
+			return (AUTH_ERROR);
+		}
+		else if (nfds < 0) {
+			debug(LOG_ERR, "Error reading data via select() from auth server: %s", strerror(errno));
+			/* FIXME */
+			close(sockfd);
+			return (AUTH_ERROR);
+		}
+	} while (!done);
+
 	close(sockfd);
 
 	buf[totalbytes] = '\0';
