@@ -1,5 +1,8 @@
 # $Header$
 
+2005-05-23 Philippe April <philippe@ilesansfil.org>
+	* Released 1.1.2_pre1
+
 2005-05-23 Mina Naguib <mina@ilesansfil.org>
 	* fw_uptables.c: When appending call to chain WiFiDog_Outgoing from
 	nat.prerouting, add it via -A (at end) instead of -I 1 (at beginning) to
