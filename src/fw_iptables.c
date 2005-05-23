@@ -225,7 +225,7 @@ iptables_fw_init(void)
 			iptables_do_command("-t nat -N " TABLE_WIFIDOG_AUTHSERVERS);
 
 			/* Assign links and rules to these new chains */
-			iptables_do_command("-t nat -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_OUTGOING, gw_interface);
+			iptables_do_command("-t nat -A PREROUTING -i %s -j " TABLE_WIFIDOG_OUTGOING, gw_interface);
 
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_OUTGOING " -d %s -j " TABLE_WIFIDOG_WIFI_TO_ROUTER, gw_address);
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_ROUTER " -j ACCEPT");

@@ -1,5 +1,10 @@
 # $Header$
 
+2005-05-23 Mina Naguib <mina@ilesansfil.org>
+	* fw_uptables.c: When appending call to chain WiFiDog_Outgoing from
+	nat.prerouting, add it via -A (at end) instead of -I 1 (at beginning) to
+	allow for existing nat forwarding.
+
 2005-05-16 Mina Naguib <mina@ilesansfil.org>
 	* centralserver.c: read()s from central server in auth_server_request() are
 	now timed-out (via select).  This is hopefully a bugfix to the
