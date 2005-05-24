@@ -134,9 +134,8 @@ parse_commandline(int argc, char **argv)
 	    }
 	    config.param = strdup(*(argv + optind + 1));
     }
-
-    if (config.command == WDCTL_UNDEF) {
-	    fprintf(stderr, "wdctl: Error: Invalid command \"%s\"\n", *argv);
+	 else {
+	    fprintf(stderr, "wdctl: Error: Invalid command \"%s\"\n", *(argv + optind));
 	    usage();
 	    exit(1);
     }

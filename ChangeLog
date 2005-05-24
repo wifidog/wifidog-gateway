@@ -1,5 +1,10 @@
 # $Header$
 
+2005-05-24 Mina Naguib <mina@ilesansfil.org>
+	* wdctl.c: Minor bugfix pointed out by David Vincelli: When an invalid
+	command is given to wdctl, the error message showed "Invalid command:
+	wdctl" instead of the actual command supplied
+
 2005-05-23 Philippe April <philippe@ilesansfil.org>
 	* Released 1.1.2_pre1
 
