@@ -2,6 +2,39 @@ $Header$
 
 OpenWRT specific README
 
+Since the newest OpenWRT releases, we will be able to release
+binary IPKGs that should work on all the OpenWRT installations.
+
+The binaries are available at sourceforge.
+
+The older instructions are now outdated, but they are still at the bottom.
+
+Because they now release the images and an SDK, you can also compile
+WiFiDog for the images they distribute if the current IPKG we distribute is
+not up-to-date enough for you.
+
+To do so, download the SDK named: OpenWrt-SDK-Linux..... from OpenWRT,
+then unpack the OpenWrt-SDK-WiFiDog tarball into the "package" directory of
+OpenWrt-SDK, to have the files in a layout similar to this:
+
+OpenWrt-SDK-Linux-i686-1/package/
+OpenWrt-SDK-Linux-i686-1/package/depend.mk
+OpenWrt-SDK-Linux-i686-1/package/rules.mk
+OpenWrt-SDK-Linux-i686-1/package/wifidog
+OpenWrt-SDK-Linux-i686-1/package/wifidog/Config.in
+OpenWrt-SDK-Linux-i686-1/package/wifidog/Makefile
+OpenWrt-SDK-Linux-i686-1/package/wifidog/ipkg
+OpenWrt-SDK-Linux-i686-1/package/wifidog/ipkg/wifidog.control
+OpenWrt-SDK-Linux-i686-1/package/wifidog/ipkg/wifidog.init
+OpenWrt-SDK-Linux-i686-1/package/wifidog/ipkg/wifidog.conffiles
+
+Then, simply run make at the root of OpenWrt-SDK-Linux-i686-1.
+
+You should end up with an IPKG file in OpenWrt-SDK-Linux-i686-1/bin/packages/
+if everything went well.
+
+---- OLDER INSTRUCTIONS ----
+
 In order to compile OpenWRT for the linksys WRT54G, you must first
 obtain and install the OpenWRT build environement from the OpenWRT
 project: http://openwrt.ksilebo.net/

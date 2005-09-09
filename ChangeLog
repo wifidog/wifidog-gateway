@@ -1,4 +1,7 @@
 # $Header$
+2005-05-23 Philippe April <philippe@ilesansfil.org>
+	* Added compile instructions and installation for OpenWrt Whiterussian-rc2
+	* Released 1.1.2
 
 2005-05-24 Mina Naguib <mina@ilesansfil.org>
 	* wdctl.c: Minor bugfix pointed out by David Vincelli: When an invalid

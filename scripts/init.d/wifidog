@@ -82,6 +82,17 @@ case "$1" in
       fi
     }
 
+    ### Test ipt_REDIRECT with iptables
+    test_ipt_REDIRECT () {
+      IPTABLES_OK=$($IPT -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 2060 2>&1 | grep "No chain.target.match")
+      if [ -z "$IPTABLES_OK" ]; then
+        $IPT -t nat -D PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 2060 2>&1
+        echo 1
+      else
+        echo 0
+      fi
+    }
+
     ### Find a module on disk
     module_exists () {
     echo " Looking for a module on disk"
@@ -152,6 +163,31 @@ case "$1" in
       else
     echo "   ipt_mark module is working"
     fi
+
+    echo "  Testing ipt_REDIRECT"
+    TEST_IPT_MAC=$(test_ipt_REDIRECT)
+    if [ "$TEST_IPT_MAC" = "0" ]; then
+      echo "   iptables is not working with ipt_REDIRECT"
+      echo "   Scanning disk for ipt_REDIRECT module"
+      TEST_IPT_MAC_MODULE_EXISTS=$(module_exists "ipt_REDIRECT")
+      if [ "$TEST_IPT_MAC_MODULE_EXISTS" = "0" ]; then
+        echo "   ipt_REDIRECT module is missing, please install it (kernel or module)"
+        exit
+      else
+        echo "   ipt_REDIRECT module exists, trying to load"
+        insmod ipt_REDIRECT > /dev/null
+        TEST_IPT_MAC_MODULE_MEMORY=$(module_in_memory "ipt_REDIRECT")
+        if [ "$TEST_IPT_MAC_MODULE_MEMORY" = "0" ]; then
+          echo "  Error: ipt_REDIRECT not loaded"
+          exit
+        else
+          echo "  ipt_REDIRECT loaded sucessfully"
+        fi
+      fi
+    else
+      echo "   ipt_REDIRECT  module is working"
+    fi
+
     ;;
 
   *)
