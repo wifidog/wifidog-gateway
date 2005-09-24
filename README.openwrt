@@ -13,9 +13,9 @@ Because they now release the images and an SDK, you can also compile
 WiFiDog for the images they distribute if the current IPKG we distribute is
 not up-to-date enough for you.
 
-To do so, download the SDK named: OpenWrt-SDK-Linux..... from OpenWRT,
-then unpack the OpenWrt-SDK-WiFiDog tarball into the "package" directory of
-OpenWrt-SDK, to have the files in a layout similar to this:
+To do so, download the SDK named: OpenWrt-SDK-Linux from OpenWRT,
+then get the package/wifidog/ directory from OpenWRT's CVS (it will be included
+in the next versions of OpenWRT) and put it under to have a layout similar to this:
 
 OpenWrt-SDK-Linux-i686-1/package/
 OpenWrt-SDK-Linux-i686-1/package/depend.mk

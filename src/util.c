@@ -172,6 +172,44 @@ char *get_iface_ip(char *ifname) {
 #endif
 }
 
+char *get_iface_mac (char *ifname) {
+#ifdef __linux__
+    int r, s;
+    struct ifreq ifr;
+    char *hwaddr, mac[13];
+    
+    strcpy(ifr.ifr_name, ifname);
+
+    s = socket(PF_INET, SOCK_DGRAM, 0);
+    if (-1 == s) {
+       debug(LOG_ERR, "get_iface_mac socket: %s", strerror(errno));
+       return NULL;
+    }
+
+    r = ioctl(s, SIOCGIFHWADDR, &ifr);
+    if (r == -1) {
+       debug(LOG_ERR, "get_iface_mac ioctl(SIOCGIFHWADDR): %s", strerror(errno));
+       close(s);
+       return NULL;
+    }
+
+    hwaddr = ifr.ifr_hwaddr.sa_data;
+    snprintf(mac, 13, "%02X%02X%02X%02X%02X%02X", 
+       hwaddr[0] & 0xFF,
+       hwaddr[1] & 0xFF,
+       hwaddr[2] & 0xFF,
+       hwaddr[3] & 0xFF,
+       hwaddr[4] & 0xFF,
+       hwaddr[5] & 0xFF
+       );
+       
+    close(s);
+    return safe_strdup(mac);
+#else
+    return NULL;
+#endif
+}
+
 void mark_online() {
 	int before;
 	int after;

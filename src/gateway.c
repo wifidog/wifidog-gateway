@@ -188,15 +188,25 @@ main_loop(void)
 	/* Initializes the linked list of connected clients */
 	client_list_init();
 
-    /* If we don't have the Gateway IP address, get it. Can't fail. */
-    if (!config->gw_address) {
-        debug(LOG_DEBUG, "Finding IP address of %s", config->gw_interface);
-        if ((config->gw_address = get_iface_ip(config->gw_interface)) == NULL) {
-		    debug(LOG_ERR, "Could not get IP address information of %s, exiting...", config->gw_interface);
-            exit(1);
-        }
-        debug(LOG_DEBUG, "%s = %s", config->gw_interface, config->gw_address);
+  /* If we don't have the Gateway IP address, get it. Can't fail. */
+  if (!config->gw_address) {
+    debug(LOG_DEBUG, "Finding IP address of %s", config->gw_interface);
+    if ((config->gw_address = get_iface_ip(config->gw_interface)) == NULL) {
+	    debug(LOG_ERR, "Could not get IP address information of %s, exiting...", config->gw_interface);
+      exit(1);
     }
+    debug(LOG_DEBUG, "%s = %s", config->gw_interface, config->gw_address);
+  }
+
+  /* If we don't have the Gateway ID, construct it from the internal MAC address. Can't fail. */
+  if (!config->gw_id) {
+    debug(LOG_DEBUG, "Finding MAC address of %s", config->gw_interface);
+    if ((config->gw_id = get_iface_mac(config->gw_interface)) == NULL) {
+      debug(LOG_ERR, "Could not get MAC address information of %s, exiting...", config->gw_interface);
+      exit(1);
+    }
+    debug(LOG_DEBUG, "%s = %s", config->gw_interface, config->gw_id);
+  }
 
 	/* Initializes the web server */
 	debug(LOG_NOTICE, "Creating web server on %s:%d", 

@@ -37,6 +37,10 @@ struct in_addr *wd_gethostbyname(const char *name);
 /* @brief Get IP address of an interface */
 char *get_iface_ip(char *ifname);
 
+/* @brief Get MAC address of an interface */
+char *get_iface_mac(char *ifname);
+
+
 /* @brief Sets hint that an online action (dns/connect/etc using WAN) succeeded */
 void mark_online();
 /* @brief Sets hint that an online action (dns/connect/etc using WAN) failed */

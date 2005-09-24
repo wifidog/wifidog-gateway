@@ -1,4 +1,13 @@
 # $Header$
+2005-09-24 Philippe April <philippe@ilesansfil.org>
+	* (finally) Added {Saul Albert,Jo Walsh,Schuyler}'s patch (thank you!) to send
+	the GW interface's mac address as the node_id if no node_id is specified. It allows
+	the use of generic configuration files without the need to hardcode the
+	node_id in.
+	* Added TrustedMACList configuration variable which allows specifying
+	MAC addresses which are allowed to go through without authentication.
+	* Updated OpenWrt instructions.
+
 2005-09-08 Philippe April <philippe@ilesansfil.org>
 	* Added compile instructions and installation for OpenWrt Whiterussian-rc2
 	* Released 1.1.2

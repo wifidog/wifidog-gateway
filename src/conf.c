@@ -84,7 +84,8 @@ typedef enum {
 	oWdctlSocket,
 	oSyslogFacility,
 	oFirewallRule,
-	oFirewallRuleSet
+	oFirewallRuleSet,
+    oTrustedMACList
 } OpCodes;
 
 /** @internal
@@ -108,23 +109,19 @@ static const struct {
 	{ "clienttimeout",      oClientTimeout },
 	{ "checkinterval",      oCheckInterval },
 	{ "syslogfacility", 	oSyslogFacility },
-	{ "wdctlsocket", 	oWdctlSocket },
-	{ "hostname",		oAuthServHostname },
-	{ "sslavailable",	oAuthServSSLAvailable },
-	{ "sslport",		oAuthServSSLPort },
-	{ "httpport",		oAuthServHTTPPort },
-	{ "path",		oAuthServPath },
+	{ "wdctlsocket", 	    oWdctlSocket },
+	{ "hostname",		    oAuthServHostname },
+	{ "sslavailable",	    oAuthServSSLAvailable },
+	{ "sslport",		    oAuthServSSLPort },
+	{ "httpport",		    oAuthServHTTPPort },
+	{ "path",		        oAuthServPath },
 	{ "firewallruleset",	oFirewallRuleSet },
-	{ "firewallrule",	oFirewallRule },
+	{ "firewallrule",	    oFirewallRule },
+	{ "trustedmaclist",	    oTrustedMACList },
 	{ NULL,                 oBadOption },
 };
 
 static OpCodes config_parse_token(const char *cp, const char *filename, int linenum);
-static void config_notnull(void *parm, char *parmname);
-static int parse_boolean_value(char *);
-static void parse_auth_server(FILE *, char *, int *);
-static int parse_firewall_rule(char *ruleset, char *leftover);
-static void parse_firewall_ruleset(char *, FILE *, char *, int *);
 
 /** Accessor for the current gateway configuration
 @return:  A pointer to the current config.  The pointer isn't opaque, but should be treated as READ-ONLY
@@ -158,6 +155,7 @@ config_init(void)
 	config.log_syslog = DEFAULT_LOG_SYSLOG;
 	config.wdctl_sock = safe_strdup(DEFAULT_WDCTL_SOCK);
 	config.rulesets = NULL;
+    config.trustedmaclist = NULL;
 }
 
 /**
@@ -644,6 +642,9 @@ config_read(char *filename)
 					parse_firewall_ruleset(p1, fd,
 							filename, &linenum);
 					break;
+                case oTrustedMACList:
+                    parse_trusted_mac_list(p1);
+                    break;
 				case oHTTPDName:
 					config.httpdname = safe_strdup(p1);
 					break;
@@ -703,11 +704,43 @@ parse_boolean_value(char *line)
 	return -1;
 }
 
+void
+parse_trusted_mac_list(char *ptr)
+{
+    char *mac;
+    mac = (char *)safe_malloc(18);
+    t_trusted_mac *p;
+
+    while (1 == sscanf(ptr, "%17s", mac)) {
+        if (config.trustedmaclist == NULL) {
+            config.trustedmaclist = safe_malloc(sizeof(t_trusted_mac));
+            config.trustedmaclist->mac = mac;
+            config.trustedmaclist->next = NULL;
+        } else {
+            /* Advance to the last entry */
+            for (p = config.trustedmaclist; p->next != NULL; p = p->next);
+            p->next = safe_malloc(sizeof(t_trusted_mac));
+            p = p->next;
+            p->mac = mac;
+            p->next = NULL;
+        }
+
+        /* We put our pointer in the structure, re-allocate memory */
+        mac = (char *)safe_malloc(18);
+
+        while (*ptr != '\n' && *ptr != ',')
+            ptr++;
+        /* Advance one more to actually begin the next MAC */
+        ptr++;
+    }
+
+    free(mac);
+}
+
 /** Verifies if the configuration is complete and valid.  Terminates the program if it isn't */
 void
 config_validate(void)
 {
-	config_notnull(config.gw_id, "GatewayID");
 	config_notnull(config.gw_interface, "GatewayInterface");
 	config_notnull(config.auth_servers, "AuthServer");
 

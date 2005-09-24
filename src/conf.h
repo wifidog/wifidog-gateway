@@ -33,7 +33,7 @@
 #define DEFAULT_DAEMON 1
 #define DEFAULT_DEBUGLEVEL LOG_INFO
 #define DEFAULT_HTTPDMAXCONN 10
-#define DEFAULT_GATEWAYID "default"
+#define DEFAULT_GATEWAYID NULL
 #define DEFAULT_GATEWAYPORT 2060
 #define DEFAULT_HTTPDNAME "WiFiDog"
 #define DEFAULT_CLIENTTIMEOUT 5
@@ -86,6 +86,14 @@ typedef struct _firewall_ruleset_t {
 } t_firewall_ruleset;
 
 /**
+ * Trusted MAC Addresses
+ */
+typedef struct _trusted_mac_t {
+    char   *mac;
+    struct _trusted_mac_t *next;
+} t_trusted_mac;
+
+/**
  * Configuration structure
  */
 typedef struct {
@@ -117,6 +125,7 @@ typedef struct {
     int syslog_facility;	/**< @brief facility to use when using syslog for
 				     logging */
     t_firewall_ruleset	*rulesets;	/**< @brief firewall rules */
+    t_trusted_mac *trustedmaclist; /**< @brief list of trusted macs */
 } s_config;
 
 /** @brief Get the current gateway configuration */
@@ -142,6 +151,13 @@ void mark_auth_server_bad(t_auth_serv *);
 
 /** @brief Fetch a firewall rule set. */
 t_firewall_rule *get_ruleset(char *);
+
+static void config_notnull(void *parm, char *parmname);
+static int parse_boolean_value(char *);
+static void parse_auth_server(FILE *, char *, int *);
+static int parse_firewall_rule(char *ruleset, char *leftover);
+static void parse_firewall_ruleset(char *, FILE *, char *, int *);
+void parse_trusted_mac_list(char *);
 
 #define LOCK_CONFIG() do { \
 	debug(LOG_DEBUG, "Locking config"); \

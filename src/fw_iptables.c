@@ -186,6 +186,7 @@ iptables_fw_init(void)
 	 char * gw_interface = NULL;
 	 char * gw_address = NULL;
 	 int gw_port = 0;
+     t_trusted_mac *p;
    
     fw_quiet = 0;
 
@@ -203,13 +204,17 @@ iptables_fw_init(void)
 	  */
 
 	 		/* Create new chains */
+			iptables_do_command("-t mangle -N " TABLE_WIFIDOG_TRUSTED);
 			iptables_do_command("-t mangle -N " TABLE_WIFIDOG_OUTGOING);
 			iptables_do_command("-t mangle -N " TABLE_WIFIDOG_INCOMING);
 
 			/* Assign links and rules to these new chains */
 			iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_OUTGOING, gw_interface);
+			iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_TRUSTED, gw_interface);
 			iptables_do_command("-t mangle -I POSTROUTING 1 -o %s -j " TABLE_WIFIDOG_INCOMING, gw_interface);
 
+            for (p = config->trustedmaclist; p != NULL; p = p->next)
+                iptables_do_command("-t mangle -A " TABLE_WIFIDOG_TRUSTED " -m mac --mac-source %s -j MARK --set-mark %d", p->mac, FW_MARK_KNOWN);
 
 	 /*
 	  *
@@ -298,10 +303,13 @@ iptables_fw_destroy(void)
 	  *
 	  */
 	 debug(LOG_DEBUG, "Destroying chains in the MANGLE table");
+	 iptables_fw_destroy_mention("mangle", "PREROUTING", TABLE_WIFIDOG_TRUSTED);
 	 iptables_fw_destroy_mention("mangle", "PREROUTING", TABLE_WIFIDOG_OUTGOING);
 	 iptables_fw_destroy_mention("mangle", "POSTROUTING", TABLE_WIFIDOG_INCOMING);
+    iptables_do_command("-t mangle -F " TABLE_WIFIDOG_TRUSTED);
     iptables_do_command("-t mangle -F " TABLE_WIFIDOG_OUTGOING);
     iptables_do_command("-t mangle -F " TABLE_WIFIDOG_INCOMING);
+    iptables_do_command("-t mangle -X " TABLE_WIFIDOG_TRUSTED);
     iptables_do_command("-t mangle -X " TABLE_WIFIDOG_OUTGOING);
     iptables_do_command("-t mangle -X " TABLE_WIFIDOG_INCOMING);
 

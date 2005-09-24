@@ -41,6 +41,7 @@
 #define TABLE_WIFIDOG_KNOWN     "WiFiDog_Known"
 #define TABLE_WIFIDOG_UNKNOWN   "WiFiDog_Unknown"
 #define TABLE_WIFIDOG_LOCKED    "WiFiDog_Locked"
+#define TABLE_WIFIDOG_TRUSTED    "WiFiDog_Trusted"
 /*@}*/ 
 
 /** Used by iptables_fw_access to select if the client should be granted of denied access */
