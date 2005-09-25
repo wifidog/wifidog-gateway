@@ -28,13 +28,26 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <syslog.h>
 
+#include "debug.h"
 #include "safe.h"
 #include "conf.h"
 
 #include "../config.h"
 
+/*
+ * Holds an argv that could be passed to exec*() if we restart ourselves
+ */
+char ** restartargv = NULL;
+
 static void usage(void);
+
+/*
+ * A flag to denote whether we were restarted via a parent wifidog, or started normally
+ * 0 means normally, otherwise it will be populated by the PID of the parent
+ */
+pid_t restarted = 0;
 
 /** @internal
  * @brief Print usage
@@ -53,61 +66,115 @@ usage(void)
     printf("  -w <path>     Wdctl socket path\n");
     printf("  -h            Print usage\n");
     printf("  -v            Print version information\n");
+    printf("  -x pid        Used internally by WiFiDog when re-starting itself *DO NOT ISSUE THIS SWITCH MANUAlLY*\n");
+    printf("  -i <path>     Internal socket path used when re-starting self\n");
     printf("\n");
 }
 
 /** Uses getopt() to parse the command line and set configuration values
+ * also populates restartargv
  */
-void
-parse_commandline(int argc, char **argv)
-{
+void parse_commandline(int argc, char **argv) {
     int c;
+	 int skiponrestart;
+	 int i;
+
     s_config *config = config_get_config();
 
-    while (-1 != (c = getopt(argc, argv, "c:hfd:sw:v"))) {
-        switch(c) {
-            case 'h':
-                usage();
-                exit(1);
-                break;
+	//MAGIC 3: Our own -x, the pid, and NULL :
+	restartargv = safe_malloc((argc + 3) * sizeof(char*));
+	i=0;
+	restartargv[i++] = safe_strdup(argv[0]);
 
-            case 'c':
-                if (optarg) {
-                    strncpy(config->configfile, optarg, sizeof(config->configfile));
-                }
-                break;
+    while (-1 != (c = getopt(argc, argv, "c:hfd:sw:vx:i:"))) {
 
-	    case 'w':
-		if (optarg) {
-		    free(config->wdctl_sock);
-		    config->wdctl_sock = safe_strdup(optarg);
+		skiponrestart = 0;
+
+		switch(c) {
+
+			case 'h':
+				usage();
+				exit(1);
+				break;
+
+			case 'c':
+				if (optarg) {
+					strncpy(config->configfile, optarg, sizeof(config->configfile));
+				}
+				break;
+
+			case 'w':
+				if (optarg) {
+					free(config->wdctl_sock);
+					config->wdctl_sock = safe_strdup(optarg);
+				}
+				break;
+
+			case 'f':
+				skiponrestart = 1;
+				config->daemon = 0;
+				break;
+
+			case 'd':
+				if (optarg) {
+					config->debuglevel = atoi(optarg);
+				}
+				break;
+
+			case 's':
+				config->log_syslog = 1;
+				break;
+
+			case 'v':
+				printf("This is WiFiDog version " VERSION "\n");
+				exit(1);
+				break;
+
+			case 'x':
+				skiponrestart = 1;
+				if (optarg) {
+					restarted = atoi(optarg);
+				}
+				else {
+					printf("The expected PID to the -x switch was not supplied!");
+					exit(1);
+				}
+				break;
+
+			case 'i':
+				if (optarg) {
+					free(config->internal_sock);
+					config->internal_sock = safe_strdup(optarg);
+				}
+				break;
+
+			default:
+				usage();
+				exit(1);
+				break;
+
 		}
-		break;
 
-            case 'f':
-                config->daemon = 0;
-                break;
+		if (!skiponrestart) {
+			/* Add it to restartargv */
+			safe_asprintf(&(restartargv[i++]), "-%c", c);
+			if (optarg) {
+				restartargv[i++] = safe_strdup(optarg);
+			}
+		}
 
-            case 'd':
-                if (optarg) {
-                    config->debuglevel = atoi(optarg);
-                }
-                break;
+	}
 
-            case 's':
-                config->log_syslog = 1;
-                break;
+	/* Finally, we should add  the -x, pid and NULL to restartargv
+	 * HOWEVER we cannot do it here, since this is called before we fork to background
+	 * so we'll leave this job to gateway.c after forking is completed
+	 * so that the correct PID is assigned
+	 *
+	 * We add 3 nulls, and the first 2 will be overridden later
+	 */
+	restartargv[i++] = NULL;
+	restartargv[i++] = NULL;
+	restartargv[i++] = NULL;
 
-				case 'v':
-					 printf("This is WiFiDog version " VERSION "\n");
-					 exit(1);
-					 break;
-
-            default:
-                usage();
-                exit(1);
-                break;
-        }
-    }
 }
 

@@ -475,8 +475,8 @@ iptables_fw_counters_update(void)
             debug(LOG_DEBUG, "Outgoing %s Bytes=%llu", ip, counter);
 	    LOCK_CLIENT_LIST();
             if ((p1 = client_list_find_by_ip(ip))) {
-                if (p1->counters.outgoing < counter) {
-                    p1->counters.outgoing = counter;
+                if ((p1->counters.outgoing - p1->counters.outgoing_history) < counter) {
+                    p1->counters.outgoing = p1->counters.outgoing_history + counter;
                     p1->counters.last_updated = time(NULL);
                     debug(LOG_DEBUG, "%s - Updated counter.outgoing to %llu bytes", ip, counter);
                 }
@@ -513,8 +513,8 @@ iptables_fw_counters_update(void)
             debug(LOG_DEBUG, "Incoming %s Bytes=%llu", ip, counter);
 	    LOCK_CLIENT_LIST();
             if ((p1 = client_list_find_by_ip(ip))) {
-                if (p1->counters.incoming < counter) {
-                    p1->counters.incoming = counter;
+                if ((p1->counters.incoming - p1->counters.incoming_history) < counter) {
+                    p1->counters.incoming = p1->counters.incoming_history + counter;
                     debug(LOG_DEBUG, "%s - Updated counter.incoming to %llu bytes", ip, counter);
                 }
             } else {

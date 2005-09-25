@@ -27,14 +27,20 @@
   @author Copyright (C) 2005 Mina Naguib <mina@ilesansfil.org>
  */
 
+
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
+#include "httpd.h"
 #include "safe.h"
 #include "debug.h"
 #include <syslog.h>
+
+/* From gateway.c */
+extern httpd * webserver;
 
 void * safe_malloc (size_t size) {
 	void * retval = NULL;
@@ -82,3 +88,23 @@ int safe_vasprintf(char **strp, const char *fmt, va_list ap) {
 	}
 	return (retval);
 }
+
+pid_t safe_fork(void) {
+	pid_t result;
+	result = fork();
+
+	if (result == -1) {
+		debug(LOG_CRIT, "Failed to fork: %s.  Bailing out", strerror(errno));
+		exit (1);
+	}
+	else if (result == 0) {
+		/* I'm the child - do some cleanup */
+		if (webserver) {
+			close(webserver->serverSock);
+			webserver = NULL;
+		}
+	}
+
+	return result;
+}
+

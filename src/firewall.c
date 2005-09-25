@@ -69,6 +69,9 @@
 
 extern pthread_mutex_t client_list_mutex;
 
+/* from commandline.c */
+extern pid_t restarted;
+
 int icmp_fd = 0;
 
 /**
@@ -143,6 +146,8 @@ int
 fw_init(void)
 {
     int flags, oneopt = 1, zeroopt = 0;
+	 int result = 0;
+	 t_client * client = NULL;
 
     debug(LOG_INFO, "Creating ICMP socket");
     if ((icmp_fd = socket (AF_INET, SOCK_RAW, IPPROTO_ICMP)) == -1 ||
@@ -155,7 +160,20 @@ fw_init(void)
     }
 
     debug(LOG_INFO, "Initializing Firewall");
-    return iptables_fw_init();
+    result = iptables_fw_init();
+
+	 if (restarted) {
+		 debug(LOG_INFO, "Restoring firewall rules for clients inherited from parent");
+		 LOCK_CLIENT_LIST();
+		 client = client_get_first_client();
+		 while (client) {
+			 fw_allow(client->ip, client->mac, client->fw_connection_state);
+			 client = client->next;
+		 }
+		 UNLOCK_CLIENT_LIST();
+	 }
+
+	 return result;
 }
 
 /** Clear the authserver rules
@@ -268,7 +286,7 @@ fw_counter(void)
                             debug(LOG_INFO, "%s - Access has changed to allowed, refreshing firewall and clearing counters", p1->ip);
                             fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
                             p1->fw_connection_state = FW_MARK_KNOWN;
-                            p1->counters.incoming = p1->counters.outgoing = 0;
+                            p1->counters.incoming = p1->counters.outgoing = p1->counters.incoming_history = p1->counters.outgoing_history = 0;
                             fw_allow(p1->ip, p1->mac, p1->fw_connection_state);
                         }
                         break;

@@ -154,6 +154,7 @@ config_init(void)
 	config.daemon = -1;
 	config.log_syslog = DEFAULT_LOG_SYSLOG;
 	config.wdctl_sock = safe_strdup(DEFAULT_WDCTL_SOCK);
+	config.internal_sock = safe_strdup(DEFAULT_INTERNAL_SOCK);
 	config.rulesets = NULL;
 	config.trustedmaclist = NULL;
 }

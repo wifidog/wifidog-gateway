@@ -48,12 +48,12 @@ _debug(char *filename, int line, int level, char *format, ...)
         va_start(vlist, format);
 
         if (level <= LOG_WARNING) {
-            fprintf(stderr, "[%d][%.24s](%s:%d) ", level, ctime_r(&ts, buf),
+            fprintf(stderr, "[%d][%.24s][%u](%s:%d) ", level, ctime_r(&ts, buf), getpid(),
 			    filename, line);
             vfprintf(stderr, format, vlist);
             fputc('\n', stderr);
         } else if (!config->daemon) {
-            fprintf(stdout, "[%d][%.24s](%s:%d) ", level, ctime_r(&ts, buf),
+            fprintf(stdout, "[%d][%.24s][%u](%s:%d) ", level, ctime_r(&ts, buf), getpid(),
 			    filename, line);
             vfprintf(stdout, format, vlist);
             fputc('\n', stdout);

@@ -1,6 +1,19 @@
 # $Header$
 
 2005-09-24 Mina Naguib <mina@ilesansfil.org>
+	* New wdctl command "restart" which will get wifidog to restart itself
+	while preserving the existing clientlist.  Perfect for 0-downtime
+	upgrading!
+	* safe.c: New safe_fork that croaks if the fork fails, also takes care of
+	closing some global file descriptors for the child
+	* debug.c: Now also logs the PID as part of every entry
+	* gateway.c: Handler for SIGCHLD now waitpid()s with WNOHANG flag to prevent deadlock
+	when the handler is called and another wait() or waitpid() is used
+	* util.c: execute() now uses waitpid() instead of wait() to reap only the child
+	it fork/executed
+	* Extra debugging entries throughout code
+
+2005-09-24 Mina Naguib <mina@ilesansfil.org>
 	* conf.c: Pre-emptive bugfix - harsh lockdown of parsing trusted MAC
 	addresses from config file
 

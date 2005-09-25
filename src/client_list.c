@@ -50,7 +50,7 @@ pthread_mutex_t client_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 /** @internal
  * Holds a pointer to the first element of the list 
  */ 
-static t_client         *firstclient = NULL;
+t_client         *firstclient = NULL;
 
 /** Get the first element of the list of connected clients
  */
@@ -95,7 +95,7 @@ client_list_append(char *ip, char *mac, char *token)
     curclient->ip = safe_strdup(ip);
     curclient->mac = safe_strdup(mac);
     curclient->token = safe_strdup(token);
-    curclient->counters.incoming = curclient->counters.outgoing = 0;
+    curclient->counters.incoming = curclient->counters.incoming_history = curclient->counters.outgoing = curclient->counters.outgoing_history = 0;
     curclient->counters.last_updated = time(NULL);
 
     if (prevclient == NULL) {

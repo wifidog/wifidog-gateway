@@ -41,6 +41,7 @@
 #define DEFAULT_LOG_SYSLOG 0
 #define DEFAULT_SYSLOG_FACILITY LOG_DAEMON
 #define DEFAULT_WDCTL_SOCK "/tmp/wdctl.sock"
+#define DEFAULT_INTERNAL_SOCK "/tmp/wifidog.sock"
 #define DEFAULT_AUTHSERVPORT 80
 #define DEFAULT_AUTHSERVSSLPORT 443
 /** Note that DEFAULT_AUTHSERVSSLAVAILABLE must be 0 or 1, even if the config file syntax is yes or no */
@@ -99,6 +100,7 @@ typedef struct _trusted_mac_t {
 typedef struct {
     char configfile[255];	/**< @brief name of the config file */
     char *wdctl_sock;		/**< @brief wdctl path to socket */
+    char *internal_sock;		/**< @brief internal path to socket */
     int daemon;			/**< @brief if daemon > 0, use daemon mode */
     int debuglevel;		/**< @brief Debug information verbosity */
     char *external_interface;	/**< @brief External network interface name for

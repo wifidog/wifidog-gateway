@@ -64,6 +64,9 @@ extern time_t started_time;
 extern	pthread_mutex_t	client_list_mutex;
 extern	pthread_mutex_t	config_mutex;
 
+/* Defined in commandline.c */
+extern pid_t restarted;
+
 /* XXX Do these need to be locked ? */
 static time_t last_online_time = 0;
 static time_t last_offline_time = 0;
@@ -88,20 +91,19 @@ execute(char *cmd_line, int quiet)
     new_argv[2] = cmd_line;
     new_argv[3] = NULL;
 
-    if ((pid = fork()) < 0) {    /* fork a child process           */
-        debug(LOG_ERR, "fork(): %s", strerror(errno));
-        exit(1);
-    } else if (pid == 0) {    /* for the child process:         */
+	 pid = safe_fork();
+	 if (pid == 0) {    /* for the child process:         */
         /* We don't want to see any errors if quiet flag is on */
         if (quiet) close(2);
         if (execvp("/bin/sh", (char *const *)new_argv) < 0) {    /* execute the command  */
             debug(LOG_ERR, "execvp(): %s", strerror(errno));
             exit(1);
         }
-    } else {        /* for the parent:      */
-        do {
-            rc = wait(&status);
-        } while (rc != pid && rc != -1);    /* wait for completion  */
+    }
+	 else {        /* for the parent:      */
+		debug(LOG_DEBUG, "Waiting for PID %d to exit", pid);
+		rc = waitpid(pid, &status, 0);
+		debug(LOG_DEBUG, "Process PID %d exited", rc);
     }
 
     return (WEXITSTATUS(status));
@@ -326,6 +328,17 @@ char * get_status_text() {
 
 	snprintf((buffer + len), (sizeof(buffer) - len), "Uptime: %ud %uh %um %us\n", days, hours, minutes, seconds);
 	len = strlen(buffer);
+
+	snprintf((buffer + len), (sizeof(buffer) - len), "Restarted: ");
+	len = strlen(buffer);
+	if (restarted) {
+		snprintf((buffer + len), (sizeof(buffer) - len), "Yes (from PID %d)\n", restarted);
+		len = strlen(buffer);
+	}
+	else {
+		snprintf((buffer + len), (sizeof(buffer) - len), "No\n");
+		len = strlen(buffer);
+	}
 	
 	snprintf((buffer + len), (sizeof(buffer) - len), "is_online: %s\n", (is_online() ? "yes" : "no"));
 	len = strlen(buffer);
