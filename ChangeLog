@@ -1,4 +1,9 @@
 # $Header$
+
+2005-09-24 Mina Naguib <mina@ilesansfil.org>
+	* conf.c: Pre-emptive bugfix - harsh lockdown of parsing trusted MAC
+	addresses from config file
+
 2005-09-24 Philippe April <philippe@ilesansfil.org>
 	* (finally) Added {Saul Albert,Jo Walsh,Schuyler}'s patch (thank you!) to send
 	the GW interface's mac address as the node_id if no node_id is specified. It allows

@@ -85,7 +85,7 @@ typedef enum {
 	oSyslogFacility,
 	oFirewallRule,
 	oFirewallRuleSet,
-    oTrustedMACList
+	oTrustedMACList
 } OpCodes;
 
 /** @internal
@@ -155,7 +155,7 @@ config_init(void)
 	config.log_syslog = DEFAULT_LOG_SYSLOG;
 	config.wdctl_sock = safe_strdup(DEFAULT_WDCTL_SOCK);
 	config.rulesets = NULL;
-    config.trustedmaclist = NULL;
+	config.trustedmaclist = NULL;
 }
 
 /**
@@ -639,12 +639,11 @@ config_read(char *filename)
 							&linenum);
 					break;
 				case oFirewallRuleSet:
-					parse_firewall_ruleset(p1, fd,
-							filename, &linenum);
+					parse_firewall_ruleset(p1, fd, filename, &linenum);
 					break;
-                case oTrustedMACList:
-                    parse_trusted_mac_list(p1);
-                    break;
+				case oTrustedMACList:
+					parse_trusted_mac_list(p1);
+					break;
 				case oHTTPDName:
 					config.httpdname = safe_strdup(p1);
 					break;
@@ -704,37 +703,46 @@ parse_boolean_value(char *line)
 	return -1;
 }
 
-void
-parse_trusted_mac_list(char *ptr)
-{
-    char *mac;
-    mac = (char *)safe_malloc(18);
-    t_trusted_mac *p;
+void parse_trusted_mac_list(char *ptr) {
+	char *ptrcopy = NULL;
+	char *possiblemac = NULL;
+	char *mac = NULL;
+	t_trusted_mac *p = NULL;
 
-    while (1 == sscanf(ptr, "%17s", mac)) {
-        if (config.trustedmaclist == NULL) {
-            config.trustedmaclist = safe_malloc(sizeof(t_trusted_mac));
-            config.trustedmaclist->mac = mac;
-            config.trustedmaclist->next = NULL;
-        } else {
-            /* Advance to the last entry */
-            for (p = config.trustedmaclist; p->next != NULL; p = p->next);
-            p->next = safe_malloc(sizeof(t_trusted_mac));
-            p = p->next;
-            p->mac = mac;
-            p->next = NULL;
-        }
+	debug(LOG_DEBUG, "Parsing string [%s] for trusted MAC addresses", ptr);
 
-        /* We put our pointer in the structure, re-allocate memory */
-        mac = (char *)safe_malloc(18);
+	mac = safe_malloc(18);
 
-        while (*ptr != '\n' && *ptr != ',')
-            ptr++;
-        /* Advance one more to actually begin the next MAC */
-        ptr++;
-    }
+	/* strsep modifies original, so let's make a copy */
+	ptrcopy = safe_strdup(ptr);
 
-    free(mac);
+	while ((possiblemac = strsep(&ptrcopy, ", "))) {
+		if (sscanf(possiblemac, " %17[A-Fa-f0-9:]", mac) == 1) {
+			/* Copy mac to the list */
+
+			debug(LOG_DEBUG, "Adding MAC address [%s] to trusted list", mac);
+
+			if (config.trustedmaclist == NULL) {
+				config.trustedmaclist = safe_malloc(sizeof(t_trusted_mac));
+				config.trustedmaclist->mac = safe_strdup(mac);
+				config.trustedmaclist->next = NULL;
+			}
+			else {
+				/* Advance to the last entry */
+				for (p = config.trustedmaclist; p->next != NULL; p = p->next);
+				p->next = safe_malloc(sizeof(t_trusted_mac));
+				p = p->next;
+				p->mac = safe_strdup(mac);
+				p->next = NULL;
+			}
+
+		}
+	}
+
+	free(ptrcopy);
+
+	free(mac);
+
 }
 
 /** Verifies if the configuration is complete and valid.  Terminates the program if it isn't */
