@@ -380,6 +380,7 @@ void _httpd_storeData(request *r, char *query)
 		else
 		{
                 	*cp2 = *cp++;
+            /*
 			if (*cp2 == '.')
 			{
 				strcpy(cp2,"_dot_");
@@ -387,13 +388,18 @@ void _httpd_storeData(request *r, char *query)
 			}
 			else
 			{
+            */
 				cp2++;
+            /*
 			}
+            */
 		}
         }
-	*cp = 0;
-	tmpVal = _httpd_unescape(val);
-	httpdAddVariable(r, var, tmpVal);
+    if (val != NULL) {
+	    *cp = 0;
+	    tmpVal = _httpd_unescape(val);
+	    httpdAddVariable(r, var, tmpVal);
+    }
 	free(var);
 }
 

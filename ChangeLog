@@ -1,4 +1,6 @@
 # $Header$
+2005-10-03 Philippe April <philippe@ilesansfil.org>
+	* libhttpd: Fixed two bugs parsing the GET query string making wifidog segfault
 
 2005-09-24 Mina Naguib <mina@ilesansfil.org>
 	* New wdctl command "restart" which will get wifidog to restart itself
