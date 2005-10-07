@@ -1,4 +1,7 @@
 # $Header$
+2005-10-07 Philippe April <philippe@ilesansfil.org>
+	* Released 1.1.3_beta1
+
 2005-10-03 Philippe April <philippe@ilesansfil.org>
 	* libhttpd: Fixed two bugs parsing the GET query string making wifidog segfault
 
