@@ -55,6 +55,8 @@
 #include "conf.h"
 #include "debug.h"
 
+#include "../config.h"
+
 static pthread_mutex_t ghbn_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* Defined in ping_thread.c */
@@ -72,6 +74,8 @@ static time_t last_online_time = 0;
 static time_t last_offline_time = 0;
 static time_t last_auth_online_time = 0;
 static time_t last_auth_offline_time = 0;
+
+long served_this_session = 0;
 
 /** Fork a child and execute a shell command, the parent
  * process waits for the child to return and returns the child's exit()
@@ -326,24 +330,30 @@ char * get_status_text() {
 	uptime -= minutes * 60;
 	seconds = uptime;
 
+	snprintf((buffer + len), (sizeof(buffer) - len), "Version: " VERSION "\n");
+	len = strlen(buffer);
+
 	snprintf((buffer + len), (sizeof(buffer) - len), "Uptime: %ud %uh %um %us\n", days, hours, minutes, seconds);
 	len = strlen(buffer);
 
-	snprintf((buffer + len), (sizeof(buffer) - len), "Restarted: ");
+	snprintf((buffer + len), (sizeof(buffer) - len), "Has been restarted: ");
 	len = strlen(buffer);
 	if (restarted) {
-		snprintf((buffer + len), (sizeof(buffer) - len), "Yes (from PID %d)\n", restarted);
+		snprintf((buffer + len), (sizeof(buffer) - len), "yes (from PID %d)\n", restarted);
 		len = strlen(buffer);
 	}
 	else {
-		snprintf((buffer + len), (sizeof(buffer) - len), "No\n");
+		snprintf((buffer + len), (sizeof(buffer) - len), "no\n");
 		len = strlen(buffer);
 	}
 	
-	snprintf((buffer + len), (sizeof(buffer) - len), "is_online: %s\n", (is_online() ? "yes" : "no"));
+	snprintf((buffer + len), (sizeof(buffer) - len), "Internet Connectivity: %s\n", (is_online() ? "yes" : "no"));
 	len = strlen(buffer);
 	
-	snprintf((buffer + len), (sizeof(buffer) - len), "is_auth_online: %s\n\n", (is_auth_online() ? "yes" : "no"));
+	snprintf((buffer + len), (sizeof(buffer) - len), "Auth server reachable: %s\n", (is_auth_online() ? "yes" : "no"));
+	len = strlen(buffer);
+
+	snprintf((buffer + len), (sizeof(buffer) - len), "Clients served this session: %lu\n\n", served_this_session);
 	len = strlen(buffer);
 
 	LOCK_CLIENT_LIST();
@@ -368,14 +378,16 @@ char * get_status_text() {
 
 	count = 0;
 	while (first != NULL) {
-		snprintf((buffer + len), (sizeof(buffer) - len), "Client %d\t"
-				"Ip: %s\tMac: %s\tToken: %s\n", count, 
-				first->ip, first->mac, first->token);
+		snprintf((buffer + len), (sizeof(buffer) - len), "\nClient %d\n", count);
 		len = strlen(buffer);
 
-		snprintf((buffer + len), (sizeof(buffer) - len), "\tIn: %llu\t"
-				"Out: %llu\n" , first->counters.incoming,
-				first->counters.outgoing);
+		snprintf((buffer + len), (sizeof(buffer) - len), "  IP: %s MAC: %s\n", first->ip, first->mac);
+		len = strlen(buffer);
+
+		snprintf((buffer + len), (sizeof(buffer) - len), "  Token: %s\n", first->token);
+		len = strlen(buffer);
+
+		snprintf((buffer + len), (sizeof(buffer) - len), "  Downloaded: %llu\n  Uploaded: %llu\n" , first->counters.incoming, first->counters.outgoing);
 		len = strlen(buffer);
 
 		count++;

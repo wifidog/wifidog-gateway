@@ -71,12 +71,12 @@ void
 thread_wdctl(void *arg)
 {
 	int	sock,
-		fd,
-		len;
+		fd;
 	char	*sock_name;
 	struct 	sockaddr_un	sa_un;
 	int result;
 	pthread_t	tid;
+    socklen_t len;
 
 	debug(LOG_DEBUG, "Starting wdctl.");
 
@@ -231,8 +231,7 @@ static void
 wdctl_restart(int afd)
 {
 	int	sock,
-		fd,
-		len;
+		fd;
 	char	*sock_name;
 	struct 	sockaddr_un	sa_un;
 	int result;
@@ -241,6 +240,7 @@ wdctl_restart(int afd)
 	char * tempstring = NULL;
 	pid_t pid;
 	ssize_t written;
+	socklen_t len;
 
 	conf = config_get_config();
 

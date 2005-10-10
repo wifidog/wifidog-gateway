@@ -78,25 +78,20 @@ http_callback_404(httpd *webserver, request *r)
 
 	if (!is_online()) {
 		/* The internet connection is down at the moment  - apologize and do not redirect anywhere */
-		http_wifidog_header(r, "Uh oh! Internet access unavailable");
-		httpdOutput(r, "We apologize, but it seems that the internet connection that powers this hotspot is temporarily unavailable.");
-		httpdOutput(r, "<p>");
-		httpdOutput(r, "If at all possible, please notify the owners of this hotspot that the internet connection is out of service.");
-		httpdOutput(r, "<p>");
-		httpdOutput(r, "The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.");
-		httpdOutput(r, "<p>");
-		httpdPrintf(r, "In a while please <a href='%s'>click here</a> to try your request again.", tmp_url);
+		http_wifidog_header(r, "<h2>Uh oh! Internet access unavailable</h2>");
+		httpdOutput(r, "<p>We apologize, but it seems that the internet connection that powers this hotspot is temporarily unavailable.</p>");
+		httpdOutput(r, "<p>If at all possible, please notify the owners of this hotspot that the internet connection is out of service.</p>");
+		httpdOutput(r, "<p>The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.</p>");
+		httpdPrintf(r, "<p>In a while please <a href='%s'>click here</a> to try your request again.</p>", tmp_url);
 		http_wifidog_footer(r);
 		debug(LOG_INFO, "Sent %s an apology since I am not online - no point sending them to auth server", r->clientAddr);
 	}
 	else if (!is_auth_online()) {
 		/* The auth server is down at the moment - apologize and do not redirect anywhere */
-		http_wifidog_header(r, "Uh oh! Login screen unavailable");
-		httpdOutput(r, "We apologize, but it seems that we are currently unable to re-direct you to the login screen.");
-		httpdOutput(r, "<p>");
-		httpdOutput(r, "The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.");
-		httpdOutput(r, "<p>");
-		httpdPrintf(r, "In a couple of minutes please <a href='%s'>click here</a> to try your request again.", tmp_url);
+		http_wifidog_header(r, "<h2>Uh oh! Login screen unavailable</h2>");
+		httpdOutput(r, "<p>We apologize, but it seems that we are currently unable to re-direct you to the login screen.</p>");
+		httpdOutput(r, "<p>The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.</p>");
+		httpdPrintf(r, "<p>In a couple of minutes please <a href='%s'>click here</a> to try your request again.</p>", tmp_url);
 		http_wifidog_footer(r);
 		debug(LOG_INFO, "Sent %s an apology since auth server not online - no point sending them to auth server", r->clientAddr);
 	}
@@ -135,7 +130,7 @@ void
 http_callback_wifidog(httpd *webserver, request *r)
 {
 	http_wifidog_header(r, "WiFiDog");
-	httpdOutput(r, "Please use the menu on the left to navigate the features of this WiFiDog installation.");
+	httpdOutput(r, "Please use the menu to navigate the features of this WiFiDog installation.");
 	http_wifidog_footer(r);
 }
 
@@ -203,52 +198,109 @@ http_callback_auth(httpd *webserver, request *r)
 void
 http_wifidog_header(request *r, char *title)
 {
-	httpdOutput(r, "<html>\n");
-	httpdOutput(r, "<head>\n");
-	httpdPrintf(r, "<title>%s</title>\n", title);
-	httpdOutput(r, "<meta HTTP-EQUIV='Pragma' CONTENT='no-cache'>\n");
-	httpdOutput(r, "</head>\n");
-	httpdOutput(r, "<body topmargin=0 leftmargin=0 marginwidth=0 marginheight=0 bgcolor=white text=#628C53 link=blue alink=blue vlink=blue>\n");
+    httpdOutput(r, "<html>\n");
+    httpdOutput(r, "<head>\n");
+    httpdPrintf(r, "<title>%s</title>\n", title);
+    httpdOutput(r, "<meta HTTP-EQUIV='Pragma' CONTENT='no-cache'>\n");
 
-	httpdOutput(r, "<table width=100%% height=100%% border=0 cellpadding=12 cellspacing=5>\n");
+    httpdOutput(r, "<style>\n");
+    httpdOutput(r, "body {\n");
+    httpdOutput(r, "  margin: 10px 60px 0 60px; \n");
+    httpdOutput(r, "  font-family : bitstream vera sans, sans-serif;\n");
+    httpdOutput(r, "  color: #46a43a;\n");
+    httpdOutput(r, "}\n");
 
-	httpdOutput(r, "<tr>\n");
+    httpdOutput(r, "a {\n");
+    httpdOutput(r, "  color: #46a43a;\n");
+    httpdOutput(r, "}\n");
 
-	httpdOutput(r, "<td valign=top align=right width=30%% bgcolor=#e1f5da>\n");
-	httpdOutput(r, "&nbsp;<p>\n");
-	httpdOutput(r, "&nbsp;<p>\n");
-	httpdOutput(r, "<a href='/wifidog/status'>WiFiDog Status</a>\n");
-	httpdOutput(r, "<p>\n");
-	httpdOutput(r, "<a href='/wifidog/about'>About WiFiDog</a>\n");
-	httpdOutput(r, "<p>\n");
-	httpdOutput(r, "<a href='http://www.ilesansfil.org/wiki/WiFiDog'>WiFiDog's homepage</a>\n");
-	httpdOutput(r, "</td>\n");
+    httpdOutput(r, "a:active {\n");
+    httpdOutput(r, "  color: #46a43a;\n");
+    httpdOutput(r, "}\n");
 
-	httpdOutput(r, "<td valign=top align=left>\n");
-	httpdPrintf(r, "<h1>%s</h1>\n", title);
-	httpdOutput(r, "<hr>\n");
+    httpdOutput(r, "a:link {\n");
+    httpdOutput(r, "  color: #46a43a;\n");
+    httpdOutput(r, "}\n");
 
+    httpdOutput(r, "a:visited {\n");
+    httpdOutput(r, "  color: #46a43a;\n");
+    httpdOutput(r, "}\n");
+
+    httpdOutput(r, "#header {\n");
+    httpdOutput(r, "  height: 30px;\n");
+    httpdOutput(r, "  background-color: #B4F663;\n");
+    httpdOutput(r, "  padding: 20px;\n");
+    httpdOutput(r, "  font-size: 20pt;\n");
+    httpdOutput(r, "  text-align: center;\n");
+    httpdOutput(r, "  border: 2px solid #46a43a;\n");
+    httpdOutput(r, "  border-bottom: 0;\n");
+    httpdOutput(r, "}\n");
+
+    httpdOutput(r, "#menu {\n");
+    httpdOutput(r, "  width: 200px;\n");
+    httpdOutput(r, "  float: right;\n");
+    httpdOutput(r, "  background-color: #B4F663;\n");
+    httpdOutput(r, "  border: 2px solid #46a43a;\n");
+    httpdOutput(r, "  font-size: 80%;\n");
+    httpdOutput(r, "  min-height: 300px;\n");
+    httpdOutput(r, "}\n");
+
+    httpdOutput(r, "#menu h2 {\n");
+    httpdOutput(r, "  margin: 0;\n");
+    httpdOutput(r, "  background-color: #46a43a;\n");
+    httpdOutput(r, "  text-align: center;\n");
+    httpdOutput(r, "  color: #B4F663;\n");
+    httpdOutput(r, "}\n");
+
+    httpdOutput(r, "#copyright {\n");
+    httpdOutput(r, "}\n");
+
+    httpdOutput(r, "#content {\n");
+    httpdOutput(r, "  padding: 20px;\n");
+    httpdOutput(r, "  border: 2px solid #46a43a;\n");
+    httpdOutput(r, "  min-height: 300px;\n");
+    httpdOutput(r, "}\n");
+    httpdOutput(r, "</style>\n");
+
+    httpdOutput(r, "</head>\n");
+
+    httpdOutput(r, "<body\n");
+
+    httpdOutput(r, "<div id=\"header\">\n");
+    httpdPrintf(r, "    %s\n", title);
+    httpdOutput(r, "</div>\n");
+
+    httpdOutput(r, "<div id=\"menu\">\n");
+
+
+    httpdOutput(r, "    <h2>Info</h2>\n");
+    httpdOutput(r, "    <ul>\n");
+    httpdOutput(r, "    <li>Version: " VERSION "\n");
+    httpdPrintf(r, "    <li>Node ID: %s\n", config_get_config()->gw_id);
+    httpdOutput(r, "    </ul>\n");
+    httpdOutput(r, "    <br>\n");
+
+    httpdOutput(r, "    <h2>Menu</h2>\n");
+    httpdOutput(r, "    <ul>\n");
+    httpdOutput(r, "    <li><a href='/wifidog/status'>WiFiDog Status</a>\n");
+    httpdOutput(r, "    <li><a href='/wifidog/about'>About WiFiDog</a>\n");
+    httpdOutput(r, "    <li><a href='http://www.wifidog.org'>WiFiDog's homepage</a>\n");
+    httpdOutput(r, "    </ul>\n");
+    httpdOutput(r, "</div>\n");
+
+    httpdOutput(r, "<div id=\"content\">\n");
+    httpdPrintf(r, "<h2>%s</h2>\n", title);
 }
 
 void
 http_wifidog_footer(request *r)
 {
-	httpdOutput(r, "</td>\n");
+	httpdOutput(r, "</div>\n");
 
-	httpdOutput(r, "</tr>\n");
+    httpdOutput(r, "<div id=\"copyright\">\n");
+    httpdOutput(r, "Copyright (C) 2004-2005.  This software is released under the GNU GPL license.\n");
+    httpdOutput(r, "</div>\n");
 
-	httpdOutput(r, "<tr>\n");
-
-	httpdOutput(r, "<td colspan=2 height=1 valign=bottom align=center>\n");
-	httpdOutput(r, "<hr>\n");
-	httpdOutput(r, "<font size=1>\n");
-	httpdOutput(r, "Copyright (C) 2004-2005.  This software is released under the GNU GPL license.\n");
-	httpdOutput(r, "</font>\n");
-	httpdOutput(r, "</td>\n");
-
-	httpdOutput(r, "</tr>\n");
-
-	httpdOutput(r, "</table>\n");
 
 	httpdOutput(r, "</body>\n");
 	httpdOutput(r, "</html>\n");

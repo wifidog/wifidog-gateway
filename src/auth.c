@@ -46,9 +46,13 @@
 #include "fw_iptables.h"
 #include "firewall.h"
 #include "client_list.h"
+#include "util.h"
 
 /* Defined in clientlist.c */
 extern	pthread_mutex_t	client_list_mutex;
+
+/* Defined in util.c */
+extern long served_this_session;
 
 /** Launches a thread that periodically checks if any of the connections has timed out
 @param arg Must contain a pointer to a string containing the IP adress of the client to check to check
@@ -205,6 +209,7 @@ authenticate_client(request *r)
 		debug(LOG_INFO, "Got ALLOWED from central server authenticating token %s from %s at %s - adding to firewall and redirecting them to portal", client->token, client->ip, client->mac);
 		client->fw_connection_state = FW_MARK_KNOWN;
 		fw_allow(client->ip, client->mac, FW_MARK_KNOWN);
+        served_this_session++;
 		safe_asprintf(&newlocation, "Location: %s://%s:%d%sportal/?gw_id=%s",
 			protocol,
 			auth_server->authserv_hostname,
