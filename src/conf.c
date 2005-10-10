@@ -77,6 +77,7 @@ typedef enum {
 	oAuthServHTTPPort,
 	oAuthServPath,
 	oAuthServMaxTries,
+    oPortal,
 	oHTTPDMaxConn,
 	oHTTPDName,
 	oClientTimeout,
@@ -104,6 +105,7 @@ static const struct {
 	{ "gatewayport",        oGatewayPort },
 	{ "authserver",         oAuthServer },
 	{ "authservmaxtries",   oAuthServMaxTries },
+	{ "portal",             oPortal },
 	{ "httpdmaxconn",       oHTTPDMaxConn },
 	{ "httpdname",          oHTTPDName },
 	{ "clienttimeout",      oClientTimeout },
@@ -148,6 +150,7 @@ config_init(void)
 	config.auth_servers = NULL;
 	config.authserv_maxtries = DEFAULT_AUTHSERVMAXTRIES;
 	config.httpdname = NULL;
+    config.portal = NULL;
 	config.clienttimeout = DEFAULT_CLIENTTIMEOUT;
 	config.checkinterval = DEFAULT_CHECKINTERVAL;
 	config.syslog_facility = DEFAULT_SYSLOG_FACILITY;
@@ -639,6 +642,9 @@ config_read(char *filename)
 					parse_auth_server(fd, filename,
 							&linenum);
 					break;
+                case oPortal:
+                    config.portal = safe_strdup(p1);
+                    break;
 				case oFirewallRuleSet:
 					parse_firewall_ruleset(p1, fd, filename, &linenum);
 					break;
@@ -751,7 +757,6 @@ void
 config_validate(void)
 {
 	config_notnull(config.gw_interface, "GatewayInterface");
-	config_notnull(config.auth_servers, "AuthServer");
 
 	if (missing_parms) {
 		debug(LOG_ERR, "Configuration is not complete, exiting...");

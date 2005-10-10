@@ -60,70 +60,93 @@ http_callback_404(httpd *webserver, request *r)
 			*url;
 	int		port;
 	s_config	*config = config_get_config();
-	t_auth_serv	*auth_server = get_auth_server();
 
-	if (auth_server->authserv_use_ssl) {
-		protocol = "https";
-		port = auth_server->authserv_ssl_port;
-	} else {
-		protocol = "http";
-		port = auth_server->authserv_http_port;
-	}
+    memset(tmp_url, 0, sizeof(tmp_url));
+    snprintf(tmp_url, (sizeof(tmp_url) - 1), "http://%s%s",
+            r->request.host,
+            r->request.path);
+    url = httpdUrlEncode(tmp_url);
 
-	memset(tmp_url, 0, sizeof(tmp_url));
-	snprintf(tmp_url, (sizeof(tmp_url) - 1), "http://%s%s",
-			r->request.host,
-			r->request.path);
-	url = httpdUrlEncode(tmp_url);
+    if (config->auth_servers == NULL) {
+        /* Redirect to splash page, no authentication servers exist */
 
-	if (!is_online()) {
-		/* The internet connection is down at the moment  - apologize and do not redirect anywhere */
-		http_wifidog_header(r, "<h2>Uh oh! Internet access unavailable</h2>");
-		httpdOutput(r, "<p>We apologize, but it seems that the internet connection that powers this hotspot is temporarily unavailable.</p>");
-		httpdOutput(r, "<p>If at all possible, please notify the owners of this hotspot that the internet connection is out of service.</p>");
-		httpdOutput(r, "<p>The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.</p>");
-		httpdPrintf(r, "<p>In a while please <a href='%s'>click here</a> to try your request again.</p>", tmp_url);
-		http_wifidog_footer(r);
-		debug(LOG_INFO, "Sent %s an apology since I am not online - no point sending them to auth server", r->clientAddr);
-	}
-	else if (!is_auth_online()) {
-		/* The auth server is down at the moment - apologize and do not redirect anywhere */
-		http_wifidog_header(r, "<h2>Uh oh! Login screen unavailable</h2>");
-		httpdOutput(r, "<p>We apologize, but it seems that we are currently unable to re-direct you to the login screen.</p>");
-		httpdOutput(r, "<p>The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.</p>");
-		httpdPrintf(r, "<p>In a couple of minutes please <a href='%s'>click here</a> to try your request again.</p>", tmp_url);
-		http_wifidog_footer(r);
-		debug(LOG_INFO, "Sent %s an apology since auth server not online - no point sending them to auth server", r->clientAddr);
-	}
-	else {
-		/* Re-direct them to auth server */
-		safe_asprintf(&newlocation, "Location: %s://%s:%d%slogin?gw_address=%s&gw_port=%d&gw_id=%s&url=%s",
-			protocol,
-			auth_server->authserv_hostname,
-			port,
-			auth_server->authserv_path,
-			config->gw_address,
-			config->gw_port, 
-			config->gw_id,
-			url);
-		httpdSetResponse(r, "307 Please authenticate yourself here\n");
-		httpdAddHeader(r, newlocation);
-		http_wifidog_header(r, "Redirection");
-		httpdPrintf(r, "Please <a href='%s://%s:%d%slogin?gw_address=%s&gw_port=%d&gw_id=%s&url=%s'>click here</a> to login",
-				protocol,
-				auth_server->authserv_hostname,
-				port,
-				auth_server->authserv_path,
-				config->gw_address, 
-				config->gw_port,
-				config->gw_id,
-				url);
-		http_wifidog_footer(r);
-		debug(LOG_INFO, "Captured %s requesting [%s] and re-directed them to login page", r->clientAddr, url);
-		free(newlocation);
-	}
+        safe_asprintf(&newlocation, "Location: http://%s:%d/wifidog/splash",
+            config->gw_address,
+            config->gw_port);
 
-	free(url);
+        httpdSetResponse(r, "307 Please visit here\n");
+        httpdAddHeader(r, newlocation);
+        http_wifidog_header(r, "Redirection");
+        httpdPrintf(r, "Please <a href='http://%s:%d/wifidog/splash'>click here</a> to login",
+            config->gw_address,
+            config->gw_port);
+        http_wifidog_footer(r);
+        debug(LOG_INFO, "Captured %s requesting [%s] and re-directed them to splash page", r->clientAddr, url);
+        free(newlocation);
+
+        http_wifidog_footer(r);
+        debug(LOG_INFO, "Sent %s the splash page", r->clientAddr);
+    } else {
+
+        t_auth_serv	*auth_server = get_auth_server();
+
+        if (auth_server->authserv_use_ssl) {
+            protocol = "https";
+            port = auth_server->authserv_ssl_port;
+        } else {
+            protocol = "http";
+            port = auth_server->authserv_http_port;
+        }
+
+        if (!is_online()) {
+            /* The internet connection is down at the moment  - apologize and do not redirect anywhere */
+            http_wifidog_header(r, "<h3>Internet access unavailable</h3>");
+            httpdOutput(r, "<p>We apologize, but it seems that the internet connection that powers this hotspot is temporarily unavailable.</p>");
+            httpdOutput(r, "<p>If at all possible, please notify the owners of this hotspot that the internet connection is out of service.</p>");
+            httpdOutput(r, "<p>The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.</p>");
+            httpdPrintf(r, "<p>In a while please <a href='%s'>click here</a> to try your request again.</p>", tmp_url);
+            http_wifidog_footer(r);
+            debug(LOG_INFO, "Sent %s an apology since I am not online - no point sending them to auth server", r->clientAddr);
+        }
+        else if (!is_auth_online()) {
+            /* The auth server is down at the moment - apologize and do not redirect anywhere */
+            http_wifidog_header(r, "<h3>Login screen unavailable</h3>");
+            httpdOutput(r, "<p>We apologize, but it seems that we are currently unable to re-direct you to the login screen.</p>");
+            httpdOutput(r, "<p>The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.</p>");
+            httpdPrintf(r, "<p>In a couple of minutes please <a href='%s'>click here</a> to try your request again.</p>", tmp_url);
+            http_wifidog_footer(r);
+            debug(LOG_INFO, "Sent %s an apology since auth server not online - no point sending them to auth server", r->clientAddr);
+        }
+        else {
+            /* Re-direct them to auth server */
+            safe_asprintf(&newlocation, "Location: %s://%s:%d%slogin?gw_address=%s&gw_port=%d&gw_id=%s&url=%s",
+                protocol,
+                auth_server->authserv_hostname,
+                port,
+                auth_server->authserv_path,
+                config->gw_address,
+                config->gw_port, 
+                config->gw_id,
+                url);
+            httpdSetResponse(r, "307 Please authenticate yourself here\n");
+            httpdAddHeader(r, newlocation);
+            http_wifidog_header(r, "Redirection");
+            httpdPrintf(r, "Please <a href='%s://%s:%d%slogin?gw_address=%s&gw_port=%d&gw_id=%s&url=%s'>click here</a> to login",
+                    protocol,
+                    auth_server->authserv_hostname,
+                    port,
+                    auth_server->authserv_path,
+                    config->gw_address, 
+                    config->gw_port,
+                    config->gw_id,
+                    url);
+            http_wifidog_footer(r);
+            debug(LOG_INFO, "Captured %s requesting [%s] and re-directed them to login page", r->clientAddr, url);
+            free(newlocation);
+        }
+
+	    free(url);
+    }
 }
 
 void 
@@ -155,12 +178,57 @@ http_callback_status(httpd *webserver, request *r)
 	free(status);
 }
 
+void
+http_callback_splash(httpd *webserver, request *r)
+{
+	char * status = NULL;
+	httpVar * url;
+
+	status = get_status_text();
+	http_wifidog_header(r, "Disclaimer");
+	httpdOutput(r, "<p>This hotspot offers Free internet access!</p>");
+	httpdOutput(r, "<p>By clicking ACCEPT, you agree that you will respect these WiFi Do's and Don'ts:</p>");
+    httpdOutput(r, "<ul>\n");
+    httpdOutput(r, "<li>Respect the venue's bandwidth. Don't download too many large files.\n");
+    httpdOutput(r, "<li>Make Purchases and Tip.\n");
+    httpdOutput(r, "<li>If it's a busy place, don't take up too much space.\n");
+    httpdOutput(r, "<li>Turn down your sound or use headphones.\n");
+    httpdOutput(r, "<li>Share a table.\n");
+    httpdOutput(r, "<li>Thank the staff or management - let them know you appreciate the WiFi.\n");
+    httpdOutput(r, "<li>If it's busy - don't overstay your welcome.\n");
+    httpdOutput(r, "<li>Help others who are having trouble getting on the network.\n");
+    httpdOutput(r, "<li>Remember that the WiFi is complimentary. If it doesn't work, let the staff know. Be patient.\n");
+    httpdOutput(r, "</ul>\n");
+	if ((url = httpdGetVariableByName(r, "url"))) {
+	    httpdPrintf(r, "<a href=\"/wifidog/auth?url=%s\">ACCEPT</a>", url->value);
+    } else {
+	    httpdOutput(r, "<a href=\"/wifidog/auth\">ACCEPT</a>");
+    }
+
+	http_wifidog_footer(r);
+	free(status);
+}
+
+void
+http_callback_portal(httpd *webserver, request *r)
+{
+	char * status = NULL;
+
+	status = get_status_text();
+	http_wifidog_header(r, "Enjoy!");
+	httpdOutput(r, "<p>Don't forget, socialize and discuss with others! (you're not at home, enjoy the place and people!)</p>");
+	http_wifidog_footer(r);
+	free(status);
+}
+
 void 
 http_callback_auth(httpd *webserver, request *r)
 {
+	s_config	*config = config_get_config();
 	t_client	*client;
 	httpVar * token;
 	char	*mac;
+    char    *newlocation;
 
 	if ((token = httpdGetVariableByName(r, "token"))) {
 		/* They supplied variable "token" */
@@ -186,6 +254,69 @@ http_callback_auth(httpd *webserver, request *r)
 
 			authenticate_client(r);
 			free(mac);
+		}
+	} else if (config->auth_servers == NULL) {
+        /* No authentication server is configured, we do not expect a token
+         * auth right away */
+		if (!(mac = arp_get(r->clientAddr))) {
+			/* We could not get their MAC address */
+			debug(LOG_ERR, "Failed to retrieve MAC address for ip %s", r->clientAddr);
+			http_wifidog_header(r, "WiFiDog Error");
+			httpdOutput(r, "Failed to retrieve your MAC address");
+			http_wifidog_footer(r);
+		} else {
+			/* We have their MAC address */
+
+			LOCK_CLIENT_LIST();
+			
+			if ((client = client_list_find(r->clientAddr, mac)) == NULL) {
+				debug(LOG_DEBUG, "New client ip=%s mac=%s", r->clientAddr, mac);
+				client_list_append(r->clientAddr, mac, "SpLaShOnLy");
+			} else {
+				debug(LOG_DEBUG, "Node for %s already exists", client->ip);
+			}
+
+            /* Find the client in the list once it's created (not very useful) */
+			client = client_list_find(r->clientAddr, mac);
+
+            debug(LOG_INFO, "ALLOWING %s [%s], the user clicked the accept button", client->ip, client->mac);
+            client->fw_connection_state = FW_MARK_KNOWN;
+            fw_allow(client->ip, client->mac, FW_MARK_KNOWN);
+
+			UNLOCK_CLIENT_LIST();
+
+			free(mac);
+
+            httpdSetResponse(r, "307 Redirect to portal\n");
+            /* If we have a portal url specified in the configuration,
+               forward to it, otherwise forward to /wifidog/portal */
+            if (config->portal && strncmp(config->portal, "http://", strlen("http://")) == 0) {
+                debug(LOG_INFO, "Redirecting to portal at %s", config->portal);
+                safe_asprintf(&newlocation, "Location: %s",
+                    config->portal
+                );
+
+                httpdAddHeader(r, newlocation);
+                http_wifidog_header(r, "Redirection");
+
+                httpdPrintf(r, "Please <a href='%s'>click here</a> for the portal",
+                    config->portal);
+            } else {
+                safe_asprintf(&newlocation, "Location: http://%s:%d/wifidog/portal",
+                    config->gw_address,
+                    config->gw_port);
+                debug(LOG_INFO, "Redirecting to local portal");
+
+                httpdAddHeader(r, newlocation);
+                http_wifidog_header(r, "Redirection");
+
+                httpdPrintf(r, "Please <a href='http://%s:%d/wifidog/portal'>click here</a> for the portal",
+                    config->gw_address, 
+                    config->gw_port);
+            }
+
+            http_wifidog_footer(r);
+            free(newlocation);
 		}
 	} else {
 		/* They did not supply variable "token" */

@@ -316,6 +316,7 @@ char * get_status_text() {
 	int		count;
 	unsigned long int uptime = 0;
 	unsigned int days = 0, hours = 0, minutes = 0, seconds = 0;
+     t_trusted_mac *p;
 	
 	len = 0;
 	snprintf(buffer, (sizeof(buffer) - len), "WiFiDog status\n\n");
@@ -393,21 +394,37 @@ char * get_status_text() {
 		count++;
 		first = first->next;
 	}
-	
+
 	UNLOCK_CLIENT_LIST();
+
+    config = config_get_config();
     
-	snprintf((buffer + len), (sizeof(buffer) - len), "\nAuthentication servers:\n");
-	len = strlen(buffer);
+    if (config->trustedmaclist != NULL) {
+        snprintf((buffer + len), (sizeof(buffer) - len), "\nTrusted MAC addresses:\n");
+        len = strlen(buffer);
 
-	LOCK_CONFIG();
+        for (p = config->trustedmaclist; p != NULL; p = p->next) {
+            snprintf((buffer + len), (sizeof(buffer) - len), "  %s\n", p->mac);
+            len = strlen(buffer);
+        }
+    }
 
-	config = config_get_config();
-	for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
-		snprintf((buffer + len), (sizeof(buffer) - len), "  Host: %s (%s)\n", auth_server->authserv_hostname, auth_server->last_ip);
-		len = strlen(buffer);
-	}
+    if (config->auth_servers != NULL) {
+        snprintf((buffer + len), (sizeof(buffer) - len), "\nAuthentication servers:\n");
+        len = strlen(buffer);
 
-	UNLOCK_CONFIG();
+        LOCK_CONFIG();
+
+        for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
+            snprintf((buffer + len), (sizeof(buffer) - len), "  Host: %s (%s)\n", auth_server->authserv_hostname, auth_server->last_ip);
+            len = strlen(buffer);
+        }
+
+        UNLOCK_CONFIG();
+    } else {
+        snprintf((buffer + len), (sizeof(buffer) - len), "\nRunning in splash only mode\n");
+        len = strlen(buffer);
+    }
 
 	return safe_strdup(buffer);
 }

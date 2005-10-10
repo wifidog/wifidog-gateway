@@ -51,7 +51,7 @@
 
 static void ping(void);
 
-time_t started_time = 0;
+extern time_t started_time;
 
 /** Launches a thread that periodically checks in with the wifidog auth server to perform heartbeat function.
 @param arg NULL
@@ -64,15 +64,6 @@ thread_ping(void *arg)
 	pthread_mutex_t		cond_mutex = PTHREAD_MUTEX_INITIALIZER;
 	struct	timespec	timeout;
 	
-	if (!started_time) {
-		debug(LOG_INFO, "Setting started_time");
-		started_time = time(NULL);
-	}
-	else if (started_time < MINIMUM_STARTED_TIME) {
-		debug(LOG_WARNING, "Detected possible clock skew - re-setting started_time");
-		started_time = time(NULL);
-	}
-
 	while (1) {
 		/* Make sure we check the servers at the very begining */
 		debug(LOG_DEBUG, "Running ping()");

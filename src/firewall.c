@@ -241,8 +241,10 @@ fw_counter(void)
 	    UNLOCK_CLIENT_LIST();
         /* Ping the client, if he responds it'll keep activity on the link */
         icmp_ping(ip);
-        /* Update the counters on the remote server */
-        auth_server_request(&authresponse, REQUEST_TYPE_COUNTERS, ip, mac, token, incoming, outgoing);
+        /* Update the counters on the remote server only if we have an auth server */
+        if (config->auth_servers != NULL) {
+            auth_server_request(&authresponse, REQUEST_TYPE_COUNTERS, ip, mac, token, incoming, outgoing);
+        }
 	    LOCK_CLIENT_LIST();
 	
         if (!(p1 = client_list_find(ip, mac))) {
@@ -252,61 +254,68 @@ fw_counter(void)
 				(config->checkinterval * config->clienttimeout)
 				<= time(NULL)) {
                 /* Timing out user */
-                debug(LOG_INFO, "%s - Inactive for %ld seconds, removing client and denying in firewall", p1->ip, config->checkinterval * config->clienttimeout);
+                debug(LOG_INFO, "%s - Inactive for %ld seconds, removing client and denying in firewall",
+                        p1->ip, config->checkinterval * config->clienttimeout);
                 fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
                 client_list_delete(p1);
 
-                /* Advertise the logout */
+                /* Advertise the logout if we have an auth server */
+                if (config->auth_servers != NULL) {
 					UNLOCK_CLIENT_LIST();
 					auth_server_request(&authresponse, REQUEST_TYPE_LOGOUT, ip, mac, token, 0, 0);
 					LOCK_CLIENT_LIST();
-            }
-				else {
+                }
+            } else {
                 /*
                  * This handles any change in
                  * the status this allows us
                  * to change the status of a
                  * user while he's connected
+                 *
+                 * Only run if we have an auth server
+                 * configured!
                  */
-                switch (authresponse.authcode) {
-                    case AUTH_DENIED:
-                        debug(LOG_NOTICE, "%s - Denied. Removing client and firewall rules", p1->ip);
-                        fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
-                        client_list_delete(p1);
-                        break;
-
-                    case AUTH_VALIDATION_FAILED:
-                        debug(LOG_NOTICE, "%s - Validation timeout, now denied. Removing client and firewall rules", p1->ip);
-                        fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
-                        client_list_delete(p1);
-                        break;
-
-                    case AUTH_ALLOWED:
-                        if (p1->fw_connection_state != FW_MARK_KNOWN) {
-                            debug(LOG_INFO, "%s - Access has changed to allowed, refreshing firewall and clearing counters", p1->ip);
+                if (config->auth_servers != NULL) {
+                    switch (authresponse.authcode) {
+                        case AUTH_DENIED:
+                            debug(LOG_NOTICE, "%s - Denied. Removing client and firewall rules", p1->ip);
                             fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
-                            p1->fw_connection_state = FW_MARK_KNOWN;
-                            p1->counters.incoming = p1->counters.outgoing = p1->counters.incoming_history = p1->counters.outgoing_history = 0;
-                            fw_allow(p1->ip, p1->mac, p1->fw_connection_state);
-                        }
-                        break;
+                            client_list_delete(p1);
+                            break;
 
-                    case AUTH_VALIDATION:
-                        /*
-                         * Do nothing, user
-                         * is in validation
-                         * period
-                         */
-                        debug(LOG_INFO, "%s - User in validation period", p1->ip);
-                        break;
+                        case AUTH_VALIDATION_FAILED:
+                            debug(LOG_NOTICE, "%s - Validation timeout, now denied. Removing client and firewall rules", p1->ip);
+                            fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
+                            client_list_delete(p1);
+                            break;
 
-						  case AUTH_ERROR:
-								debug(LOG_WARNING, "Error communicating with auth server - leaving %s as-is for now", p1->ip);
-								break;
+                        case AUTH_ALLOWED:
+                            if (p1->fw_connection_state != FW_MARK_KNOWN) {
+                                debug(LOG_INFO, "%s - Access has changed to allowed, refreshing firewall and clearing counters", p1->ip);
+                                fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
+                                p1->fw_connection_state = FW_MARK_KNOWN;
+                                p1->counters.incoming = p1->counters.outgoing = 0;
+                                fw_allow(p1->ip, p1->mac, p1->fw_connection_state);
+                            }
+                            break;
 
-                    default:
-                        debug(LOG_DEBUG, "I do not know about authentication code %d", authresponse.authcode);
-                        break;
+                        case AUTH_VALIDATION:
+                            /*
+                             * Do nothing, user
+                             * is in validation
+                             * period
+                             */
+                            debug(LOG_INFO, "%s - User in validation period", p1->ip);
+                            break;
+
+                              case AUTH_ERROR:
+                                    debug(LOG_WARNING, "Error communicating with auth server - leaving %s as-is for now", p1->ip);
+                                    break;
+
+                        default:
+                            debug(LOG_DEBUG, "I do not know about authentication code %d", authresponse.authcode);
+                            break;
+                    }
                 }
             }
         }

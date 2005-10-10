@@ -1,4 +1,12 @@
 # $Header$
+2005-10-10 Philippe April <philippe@ilesansfil.org>
+	* Ability to run wifidog without an auth server (splash only).
+	* Does not allow (yet) to specify a custom splash/disclaimer, but will
+	forward to the portal of your choice if specified in the config (or
+	a generic one if none is specified).
+	Of course, using wifidog without an authentication server will not give
+	you statistics and all the rest of the cool features.
+
 2005-10-09 Philippe April <philippe@ilesansfil.org>
 	* Changed html pages, added info to wdctl status
 

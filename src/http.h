@@ -38,6 +38,10 @@ void http_callback_about(httpd *webserver, request *r);
 /**@brief Callback for libhttpd */
 void http_callback_status(httpd *webserver, request *r);
 /**@brief Callback for libhttpd */
+void http_callback_splash(httpd *webserver, request *r);
+/**@brief Callback for libhttpd */
+void http_callback_portal(httpd *webserver, request *r);
+/**@brief Callback for libhttpd */
 void http_callback_auth(httpd *webserver, request *r);
 
 /** @brief Sends HTML header+menu to web browser */

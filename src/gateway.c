@@ -78,6 +78,9 @@ t_client *firstclient;
 /* from client_list.c */
 extern pthread_mutex_t client_list_mutex;
 
+/* Time when wifidog started  */
+time_t started_time = 0;
+
 /* Appends -x, the current PID, and NULL to restartargv
  * see parse_commandline in commandline.c for details
  */
@@ -263,6 +266,7 @@ void
 termination_handler(int s)
 {
 	static	pthread_mutex_t	sigterm_mutex = PTHREAD_MUTEX_INITIALIZER;
+	s_config *config = config_get_config();
 
 	debug(LOG_INFO, "Handler for termination caught signal %d", s);
 
@@ -286,7 +290,7 @@ termination_handler(int s)
 		debug(LOG_INFO, "Explicitly killing the fw_counter thread");
 		pthread_kill(tid_fw_counter, SIGKILL);
 	}
-	if (tid_ping) {
+	if (config->auth_servers != NULL && tid_ping) {
 		debug(LOG_INFO, "Explicitly killing the ping thread");
 		pthread_kill(tid_ping, SIGKILL);
 	}
@@ -359,6 +363,17 @@ main_loop(void)
 	s_config *config = config_get_config();
 	request *r;
 	void **params;
+    FILE *fh;
+
+    /* Set the time when wifidog started */
+	if (!started_time) {
+		debug(LOG_INFO, "Setting started_time");
+		started_time = time(NULL);
+	}
+	else if (started_time < MINIMUM_STARTED_TIME) {
+		debug(LOG_WARNING, "Detected possible clock skew - re-setting started_time");
+		started_time = time(NULL);
+	}
 
 	/* If we don't have the Gateway IP address, get it. Can't fail. */
 	if (!config->gw_address) {
@@ -393,6 +408,9 @@ main_loop(void)
 	httpdAddCContent(webserver, "/wifidog", "about", 0, NULL, http_callback_about);
 	httpdAddCContent(webserver, "/wifidog", "status", 0, NULL, http_callback_status);
 	httpdAddCContent(webserver, "/wifidog", "auth", 0, NULL, http_callback_auth);
+	httpdAddCContent(webserver, "/wifidog", "splash", 0, NULL, http_callback_splash);
+	httpdAddCContent(webserver, "/wifidog", "portal", 0, NULL, http_callback_portal);
+
 	httpdAddC404Content(webserver, http_callback_404);
 
 	/* Reset the firewall (if WiFiDog crashed) */
@@ -400,15 +418,15 @@ main_loop(void)
 	/* Then initialize it */
 	fw_init();
 
-	/* start clean up thread */
+	/* Start clean up thread */
 	result = pthread_create(&tid_fw_counter, NULL, (void *)thread_client_timeout_check, NULL);
 	if (result != 0) {
-		debug(LOG_ERR, "FATAL: Failed to create a new thread (fw_counter) - exiting");
-		termination_handler(0);
+	    debug(LOG_ERR, "FATAL: Failed to create a new thread (fw_counter) - exiting");
+	    termination_handler(0);
 	}
 	pthread_detach(tid_fw_counter);
 
-	/* start control thread */
+	/* Start control thread */
 	result = pthread_create(&tid, NULL, (void *)thread_wdctl, (void *)safe_strdup(config->wdctl_sock));
 	if (result != 0) {
 		debug(LOG_ERR, "FATAL: Failed to create a new thread (wdctl) - exiting");
@@ -416,13 +434,15 @@ main_loop(void)
 	}
 	pthread_detach(tid);
 	
-	/* start heartbeat thread */
-	result = pthread_create(&tid_ping, NULL, (void *)thread_ping, NULL);
-	if (result != 0) {
-		debug(LOG_ERR, "FATAL: Failed to create a new thread (ping) - exiting");
-		termination_handler(0);
-	}
-	pthread_detach(tid_ping);
+	/* Start heartbeat thread, only if we have an auth server set */
+	if (config->auth_servers != NULL) {
+	    result = pthread_create(&tid_ping, NULL, (void *)thread_ping, NULL);
+	    if (result != 0) {
+		    debug(LOG_ERR, "FATAL: Failed to create a new thread (ping) - exiting");
+		    termination_handler(0);
+	    }
+	    pthread_detach(tid_ping);
+    }
 	
 	debug(LOG_NOTICE, "Waiting for connections");
 	while(1) {

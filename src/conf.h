@@ -115,6 +115,7 @@ typedef struct {
     int authserv_maxtries;	/**< @brief Maximum number of auth server
 				     connection attempts before abandoning */
     t_auth_serv	*auth_servers;	/**< @brief Auth servers list */
+    char *portal;           /**< @brief portal file or url to show */
     char *httpdname;		/**< @brief Name the web server will return when
 				     replying to a request */
     int httpdmaxconn;		/**< @brief Used by libhttpd, not sure what it
