@@ -14,6 +14,7 @@
 
 IPT=/usr/sbin/iptables
 WD_DIR=/usr/bin
+OPTIONS=""
 
 case "$1" in
   start)
@@ -23,7 +24,7 @@ case "$1" in
 	echo "FAILED:  Wifidog already running"
     else
         $0 test-module
-	if $WD_DIR/wifidog
+	if $WD_DIR/wifidog $OPTIONS
 	then
 		echo "OK"
 	else
