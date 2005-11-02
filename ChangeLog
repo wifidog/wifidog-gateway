@@ -1,4 +1,7 @@
 # $Header$
+2005-11-01 Max Horvath <max.horvath@maxspot.de>
+	* Added .project to .cvsignore
+
 2005-11-01 Philippe April <philippe@ilesansfil.org>
 	* Added OPTIONS section in wifidog-init (example: enable syslog)
 

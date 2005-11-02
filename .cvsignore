@@ -22,4 +22,4 @@ build-ipkg-utils-stamp
 build-iptables-stamp
 build-wifidog-stamp
 wifidog_*.ipk
-
+.project
