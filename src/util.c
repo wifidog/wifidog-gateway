@@ -409,22 +409,17 @@ char * get_status_text() {
         }
     }
 
-    if (config->auth_servers != NULL) {
-        snprintf((buffer + len), (sizeof(buffer) - len), "\nAuthentication servers:\n");
-        len = strlen(buffer);
+    snprintf((buffer + len), (sizeof(buffer) - len), "\nAuthentication servers:\n");
+    len = strlen(buffer);
 
-        LOCK_CONFIG();
+    LOCK_CONFIG();
 
-        for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
-            snprintf((buffer + len), (sizeof(buffer) - len), "  Host: %s (%s)\n", auth_server->authserv_hostname, auth_server->last_ip);
-            len = strlen(buffer);
-        }
-
-        UNLOCK_CONFIG();
-    } else {
-        snprintf((buffer + len), (sizeof(buffer) - len), "\nRunning in splash only mode\n");
+    for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
+        snprintf((buffer + len), (sizeof(buffer) - len), "  Host: %s (%s)\n", auth_server->authserv_hostname, auth_server->last_ip);
         len = strlen(buffer);
     }
+
+    UNLOCK_CONFIG();
 
 	return safe_strdup(buffer);
 }

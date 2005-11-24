@@ -290,7 +290,7 @@ termination_handler(int s)
 		debug(LOG_INFO, "Explicitly killing the fw_counter thread");
 		pthread_kill(tid_fw_counter, SIGKILL);
 	}
-	if (config->auth_servers != NULL && tid_ping) {
+	if (tid_ping) {
 		debug(LOG_INFO, "Explicitly killing the ping thread");
 		pthread_kill(tid_ping, SIGKILL);
 	}
@@ -408,8 +408,6 @@ main_loop(void)
 	httpdAddCContent(webserver, "/wifidog", "about", 0, NULL, http_callback_about);
 	httpdAddCContent(webserver, "/wifidog", "status", 0, NULL, http_callback_status);
 	httpdAddCContent(webserver, "/wifidog", "auth", 0, NULL, http_callback_auth);
-	httpdAddCContent(webserver, "/wifidog", "splash", 0, NULL, http_callback_splash);
-	httpdAddCContent(webserver, "/wifidog", "portal", 0, NULL, http_callback_portal);
 
 	httpdAddC404Content(webserver, http_callback_404);
 
@@ -434,15 +432,13 @@ main_loop(void)
 	}
 	pthread_detach(tid);
 	
-	/* Start heartbeat thread, only if we have an auth server set */
-	if (config->auth_servers != NULL) {
-	    result = pthread_create(&tid_ping, NULL, (void *)thread_ping, NULL);
-	    if (result != 0) {
-		    debug(LOG_ERR, "FATAL: Failed to create a new thread (ping) - exiting");
-		    termination_handler(0);
-	    }
-	    pthread_detach(tid_ping);
-    }
+	/* Start heartbeat thread */
+	result = pthread_create(&tid_ping, NULL, (void *)thread_ping, NULL);
+	if (result != 0) {
+	    debug(LOG_ERR, "FATAL: Failed to create a new thread (ping) - exiting");
+		termination_handler(0);
+	}
+	pthread_detach(tid_ping);
 	
 	debug(LOG_NOTICE, "Waiting for connections");
 	while(1) {
