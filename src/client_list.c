@@ -19,7 +19,7 @@
  \********************************************************************/
 
 /*
- * $Header$
+ * $Id$
  */
 /** @file client_list.c
   @brief Client List Functions

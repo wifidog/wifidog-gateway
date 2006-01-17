@@ -18,7 +18,7 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Header$ */
+/* $Id$ */
 /** @file ping_thread.h
     @brief WiFiDog heartbeat thread
     @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>

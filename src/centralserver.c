@@ -18,7 +18,7 @@
  *                                                                  *
  \********************************************************************/
 
-/* $Header$ */
+/* $Id$ */
 /** @file centralserver.c
   @brief Functions to talk to the central server (auth/send stats/get rules/etc...)
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>

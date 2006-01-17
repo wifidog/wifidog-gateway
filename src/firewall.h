@@ -18,7 +18,7 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Header$ */
+/* $Id$ */
 /** @file firewall.h
     @brief Firewall update functions
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>

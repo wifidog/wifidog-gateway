@@ -18,7 +18,7 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Header$ */
+/* $Id$ */
 /** @file wdctl.h
     @brief WiFiDog monitoring client
     @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>

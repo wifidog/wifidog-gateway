@@ -1,4 +1,4 @@
-$Header$
+$Id$
 
 OpenWRT specific README
 
@@ -44,7 +44,7 @@ instructions for OpwnWRT, you can compile binaries for the MIPS_EL
 platform.
  
 Once you have successfully compiled your buildroot, you can change
-back to your wifidog CVS checkout directory and use the commands:
+back to your wifidog subversion checkout directory and use the commands:
 
 ./ipkg/rules BUILDROOT=<path_to_openwrt_buildroot>
 

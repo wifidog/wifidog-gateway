@@ -1,5 +1,5 @@
 #
-# $Header$
+# $Id$
 #
 
 bin_PROGRAMS = wifidog \

@@ -1,5 +1,5 @@
 #
-# $Header$
+# $Id$
 #
 
 lib_LTLIBRARIES = libhttpd.la

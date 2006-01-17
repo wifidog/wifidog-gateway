@@ -18,7 +18,7 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Header$ */
+/* $Id$ */
 /** @file client_list.h
     @brief Client List functions
     @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>

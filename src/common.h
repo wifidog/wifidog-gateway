@@ -18,7 +18,7 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Header$ */
+/* $Id$ */
 /** @file common.h
     @brief Common constants and other bits
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>

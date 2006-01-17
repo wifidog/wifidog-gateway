@@ -1,4 +1,4 @@
-# $Header$
+# $Id$
 
 SUBDIRS = libhttpd src . doc 
 

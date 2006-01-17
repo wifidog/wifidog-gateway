@@ -18,7 +18,7 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Header$ */
+/* $Id$ */
 /** @file safe.h
 	  @brief Safe versions of stdlib/string functions that error out and exit if memory allocation fails
 	  @author Copyright (C) 2005 Mina Naguib <mina@ilesansfil.org>

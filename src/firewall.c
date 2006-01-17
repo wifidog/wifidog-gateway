@@ -19,8 +19,7 @@
  \********************************************************************/
 
 /*
- * $Header: /cvsroot/wifidog/wifidog/src/firewall.c,v 1.32 2004/04/23
- * 11:37:43 aprilp Exp $
+ * $Id$
  */
 /** @internal
   @file firewall.c

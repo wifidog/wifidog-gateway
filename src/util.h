@@ -18,7 +18,7 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Header$ */
+/* $Id$ */
 /** @file util.h
     @brief Misc utility functions
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>

@@ -18,7 +18,7 @@
  *                                                                  *
  \********************************************************************/
 
-/* $Header$ */
+/* $Id$ */
 /** @file conf.c
   @brief Config file parsing
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>

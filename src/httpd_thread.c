@@ -18,7 +18,7 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Header$ */
+/* $Id$ */
 
 /** @file httpd_thread.c
     @brief Handles on web request.

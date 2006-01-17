@@ -1,7 +1,7 @@
 #!/bin/sh
 # Run this to generate all the initial makefiles, etc.
 #
-# $Header$
+# $Id$
 
 if [ -r Makefile ]
 then

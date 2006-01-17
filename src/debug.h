@@ -18,7 +18,7 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Header$ */
+/* $Id$ */
 /** @file debug.h
     @brief Debug output routines
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>

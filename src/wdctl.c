@@ -18,7 +18,7 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Header$ */
+/* $Id$ */
 /** @file wdctl.c
     @brief Monitoring and control of wifidog, client part
     @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>

@@ -1,5 +1,5 @@
 
-$Header$
+$Id$
 
 
 This file contains some small notes on developing the WiFiDog application.
@@ -18,10 +18,10 @@ SOURCE CODE:
 	- Please do not contribute unless you agree with the GPL license and are contributing your portion under that license.  See the included LICENSE.txt
 	- Please respect the intellectual property of others.  You are not allowed to taint WiFiDog by including source code from projects that do not allow so.
 	- Keep in mind that this application will run on extremely simple embedded devices.  The binary size needs to be small, the dependencies absolutely minimal, and the memory footprint negligible.
-	- Always place the CVS "Header" macro at the top of every file
+	- Always place the subversion "Id" macro at the top of every file
 	- Since this is a collaborative project, please aim for clearness instead of cleverness when faced with a choice.
 	- If you must use some cleverness, please add appropriate clear comments.
-	- Please re-indent your code before committing to CVS - see the "Formatting Your Source Code" section in the GNU Coding Standards at http://www.gnu.org/prep/standards_toc.html - the entire document makes a good reading if you haven't read it before.  Also see the "indent" program.
+	- Please re-indent your code before committing to subversion - see the "Formatting Your Source Code" section in the GNU Coding Standards at http://www.gnu.org/prep/standards_toc.html - the entire document makes a good reading if you haven't read it before.  Also see the "indent" program.
 	- Before writing any brand-new large chunks of code, make sure it's logic has been discussed with the other team of developers or included in the design stage.
 
 

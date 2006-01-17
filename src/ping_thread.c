@@ -18,7 +18,7 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Header$ */
+/* $Id$ */
 /** @file ping_thread.c
     @brief Periodically checks in with the central auth server to make sure everything is running properly.
     @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>

@@ -1,4 +1,8 @@
-# $Header$
+# $Id$
+
+2006-01-17 Mina Naguib <mina@ilesansfil.org>
+	* Ingisgnificant cleanup  of CVS artifacts after svn migration
+
 2005-11-24 Philippe April <philippe@ilesansfil.org>
 	* Bad idea
 

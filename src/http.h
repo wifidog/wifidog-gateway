@@ -18,7 +18,7 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Header$ */
+/* $Id$ */
 /** @file http.h
     @brief HTTP IO functions
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>

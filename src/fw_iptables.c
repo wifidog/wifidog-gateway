@@ -18,7 +18,7 @@
  *                                                                  *
  \********************************************************************/
 
-/* $Header$ */
+/* $Id$ */
 /** @internal
   @file fw_iptables.c
   @brief Firewall iptables functions
