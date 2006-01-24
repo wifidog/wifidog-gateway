@@ -1,4 +1,6 @@
 # $Id$
+2006-01-23 Benoit Grégoire  <bock@step.polymtl.ca>
+	src/conf.h:  Fix the value of DEFAULT_AUTHSERVPATH and completely wrong code comment.  Not the default indicated in the config file and the define are in sync.
 
 2006-01-17 Mina Naguib <mina@ilesansfil.org>
 	* Ingisgnificant cleanup  of CVS artifacts after svn migration
