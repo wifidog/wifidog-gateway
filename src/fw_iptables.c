@@ -49,8 +49,8 @@
 #include "client_list.h"
 
 static int iptables_do_command(char *format, ...);
-static char *iptables_compile(char *, t_firewall_rule *);
-static void iptables_load_ruleset(char *, char *);
+static char *iptables_compile(char *, char *, t_firewall_rule *);
+static void iptables_load_ruleset(char *, char *, char *);
 
 extern pthread_mutex_t	client_list_mutex;
 extern pthread_mutex_t	config_mutex;
@@ -89,11 +89,12 @@ iptables_do_command(char *format, ...)
  * @internal
  * Compiles a struct definition of a firewall rule into a valid iptables
  * command.
+ * @arg table Table containing the chain.
  * @arg chain Chain that the command will be (-A)ppended to.
  * @arg rule Definition of a rule into a struct, from conf.c.
  */
 static char *
-iptables_compile(char *chain, t_firewall_rule *rule)
+iptables_compile(char * table, char *chain, t_firewall_rule *rule)
 {
     char	command[MAX_BUF],
     		*mode;
@@ -106,7 +107,7 @@ iptables_compile(char *chain, t_firewall_rule *rule)
         mode = safe_strdup("REJECT");
     }
     
-    snprintf(command, sizeof(command),  "-t filter -A %s ", chain);
+    snprintf(command, sizeof(command),  "-t %s -A %s ",table, chain);
     if (rule->mask != NULL) {
         snprintf((command + strlen(command)), (sizeof(command) - 
                 strlen(command)), "-d %s ", rule->mask);
@@ -133,24 +134,25 @@ iptables_compile(char *chain, t_firewall_rule *rule)
  * @internal
  * Load all the rules in a rule set.
  * @arg ruleset Name of the ruleset
+ * @arg table Table containing the chain.
  * @arg chain IPTables chain the rules go into
  */
 static void
-iptables_load_ruleset(char *ruleset, char *chain)
+iptables_load_ruleset(char * table, char *ruleset, char *chain)
 {
-	t_firewall_rule		*rules;
+	t_firewall_rule		*rule;
 	char			*cmd;
 
-	debug(LOG_DEBUG, "Load ruleset %s into chain %s", ruleset, chain);
+	debug(LOG_DEBUG, "Load ruleset %s into table %s, chain %s", ruleset, table, chain);
 	
-	for (rules = get_ruleset(ruleset); rules != NULL; rules = rules->next) {
-		cmd = iptables_compile(chain, rules);
-		debug(LOG_DEBUG, "Loading rule \"%s\" into %s", cmd, chain);
+	for (rule = get_ruleset(ruleset); rule != NULL; rule = rule->next) {
+		cmd = iptables_compile(table, chain, rule);
+		debug(LOG_DEBUG, "Loading rule \"%s\" into table %s, chain %s", cmd, table, chain);
 		iptables_do_command(cmd);
 		free(cmd);
 	}
 
-	debug(LOG_DEBUG, "Ruleset %s loaded into %s", ruleset, chain);
+	debug(LOG_DEBUG, "Ruleset %s loaded into table %s, chain %s", ruleset, table, chain);
 }
 
 void
@@ -226,6 +228,7 @@ iptables_fw_init(void)
 			iptables_do_command("-t nat -N " TABLE_WIFIDOG_OUTGOING);
 			iptables_do_command("-t nat -N " TABLE_WIFIDOG_WIFI_TO_ROUTER);
 			iptables_do_command("-t nat -N " TABLE_WIFIDOG_WIFI_TO_INTERNET);
+			iptables_do_command("-t nat -N " TABLE_WIFIDOG_GLOBAL);
 			iptables_do_command("-t nat -N " TABLE_WIFIDOG_UNKNOWN);
 			iptables_do_command("-t nat -N " TABLE_WIFIDOG_AUTHSERVERS);
 
@@ -241,6 +244,7 @@ iptables_fw_init(void)
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_UNKNOWN);
 
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j " TABLE_WIFIDOG_AUTHSERVERS);
+			iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j " TABLE_WIFIDOG_GLOBAL);
 			iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 80 -j REDIRECT --to-ports %d", gw_port);
 
 
@@ -265,19 +269,20 @@ iptables_fw_init(void)
 			iptables_fw_set_authservers();
 
 			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j " TABLE_WIFIDOG_LOCKED, FW_MARK_LOCKED);
-			iptables_load_ruleset("locked-users", TABLE_WIFIDOG_LOCKED);
+			iptables_load_ruleset("filter", "locked-users", TABLE_WIFIDOG_LOCKED);
 
 			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_GLOBAL);
-			iptables_load_ruleset("global", TABLE_WIFIDOG_GLOBAL);
+			iptables_load_ruleset("filter", "global", TABLE_WIFIDOG_GLOBAL);
+			iptables_load_ruleset("nat", "global", TABLE_WIFIDOG_GLOBAL);
 
 			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j " TABLE_WIFIDOG_VALIDATE, FW_MARK_PROBATION);
-			iptables_load_ruleset("validating-users", TABLE_WIFIDOG_VALIDATE);
+			iptables_load_ruleset("filter", "validating-users", TABLE_WIFIDOG_VALIDATE);
 
 			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j " TABLE_WIFIDOG_KNOWN, FW_MARK_KNOWN);
-			iptables_load_ruleset("known-users", TABLE_WIFIDOG_KNOWN);
+			iptables_load_ruleset("filter", "known-users", TABLE_WIFIDOG_KNOWN);
     
 			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_UNKNOWN);
-			iptables_load_ruleset("unknown-users", TABLE_WIFIDOG_UNKNOWN);
+			iptables_load_ruleset("filter", "unknown-users", TABLE_WIFIDOG_UNKNOWN);
 			iptables_do_command("-t filter -A " TABLE_WIFIDOG_UNKNOWN " -j REJECT --reject-with icmp-port-unreachable");
 
 	free(gw_interface);

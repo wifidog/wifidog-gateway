@@ -82,7 +82,7 @@ thread_client_timeout_check(void *arg)
 	
 		debug(LOG_DEBUG, "Running fw_counter()");
 	
-		fw_counter();
+		fw_sync_with_authserver();
 	}
 }
 

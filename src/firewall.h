@@ -54,7 +54,7 @@ int fw_allow(char *ip, char *mac, int profile);
 int fw_deny(char *ip, char *mac, int profile);
 
 /** @brief Refreshes the entire client list */
-void fw_counter(void);
+void fw_sync_with_authserver(void);
 
 /** @brief Get an IP's MAC address from the ARP cache.*/
 char *arp_get(char *req_ip);

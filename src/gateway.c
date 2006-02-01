@@ -72,7 +72,7 @@ httpd * webserver = NULL;
 
 /* from commandline.c */
 extern char ** restartargv;
-extern pid_t restarted;
+extern pid_t restart_orig_pid;
 t_client *firstclient;
 
 /* from client_list.c */
@@ -94,7 +94,7 @@ void append_x_restartargv(void) {
 }
 
 /* @internal
- * @brief Connects to the parent via the internal socket
+ * @brief During gateway restart, connects to the parent process via the internal socket
  * Downloads from it the active client list
  */
 void get_clients_from_parent(void) {
@@ -507,7 +507,7 @@ int main(int argc, char **argv) {
 	/* Init the signals to catch chld/quit/etc */
 	init_signals();
 
-	if (restarted) {
+	if (restart_orig_pid) {
 		/*
 		 * We were restarted and our parent is waiting for us to talk to it over the socket
 		 */
@@ -516,8 +516,8 @@ int main(int argc, char **argv) {
 		/*
 		 * At this point the parent will start destroying itself and the firewall. Let it finish it's job before we continue
 		 */
-		while (kill(restarted, 0) != -1) {
-			debug(LOG_INFO, "Waiting for parent PID %d to die before continuing loading", restarted);
+		while (kill(restart_orig_pid, 0) != -1) {
+			debug(LOG_INFO, "Waiting for parent PID %d to die before continuing loading", restart_orig_pid);
 			sleep(1);
 		}
 

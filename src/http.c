@@ -51,6 +51,7 @@
 
 extern pthread_mutex_t	client_list_mutex;
 
+/** The 404 handler is also responsable for redirecting to the auth server */
 void
 http_callback_404(httpd *webserver, request *r)
 {

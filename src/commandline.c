@@ -47,7 +47,7 @@ static void usage(void);
  * A flag to denote whether we were restarted via a parent wifidog, or started normally
  * 0 means normally, otherwise it will be populated by the PID of the parent
  */
-pid_t restarted = 0;
+pid_t restart_orig_pid = 0;
 
 /** @internal
  * @brief Print usage
@@ -133,7 +133,7 @@ void parse_commandline(int argc, char **argv) {
 			case 'x':
 				skiponrestart = 1;
 				if (optarg) {
-					restarted = atoi(optarg);
+					restart_orig_pid = atoi(optarg);
 				}
 				else {
 					printf("The expected PID to the -x switch was not supplied!");

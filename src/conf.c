@@ -76,7 +76,6 @@ typedef enum {
 	oAuthServSSLPort,
 	oAuthServHTTPPort,
 	oAuthServPath,
-	oAuthServMaxTries,
 	oHTTPDMaxConn,
 	oHTTPDName,
 	oClientTimeout,
@@ -103,7 +102,6 @@ static const struct {
 	{ "gatewayaddress",     oGatewayAddress },
 	{ "gatewayport",        oGatewayPort },
 	{ "authserver",         oAuthServer },
-	{ "authservmaxtries",   oAuthServMaxTries },
 	{ "httpdmaxconn",       oHTTPDMaxConn },
 	{ "httpdname",          oHTTPDName },
 	{ "clienttimeout",      oClientTimeout },
@@ -146,7 +144,6 @@ config_init(void)
 	config.gw_address = NULL;
 	config.gw_port = DEFAULT_GATEWAYPORT;
 	config.auth_servers = NULL;
-	config.authserv_maxtries = DEFAULT_AUTHSERVMAXTRIES;
 	config.httpdname = NULL;
 	config.clienttimeout = DEFAULT_CLIENTTIMEOUT;
 	config.checkinterval = DEFAULT_CHECKINTERVAL;
@@ -389,7 +386,7 @@ parse_firewall_ruleset(char *ruleset, FILE *file, char *filename, int *linenum)
 			
 			switch (opcode) {
 				case oFirewallRule:
-					parse_firewall_rule(ruleset, p2);
+					_parse_firewall_rule(ruleset, p2);
 					break;
 
 				case oBadOption:
@@ -412,8 +409,11 @@ parse_firewall_ruleset(char *ruleset, FILE *file, char *filename, int *linenum)
 	debug(LOG_DEBUG, "Firewall Rule Set %s added.", ruleset);
 }
 
+/** @internal
+Helper for parse_firewall_ruleset.  Parses a single rule in a ruleset
+*/
 static int
-parse_firewall_rule(char *ruleset, char *leftover)
+_parse_firewall_rule(char *ruleset, char *leftover)
 {
 	int i;
 	int block_allow = 0; /**< 0 == block, 1 == allow */
@@ -650,9 +650,6 @@ config_read(char *filename)
 					break;
 				case oHTTPDMaxConn:
 					sscanf(p1, "%d", &config.httpdmaxconn);
-					break;
-				case oAuthServMaxTries:
-					sscanf(p1, "%d", &config.authserv_maxtries);
 					break;
 				case oBadOption:
 					debug(LOG_ERR, "Bad option on line %d "

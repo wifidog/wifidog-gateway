@@ -38,7 +38,7 @@ rpm: dist
 	cp ${builddir}wifidog-@VERSION@.tar.gz /usr/src/RPM/SOURCES
 	rpmbuild -ta ${builddir}wifidog-@VERSION@.tar.gz
 	
-clean-local:
-	echo "clean-local: " && pwd
-	rm -f /usr/src/RPM/SPECS/wifidog.spec
-	rm -f /usr/src/RPM/SOURCES/wifidog-@VERSION@.tar.gz
+#clean-local:
+#	echo "clean-local: " && pwd
+#	rm -f /usr/src/RPM/SPECS/wifidog.spec
+#	rm -f /usr/src/RPM/SOURCES/wifidog-@VERSION@.tar.gz

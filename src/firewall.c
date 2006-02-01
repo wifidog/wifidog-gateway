@@ -69,7 +69,7 @@
 extern pthread_mutex_t client_list_mutex;
 
 /* from commandline.c */
-extern pid_t restarted;
+extern pid_t restart_orig_pid;
 
 int icmp_fd = 0;
 
@@ -161,7 +161,7 @@ fw_init(void)
     debug(LOG_INFO, "Initializing Firewall");
     result = iptables_fw_init();
 
-	 if (restarted) {
+	 if (restart_orig_pid) {
 		 debug(LOG_INFO, "Restoring firewall rules for clients inherited from parent");
 		 LOCK_CLIENT_LIST();
 		 client = client_get_first_client();
@@ -175,7 +175,7 @@ fw_init(void)
 	 return result;
 }
 
-/** Clear the authserver rules
+/** Remove all auth server firewall whitelist rules
  */
 void
 fw_clear_authservers(void)
@@ -184,7 +184,7 @@ fw_clear_authservers(void)
 	iptables_fw_clear_authservers();
 }
 
-/** Set the authservers rules
+/** Add the necessary firewall rules to whitelist the authservers
  */
 void
 fw_set_authservers(void)
@@ -213,7 +213,7 @@ fw_destroy(void)
  * @todo Make this function smaller and use sub-fonctions
  */
 void
-fw_counter(void)
+fw_sync_with_authserver(void)
 {
     t_authresponse  authresponse;
     char            *token, *ip, *mac;

@@ -332,5 +332,3 @@ int _connect_auth_server(int level) {
 		}
 	}
 }
-
-/* config->authserv_maxtries */

@@ -220,7 +220,7 @@ int _httpd_decode (bufcoded, bufplain, outbufsize)
 
 	int nbytesdecoded, j;
 	register char *bufin = bufcoded;
-	register unsigned char *bufout = bufplain;
+	register char *bufout = bufplain;
 	register int nprbytes;
 
 	/*
@@ -255,9 +255,9 @@ int _httpd_decode (bufcoded, bufplain, outbufsize)
    
 	while (nprbytes > 0) 
 	{
-		*(bufout++)=(unsigned char)(DEC(*bufin)<<2|DEC(bufin[1])>>4);
-		*(bufout++)=(unsigned char)(DEC(bufin[1])<<4|DEC(bufin[2])>>2);
-		*(bufout++)=(unsigned char)(DEC(bufin[2])<<6|DEC(bufin[3]));
+		*(bufout++)=(DEC(*bufin)<<2|DEC(bufin[1])>>4);
+		*(bufout++)=(DEC(bufin[1])<<4|DEC(bufin[2])>>2);
+		*(bufout++)=(DEC(bufin[2])<<6|DEC(bufin[3]));
 		bufin += 4;
 		nprbytes -= 4;
 	}

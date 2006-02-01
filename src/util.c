@@ -67,7 +67,7 @@ extern	pthread_mutex_t	client_list_mutex;
 extern	pthread_mutex_t	config_mutex;
 
 /* Defined in commandline.c */
-extern pid_t restarted;
+extern pid_t restart_orig_pid;
 
 /* XXX Do these need to be locked ? */
 static time_t last_online_time = 0;
@@ -339,8 +339,8 @@ char * get_status_text() {
 
 	snprintf((buffer + len), (sizeof(buffer) - len), "Has been restarted: ");
 	len = strlen(buffer);
-	if (restarted) {
-		snprintf((buffer + len), (sizeof(buffer) - len), "yes (from PID %d)\n", restarted);
+	if (restart_orig_pid) {
+		snprintf((buffer + len), (sizeof(buffer) - len), "yes (from PID %d)\n", restart_orig_pid);
 		len = strlen(buffer);
 	}
 	else {

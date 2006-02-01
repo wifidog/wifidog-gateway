@@ -48,7 +48,6 @@
 #define DEFAULT_AUTHSERVSSLAVAILABLE 0
 /** Note:  The path must be prefixed by /, and must be suffixed /.  Put / for the server root.*/
 #define DEFAULT_AUTHSERVPATH "/wifidog/"
-#define DEFAULT_AUTHSERVMAXTRIES 1
 /*@}*/ 
 
 /**
@@ -112,8 +111,6 @@ typedef struct {
 				     server */
     int gw_port;		/**< @brief Port the webserver will run on */
     
-    int authserv_maxtries;	/**< @brief Maximum number of auth server
-				     connection attempts before abandoning */
     t_auth_serv	*auth_servers;	/**< @brief Auth servers list */
     char *httpdname;		/**< @brief Name the web server will return when
 				     replying to a request */
@@ -157,7 +154,7 @@ t_firewall_rule *get_ruleset(char *);
 static void config_notnull(void *parm, char *parmname);
 static int parse_boolean_value(char *);
 static void parse_auth_server(FILE *, char *, int *);
-static int parse_firewall_rule(char *ruleset, char *leftover);
+static int _parse_firewall_rule(char *ruleset, char *leftover);
 static void parse_firewall_ruleset(char *, FILE *, char *, int *);
 void parse_trusted_mac_list(char *);
 
