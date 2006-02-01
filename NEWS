@@ -1,3 +1,21 @@
+# $Id$
+WiFiDog 1.1.3beta2:
+	-Fix bug #65 (Whitelisted servers would still splash on port 80
+	-Fix incorrect default value for Path in the AuthServer configuration
+	-Add more info to wdctl status
+
+WiFiDog 1.1.3beta1:
+	-Added patch by wireless London to use the GW interface's mac address as the node_id
+	  if no node_id is specified. It allows the use of generic configuration files without
+	  the need to hardcoding the node_id in.
+	-Added TrustedMACList configuration variable which allows specifying
+	  MAC addresses which are allowed to go through without authentication.
+	-New wdctl command "restart" which will get wifidog to restart itself
+	  while preserving the existing clientlist.  Perfect for 0-downtime
+	  upgrading!
+	-libhttpd: Fixed two bugs parsing the GET query string making wifidog segfault
+	  
+	
 WiFiDog 1.1.2:
     - Added some informations so it compiles on newer OpenWRT's (whiterussian-rc2)
     - Fixed minor issue with wdctl
