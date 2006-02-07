@@ -1,4 +1,7 @@
 # $Id$
+2006-02-06 Benoit Grégoire  <bock@step.polymtl.ca>
+	* src/fw_iptables.c: Fix deleting the rules on shutdown.
+
 2006-01-31 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Release 1.1.3_beta2
 	

@@ -329,6 +329,7 @@ iptables_fw_destroy(void)
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_OUTGOING);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_WIFI_TO_ROUTER);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_WIFI_TO_INTERNET);
+    iptables_do_command("-t nat -F " TABLE_WIFIDOG_GLOBAL);
     iptables_do_command("-t nat -F " TABLE_WIFIDOG_UNKNOWN);
 	iptables_do_command("-t nat -X " TABLE_WIFIDOG_AUTHSERVERS);
     iptables_do_command("-t nat -X " TABLE_WIFIDOG_OUTGOING);
