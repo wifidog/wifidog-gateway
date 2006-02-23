@@ -4,6 +4,7 @@
 	* Changed order in the filter.FORWARD chain
 	* Added TCPMSS rule
 	* Fixed deleting the rules on shutdown
+	* Fixed wdctl reset problem
 
 2006-02-06 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/fw_iptables.c: Fix deleting the rules on shutdown.
