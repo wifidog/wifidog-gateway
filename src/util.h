@@ -40,6 +40,8 @@ char *get_iface_ip(char *ifname);
 /* @brief Get MAC address of an interface */
 char *get_iface_mac(char *ifname);
 
+/* @brief Get interface name of default gateway */
+char *get_ext_iface (void);
 
 /* @brief Sets hint that an online action (dns/connect/etc using WAN) succeeded */
 void mark_online();

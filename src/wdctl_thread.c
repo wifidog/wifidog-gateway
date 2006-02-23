@@ -177,11 +177,11 @@ thread_wdctl_handler(void *arg)
 		read_bytes += len;
 	}
 
-	if (strcmp(request, "status") == 0) {
+	if (strncmp(request, "status", 6) == 0) {
 		wdctl_status(fd);
-	} else if (strcmp(request, "stop") == 0) {
+	} else if (strncmp(request, "stop", 4) == 0) {
 		wdctl_stop(fd);
-	} else if (strncmp(request, "reset", 6) == 0) {
+	} else if (strncmp(request, "reset", 5) == 0) {
 		wdctl_reset(fd, (request + 6));
 	} else if (strncmp(request, "restart", 7) == 0) {
 		wdctl_restart(fd);
