@@ -5,6 +5,7 @@
 	* Added TCPMSS rule
 	* Fixed deleting the rules on shutdown
 	* Fixed wdctl reset problem
+	* Released 1.1.3_beta4
 
 2006-02-06 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/fw_iptables.c: Fix deleting the rules on shutdown.
