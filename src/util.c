@@ -216,6 +216,30 @@ char *get_iface_mac (char *ifname) {
 #endif
 }
 
+char *get_gw_iface (void) {
+#ifdef __linux__
+    FILE *input;
+    char *device, *gw;
+
+    device = (char *)malloc(16);
+    gw = (char *)malloc(16);
+
+    input = fopen("/proc/net/route", "r");
+    while (!feof(input)) {
+        fscanf(input, "%s %s %*s %*s %*s %*s %*s %*s %*s %*s %*s\n", device, gw);
+        if (strcmp(gw, "00000000") == 0) {
+            free(gw);
+            return device;
+        }
+    }
+    fclose(input);
+
+    free(device);
+    free(gw);
+#endif
+    return NULL;
+}
+
 void mark_online() {
 	int before;
 	int after;

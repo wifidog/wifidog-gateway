@@ -264,7 +264,16 @@ iptables_fw_init(void)
 			iptables_do_command("-t filter -N " TABLE_WIFIDOG_UNKNOWN);
 
 			/* Assign links and rules to these new chains */
-			iptables_do_command("-t filter -A FORWARD -i %s -j " TABLE_WIFIDOG_WIFI_TO_INTERNET, gw_interface);
+
+            /* Insert at the beginning */
+			iptables_do_command("-t filter -I FORWARD -i %s -j " TABLE_WIFIDOG_WIFI_TO_INTERNET, gw_interface);
+
+            /* TCPMSS rule for PPPoE */
+			iptables_do_command("-t filter -A FORWARD -m state --state INVALID -j DROP");
+			iptables_do_command("-t filter -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT");
+			iptables_do_command("-t filter -A FORWARD -i %s -m state --state NEW,INVALID -j DROP", gw_interface);
+			iptables_do_command("-t filter -A FORWARD -o %s -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu", gw_interface);
+
 			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_AUTHSERVERS);
 			iptables_fw_set_authservers();
 
@@ -335,6 +344,7 @@ iptables_fw_destroy(void)
     iptables_do_command("-t nat -X " TABLE_WIFIDOG_OUTGOING);
     iptables_do_command("-t nat -X " TABLE_WIFIDOG_WIFI_TO_ROUTER);
     iptables_do_command("-t nat -X " TABLE_WIFIDOG_WIFI_TO_INTERNET);
+    iptables_do_command("-t nat -X " TABLE_WIFIDOG_GLOBAL);
     iptables_do_command("-t nat -X " TABLE_WIFIDOG_UNKNOWN);
 
 	 /*
