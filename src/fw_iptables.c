@@ -275,7 +275,7 @@ iptables_fw_init(void)
 			iptables_do_command("-t filter -I FORWARD -i %s -j " TABLE_WIFIDOG_WIFI_TO_INTERNET, gw_interface);
 
             /* TCPMSS rule for PPPoE */
-			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " FORWARD -m state --state INVALID -j DROP");
+			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m state --state INVALID -j DROP");
 			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m state --state RELATED,ESTABLISHED -j ACCEPT");
             if (ext_interface != NULL) {
 			    iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -i %s -m state --state NEW,INVALID -j DROP", gw_interface);
