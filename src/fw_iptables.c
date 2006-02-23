@@ -187,6 +187,7 @@ iptables_fw_init(void)
     s_config *config;
 	 char * gw_interface = NULL;
 	 char * gw_address = NULL;
+	 char * ext_interface = NULL;
 	 int gw_port = 0;
      t_trusted_mac *p;
    
@@ -197,6 +198,11 @@ iptables_fw_init(void)
 	 gw_interface = safe_strdup(config->gw_interface);
 	 gw_address = safe_strdup(config->gw_address);
 	 gw_port = config->gw_port;
+     if (config->external_interface) {
+	    ext_interface = safe_strdup(config->external_interface);
+     } else {
+	    ext_interface = get_ext_iface();
+     }
 	 UNLOCK_CONFIG();
     
 	 /*
@@ -271,8 +277,14 @@ iptables_fw_init(void)
             /* TCPMSS rule for PPPoE */
 			iptables_do_command("-t filter -A FORWARD -m state --state INVALID -j DROP");
 			iptables_do_command("-t filter -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT");
-			iptables_do_command("-t filter -A FORWARD -i %s -m state --state NEW,INVALID -j DROP", gw_interface);
-			iptables_do_command("-t filter -A FORWARD -o %s -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu", gw_interface);
+            if (ext_interface != NULL) {
+			    iptables_do_command("-t filter -A FORWARD -i %s -m state --state NEW,INVALID -j DROP", gw_interface);
+			    iptables_do_command("-t filter -A FORWARD -o %s -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu", gw_interface);
+            } else {
+                /* Will this work even if we don't specify an external interface? */
+			    iptables_do_command("-t filter -A FORWARD -m state --state NEW,INVALID -j DROP");
+			    iptables_do_command("-t filter -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu");
+            }
 
 			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_AUTHSERVERS);
 			iptables_fw_set_authservers();

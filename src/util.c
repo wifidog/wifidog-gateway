@@ -216,7 +216,7 @@ char *get_iface_mac (char *ifname) {
 #endif
 }
 
-char *get_gw_iface (void) {
+char *get_ext_iface (void) {
 #ifdef __linux__
     FILE *input;
     char *device, *gw;
