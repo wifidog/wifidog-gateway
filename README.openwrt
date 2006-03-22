@@ -1,6 +1,165 @@
 $Id$
 
 OpenWRT specific README
+=======================
+
+So, you want to run wifidog on one of linksys' WRT wireless routers!
+
+OpenWRT is the embedded linux-gnu bundle that runs on the linksys wrt
+series routers.
+
+OpenWRT's home page is http://www.openwrt.org
+
+To build wifidog so that it may be run on the linksys wrt routers you
+must first obtain the OpenWRT toolchain.  This toolchain is a set of
+compilers and other software development tools that will allow you,
+running on your intel/pentium/mac computer to compile and develop software
+that is to run on the mips based linksys wrt series routers, which is
+based on another computer cpu chip entirely.
+
+You have four options for building wifidog using the OpenWRT toolchain.
+
+1. get the prebuilt, minimal OpenWRT toolchain.
+   wget http://downloads.openwrt.org/whiterussian/newest/OpenWrt-SDK-Linux-i686-1.tar.bz2
+   ... unpack the tarball, etc
+   ... the full path to the OpenWrt-SDK-Linux-i686-1 directory is your BUILDROOT
+
+   cd wifidog directory (where this README is)
+   ipkg/rules-rc4-sdk BUILDROOT=<Full Path to OpenWrt SDK>
+
+   If it works (!) you will have an ipkg file in your wifidog directory
+   with the wifidog package in it.  You can then boot up your OpenWrt
+   router, copy the ipkg to it, and install it using the ipkg commands.
+
+   You should also make sure that the wifidog prereqs are already
+   installed on the router before you go to run wifidog.
+
+   The prereqs are:
+   * iptables command and modules mac, mark and MARK
+   * iptables kernel module mac
+   * libpthread
+
+   These are all packages you can install on your running OpenWrt router
+   using the ipkg commands.  If the router is on the net, the ipkg
+   commands can download the packages from www.openwrt.org, just like
+   debian apt-get or fedora yum or up2date.
+
+2. checkout the stable release of the full OpenWRT toolchain.
+   This will let you build your own flash image for the router.
+   Since the above minimal toolchain isn't precompiled for all
+   computers, this is the way to go if you want to use the toolchain
+   on a non-intel computer, like a Mac.
+
+   svn checkout https://svn.openwrt.org/openwrt/branches/whiterussian OpenWrt-ToolChain-Linux
+   ... follow the instructions in the README, INSTALL
+   ... typically, ./configure; make; make install
+   ... the full path to the OpenWrt-ToolChain-Linux directory is your BUILDROOT
+
+   So, you've got your toolchain built (with it's version of gcc, ld,
+   etc etc).  Now on to compiling wifidog:
+
+   cd wifidog directory (where this README is)
+   ipkg/rules-rc4 BUILDROOT=<Full Path to OpenWrt toolchain>
+
+   If it works (!) you will have an ipkg file in your wifidog directory
+   with the wifidog package in it and all the prereqs.  You can then boot
+   up your OpenWrt router, copy the ipkg to it, and install it using the
+   ipkg commands.
+
+   The advantage with this method is that the wifidog build process will
+   draw into itself all it's openwrt prereqs.
+
+   The other big plus is that you can cut your own custom openwrt flash
+   image that has all the things you want in it, like asterisk or java,
+   and of course including wifidog.
+
+3. checkout the bleeding edge release of the full OpenWRT toolchain
+   Careful, you may brick your router.
+   Currently, if you want to run linux 2.6, this is the only way to go.
+   Plus, there are new tools, apps, and a better build process.
+
+   svn checkout https://svn.openwrt.org/openwrt/trunk OpenWrt-ToolChain-Linux
+   ... follow the instructions in the README, INSTALL
+   ... typically, ./configure; make; make install
+   ... the full path to the OpenWrt-ToolChain-Linux directory is your BUILDROOT
+
+   The rest of this recipe is just like 2.
+
+4. you want to use a pre-rc4 version of the OpenWRT toolchain.
+   You have to work with the full toolchain, so the recipe is like 2.
+   except for the build of wifidog:
+
+   cd wifidog directory (where this README is)
+   ipkg/rules BUILDROOT=<Full Path to pre-rc4 OpenWrt toolchain>
+
+   This builds wifidog using the older OpenWRT.
+
+
+---- How to integrate wifidog with the OpenWRT flash image build process ----
+
+Go to the OpenWRT build root.  This is the top level directory
+from the tarball or from the svn checkout.  You should find a README or
+README.SDK file there, and most importantly a "package" directory.
+
+You'll notice that under the package subdirectory are specifications for all
+the applications available under OpenWRT.  As of RC4, wifidog is not yet there.
+To integrate wifidog into the build process you'll need to add a specification
+for wifidog into the package directory, and add wifidog to the build list.
+
+  BUILDROOT=<OpenWRT build root>
+  mkdir $BUILDROOT/package/wifidog  
+  mkdir $BUILDROOT/package/wifidog/ipkg
+  mkdir $BUILDROOT/package/wifidog/patches
+
+Create a wifidog Config.in file.  This will define wifidog to the OpenWRT build process.
+When configuring OpenWRT you run "make menuconfig".  This compiles a few things, and
+then presents a menu textual-ui that allows you select various options for the build.
+Among other things you can choose the application packages that are part of the build.
+A wifidog Config.in file will put an entry for wifidog in the menu ui.
+
+  cp package/wifidog/Config.in $BUILDROOT/package/wifidog/Config.in
+
+Create a Makefile.  This will be used by the OpenWRT build process to obtain (download)
+configure and build wifidog.
+
+  cp package/wifidog/Makefile $BUILDROOT/package/wifidog/Makefile
+
+Create a debian package file.  This will be used by the OpenWRT build process to make
+an ipkg file.
+
+  cp package/wifidog/ipkg/wifidog.control $BUILDROOT/package/wifidog/ipkg/wifidog.control
+
+Create a list of the config files that will be installed
+
+  cp package/wifidog/ipkg/wifidog.conffiles $BUILDROOT/package/wifidog/ipkg/wifidog.conffiles
+
+Create an initialization script that will start up wifidog
+
+  cp scripts/init.d/wifidog $BUILDROOT/package/wifidog/ipkg/wifidog.init
+
+Edit the OpenWRT package Config.in to add wifidog to the list of packages
+
+  vi $BUILDROOT/package/Config.in
+
+Add the following line to the "Network" section:
+
+  source "package/wifidog/Config.in"
+
+Save it.
+
+Edit the OpenWRT package Makefile add wifidog to the list of packages
+
+  vi $BUILDROOT/package/Makefile
+
+Add the following line with the rest of the lines like that:
+
+  package-$(BR2_PACKAGE_WIFIDOG) += wifidog
+
+Add the following line to the dependency section:
+
+  wifidog-compile: libpthread-compile iptables-compile
+
+Save it.
 
 Since the newest OpenWRT releases, we will be able to release
 binary IPKGs that should work on all the OpenWRT installations.

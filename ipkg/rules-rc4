@@ -13,12 +13,11 @@ VERSION=$(WIFIDOG_MAJOR_VERSION).$(WIFIDOG_MINOR_VERSION).$(WIFIDOG_MICRO_VERSIO
 
 BUILD_DIR:=$(CURDIR)/ipkg
 TMP_DIR:=$(BUILD_DIR)/tmp
-STAGING_DIR=$(BUILDROOT)/build_$(ARCH)/staging_dir
+STAGING_DIR=$(BUILDROOT)/staging_dir_$(ARCH)
 IPKG_DIR := $(wildcard $(BUILDROOT)/build_$(ARCH)/ipkg-utils-*/)
 IPTABLES_DIR := $(wildcard $(BUILDROOT)/build_$(ARCH)/iptables-*/)
-KERNEL_VERSION := $(shell awk '$$1 == "\#define" && $$2 == "UTS_RELEASE" {gsub(/["]/, "", $$3); print $$3}' $(BUILDROOT)/build_$(ARCH)/WRT54GS/release/src/linux/linux/include/linux/version.h)
-KERNEL_MODULES_DIR := $(BUILDROOT)/build_$(ARCH)/WRT54GS/release/src/linux/linux/modules/lib/modules/$(KERNEL_VERSION)
-UCLIBC_DIR := $(wildcard $(BUILDROOT)/build_$(ARCH)/uClibc*/)
+KERNEL_VERSION := $(shell awk '$$1 == "\#define" && $$2 == "UTS_RELEASE" {gsub(/["]/, "", $$3); print $$3}' $(BUILDROOT)/build_$(ARCH)/linux/linux-*/include/linux/version.h)
+KERNEL_MODULES_DIR := $(wildcard $(BUILDROOT)/build_$(ARCH)/linux-*/modules/lib/modules/$(KERNEL_VERSION))
 
 GNU_TARGET_NAME=$(ARCH)-linux
 TARGET_CROSS=$(STAGING_DIR)/bin/$(ARCH)-linux-uclibc-
@@ -28,7 +27,7 @@ LD=$(TARGET_CROSS)ld
 AR=$(TARGET_CROSS)ar
 RANLIB=$(TARGET_CROSS)ranlib
 STRIP=$(TARGET_CROSS)strip
-IPKG_BUILD=$(STAGING_DIR)/bin/ipkg-build
+IPKG_BUILD=$(STAGING_DIR)/usr/bin/ipkg-build
 
 all: binary
 
@@ -45,7 +44,7 @@ build-wifidog-stamp:
 
 build-ipkg-utils: build-ipkg-utils-stamp
 build-ipkg-utils-stamp:
-	$(MAKE) -C $(BUILDROOT) ipkg-utils
+	$(MAKE) -C $(BUILDROOT)toolchain TOPDIR=$(BUILDROOT) ipkg-utils
 	touch build-ipkg-utils-stamp
 
 build-iptables: build-iptables-stamp
@@ -94,8 +93,8 @@ install-kernel-modules:
 
 install-pthread:
 	mkdir -p $(TMP_DIR)/lib
-	cp $(UCLIBC_DIR)/lib/libpthread*so $(TMP_DIR)/lib
-	cp $(UCLIBC_DIR)/lib/libpthread*so.0 $(TMP_DIR)/lib
+	cp $(STAGING_DIR)/lib/libpthread*so $(TMP_DIR)/lib
+	cp $(STAGING_DIR)/lib/libpthread*so.0 $(TMP_DIR)/lib
 
 binary: build install
 	mkdir -p $(TMP_DIR)/CONTROL
