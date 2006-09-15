@@ -28,6 +28,10 @@
 #define _CONFIG_H_
 
 /*@{*/ 
+/** Defines */
+#define NUM_EXT_INTERFACE_DETECT_RETRY 120
+#define EXT_INTERFACE_DETECT_RETRY_INTERVAL 1
+
 /** Defaults configuration values */
 #define DEFAULT_CONFIGFILE "/etc/wifidog.conf"
 #define DEFAULT_DAEMON 1

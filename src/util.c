@@ -25,6 +25,7 @@
   @file util.c
   @brief Misc utility functions
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
+  @author Copyright (C) 2006 Benoit Grégoire <bock@step.polymtl.ca>
  */
 
 #define _GNU_SOURCE
@@ -220,20 +221,37 @@ char *get_ext_iface (void) {
 #ifdef __linux__
     FILE *input;
     char *device, *gw;
-
+    int i;
+    pthread_cond_t		cond = PTHREAD_COND_INITIALIZER;
+    pthread_mutex_t		cond_mutex = PTHREAD_MUTEX_INITIALIZER;
+    struct	timespec	timeout;
     device = (char *)malloc(16);
     gw = (char *)malloc(16);
-
-    input = fopen("/proc/net/route", "r");
-    while (!feof(input)) {
-        fscanf(input, "%s %s %*s %*s %*s %*s %*s %*s %*s %*s %*s\n", device, gw);
-        if (strcmp(gw, "00000000") == 0) {
-            free(gw);
-            return device;
+    debug(LOG_DEBUG, "get_ext_iface(): Autodectecting the external interface from routing table");
+    for (i=1; i<=NUM_EXT_INTERFACE_DETECT_RETRY; i++) {
+        input = fopen("/proc/net/route", "r");
+        while (!feof(input)) {
+            fscanf(input, "%s %s %*s %*s %*s %*s %*s %*s %*s %*s %*s\n", device, gw);
+            if (strcmp(gw, "00000000") == 0) {
+                free(gw);
+                debug(LOG_INFO, "get_ext_iface(): Detected %s as the default interface after try %d", device, i);
+                return device;
+            }
         }
+        fclose(input);
+        debug(LOG_ERR, "get_ext_iface(): Failed to detect the external interface after try %d of %d (maybe the interface is not up yet?)", i, NUM_EXT_INTERFACE_DETECT_RETRY);
+	/* Sleep for config.checkinterval seconds... */
+	timeout.tv_sec = time(NULL) + EXT_INTERFACE_DETECT_RETRY_INTERVAL;
+	timeout.tv_nsec = 0;
+	/* Mutex must be locked for pthread_cond_timedwait... */
+	pthread_mutex_lock(&cond_mutex);	
+	/* Thread safe "sleep" */
+	pthread_cond_timedwait(&cond, &cond_mutex, &timeout);
+	/* No longer needs to be locked */
+	pthread_mutex_unlock(&cond_mutex);
     }
-    fclose(input);
-
+    debug(LOG_ERR, "get_ext_iface(): Failed to detect the external interface after %d tries, aborting", NUM_EXT_INTERFACE_DETECT_RETRY);
+    exit(1);
     free(device);
     free(gw);
 #endif
