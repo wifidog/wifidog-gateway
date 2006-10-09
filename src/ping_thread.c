@@ -21,7 +21,7 @@
 /* $Id$ */
 /** @file ping_thread.c
     @brief Periodically checks in with the central auth server to make sure everything is running properly.
-    @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>
+    @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@miniguru.ca>
 */
 
 #define _GNU_SOURCE
@@ -104,6 +104,11 @@ ping(void)
 
 	debug(LOG_DEBUG, "Entering ping()");
 	
+	/*
+	 * The ping thread does not really try to see if the auth server is actually
+	 * working. Merely that there is a web server listening at the port. And that
+	 * is done by connect_auth_server() internally.
+	 */
 	sockfd = connect_auth_server();
 	if (sockfd == -1) {
 		/*
@@ -140,7 +145,8 @@ ping(void)
 	/*
 	 * Prep & send request
 	 */
-	snprintf(request, sizeof(request) - 1, "GET %sping/?gw_id=%s&sys_uptime=%lu&sys_memfree=%u&sys_load=%.2f&wifidog_uptime=%lu HTTP/1.0\r\n"
+	snprintf(request, sizeof(request) - 1,
+			"GET %sping/?gw_id=%s&sys_uptime=%lu&sys_memfree=%u&sys_load=%.2f&wifidog_uptime=%lu HTTP/1.0\r\n"
 			"User-Agent: WiFiDog %s\r\n"
 			"Host: %s\r\n"
 			"\r\n",

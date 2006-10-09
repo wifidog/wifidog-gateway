@@ -21,7 +21,7 @@
 /* $Id$ */
 /** @file auth.h
     @brief Authentication handling thread
-    @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>
+    @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@miniguru.ca>
 */
 
 #ifndef _AUTH_H_
@@ -38,15 +38,15 @@ typedef enum {
     AUTH_DENIED = 0, /**< Client was denied by the auth server */
     AUTH_ALLOWED = 1, /**< Client was granted access by the auth server */
     AUTH_VALIDATION = 5, /**< A misnomer.  Client is in 15 min probation to validate his new account */
-    AUTH_VALIDATION_FAILED = 6, /**< @todo DOCUMENT ME */
+    AUTH_VALIDATION_FAILED = 6, /**< Client had X minutes to validate account by email and didn't = too late */
     AUTH_LOCKED = 254 /**< Account has been locked */
 } t_authcode;
 
-/** @brief 
- * This structure contains all the information returned by the  authentication server
+/** 
+ * @brief This structure contains all the information returned by the  authentication server
  */
 typedef struct _t_authresponse {
-    t_authcode authcode; /**< @brief Authentication code returned by the server */
+    t_authcode authcode; /**< Authentication code returned by the server */
 } t_authresponse;
 
 

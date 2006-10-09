@@ -49,7 +49,8 @@
 
 extern pthread_mutex_t	config_mutex;
 
-/** Initiates a transaction with the auth server, either to authenticate or to update the traffic counters at the server
+/** Initiates a transaction with the auth server, either to authenticate or to
+ * update the traffic counters at the server
 @param authresponse Returns the information given by the central server 
 @param request_type Use the REQUEST_TYPE_* #defines in centralserver.h
 @param ip IP adress of the client this request is related to
@@ -83,7 +84,8 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	 * everywhere.
 	 */
 	memset(buf, 0, sizeof(buf));
-	snprintf(buf, (sizeof(buf) - 1), "GET %sauth/?stage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu HTTP/1.0\r\n"
+	snprintf(buf, (sizeof(buf) - 1),
+		"GET %sauth/?stage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu HTTP/1.0\r\n"
 		"User-Agent: WiFiDog %s\r\n"
 		"Host: %s\r\n"
 		"\r\n",
@@ -101,7 +103,7 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	do {
 		FD_ZERO(&readfds);
 		FD_SET(sockfd, &readfds);
-		timeout.tv_sec = 30; /* XXX magic... 30 second */
+		timeout.tv_sec = 30; /* XXX magic... 30 second is as good a timeout as any */
 		timeout.tv_usec = 0;
 		nfds = sockfd + 1;
 
@@ -157,6 +159,7 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 		return(AUTH_ERROR);
 	}
 
+	/* XXX Never reached because of the above if()/else pair. */
 	return(AUTH_ERROR);
 }
 
@@ -180,8 +183,9 @@ int connect_auth_server() {
 	return (sockfd);
 }
 
-/* Helper function called by connect_auth_server() to do the actual work including recursion - do not call directly
-@param level recursion level indicator
+/* Helper function called by connect_auth_server() to do the actual work including recursion
+ * DO NOT CALL DIRECTLY
+ @param level recursion level indicator must be 0 when not called by _connect_auth_server()
  */
 int _connect_auth_server(int level) {
 	s_config *config = config_get_config();
@@ -190,15 +194,16 @@ int _connect_auth_server(int level) {
 	int num_servers = 0;
 	char * hostname = NULL;
 	char * popular_servers[] = {
-		  "www.google.com"
-		, "www.yahoo.com"
-		, NULL
+		  "www.google.com",
+		  "www.yahoo.com",
+		  NULL
 	};
 	char ** popularserver;
 	char * ip;
 	struct sockaddr_in their_addr;
 	int sockfd;
 
+	/* XXX level starts out at 0 and gets incremented by every iterations. */
 	level++;
 
 	/*
@@ -212,7 +217,8 @@ int _connect_auth_server(int level) {
 	if (level > num_servers) {
 		/*
 		 * We've called ourselves too many times
-		 * That means we've cycled through all the servers in the server list at least once and none are accessible
+		 * This means we've cycled through all the servers in the server list
+		 * at least once and none are accessible
 		 */
 		return (-1);
 	}
@@ -244,6 +250,11 @@ int _connect_auth_server(int level) {
 			}
 		}
 
+		/* 
+		 * If we got any h_addr buffer for one of the popular servers, in other
+		 * words, if one of the popular servers resolved, we'll assume the DNS
+		 * works, otherwise we'll deal with net connection or DNS failure.
+		 */
 		if (h_addr) {
 			free (h_addr);
 			/*
@@ -267,7 +278,8 @@ int _connect_auth_server(int level) {
 			 * and nothing we can do will make it work
 			 */
 			mark_offline();
-			debug(LOG_DEBUG, "Level %d: Failed to resolve auth server and all popular servers. The internet connection is probably down", level);
+			debug(LOG_DEBUG, "Level %d: Failed to resolve auth server and all popular servers. "
+					"The internet connection is probably down", level);
 			return(-1);
 		}
 	}
@@ -321,7 +333,7 @@ int _connect_auth_server(int level) {
 			debug(LOG_DEBUG, "Level %d: Failed to connect to auth server %s:%d (%s). Marking it as bad and trying next if possible", level, hostname, auth_server->authserv_http_port, strerror(errno));
 			close(sockfd);
 			mark_auth_server_bad(auth_server);
-			return _connect_auth_server(level);
+			return _connect_auth_server(level); /* Yay recursion! */
 		}
 		else {
 			/*

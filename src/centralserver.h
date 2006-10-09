@@ -22,7 +22,7 @@
 /** @file centralserver.h
     @brief Functions to talk to the central server (auth/send stats/get rules/etc...)
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
-*/
+ */
 
 #ifndef _CENTRALSERVER_H_
 #define _CENTRALSERVER_H_
@@ -40,7 +40,7 @@ t_authcode auth_server_request(t_authresponse *authresponse, char *request_type,
 /** @brief Tries really hard to connect to an auth server.  Returns a connected file descriptor or -1 on error */
 int connect_auth_server();
 
-/** @brief Helper function called by connect_auth_server() to do the actual work including recursion - do not call directly */
+/** @brief Helper function called by connect_auth_server() to do the actual work including recursion - DO NOT CALL DIRECTLY */
 int _connect_auth_server(int level);
 
 #endif /* _CENTRALSERVER_H_ */

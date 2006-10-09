@@ -51,7 +51,7 @@
 
 extern pthread_mutex_t	client_list_mutex;
 
-/** The 404 handler is also responsable for redirecting to the auth server */
+/** The 404 handler is also responsible for redirecting to the auth server */
 void
 http_callback_404(httpd *webserver, request *r)
 {
@@ -72,6 +72,11 @@ http_callback_404(httpd *webserver, request *r)
 	}
 
 	memset(tmp_url, 0, sizeof(tmp_url));
+	/* 
+	 * XXX Note the code belows assume that the client's request is a plain
+	 * http request to a standard port. At any rate, this handler is called only
+	 * if the internet/auth server is down so it's not a huge loss, but still.
+	 */
 	snprintf(tmp_url, (sizeof(tmp_url) - 1), "http://%s%s",
 			r->request.host,
 			r->request.path);

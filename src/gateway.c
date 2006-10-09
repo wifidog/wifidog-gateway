@@ -23,7 +23,7 @@
   @file gateway.c
   @brief Main loop
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
-  @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>
+  @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@miniguru.ca>
  */
 
 #include <stdio.h>
@@ -61,9 +61,9 @@
 #include "util.h"
 
 /** XXX Ugly hack 
-* We need to remember the thread IDs of threads that simulate wait with pthread_cond_timedwait
-* so we can explicitly kill them in the termination handler
-*/
+ * We need to remember the thread IDs of threads that simulate wait with pthread_cond_timedwait
+ * so we can explicitly kill them in the termination handler
+ */
 static pthread_t tid_fw_counter = 0;
 static pthread_t tid_ping = 0; 
 
@@ -83,6 +83,9 @@ time_t started_time = 0;
 
 /* Appends -x, the current PID, and NULL to restartargv
  * see parse_commandline in commandline.c for details
+ *
+ * Why is restartargv global? Shouldn't it be at most static to commandline.c
+ * and this function static there? -Alex @ 8oct2006
  */
 void append_x_restartargv(void) {
 	int i;
@@ -283,8 +286,9 @@ termination_handler(int s)
 	fw_destroy();
 
 	/* XXX Hack
-	 * Aparently pthread_cond_timedwait under openwrt prevents signals (and therefore termination handler) from happening
-	 * so we need to explicitly kill the threads that use that
+	 * Aparently pthread_cond_timedwait under openwrt prevents signals (and therefore
+	 * termination handler) from happening so we need to explicitly kill the threads 
+	 * that use that
 	 */
 	if (tid_fw_counter) {
 		debug(LOG_INFO, "Explicitly killing the fw_counter thread");
@@ -300,8 +304,8 @@ termination_handler(int s)
 }
 
 /** @internal 
-    Registers all the signal handlers
-*/
+ * Registers all the signal handlers
+ */
 static void
 init_signals(void)
 {
@@ -385,15 +389,16 @@ main_loop(void)
 		debug(LOG_DEBUG, "%s = %s", config->gw_interface, config->gw_address);
 	}
 
-  /* If we don't have the Gateway ID, construct it from the internal MAC address. Can't fail. */
-  if (!config->gw_id) {
-    debug(LOG_DEBUG, "Finding MAC address of %s", config->gw_interface);
-    if ((config->gw_id = get_iface_mac(config->gw_interface)) == NULL) {
-      debug(LOG_ERR, "Could not get MAC address information of %s, exiting...", config->gw_interface);
-      exit(1);
-    }
-    debug(LOG_DEBUG, "%s = %s", config->gw_interface, config->gw_id);
-  }
+	/* If we don't have the Gateway ID, construct it from the internal MAC address.
+	 * "Can't fail" so exit() if the impossible happens. */
+	if (!config->gw_id) {
+    	debug(LOG_DEBUG, "Finding MAC address of %s", config->gw_interface);
+    	if ((config->gw_id = get_iface_mac(config->gw_interface)) == NULL) {
+			debug(LOG_ERR, "Could not get MAC address information of %s, exiting...", config->gw_interface);
+			exit(1);
+		}
+		debug(LOG_DEBUG, "%s = %s", config->gw_interface, config->gw_id);
+	}
 
 	/* Initializes the web server */
 	debug(LOG_NOTICE, "Creating web server on %s:%d", config->gw_address, config->gw_port);

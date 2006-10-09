@@ -21,7 +21,7 @@
 /* $Id$ */
 /** @file auth.c
     @brief Authentication handling thread
-    @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@acv.ca>
+    @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@miniguru.ca>
 */
 
 #define _GNU_SOURCE
@@ -68,7 +68,7 @@ thread_client_timeout_check(void *arg)
 	
 	while (1) {
 		/* Sleep for config.checkinterval seconds... */
-	  timeout.tv_sec = time(NULL) + config_get_config()->checkinterval;
+		timeout.tv_sec = time(NULL) + config_get_config()->checkinterval;
 		timeout.tv_nsec = 0;
 
 		/* Mutex must be locked for pthread_cond_timedwait... */
@@ -88,7 +88,8 @@ thread_client_timeout_check(void *arg)
 
 /** Authenticates a single client against the central server and returns when done
  * Alters the firewall rules depending on what the auth server says
-@param r httpd request struct */
+@param r httpd request struct
+*/
 void
 authenticate_client(request *r)
 {
@@ -117,12 +118,17 @@ authenticate_client(request *r)
 	token = safe_strdup(client->token);
 	
 	UNLOCK_CLIENT_LIST();
-		
+	
+	/* 
+	 * At this point we've released the lock while we do an HTTP request since it could
+	 * take multiple seconds to do and the gateway would effectively be frozen if we
+	 * kept the lock.
+	 */
 	auth_server_request(&auth_response, REQUEST_TYPE_LOGIN, r->clientAddr, mac, token, 0, 0);
 	
 	LOCK_CLIENT_LIST();
 	
-	/* can't trust the client to still exist */
+	/* can't trust the client to still exist after n seconds have passed */
 	client = client_list_find(r->clientAddr, mac);
 	
 	if (client == NULL) {
@@ -182,7 +188,9 @@ authenticate_client(request *r)
 
     case AUTH_VALIDATION:
 		/* They just got validated for X minutes to check their email */
-		debug(LOG_INFO, "Got VALIDATION from central server authenticating token %s from %s at %s - adding to firewall and redirecting them to activate message", client->token, client->ip, client->mac);
+		debug(LOG_INFO, "Got VALIDATION from central server authenticating token %s from %s at %s"
+				"- adding to firewall and redirecting them to activate message", client->token,
+				client->ip, client->mac);
 		client->fw_connection_state = FW_MARK_PROBATION;
 		fw_allow(client->ip, client->mac, FW_MARK_PROBATION);
 		safe_asprintf(&newlocation, "Location: %s://%s:%d%sgw_message.php?message=activate",
@@ -206,7 +214,8 @@ authenticate_client(request *r)
 
     case AUTH_ALLOWED:
 		/* Logged in successfully as a regular account */
-		debug(LOG_INFO, "Got ALLOWED from central server authenticating token %s from %s at %s - adding to firewall and redirecting them to portal", client->token, client->ip, client->mac);
+		debug(LOG_INFO, "Got ALLOWED from central server authenticating token %s from %s at %s - "
+				"adding to firewall and redirecting them to portal", client->token, client->ip, client->mac);
 		client->fw_connection_state = FW_MARK_KNOWN;
 		fw_allow(client->ip, client->mac, FW_MARK_KNOWN);
         served_this_session++;
@@ -233,7 +242,8 @@ authenticate_client(request *r)
 
     case AUTH_VALIDATION_FAILED:
 		 /* Client had X minutes to validate account by email and didn't = too late */
-		debug(LOG_INFO, "Got VALIDATION_FAILED from central server authenticating token %s from %s at %s - redirecting them to failed_validation message", client->token, client->ip, client->mac);
+		debug(LOG_INFO, "Got VALIDATION_FAILED from central server authenticating token %s from %s at %s "
+				"- redirecting them to failed_validation message", client->token, client->ip, client->mac);
 		safe_asprintf(&newlocation, "Location: %s://%s:%d%sgw_message.php?message=failed_validation",
 			protocol,
 			auth_server->authserv_hostname,

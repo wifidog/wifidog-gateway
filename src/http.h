@@ -29,7 +29,7 @@
 
 #include "httpd.h"
 
-/**@brief Callback for libhttpd */
+/**@brief Callback for libhttpd, main entry point for captive portal */
 void http_callback_404(httpd *webserver, request *r);
 /**@brief Callback for libhttpd */
 void http_callback_wifidog(httpd *webserver, request *r);
@@ -37,7 +37,7 @@ void http_callback_wifidog(httpd *webserver, request *r);
 void http_callback_about(httpd *webserver, request *r);
 /**@brief Callback for libhttpd */
 void http_callback_status(httpd *webserver, request *r);
-/**@brief Callback for libhttpd */
+/**@brief Callback for libhttpd, main entry point post login for auth confirmation */
 void http_callback_auth(httpd *webserver, request *r);
 
 /** @brief Sends HTML header+menu to web browser */
