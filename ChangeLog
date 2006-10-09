@@ -1,4 +1,9 @@
 # $Id$
+2006-10-08 Alexandre Carmel-Veilleux <acv@miniguru.ca>
+	* Changed my email in a few files.
+	* Broken down some printf's on multiple lines.
+	* Added comments.
+
 2006-09-14 Benoit Gr�oire  <bock@step.polymtl.ca>
 	* src/util.c, src/conf.h: Fix autodectection of the External interface if not specified in the config file.  If the interface (typically pppoe) wasn't yet fully up when wifidog starts, wifidog would stop every connection from going trough.  It will now retry every second for up to two minutes, and then exit with a fatal error if it can't successfully detect it.
 
