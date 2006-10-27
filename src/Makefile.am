@@ -6,7 +6,8 @@ bin_PROGRAMS = wifidog \
 	wdctl
  
 AM_CPPFLAGS = \
-	-I${top_srcdir}/libhttpd/
+	-I${top_srcdir}/libhttpd/ \
+	-DSYSCONFDIR='"$(sysconfdir)"' 
 wifidog_LDADD = $(top_builddir)/libhttpd/libhttpd.la
 
 wifidog_SOURCES = commandline.c \
