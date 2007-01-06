@@ -29,7 +29,10 @@
 
 /*@{*/ 
 /** Defines */
+/** How long till we give up detecting the interface with the default route */
 #define NUM_EXT_INTERFACE_DETECT_RETRY 120
+/** How often should we try to detect the interface with the default route
+ *  if it isn't up yet */
 #define EXT_INTERFACE_DETECT_RETRY_INTERVAL 1
 
 /** Defaults configuration values */

@@ -52,7 +52,7 @@ extern pthread_mutex_t	config_mutex;
 /** Initiates a transaction with the auth server, either to authenticate or to
  * update the traffic counters at the server
 @param authresponse Returns the information given by the central server 
-@param request_type Use the REQUEST_TYPE_* #defines in centralserver.h
+@param request_type Use the REQUEST_TYPE_* defines in centralserver.h
 @param ip IP adress of the client this request is related to
 @param mac MAC adress of the client this request is related to
 @param token Authentification token of the client

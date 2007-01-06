@@ -441,7 +441,7 @@ iptables_fw_destroy_mention(
 	return (deleted);
 }
 
-/** Set the firewall access for a specific client */
+/** Set if a specific client has access through the firewall */
 int
 iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag)
 {

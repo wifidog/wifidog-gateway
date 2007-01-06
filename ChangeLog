@@ -1,4 +1,8 @@
 # $Id$
+2007-01-06 Benoit Grégoire  <bock@step.polymtl.ca>
+	* Documentation update in the code
+	* Released 1.1.3_beta6
+
 2006-10-26 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/conf.h: Fix #238 by using $sysconfdir to compute the default config-file location.
 	

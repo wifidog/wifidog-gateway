@@ -240,7 +240,7 @@ char *get_ext_iface (void) {
         }
         fclose(input);
         debug(LOG_ERR, "get_ext_iface(): Failed to detect the external interface after try %d of %d (maybe the interface is not up yet?)", i, NUM_EXT_INTERFACE_DETECT_RETRY);
-	/* Sleep for config.checkinterval seconds... */
+	/* Sleep for EXT_INTERFACE_DETECT_RETRY_INTERVAL seconds */
 	timeout.tv_sec = time(NULL) + EXT_INTERFACE_DETECT_RETRY_INTERVAL;
 	timeout.tv_nsec = 0;
 	/* Mutex must be locked for pthread_cond_timedwait... */

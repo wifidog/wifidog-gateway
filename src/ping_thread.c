@@ -20,7 +20,9 @@
 
 /* $Id$ */
 /** @file ping_thread.c
-    @brief Periodically checks in with the central auth server to make sure everything is running properly.
+    @brief Periodically checks in with the central auth server so the auth
+    server knows the gateway is still up.  Note that this is NOT how the gateway
+    detects that the central server is still up.
     @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@miniguru.ca>
 */
 

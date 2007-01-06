@@ -25,6 +25,7 @@
   @file firewall.c
   @brief Firewall update functions
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
+  2006 Benoit Grégoire, Technologies Coeus inc. <bock@step.polymtl.ca>
  */
 
 #define _GNU_SOURCE
@@ -238,7 +239,10 @@ fw_sync_with_authserver(void)
 	    incoming = p1->counters.incoming;
 
 	    UNLOCK_CLIENT_LIST();
-        /* Ping the client, if he responds it'll keep activity on the link */
+        /* Ping the client, if he responds it'll keep activity on the link.
+         * However, if the firewall blocks it, it will not help.  The suggested
+         * way to deal witht his is to keep the DHCP lease time extremely 
+         * short:  Shorter than config->checkinterval * config->clienttimeout */
         icmp_ping(ip);
         /* Update the counters on the remote server only if we have an auth server */
         if (config->auth_servers != NULL) {
