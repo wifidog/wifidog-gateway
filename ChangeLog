@@ -8,6 +8,7 @@
 	* ipk/ Removed the obsolete OpenWRT RC4 scripts
 	* README.openwrt:  Update
 	* scripts/openwrt/ remove obsolete dir.
+	* contrib/dump_fw.sh:  Convenience script for firewall debugging.
 		
 2007-01-06 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Documentation update in the code
