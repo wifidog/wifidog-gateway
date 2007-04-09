@@ -1,4 +1,7 @@
 # $Id$
+2007-07-09 Benoit Grégoire  <bock@step.polymtl.ca>
+	* Makefile.am:  Slight path fix when using building make ipk.  Tell me if you have trouble with this
+
 2007-01-06 Benoit Grégoire  <bock@step.polymtl.ca>
 	* contrib/ Add contrib dir to collect the scripts and other code distributed with, but not really part of wifidog.
 	* Include the scripts used to build a ipkg on Openwrt RC6 and 0.9
