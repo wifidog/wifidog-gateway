@@ -1,5 +1,8 @@
 # $Id$
-2007-07-09 Benoit Grégoire  <bock@step.polymtl.ca>
+2007-04-26 Benoit Grégoire  <bock@step.polymtl.ca>
+	* conf.h:  The DEFAULT_CHECKINTERVAL was 5 instead of 60 (as stated in the config file) which caused huge needless load on the auth servers, and needless ping traffic towards the clients if it wasn't manually set.
+
+2007-04-09 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Makefile.am:  Slight path fix when using building make ipk.  Tell me if you have trouble with this
 
 2007-01-06 Benoit Grégoire  <bock@step.polymtl.ca>
