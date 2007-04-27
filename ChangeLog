@@ -1,5 +1,8 @@
 # $Id$
 2007-04-26 Benoit Grégoire  <bock@step.polymtl.ca>
+	* wifidog.conf:  Improve comments and add examples of blocking access to the upstream LAN.
+
+2007-04-26 Benoit Grégoire  <bock@step.polymtl.ca>
 	* conf.h:  The DEFAULT_CHECKINTERVAL was 5 instead of 60 (as stated in the config file) which caused huge needless load on the auth servers, and needless ping traffic towards the clients if it wasn't manually set.
 
 2007-04-09 Benoit Grégoire  <bock@step.polymtl.ca>
