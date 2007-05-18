@@ -294,6 +294,7 @@ wdctl_restart(int afd)
 
 		/* Wait for the child to connect to our socket :*/
 		debug(LOG_DEBUG, "Waiting for child to connect on internal socket");
+		len = sizeof(sa_un);
 		if ((fd = accept(sock, (struct sockaddr *)&sa_un, &len)) == -1){
 			debug(LOG_ERR, "Accept failed on internal socket: %s", strerror(errno));
 			close(sock);

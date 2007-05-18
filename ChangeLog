@@ -1,4 +1,7 @@
 # $Id$
+2007-05-18 Benoit Grégoire  <bock@step.polymtl.ca>
+	* wdctl_thread.c:  Fix #324
+	
 2007-04-26 Benoit Grégoire  <bock@step.polymtl.ca>
 	* wifidog.conf:  Improve comments and add examples of blocking access to the upstream LAN.
 
