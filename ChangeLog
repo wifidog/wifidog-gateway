@@ -1,4 +1,8 @@
 # $Id$
+2007-05-24 Benoit Grégoire  <bock@step.polymtl.ca>
+	* wdctl_thread.c:  Fix #324, again.  Credit goes to Medea, I misunderstood his instructons.
+	* From David Bird <david@coova.com> libhttpd/: Fix #266 - don't process query string parameters and keep them in that request.path.
+
 2007-05-18 Benoit Grégoire  <bock@step.polymtl.ca>
 	* wdctl_thread.c:  Fix #324
 	

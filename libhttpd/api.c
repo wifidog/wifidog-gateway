@@ -571,10 +571,15 @@ int httpdReadRequest(httpd *server, request *r)
 		}
 	}
 
+
+#if 0
+	/* XXX: For WifiDog, we do not need to process any of the 
+	   post or query string parameters. So, lets keep the GET variables
+	   in the request.path too!
+	*/
 	/*
 	** Process and POST data
 	*/
-#if 0
 	if (r->request.contentLength > 0)
 	{
 		bzero(buf, HTTP_MAX_LEN);
@@ -582,7 +587,6 @@ int httpdReadRequest(httpd *server, request *r)
 		_httpd_storeData(r, buf);
 		
 	}
-#endif
 	
 	/*
 	** Process any URL data
@@ -594,6 +598,8 @@ int httpdReadRequest(httpd *server, request *r)
 		cp++;
 		_httpd_storeData(r, cp);
 	}
+#endif
+
 	return(0);
 }
 

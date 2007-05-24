@@ -122,7 +122,8 @@ thread_wdctl(void *arg)
 	}
 
 	while (1) {
-		memset(&sa_un, 0, sizeof(sa_un));
+		len = sizeof(sa_un); 
+		memset(&sa_un, 0, len);
 		if ((fd = accept(sock, (struct sockaddr *)&sa_un, &len)) == -1){
 			debug(LOG_ERR, "Accept failed on control socket: %s",
 					strerror(errno));
