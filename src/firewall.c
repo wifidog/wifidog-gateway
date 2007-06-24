@@ -72,7 +72,7 @@ extern pthread_mutex_t client_list_mutex;
 /* from commandline.c */
 extern pid_t restart_orig_pid;
 
-int icmp_fd = 0;
+
 
 /**
  * Allow a client access through the firewall by adding a rule in the firewall to MARK the user's packets with the proper
@@ -295,9 +295,17 @@ fw_sync_with_authserver(void)
                         case AUTH_ALLOWED:
                             if (p1->fw_connection_state != FW_MARK_KNOWN) {
                                 debug(LOG_INFO, "%s - Access has changed to allowed, refreshing firewall and clearing counters", p1->ip);
-                                fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
+                                //WHY did we deny, then allow!?!? benoitg 2007-06-21
+                                //fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
+
+                                if (p1->fw_connection_state != FW_MARK_PROBATION) {
+     p1->counters.incoming = p1->counters.outgoing = 0;
+                                }
+                                else {
+                                	//We don't want to clear counters if the user was in validation, it probably already transmitted data..
+                                    debug(LOG_INFO, "%s - Skipped clearing counters after all, the user was previously in validation", p1->ip);
+                                }
                                 p1->fw_connection_state = FW_MARK_KNOWN;
-                                p1->counters.incoming = p1->counters.outgoing = 0;
                                 fw_allow(p1->ip, p1->mac, p1->fw_connection_state);
                             }
                             break;
@@ -316,7 +324,7 @@ fw_sync_with_authserver(void)
                                     break;
 
                         default:
-                            debug(LOG_DEBUG, "I do not know about authentication code %d", authresponse.authcode);
+                            debug(LOG_ERR, "I do not know about authentication code %d", authresponse.authcode);
                             break;
                     }
                 }

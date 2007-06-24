@@ -607,7 +607,6 @@ config_read(char *filename)
 
 		if (p1 && p1[0] != '\0') {
 			/* Strip trailing spaces */
-			/* Strip tailing spaces */
 
 			if ((strncmp(s, "#", 1)) != 0) {
 				debug(LOG_DEBUG, "Parsing token: %s, "

@@ -70,13 +70,12 @@ static void wdctl_restart(int);
 void
 thread_wdctl(void *arg)
 {
-	int	sock,
-		fd;
+	int	fd;
 	char	*sock_name;
 	struct 	sockaddr_un	sa_un;
 	int result;
 	pthread_t	tid;
-    socklen_t len;
+	socklen_t len;
 
 	debug(LOG_DEBUG, "Starting wdctl.");
 
@@ -92,9 +91,9 @@ thread_wdctl(void *arg)
 	
 
 	debug(LOG_DEBUG, "Creating socket");
-	sock = socket(PF_UNIX, SOCK_STREAM, 0);
+	wdctl_socket_server = socket(PF_UNIX, SOCK_STREAM, 0);
 
-	debug(LOG_DEBUG, "Got server socket %d", sock);
+	debug(LOG_DEBUG, "Got server socket %d", wdctl_socket_server);
 
 	/* If it exists, delete... Not the cleanest way to deal. */
 	unlink(sock_name);
@@ -108,14 +107,14 @@ thread_wdctl(void *arg)
 			strlen(sock_name));
 	
 	/* Which to use, AF_UNIX, PF_UNIX, AF_LOCAL, PF_LOCAL? */
-	if (bind(sock, (struct sockaddr *)&sa_un, strlen(sock_name) 
+	if (bind(wdctl_socket_server, (struct sockaddr *)&sa_un, strlen(sock_name) 
 				+ sizeof(sa_un.sun_family))) {
 		debug(LOG_ERR, "Could not bind control socket: %s",
 				strerror(errno));
 		pthread_exit(NULL);
 	}
 
-	if (listen(sock, 5)) {
+	if (listen(wdctl_socket_server, 5)) {
 		debug(LOG_ERR, "Could not listen on control socket: %s",
 				strerror(errno));
 		pthread_exit(NULL);
@@ -124,7 +123,7 @@ thread_wdctl(void *arg)
 	while (1) {
 		len = sizeof(sa_un); 
 		memset(&sa_un, 0, len);
-		if ((fd = accept(sock, (struct sockaddr *)&sa_un, &len)) == -1){
+		if ((fd = accept(wdctl_socket_server, (struct sockaddr *)&sa_un, &len)) == -1){
 			debug(LOG_ERR, "Accept failed on control socket: %s",
 					strerror(errno));
 		} else {
@@ -342,6 +341,8 @@ wdctl_restart(int afd)
 	}
 	else {
 		/* Child */
+		close(wdctl_socket_server);
+		close(icmp_fd);
 		close(sock);
 		shutdown(afd, 2);
 		close(afd);

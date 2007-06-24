@@ -1,4 +1,12 @@
 # $Id$
+2007-06-24 Benoit Grégoire  <bock@step.polymtl.ca>
+	* Close #321:  Make the Gateway retry forever if it cannot find it's interface.  You never know when someone may finally replug the network cable or something...
+	* Close #332:  Apply patch from Laurent Marchal. biguphpc<AT>gmail<DOT>com
+	* fw_iptables.c:  Fix error in iptables_fw_access().  Rules were created as ACCEPT instead of DROP
+	* firewall.c:  Fix bug in fw_sync_with_authserver().  The traffic for the validation period of a user who validated his account while connected wouldn't get counted.
+	* doc/wifidog_firewall_map.dia:  At long last, full documentation of the firewall.  We would have avoided a lot of stupid mistakes if we produced that sooner.
+	* Release 1.1.3_rc1
+
 2007-05-24 Benoit Grégoire  <bock@step.polymtl.ca>
 	* wdctl_thread.c:  Fix #324, again.  Credit goes to Medea, I misunderstood his instructons.
 	* From David Bird <david@coova.com> libhttpd/: Fix #266 - don't process query string parameters and keep them in that request.path.

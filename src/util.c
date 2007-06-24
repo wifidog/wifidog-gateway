@@ -173,6 +173,7 @@ char *get_iface_ip(char *ifname) {
     in.s_addr = ip;
 
     ip_str = (char *)inet_ntoa(in);
+    close(sockd);
     return safe_strdup(ip_str);
 #else
     return safe_strdup("0.0.0.0");
@@ -222,13 +223,14 @@ char *get_ext_iface (void) {
     FILE *input;
     char *device, *gw;
     int i;
+    int keep_detecting = 1;
     pthread_cond_t		cond = PTHREAD_COND_INITIALIZER;
     pthread_mutex_t		cond_mutex = PTHREAD_MUTEX_INITIALIZER;
     struct	timespec	timeout;
     device = (char *)malloc(16);
     gw = (char *)malloc(16);
     debug(LOG_DEBUG, "get_ext_iface(): Autodectecting the external interface from routing table");
-    for (i=1; i<=NUM_EXT_INTERFACE_DETECT_RETRY; i++) {
+    while(keep_detecting) {
         input = fopen("/proc/net/route", "r");
         while (!feof(input)) {
             fscanf(input, "%s %s %*s %*s %*s %*s %*s %*s %*s %*s %*s\n", device, gw);
@@ -249,6 +251,10 @@ char *get_ext_iface (void) {
 	pthread_cond_timedwait(&cond, &cond_mutex, &timeout);
 	/* No longer needs to be locked */
 	pthread_mutex_unlock(&cond_mutex);
+	    //for (i=1; i<=NUM_EXT_INTERFACE_DETECT_RETRY; i++) {
+	    if (NUM_EXT_INTERFACE_DETECT_RETRY != 0 && i>=NUM_EXT_INTERFACE_DETECT_RETRY) {
+	    	keep_detecting = 0;
+	    }
     }
     debug(LOG_ERR, "get_ext_iface(): Failed to detect the external interface after %d tries, aborting", NUM_EXT_INTERFACE_DETECT_RETRY);
     exit(1);

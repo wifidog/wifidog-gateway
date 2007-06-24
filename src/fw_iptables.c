@@ -59,7 +59,8 @@ extern pthread_mutex_t	config_mutex;
 Used to supress the error output of the firewall during destruction */ 
 static int fw_quiet = 0;
 
-/** @internal */
+/** @internal 
+ * */
 static int
 iptables_do_command(char *format, ...)
 {
@@ -218,7 +219,7 @@ iptables_fw_init(void)
 
 			/* Assign links and rules to these new chains */
 			iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_OUTGOING, gw_interface);
-			iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_TRUSTED, gw_interface);
+			iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_TRUSTED, gw_interface);//this rule will be inserted before the prior one
 			iptables_do_command("-t mangle -I POSTROUTING 1 -o %s -j " TABLE_WIFIDOG_INCOMING, gw_interface);
 
             for (p = config->trustedmaclist; p != NULL; p = p->next)
@@ -274,22 +275,18 @@ iptables_fw_init(void)
             /* Insert at the beginning */
 			iptables_do_command("-t filter -I FORWARD -i %s -j " TABLE_WIFIDOG_WIFI_TO_INTERNET, gw_interface);
 
-            /* TCPMSS rule for PPPoE */
+
 			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m state --state INVALID -j DROP");
 
 			/* XXX: Why this? it means that connections setup after authentication
 			   stay open even after the connection is done... 
 			   iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m state --state RELATED,ESTABLISHED -j ACCEPT");*/
 
-
-            if (ext_interface != NULL) {
-			    iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -i %s -m state --state NEW,INVALID -j DROP", ext_interface);
-			    iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -o %s -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu", ext_interface);
-            } else {
-                /* Will this work even if we don't specify an external interface? */
-			    iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m state --state NEW,INVALID -j DROP");
-			    iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu");
-            }
+			//Won't this rule NEVER match anyway?!?!? benoitg, 2007-06-23
+			//iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -i %s -m state --state NEW -j DROP", ext_interface);
+            
+            /* TCPMSS rule for PPPoE */
+   			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -o %s -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu", ext_interface);
 
 			iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_AUTHSERVERS);
 			iptables_fw_set_authservers();
@@ -461,7 +458,7 @@ iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag)
             break;
         case FW_ACCESS_DENY:
             iptables_do_command("-t mangle -D " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
-            rc = iptables_do_command("-t mangle -D " TABLE_WIFIDOG_INCOMING " -d %s -j ACCEPT", ip);
+            rc = iptables_do_command("-t mangle -D " TABLE_WIFIDOG_INCOMING " -d %s -j DROP", ip);
             break;
         default:
             rc = -1;

@@ -1,4 +1,4 @@
-# $Id: Makefile 3277 2006-02-27 18:58:33Z florian $
+# $Id: $
 ifndef TOPDIR
 	        ERR := $(Please set TOPDIR to OpenWRT SDK's buildroot)
 endif
@@ -6,7 +6,7 @@ endif
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=wifidog
-PKG_VERSION:=1.1.3_beta7-pre1
+PKG_VERSION:=1.1.3_rc1
 PKG_RELEASE:=1
 PKG_MD5SUM:=842b21e1b02d0a90677b289d794e0e21
 PKG_SOURCE_URL:= @SF/$(PKG_NAME)

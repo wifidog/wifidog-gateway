@@ -1,4 +1,19 @@
 # $Id$
+WiFiDog 1.1.3rc1:
+	* Close #321:  Make the Gateway retry forever if it cannot find it's interface.  You never know when someone may finally replug the network cable or something...
+	* Close #332:  Apply patch from Laurent Marchal. biguphpc<AT>gmail<DOT>com
+	* fw_iptables.c:  Fix error in iptables_fw_access().  Rules were created as ACCEPT instead of DROP
+	* firewall.c:  Fix bug in fw_sync_with_authserver().  The traffic for the validation period of a user who validated his account while connected wouldn't get counted.
+	* doc/wifidog_firewall_map.dia:  At long last, full documentation of the firewall.  We would have avoided a lot of stupid mistakes if we produced that sooner.
+	* Release 1.1.3_rc1
+	* Fix #324
+	* wifidog.conf:  Improve comments and add examples of blocking access to the upstream LAN.
+	* conf.h:  The DEFAULT_CHECKINTERVAL was 5 instead of 60 (as stated in the config file) which caused huge needless load on the auth servers, and needless ping traffic towards the clients if it wasn't manually set.
+	* contrib/ Add contrib dir to collect the scripts and other code distributed with, but not really part of wifidog.
+	* Modify the build system to finally be able to build wifidog directly from the wifidog directory using the same files 
+		used to make the official .ipk, without having to copy ANYTHNG to the openwrt SDK.
+		There is now a new target:  make ipk make ipk OPENWRTSDK=path_to_openwrt_sdk
+			
 WiFiDog 1.1.3beta6:
 	-Fix bug #238 (config file location was hardcoded)
 	-Fix problem with autodectection of the External interface if the interface isn't fully up yet.  wifidog wil now retry for up to two minutes.

@@ -29,8 +29,8 @@ doc:
 ipk: dist
 	make -C $(OPENWRTSDK) distclean
 	mkdir -p  $(OPENWRTSDK)/dl
-	cp -f  ${builddir}wifidog-@VERSION@.tar.gz $(OPENWRTSDK)/dl/
-	make -C ${builddir}contrib/build-openwrt-ipk/wifidog TOPDIR=$(OPENWRTSDK) PKG_MD5SUM= V=99
+	cp -f  ${builddir}/wifidog-@VERSION@.tar.gz $(OPENWRTSDK)/dl/
+	make -C ${builddir}/contrib/build-openwrt-ipk/wifidog TOPDIR=$(OPENWRTSDK) PKG_MD5SUM= V=99
 	@echo DONE.  If there were no errors, your package should be in: $(OPENWRTSDK)/bin/packages/
 .PHONY: rpm
 rpm: dist
