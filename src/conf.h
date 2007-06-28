@@ -30,8 +30,8 @@
 /*@{*/ 
 /** Defines */
 /** How many times should we try detecting the interface with the default route
- * (in seconds) */
-#define NUM_EXT_INTERFACE_DETECT_RETRY 120
+ * (in seconds).  If set to 0, it will keep retrying forever */
+#define NUM_EXT_INTERFACE_DETECT_RETRY 0
 /** How often should we try to detect the interface with the default route
  *  if it isn't up yet (interval in seconds) */
 #define EXT_INTERFACE_DETECT_RETRY_INTERVAL 1
@@ -60,6 +60,11 @@
 #define DEFAULT_AUTHSERVSSLAVAILABLE 0
 /** Note:  The path must be prefixed by /, and must be suffixed /.  Put / for the server root.*/
 #define DEFAULT_AUTHSERVPATH "/wifidog/"
+#define DEFAULT_AUTHSERVLOGINPATHFRAGMENT "login/?"
+#define DEFAULT_AUTHSERVPORTALPATHFRAGMENT "portal/?"
+#define DEFAULT_AUTHSERVMSGPATHFRAGMENT "gw_message.php?"
+#define DEFAULT_AUTHSERVPINGPATHFRAGMENT "ping/?"
+#define DEFAULT_AUTHSERVAUTHPATHFRAGMENT "auth/?"
 /*@}*/ 
 
 /**
@@ -68,6 +73,11 @@
 typedef struct _auth_serv_t {
     char *authserv_hostname;	/**< @brief Hostname of the central server */
     char *authserv_path;	/**< @brief Path where wifidog resides */
+    char *authserv_login_script_path_fragment;	/**< @brief This is the script the user will be sent to for login. */
+    char *authserv_portal_script_path_fragment;	/**< @brief This is the script the user will be sent to after a successfull login. */
+    char *authserv_msg_script_path_fragment;	/**< @brief This is the script the user will be sent to upon error to read a readable message. */
+    char *authserv_ping_script_path_fragment;	/**< @brief This is the ping heartbeating script. */
+    char *authserv_auth_script_path_fragment;	/**< @brief This is the script that talks the wifidog gateway protocol. */
     int authserv_http_port;	/**< @brief Http port the central server
 				     listens on */
     int authserv_ssl_port;	/**< @brief Https port the central server

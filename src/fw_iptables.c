@@ -502,13 +502,13 @@ iptables_fw_counters_update(void)
 				  debug(LOG_WARNING, "I was supposed to read an IP address but instead got [%s] - ignoring it", ip);
 				  continue;
 			  }
-            debug(LOG_DEBUG, "Outgoing %s Bytes=%llu", ip, counter);
+            debug(LOG_DEBUG, "Read outgoing traffic for %s: Bytes=%llu", ip, counter);
 	    LOCK_CLIENT_LIST();
             if ((p1 = client_list_find_by_ip(ip))) {
                 if ((p1->counters.outgoing - p1->counters.outgoing_history) < counter) {
                     p1->counters.outgoing = p1->counters.outgoing_history + counter;
                     p1->counters.last_updated = time(NULL);
-                    debug(LOG_DEBUG, "%s - Updated counter.outgoing to %llu bytes", ip, counter);
+                    debug(LOG_DEBUG, "%s - Updated counter.outgoing to %llu bytes.  Updated last_updated to %d", ip, counter, p1->counters.last_updated);
                 }
             } else {
                 debug(LOG_ERR, "Could not find %s in client list", ip);
@@ -540,7 +540,7 @@ iptables_fw_counters_update(void)
 				  debug(LOG_WARNING, "I was supposed to read an IP address but instead got [%s] - ignoring it", ip);
 				  continue;
 			  }
-            debug(LOG_DEBUG, "Incoming %s Bytes=%llu", ip, counter);
+            debug(LOG_DEBUG, "Read incoming traffic for %s: Bytes=%llu", ip, counter);
 	    LOCK_CLIENT_LIST();
             if ((p1 = client_list_find_by_ip(ip))) {
                 if ((p1->counters.incoming - p1->counters.incoming_history) < counter) {

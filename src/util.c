@@ -222,7 +222,7 @@ char *get_ext_iface (void) {
 #ifdef __linux__
     FILE *input;
     char *device, *gw;
-    int i;
+    int i = 1;
     int keep_detecting = 1;
     pthread_cond_t		cond = PTHREAD_COND_INITIALIZER;
     pthread_mutex_t		cond_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -241,7 +241,7 @@ char *get_ext_iface (void) {
             }
         }
         fclose(input);
-        debug(LOG_ERR, "get_ext_iface(): Failed to detect the external interface after try %d of %d (maybe the interface is not up yet?)", i, NUM_EXT_INTERFACE_DETECT_RETRY);
+        debug(LOG_ERR, "get_ext_iface(): Failed to detect the external interface after try %d (maybe the interface is not up yet?).  Retry limit: %d", i, NUM_EXT_INTERFACE_DETECT_RETRY);
 	/* Sleep for EXT_INTERFACE_DETECT_RETRY_INTERVAL seconds */
 	timeout.tv_sec = time(NULL) + EXT_INTERFACE_DETECT_RETRY_INTERVAL;
 	timeout.tv_nsec = 0;
@@ -252,11 +252,12 @@ char *get_ext_iface (void) {
 	/* No longer needs to be locked */
 	pthread_mutex_unlock(&cond_mutex);
 	    //for (i=1; i<=NUM_EXT_INTERFACE_DETECT_RETRY; i++) {
-	    if (NUM_EXT_INTERFACE_DETECT_RETRY != 0 && i>=NUM_EXT_INTERFACE_DETECT_RETRY) {
+	    if (NUM_EXT_INTERFACE_DETECT_RETRY != 0 && i>NUM_EXT_INTERFACE_DETECT_RETRY) {
 	    	keep_detecting = 0;
 	    }
+	    i++;
     }
-    debug(LOG_ERR, "get_ext_iface(): Failed to detect the external interface after %d tries, aborting", NUM_EXT_INTERFACE_DETECT_RETRY);
+    debug(LOG_ERR, "get_ext_iface(): Failed to detect the external interface after %d tries, aborting", i);
     exit(1);
     free(device);
     free(gw);

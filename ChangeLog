@@ -1,4 +1,12 @@
 # $Id$
+2007-06-27 Benoit Grégoire  <bock@step.polymtl.ca>
+	* util.c:  Fix while loop initialisation bug
+	* conf.h:  Forgot to change the value of NUM_EXT_INTERFACE_DETECT_RETRY to actually make it wait forever.
+	* Remove hardcoded authserver paths.  Can now be defined in the config file (auth server section).
+	* Centralise browser redirect code to simplify code
+	* Add manual logout URL, based in part on work by David Bird
+	* Release 1.1.3 final
+	
 2007-06-24 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Close #321:  Make the Gateway retry forever if it cannot find it's interface.  You never know when someone may finally replug the network cable or something...
 	* Close #332:  Apply patch from Laurent Marchal. biguphpc<AT>gmail<DOT>com

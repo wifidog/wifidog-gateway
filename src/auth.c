@@ -98,11 +98,9 @@ authenticate_client(request *r)
 	char	*ip,
 		*mac,
 		*token;
-	char *newlocation = NULL;
-	char *protocol = NULL;
+	char *urlFragment = NULL;
 	s_config	*config = NULL;
 	t_auth_serv	*auth_server = NULL;
-	int port = 80;
 
 	LOCK_CLIENT_LIST();
 
@@ -146,14 +144,6 @@ authenticate_client(request *r)
 	config = config_get_config();
 	auth_server = get_auth_server();
 
-	if (auth_server->authserv_use_ssl) {
-		protocol = "https";
-		port = auth_server->authserv_ssl_port;
-	} else {
-		protocol = "http";
-		port = auth_server->authserv_http_port;
-	}
-
 	switch(auth_response.authcode) {
 
 	case AUTH_ERROR:
@@ -167,23 +157,12 @@ authenticate_client(request *r)
 	case AUTH_DENIED:
 		/* Central server said invalid token */
 		debug(LOG_INFO, "Got DENIED from central server authenticating token %s from %s at %s - redirecting them to denied message", client->token, client->ip, client->mac);
-		safe_asprintf(&newlocation, "Location: %s://%s:%d%sgw_message.php?message=denied",
-			protocol,
-			auth_server->authserv_hostname,
-			port,
-			auth_server->authserv_path
+		safe_asprintf(&urlFragment, "%smessage=%s",
+			auth_server->authserv_msg_script_path_fragment,
+			GATEWAY_MESSAGE_DENIED
 		);
-		httpdSetResponse(r, "307 Redirect to denied message\n");
-		httpdAddHeader(r, newlocation);
-		free(newlocation);
-		http_wifidog_header(r, "Redirection to message");
-		httpdPrintf(r, "Please <a href='%s://%s:%d%sgw_message.php?message=denied'>click here</a>.",
-			protocol,
-			auth_server->authserv_hostname,
-			port,
-			auth_server->authserv_path
-		);
-		http_wifidog_footer(r);
+		http_send_redirect_to_auth(r, urlFragment, "Redirect to denied message");
+		free(urlFragment);
 		break;
 
     case AUTH_VALIDATION:
@@ -193,23 +172,12 @@ authenticate_client(request *r)
 				client->ip, client->mac);
 		client->fw_connection_state = FW_MARK_PROBATION;
 		fw_allow(client->ip, client->mac, FW_MARK_PROBATION);
-		safe_asprintf(&newlocation, "Location: %s://%s:%d%sgw_message.php?message=activate",
-			protocol,
-			auth_server->authserv_hostname,
-			port,
-			auth_server->authserv_path
+		safe_asprintf(&urlFragment, "%smessage=%s",
+			auth_server->authserv_msg_script_path_fragment,
+			GATEWAY_MESSAGE_ACTIVATE_ACCOUNT
 		);
-		httpdSetResponse(r, "307 Redirect to activate message\n");
-		httpdAddHeader(r, newlocation);
-		free(newlocation);
-		http_wifidog_header(r, "Redirection to message");
-		httpdPrintf(r, "Please <a href='%s://%s:%d%sgw_message.php?message=activate'>click here</a>.",
-			protocol,
-			auth_server->authserv_hostname,
-			port,
-			auth_server->authserv_path
-		);
-		http_wifidog_footer(r);
+		http_send_redirect_to_auth(r, urlFragment, "Redirect to activate message");
+		free(urlFragment);
 	    break;
 
     case AUTH_ALLOWED:
@@ -219,48 +187,24 @@ authenticate_client(request *r)
 		client->fw_connection_state = FW_MARK_KNOWN;
 		fw_allow(client->ip, client->mac, FW_MARK_KNOWN);
         served_this_session++;
-		safe_asprintf(&newlocation, "Location: %s://%s:%d%sportal/?gw_id=%s",
-			protocol,
-			auth_server->authserv_hostname,
-			port,
-			auth_server->authserv_path,
+		safe_asprintf(&urlFragment, "%sgw_id=%s",
+			auth_server->authserv_portal_script_path_fragment,
 			config->gw_id
 		);
-		httpdSetResponse(r, "307 Redirect to portal\n");
-		httpdAddHeader(r, newlocation);
-		free(newlocation);
-		http_wifidog_header(r, "Redirection to portal");
-		httpdPrintf(r, "Please <a href='%s://%s:%d%sportal/?gw_id=%s'>click here</a> for the portal.",
-			protocol,
-			auth_server->authserv_hostname,
-			port,
-			auth_server->authserv_path,
-			config->gw_id
-		);
-		http_wifidog_footer(r);
+		http_send_redirect_to_auth(r, urlFragment, "Redirect to portal");
+		free(urlFragment);
 	    break;
 
     case AUTH_VALIDATION_FAILED:
 		 /* Client had X minutes to validate account by email and didn't = too late */
 		debug(LOG_INFO, "Got VALIDATION_FAILED from central server authenticating token %s from %s at %s "
 				"- redirecting them to failed_validation message", client->token, client->ip, client->mac);
-		safe_asprintf(&newlocation, "Location: %s://%s:%d%sgw_message.php?message=failed_validation",
-			protocol,
-			auth_server->authserv_hostname,
-			port,
-			auth_server->authserv_path
+		safe_asprintf(&urlFragment, "%smessage=%s",
+			auth_server->authserv_msg_script_path_fragment,
+			GATEWAY_MESSAGE_ACCOUNT_VALIDATION_FAILED
 		);
-		httpdSetResponse(r, "307 Redirect to failed validation message\n");
-		httpdAddHeader(r, newlocation);
-		free(newlocation);
-		http_wifidog_header(r, "Redirection to message");
-		httpdPrintf(r, "Please <a href='%s://%s:%d%sgw_message.php?message=failed_validation'>click here</a>.",
-			protocol,
-			auth_server->authserv_hostname,
-			port,
-			auth_server->authserv_path
-		);
-		http_wifidog_footer(r);
+		http_send_redirect_to_auth(r, urlFragment, "Redirect to failed validation message");
+		free(urlFragment);
 	    break;
 
     default:

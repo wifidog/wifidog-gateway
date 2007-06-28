@@ -69,7 +69,9 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	int done, nfds;
 	fd_set			readfds;
 	struct timeval		timeout;
-
+	t_auth_serv	*auth_server = NULL;
+	auth_server = get_auth_server();
+	
 	/* Blanket default is error. */
 	authresponse->authcode = AUTH_ERROR;
 	
@@ -85,13 +87,20 @@ auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, 
 	 */
 	memset(buf, 0, sizeof(buf));
 	snprintf(buf, (sizeof(buf) - 1),
-		"GET %sauth/?stage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu HTTP/1.0\r\n"
+		"GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu HTTP/1.0\r\n"
 		"User-Agent: WiFiDog %s\r\n"
 		"Host: %s\r\n"
 		"\r\n",
-		config_get_config()->auth_servers->authserv_path, request_type, ip, mac, token, incoming, outgoing,
-		VERSION, 
-		config_get_config()->auth_servers->authserv_hostname
+		auth_server->authserv_path,
+		auth_server->authserv_auth_script_path_fragment,
+		request_type,
+		ip,
+		mac,
+		token,
+		incoming,
+		outgoing,
+		VERSION,
+		auth_server->authserv_hostname
 	);
 
 	debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", buf);

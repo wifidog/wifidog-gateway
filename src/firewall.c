@@ -253,11 +253,14 @@ fw_sync_with_authserver(void)
         if (!(p1 = client_list_find(ip, mac))) {
             debug(LOG_ERR, "Node %s was freed while being re-validated!", ip);
         } else {
+        	time_t	current_time=time(NULL);
+        	debug(LOG_INFO, "Checking client %s for timeout:  Last updated %ld (%ld seconds ago), timeout delay %ld seconds, current time %ld, ",
+                        p1->ip, p1->counters.last_updated, current_time-p1->counters.last_updated, config->checkinterval * config->clienttimeout, current_time);
             if (p1->counters.last_updated +
 				(config->checkinterval * config->clienttimeout)
-				<= time(NULL)) {
+				<= current_time) {
                 /* Timing out user */
-                debug(LOG_INFO, "%s - Inactive for %ld seconds, removing client and denying in firewall",
+                debug(LOG_INFO, "%s - Inactive for more than %ld seconds, removing client and denying in firewall",
                         p1->ip, config->checkinterval * config->clienttimeout);
                 fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
                 client_list_delete(p1);
