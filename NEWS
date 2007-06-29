@@ -1,4 +1,9 @@
 # $Id$
+WiFiDog 1.1.3:
+	* Fix incomplete change to make te gateway retry external interface forever.
+	* Remove hardcoded authserver paths.  Can now be defined in the config file (auth server section).
+	* Add manual logout URL, based in part on work by David Bird
+
 WiFiDog 1.1.3rc1:
 	* Close #321:  Make the Gateway retry forever if it cannot find it's interface.  You never know when someone may finally replug the network cable or something...
 	* Close #332:  Apply patch from Laurent Marchal. biguphpc<AT>gmail<DOT>com
