@@ -1,4 +1,7 @@
 # $Id$
+2007-07-06 Benoit Grégoire  <bock@step.polymtl.ca>
+	* Makefile.am:  Slight change in make ipk tagrget.  It seems that sometimes builddir isn't defined.  srcdir works just as well in this case.
+	
 2007-06-27 Benoit Grégoire  <bock@step.polymtl.ca>
 	* util.c:  Fix while loop initialisation bug
 	* conf.h:  Forgot to change the value of NUM_EXT_INTERFACE_DETECT_RETRY to actually make it wait forever.
