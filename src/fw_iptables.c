@@ -458,7 +458,7 @@ iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag)
             break;
         case FW_ACCESS_DENY:
             iptables_do_command("-t mangle -D " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
-            rc = iptables_do_command("-t mangle -D " TABLE_WIFIDOG_INCOMING " -d %s -j DROP", ip);
+            rc = iptables_do_command("-t mangle -D " TABLE_WIFIDOG_INCOMING " -d %s -j ACCEPT", ip);
             break;
         default:
             rc = -1;
