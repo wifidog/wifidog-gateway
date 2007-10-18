@@ -1,4 +1,7 @@
 # $Id$
+WiFiDog 1.1.4:
+	* Fix incorrect firewal rule deletion introduced in 1.1.3rc1.  Caused the incoming byte count reported to be incorrect for users that logged in a second time on a gateway that wasn't restarted in between.
+
 WiFiDog 1.1.3:
 	* Fix incomplete change to make te gateway retry external interface forever.
 	* Remove hardcoded authserver paths.  Can now be defined in the config file (auth server section).
