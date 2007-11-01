@@ -407,10 +407,10 @@ void _httpd_storeData(request *r, char *query)
 void _httpd_formatTimeString(char *ptr, int clock)
 {
 	struct 	tm *timePtr;
+	time_t t;
 
-	if (clock == 0)
-		clock = time(NULL);
-	timePtr = gmtime((time_t*)&clock);
+	t = (clock == 0) ? time(NULL) : clock;
+	timePtr = gmtime(&t);
 	strftime(ptr, HTTP_TIME_STRING_LEN,"%a, %d %b %Y %T GMT",timePtr);
 }
 

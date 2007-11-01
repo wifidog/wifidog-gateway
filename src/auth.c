@@ -95,8 +95,7 @@ authenticate_client(request *r)
 {
 	t_client	*client;
 	t_authresponse	auth_response;
-	char	*ip,
-		*mac,
+	char	*mac,
 		*token;
 	char *urlFragment = NULL;
 	s_config	*config = NULL;
@@ -107,7 +106,7 @@ authenticate_client(request *r)
 	client = client_list_find_by_ip(r->clientAddr);
 
 	if (client == NULL) {
-		debug(LOG_ERR, "Could not find client for %s", ip);
+		debug(LOG_ERR, "Could not find client for %s", r->clientAddr);
 		UNLOCK_CLIENT_LIST();
 		return;
 	}

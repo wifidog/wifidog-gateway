@@ -50,6 +50,8 @@
 #include "firewall.h"
 #include "client_list.h"
 #include "wdctl_thread.h"
+#include "gateway.h"
+#include "safe.h"
 
 /* Defined in clientlist.c */
 extern	pthread_mutex_t	client_list_mutex;
@@ -234,7 +236,6 @@ wdctl_restart(int afd)
 		fd;
 	char	*sock_name;
 	struct 	sockaddr_un	sa_un;
-	int result;
 	s_config * conf = NULL;
 	t_client * client = NULL;
 	char * tempstring = NULL;

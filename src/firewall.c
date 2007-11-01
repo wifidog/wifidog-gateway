@@ -57,6 +57,12 @@
 #include <netpacket/packet.h>
 #endif
 
+#if defined(__NetBSD__)
+#include <netinet/in_systm.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+#endif
+
 #include "httpd.h"
 #include "safe.h"
 #include "debug.h"
@@ -105,6 +111,7 @@ fw_deny(char *ip, char *mac, int fw_connection_state)
     return iptables_fw_access(FW_ACCESS_DENY, ip, mac, fw_connection_state);
 }
 
+/* XXX DCY */
 /**
  * Get an IP's MAC address from the ARP cache.
  * Go through all the entries in /proc/net/arp until we find the requested
@@ -156,7 +163,7 @@ fw_init(void)
              setsockopt(icmp_fd, SOL_SOCKET, SO_RCVBUF, &oneopt, sizeof(oneopt)) ||
              setsockopt(icmp_fd, SOL_SOCKET, SO_DONTROUTE, &zeroopt, sizeof(zeroopt)) == -1) {
         debug(LOG_ERR, "Cannot create ICMP raw socket.");
-        return;
+        return 0;
     }
 
     debug(LOG_INFO, "Initializing Firewall");
@@ -341,60 +348,60 @@ fw_sync_with_authserver(void)
     UNLOCK_CLIENT_LIST();
 }
 
-void icmp_ping(char *host) {
-  struct sockaddr_in saddr;
-#ifdef __linux__
-  struct { 
-    struct ip ip;
-    struct icmp icmp;
-  } packet;
+void
+icmp_ping(char *host)
+{
+	struct sockaddr_in saddr;
+#if defined(__linux__) || defined(__NetBSD__)
+	struct { 
+		struct ip ip;
+		struct icmp icmp;
+	} packet;
 #endif
-  unsigned int i, j;
-  int opt = 2000;
-  unsigned short id = rand16();
+	unsigned int i, j;
+	int opt = 2000;
+	unsigned short id = rand16();
 
-  saddr.sin_family = AF_INET;
-  saddr.sin_port = 0;
-  inet_aton(host, &saddr.sin_addr);
-#ifdef HAVE_SOCKADDR_SA_LEN
-  saddr.sin_len = sizeof(struct sockaddr_in);
-#endif
-
-  memset(&(saddr.sin_zero), '\0', sizeof(saddr.sin_zero));
-
-#ifdef __linux__
-  memset(&packet.icmp, 0, sizeof(packet.icmp));
-  packet.icmp.icmp_type = ICMP_ECHO;
-  packet.icmp.icmp_id = id;
-  for (j = 0, i = 0; i < sizeof(struct icmp) / 2; i++)
-    j += ((unsigned short *)&packet.icmp)[i];
-  while (j>>16)
-    j = (j & 0xffff) + (j >> 16);  
-  packet.icmp.icmp_cksum = (j == 0xffff) ? j : ~j;
-
-  if (setsockopt(icmp_fd, SOL_SOCKET, SO_RCVBUF, &opt, sizeof(opt)) == -1) {
-      debug(LOG_ERR, "setsockopt(): %s", strerror(errno));
-  }
-  if (sendto(icmp_fd, (char *)&packet.icmp, sizeof(struct icmp), 0, (struct sockaddr *)&saddr, sizeof(saddr)) == -1) {
-      debug(LOG_ERR, "sendto(): %s", strerror(errno));
-  }
-  opt = 1;
-  if (setsockopt(icmp_fd, SOL_SOCKET, SO_RCVBUF, &opt, sizeof(opt)) == -1) {
-      debug(LOG_ERR, "setsockopt(): %s", strerror(errno));
-  }
+	memset(&saddr, 0, sizeof(saddr));
+	saddr.sin_family = AF_INET;
+	inet_aton(host, &saddr.sin_addr);
+#if defined(HAVE_SOCKADDR_SA_LEN) || defined(__NetBSD__)
+	saddr.sin_len = sizeof(struct sockaddr_in);
 #endif
 
-  return;
+#if defined(__linux__) || defined(__NetBSD__)
+	memset(&packet.icmp, 0, sizeof(packet.icmp));
+	packet.icmp.icmp_type = ICMP_ECHO;
+	packet.icmp.icmp_id = id;
+
+	for (j = 0, i = 0; i < sizeof(struct icmp) / 2; i++)
+		j += ((unsigned short *)&packet.icmp)[i];
+
+	while (j >> 16)
+		j = (j & 0xffff) + (j >> 16);  
+
+	packet.icmp.icmp_cksum = (j == 0xffff) ? j : ~j;
+
+	if (setsockopt(icmp_fd, SOL_SOCKET, SO_RCVBUF, &opt, sizeof(opt)) == -1)
+		debug(LOG_ERR, "setsockopt(): %s", strerror(errno));
+
+	if (sendto(icmp_fd, (char *)&packet.icmp, sizeof(struct icmp), 0,
+	           (const struct sockaddr *)&saddr, sizeof(saddr)) == -1)
+		debug(LOG_ERR, "sendto(): %s", strerror(errno));
+
+	opt = 1;
+	if (setsockopt(icmp_fd, SOL_SOCKET, SO_RCVBUF, &opt, sizeof(opt)) == -1)
+		debug(LOG_ERR, "setsockopt(): %s", strerror(errno));
+#endif
+
+	return;
 }
 
 unsigned short rand16(void) {
   static int been_seeded = 0;
 
   if (!been_seeded) {
-    int fd, n = 0;
-    unsigned int c = 0, seed = 0;
-    char sbuf[sizeof(seed)];
-    char *s;
+    unsigned int seed = 0;
     struct timeval now;
 
     /* not a very good seed but what the heck, it needs to be quickly acquired */

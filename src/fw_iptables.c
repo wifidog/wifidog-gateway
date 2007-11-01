@@ -206,6 +206,11 @@ iptables_fw_init(void)
      }
 	 UNLOCK_CONFIG();
     
+	if (ext_interface == NULL) {
+		debug(LOG_ERR, "FATAL: no external interface");
+		/* XXX leaks safe_strdup()'d strings */
+		return 0;
+	}
 	 /*
 	  *
 	  * Everything in the MANGLE table

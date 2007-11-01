@@ -24,6 +24,7 @@
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
  */
 
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -45,6 +46,7 @@
 #include "conf.h"
 #include "debug.h"
 #include "centralserver.h"
+#include "firewall.h"
 #include "../config.h"
 
 extern pthread_mutex_t	config_mutex;

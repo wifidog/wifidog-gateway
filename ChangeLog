@@ -1,4 +1,7 @@
 # $Id$
+2007-11-01 Benoit Grégoire  <bock@step.polymtl.ca>
+	* Apply portability patches by David Young <dyoung@pobox.com>.  These have been reviewed, but not tested.
+
 2007-10-18 Benoit Grégoire  <bock@step.polymtl.ca>
 	* fw_iptables.c: From Philippe April:  reverted change made in 1241 so we properly remove the entry from mangle.WiFiDog_Incoming when kicking out users, it was affecting statistics 
 	* Update doxygen.cfg.in for latest version and to fix path ambiguity during make dist.

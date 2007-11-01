@@ -27,6 +27,8 @@
 #ifndef _AUTH_H_
 #define _AUTH_H_
 
+#include "httpd.h"
+
 /**
  * @brief Authentication codes returned by auth server.
  *

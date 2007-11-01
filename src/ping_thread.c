@@ -50,6 +50,7 @@
 #include "debug.h"
 #include "ping_thread.h"
 #include "util.h"
+#include "centralserver.h"
 
 static void ping(void);
 

@@ -29,6 +29,7 @@
 #include <syslog.h>
 #include <stdarg.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "conf.h"
 

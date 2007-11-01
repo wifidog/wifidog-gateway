@@ -412,7 +412,7 @@ int httpdReadRequest(httpd *server, request *r)
 			** First line.  Scan the request info
 			*/
 			cp = cp2 = buf;
-			while(isalpha(*cp2))
+			while(isalpha((unsigned char)*cp2))
 				cp2++;
 			*cp2 = 0;
 			if (strcasecmp(cp,"GET") == 0)
@@ -870,7 +870,8 @@ void httpdOutput(request *r, char *msg)
 			tmp = src + 1;
 			cp = varName;
 			count2 = 0;
-			while(*tmp&&(isalnum(*tmp)||*tmp == '_')&&count2 < 80)
+			while (*tmp && (isalnum((unsigned char)*tmp) || *tmp == '_') &&
+			       count2 < 80)
 			{
 				*cp++ = *tmp++;
 				count2++;

@@ -27,6 +27,8 @@
 #ifndef _CENTRALSERVER_H_
 #define _CENTRALSERVER_H_
 
+#include "auth.h"
+
 /** @brief Ask the central server to login a client */
 #define REQUEST_TYPE_LOGIN     "login"
 /** @brief Notify the the central server of a client logout */

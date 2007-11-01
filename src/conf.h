@@ -173,11 +173,6 @@ void mark_auth_server_bad(t_auth_serv *);
 /** @brief Fetch a firewall rule set. */
 t_firewall_rule *get_ruleset(char *);
 
-static void config_notnull(void *parm, char *parmname);
-static int parse_boolean_value(char *);
-static void parse_auth_server(FILE *, char *, int *);
-static int _parse_firewall_rule(char *ruleset, char *leftover);
-static void parse_firewall_ruleset(char *, FILE *, char *, int *);
 void parse_trusted_mac_list(char *);
 
 #define LOCK_CONFIG() do { \

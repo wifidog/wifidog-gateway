@@ -130,6 +130,12 @@ static const struct {
 	{ NULL,                 oBadOption },
 };
 
+static void config_notnull(void *parm, char *parmname);
+static int parse_boolean_value(char *);
+static void parse_auth_server(FILE *, char *, int *);
+static int _parse_firewall_rule(char *ruleset, char *leftover);
+static void parse_firewall_ruleset(char *, FILE *, char *, int *);
+
 static OpCodes config_parse_token(const char *cp, const char *filename, int linenum);
 
 /** Accessor for the current gateway configuration
@@ -479,7 +485,7 @@ _parse_firewall_rule(char *ruleset, char *leftover)
 
 	/* lower case */
 	for (i = 0; *(leftover + i) != '\0'
-			&& (*(leftover + i) = tolower(*(leftover + i))); i++);
+			&& (*(leftover + i) = tolower((unsigned char)*(leftover + i))); i++);
 	
 	token = leftover;
 	TO_NEXT_WORD(leftover, finished);
@@ -511,7 +517,7 @@ _parse_firewall_rule(char *ruleset, char *leftover)
 		port = leftover;
 		TO_NEXT_WORD(leftover, finished);
 		for (i = 0; *(port + i) != '\0'; i++)
-			if (!isdigit(*(port + i)))
+			if (!isdigit((unsigned char)*(port + i)))
 				all_nums = 0; /*< No longer only digits */
 		if (!all_nums) {
 			debug(LOG_ERR, "Invalid port %s", port);
@@ -535,7 +541,7 @@ _parse_firewall_rule(char *ruleset, char *leftover)
 		TO_NEXT_WORD(leftover, finished);
 		all_nums = 1;
 		for (i = 0; *(mask + i) != '\0'; i++)
-			if (!isdigit(*(mask + i)) && (*(mask + i) != '.')
+			if (!isdigit((unsigned char)*(mask + i)) && (*(mask + i) != '.')
 					&& (*(mask + i) != '/'))
 				all_nums = 0; /*< No longer only digits */
 		if (!all_nums) {
