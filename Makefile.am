@@ -25,13 +25,22 @@ EXTRA_DIST = \
 doc:
 	$(MAKE) -C doc doc
 	
-.PHONY: ipk
-ipk: dist
+.PHONY: whiterussianipk
+whiterussianipk: dist
 	make -C $(OPENWRTSDK) distclean
 	mkdir -p  $(OPENWRTSDK)/dl
 	cp -f ${srcdir}/wifidog-@VERSION@.tar.gz $(OPENWRTSDK)/dl/
-	make -C ${srcdir}/contrib/build-openwrt-ipk/wifidog TOPDIR=$(OPENWRTSDK) PKG_MD5SUM= V=99
+	make -C ${srcdir}/contrib/build-openwrt-whiterussianipk/wifidog TOPDIR=$(OPENWRTSDK) PKG_MD5SUM= V=99
 	@echo DONE.  If there were no errors, your package should be in: $(OPENWRTSDK)/bin/packages/
+
+.PHONY: kamikazeipk
+kamikazeipk: dist
+	make -C $(OPENWRTSDK) distclean
+	mkdir -p  $(OPENWRTSDK)/dl
+	cp -f ${srcdir}/wifidog-@VERSION@.tar.gz $(OPENWRTSDK)/dl/
+	make -C ${srcdir}/contrib/build-openwrt-kamikazeipk/wifidog TOPDIR=$(OPENWRTSDK) PKG_MD5SUM= V=99 SDK=1 DEVELOPER=1
+	@echo DONE.  If there were no errors, your package should be in: $(OPENWRTSDK)/bin/packages/
+
 .PHONY: rpm
 rpm: dist
 	cp ${builddir}wifidog.spec /usr/src/RPM/SPECS

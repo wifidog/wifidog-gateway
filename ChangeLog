@@ -1,4 +1,7 @@
 # $Id$
+2008-03-24 Benoit Grégoire  <bock@step.polymtl.ca>
+	* Integrate with OpenWRT kamikaze build system
+
 2007-11-01 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Apply portability patches by David Young <dyoung@pobox.com>.  These have been reviewed, but not tested.
 
