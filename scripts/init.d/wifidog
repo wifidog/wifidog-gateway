@@ -165,6 +165,7 @@ case "$1" in
     echo "   ipt_mark module is working"
     fi
 
+##TODO:  This will not test if required iptables userspace (iptables-mod-nat on Kamikaze) is installed
     echo "  Testing ipt_REDIRECT"
     TEST_IPT_MAC=$(test_ipt_REDIRECT)
     if [ "$TEST_IPT_MAC" = "0" ]; then

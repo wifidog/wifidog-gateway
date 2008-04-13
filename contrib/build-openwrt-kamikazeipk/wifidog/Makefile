@@ -25,7 +25,7 @@ define Package/wifidog
   SUBMENU:=Captive Portals
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+kmod-ipt-extra +kmod-ipt-ipopt +kmod-ipt-nat +libpthread
+  DEPENDS:=+kmod-ipt-extra +iptables-mod-extra +kmod-ipt-ipopt +iptables-mod-ipopt +kmod-ipt-nat +iptables-mod-nat +libpthread
   TITLE:=A wireless captive portal solution
   URL:=http://www.wifidog.org
 endef
@@ -44,7 +44,7 @@ endef
 MAKE_FLAGS += \
 	DESTDIR="$(PKG_INSTALL_DIR)" \
 	all install
-	
+
 define Package/wifidog/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/scripts/init.d/wifidog $(1)/usr/bin/wifidog-init
