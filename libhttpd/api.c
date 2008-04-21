@@ -50,7 +50,7 @@
 
 
 char *httpdUrlEncode(str)
-	char	*str;
+	const char	*str;
 {
         char    *new,
                 *cp;
@@ -88,7 +88,7 @@ char *httpdRequestMethodName(request *r)
 }
 
 
-httpVar *httpdGetVariableByName(request *r, char *name)
+httpVar *httpdGetVariableByName(request *r, const char *name)
 {
 	httpVar	*curVar;
 
@@ -104,7 +104,7 @@ httpVar *httpdGetVariableByName(request *r, char *name)
 
 
 
-httpVar *httpdGetVariableByPrefix(request *r, char *prefix)
+httpVar *httpdGetVariableByPrefix(request *r, const char *prefix)
 {
 	httpVar	*curVar;
 
@@ -121,7 +121,7 @@ httpVar *httpdGetVariableByPrefix(request *r, char *prefix)
 }
 
 
-httpVar *httpdGetVariableByPrefixedName(request *r, char *prefix, char *name)
+httpVar *httpdGetVariableByPrefixedName(request *r, const char *prefix, const char *name)
 {
 	httpVar	*curVar;
 	int	prefixLen;
@@ -145,7 +145,7 @@ httpVar *httpdGetVariableByPrefixedName(request *r, char *prefix, char *name)
 
 httpVar *httpdGetNextVariableByPrefix(curVar, prefix)
 	httpVar	*curVar;
-	char	*prefix;
+	const char	*prefix;
 {
 	if(curVar)
 		curVar = curVar->nextVariable;
@@ -159,7 +159,7 @@ httpVar *httpdGetNextVariableByPrefix(curVar, prefix)
 }
 
 
-int httpdAddVariable(request *r, char *name, char *value)
+int httpdAddVariable(request *r, const char *name, const char *value)
 {
 	httpVar *curVar, *lastVar, *newVar;
 
@@ -640,7 +640,7 @@ void httpdDumpVariables(request *r)
 
 void httpdSetFileBase(server, path)
 	httpd	*server;
-	char	*path;
+	const char	*path;
 {
 	strncpy(server->fileBasePath, path, HTTP_MAX_URL);
 }
@@ -821,25 +821,25 @@ void httpdSendHeaders(request *r)
 	_httpd_sendHeaders(r, 0, 0);
 }
 
-void httpdSetResponse(request *r, char *msg)
+void httpdSetResponse(request *r, const char *msg)
 {
 	strncpy(r->response.response, msg, HTTP_MAX_URL);
 }
 
-void httpdSetContentType(request *r, char *type)
+void httpdSetContentType(request *r, const char *type)
 {
 	strcpy(r->response.contentType, type);
 }
 
 
-void httpdAddHeader(request *r, char *msg)
+void httpdAddHeader(request *r, const char *msg)
 {
 	strcat(r->response.headers,msg);
 	if (msg[strlen(msg) - 1] != '\n')
 		strcat(r->response.headers,"\n");
 }
 
-void httpdSetCookie(request *r, char *name, char *value)
+void httpdSetCookie(request *r, const char *name, const char *value)
 {
 	char	buf[HTTP_MAX_URL];
 
@@ -847,11 +847,11 @@ void httpdSetCookie(request *r, char *name, char *value)
 	httpdAddHeader(r, buf);
 }
 
-void httpdOutput(request *r, char *msg)
+void httpdOutput(request *r, const char *msg)
 {
+	const char *src;
 	char	buf[HTTP_MAX_LEN],
 		varName[80],
-		*src,
 		*dest;
 	int	count;
 
@@ -862,8 +862,8 @@ void httpdOutput(request *r, char *msg)
 	{
 		if (*src == '$')
 		{
-			char	*cp,
-				*tmp;
+			const char *tmp;
+			char	*cp;
 			int	count2;
 			httpVar	*curVar;
 
@@ -907,14 +907,14 @@ void httpdOutput(request *r, char *msg)
 
 
 #ifdef HAVE_STDARG_H
-void httpdPrintf(request *r, char *fmt, ...)
+void httpdPrintf(request *r, const char *fmt, ...)
 {
 #else
 void httpdPrintf(va_alist)
         va_dcl
 {
         request		*r;;
-        char		*fmt;
+        const char	*fmt;
 #endif
         va_list         args;
 	char		buf[HTTP_MAX_LEN];

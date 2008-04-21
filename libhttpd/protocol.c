@@ -688,10 +688,10 @@ static char *hex = "0123456789ABCDEF";
 
 
 char *_httpd_escape(str)
-        char *str;
+        const char *str;
 {
     unsigned char mask = URL_XPALPHAS;
-    char * p;
+    const char * p;
     char * q;
     char * result;
     int unacceptable = 0;

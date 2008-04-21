@@ -49,7 +49,7 @@ extern "C" {
 #define LEVEL_ERROR	"error"
 
 char * _httpd_unescape __ANSI_PROTO((char*));
-char *_httpd_escape __ANSI_PROTO((char*));
+char *_httpd_escape __ANSI_PROTO((const char*));
 char _httpd_from_hex  __ANSI_PROTO((char));
 
 
