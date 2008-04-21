@@ -318,6 +318,45 @@ http_callback_auth(httpd *webserver, request *r)
 	}
 }
 
+void
+http_callback_disconnect(httpd *webserver, request *r)
+{
+	/* XXX How do you change the status code for the response?? */
+	httpVar	*token	= httpdGetVariableByName(r, "token");
+	httpVar	*mac	= httpdGetVariableByName(r, "mac");
+
+	if (token && mac) {
+		t_client *client;
+
+		LOCK_CLIENT_LIST();
+		client = client_list_find_by_mac(mac->value);
+
+		if (!client || strcmp(client->token, token->value)) {
+			UNLOCK_CLIENT_LIST();
+			debug(LOG_INFO, "Disconnect %s with incorrect token %s", mac->value, token->value);
+			httpdOutput(r, "Invalid token for MAC");
+			return -1;
+		}
+
+		/* TODO: get current firewall counters, set counters to auth server,
+		 * send disconnect to auth server.
+		 *
+		 * XXX: this should share code with wdctl_reset
+		 */
+		fw_deny(client->ip, client->mac, client->fw_connection_state);
+		client_list_delete(client);
+
+		UNLOCK_CLIENT_LIST();
+
+	} else {
+		debug(LOG_INFO, "Disconnect called without both token and MAC given");
+		httpdOutput(r, "Both the token and MAC need to be specified");
+		return -1;
+	}
+
+	return 0;
+}
+
 void send_http_page(request *r, const char *title, const char* message)
 {
     s_config	*config = config_get_config();
