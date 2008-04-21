@@ -39,8 +39,10 @@
 /** Defaults configuration values */
 #ifndef SYSCONFDIR
 	#define DEFAULT_CONFIGFILE "/etc/wifidog.conf"
+	#define DEFAULT_HTMLMSGFILE "/etc/wifidog-msg.html"
 #else
 	#define DEFAULT_CONFIGFILE SYSCONFDIR"/wifidog.conf"
+	#define DEFAULT_HTMLMSGFILE SYSCONFDIR"/wifidog-msg.html"
 #endif	
 #define DEFAULT_DAEMON 1
 #define DEFAULT_DEBUGLEVEL LOG_INFO
@@ -120,6 +122,7 @@ typedef struct _trusted_mac_t {
  */
 typedef struct {
     char configfile[255];	/**< @brief name of the config file */
+    char *htmlmsgfile;		/**< @brief name of the HTML file used for messages */
     char *wdctl_sock;		/**< @brief wdctl path to socket */
     char *internal_sock;		/**< @brief internal path to socket */
     int daemon;			/**< @brief if daemon > 0, use daemon mode */

@@ -1,7 +1,8 @@
 # $Id$
 2008-04-21 Alexandre Carmel-Veilleux <acv@miniguru.ca>
 	* Integrated patch #452 from Wichert Akkerman <wichert@wiggy.net>: Add const to function arguments in libhttpd to enforce more type checking and prevent certain class of problems.
-	* Compatiblity fix: Libhttpd assumes that type u_int is defined. Added an #ifndef/#define pair to httpd.h to make sure that assertion is true.
+	* Compatiblity fix: Libhttpd assumes that type u_int is defined. Added an #ifndef/#include <sys/types.h> pair to httpd.h to make sure that assertion is true.
+	* Integrated patch #453 from Wichert Akkerman <wichert@wiggy.net>: Add configurable html to wifidog error messages. This has been a long-requested feature.
 
 2008-04-13 Benoit Grégoire  <bock@step.polymtl.ca>
 	* contrib/build-openwrt-kamikazeipk/wifidog/Makefile:  Add iptables userspace dependencies

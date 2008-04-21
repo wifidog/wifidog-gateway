@@ -43,7 +43,7 @@
 #endif
 
 #ifndef u_int
-#define u_int unsigned int
+#include <sys/types.h>
 #endif
 
 #ifdef __cplusplus

@@ -148,9 +148,7 @@ authenticate_client(request *r)
 	case AUTH_ERROR:
 		/* Error talking to central server */
 		debug(LOG_ERR, "Got %d from central server authenticating token %s from %s at %s", auth_response, client->token, client->ip, client->mac);
-		http_wifidog_header(r, "Error!");
-		httpdOutput(r, "Error: We did not get a valid answer from the central server");
-		http_wifidog_footer(r);
+		send_http_page(r, "Error!", "Error: We did not get a valid answer from the central server");
 		break;
 
 	case AUTH_DENIED:
@@ -208,9 +206,7 @@ authenticate_client(request *r)
 
     default:
 		debug(LOG_WARNING, "I don't know what the validation code %d means for token %s from %s at %s - sending error message", auth_response.authcode, client->token, client->ip, client->mac);
-		http_wifidog_header(r, "Internal error");
-		httpdOutput(r, "We can not validate your request at this time");
-		http_wifidog_footer(r);
+		send_http_page(r, "Internal Error", "We can not validate your request at this time");
 	    break;
 
 	}

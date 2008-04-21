@@ -90,7 +90,8 @@ typedef enum {
 	oSyslogFacility,
 	oFirewallRule,
 	oFirewallRuleSet,
-	oTrustedMACList
+	oTrustedMACList,
+        oHtmlMessageFile,
 } OpCodes;
 
 /** @internal
@@ -127,6 +128,7 @@ static const struct {
 	{ "firewallruleset",	oFirewallRuleSet },
 	{ "firewallrule",	    oFirewallRule },
 	{ "trustedmaclist",	    oTrustedMACList },
+        { "htmlmessagefile",    oHtmlMessageFile },
 	{ NULL,                 oBadOption },
 };
 
@@ -153,6 +155,7 @@ config_init(void)
 {
 	debug(LOG_DEBUG, "Setting default config parameters");
 	strncpy(config.configfile, DEFAULT_CONFIGFILE, sizeof(config.configfile));
+	config.htmlmsgfile = safe_strdup(DEFAULT_HTMLMSGFILE);
 	config.debuglevel = DEFAULT_DEBUGLEVEL;
 	config.httpdmaxconn = DEFAULT_HTTPDMAXCONN;
 	config.external_interface = NULL;
@@ -342,10 +345,10 @@ parse_auth_server(FILE *file, char *filename, int *linenum)
 	new->authserv_use_ssl = ssl_available;
 	new->authserv_path = path;
 	new->authserv_login_script_path_fragment = loginscriptpathfragment;
-    new->authserv_portal_script_path_fragment = portalscriptpathfragment;
-    new->authserv_msg_script_path_fragment = msgscriptpathfragment;    
-    new->authserv_ping_script_path_fragment = pingscriptpathfragment;  
-    new->authserv_auth_script_path_fragment = authscriptpathfragment;  
+	new->authserv_portal_script_path_fragment = portalscriptpathfragment;
+	new->authserv_msg_script_path_fragment = msgscriptpathfragment;    
+	new->authserv_ping_script_path_fragment = pingscriptpathfragment;  
+	new->authserv_auth_script_path_fragment = authscriptpathfragment;  
 	new->authserv_http_port = http_port;
 	new->authserv_ssl_port = ssl_port;
 	
@@ -722,6 +725,10 @@ config_read(char *filename)
 				case oSyslogFacility:
 					sscanf(p1, "%d", &config.syslog_facility);
 					break;
+				case oHtmlMessageFile:
+					config.htmlmsgfile = safe_strdup(p1);
+					break;
+
 				}
 			}
 		}

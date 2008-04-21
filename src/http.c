@@ -35,6 +35,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <syslog.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
 
 #include "httpd.h"
 
@@ -59,8 +63,7 @@ extern pthread_mutex_t	client_list_mutex;
 void
 http_callback_404(httpd *webserver, request *r)
 {
-	char		*urlFragment,
-			tmp_url[MAX_BUF],
+	char		tmp_url[MAX_BUF],
 			*url;
 	s_config	*config = config_get_config();
 	t_auth_serv	*auth_server = get_auth_server();
@@ -80,25 +83,32 @@ http_callback_404(httpd *webserver, request *r)
 
 	if (!is_online()) {
 		/* The internet connection is down at the moment  - apologize and do not redirect anywhere */
-		http_wifidog_header(r, "<h2>Uh oh! Internet access unavailable</h2>");
-		httpdOutput(r, "<p>We apologize, but it seems that the internet connection that powers this hotspot is temporarily unavailable.</p>");
-		httpdOutput(r, "<p>If at all possible, please notify the owners of this hotspot that the internet connection is out of service.</p>");
-		httpdOutput(r, "<p>The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.</p>");
-		httpdPrintf(r, "<p>In a while please <a href='%s'>click here</a> to try your request again.</p>", tmp_url);
-		http_wifidog_footer(r);
+		char * buf;
+		safe_asprintf(&buf, 
+			"<p>We apologize, but it seems that the internet connection that powers this hotspot is temporarily unavailable.</p>"
+			"<p>If at all possible, please notify the owners of this hotspot that the internet connection is out of service.</p>"
+			"<p>The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.</p>"
+			"<p>In a while please <a href='%s'>click here</a> to try your request again.</p>", tmp_url);
+
+                send_http_page(r, "Uh oh! Internet access unavailable!", buf);
+		free(buf);
 		debug(LOG_INFO, "Sent %s an apology since I am not online - no point sending them to auth server", r->clientAddr);
 	}
 	else if (!is_auth_online()) {
 		/* The auth server is down at the moment - apologize and do not redirect anywhere */
-		http_wifidog_header(r, "<h2>Uh oh! Login screen unavailable</h2>");
-		httpdOutput(r, "<p>We apologize, but it seems that we are currently unable to re-direct you to the login screen.</p>");
-		httpdOutput(r, "<p>The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.</p>");
-		httpdPrintf(r, "<p>In a couple of minutes please <a href='%s'>click here</a> to try your request again.</p>", tmp_url);
-		http_wifidog_footer(r);
+		char * buf;
+		safe_asprintf(&buf, 
+			"<p>We apologize, but it seems that we are currently unable to re-direct you to the login screen.</p>"
+			"<p>The maintainers of this network are aware of this disruption.  We hope that this situation will be resolved soon.</p>"
+			"<p>In a couple of minutes please <a href='%s'>click here</a> to try your request again.</p>", tmp_url);
+
+                send_http_page(r, "Uh oh! Login screen unavailable!", buf);
+		free(buf);
 		debug(LOG_INFO, "Sent %s an apology since auth server not online - no point sending them to auth server", r->clientAddr);
 	}
 	else {
 		/* Re-direct them to auth server */
+		char *urlFragment;
 		safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&url=%s",
 			auth_server->authserv_login_script_path_fragment,
 			config->gw_address,
@@ -115,29 +125,24 @@ http_callback_404(httpd *webserver, request *r)
 void 
 http_callback_wifidog(httpd *webserver, request *r)
 {
-	http_wifidog_header(r, "WiFiDog");
-	httpdOutput(r, "Please use the menu to navigate the features of this WiFiDog installation.");
-	http_wifidog_footer(r);
+	send_http_page(r, "WiFiDog", "Please use the menu to navigate the features of this WiFiDog installation.");
 }
 
 void 
 http_callback_about(httpd *webserver, request *r)
 {
-	http_wifidog_header(r, "About WiFiDog");
-	httpdOutput(r, "This is WiFiDog version <b>" VERSION "</b>");
-	http_wifidog_footer(r);
+	send_http_page(r, "About WiFiDog", "This is WiFiDog version <strong>" VERSION "</strong>");
 }
 
 void 
 http_callback_status(httpd *webserver, request *r)
 {
 	char * status = NULL;
+	char *buf;
 	status = get_status_text();
-	http_wifidog_header(r, "WiFiDog Status");
-	httpdOutput(r, "<pre>");
-	httpdOutput(r, status);
-	httpdOutput(r, "</pre>");
-	http_wifidog_footer(r);
+	safe_asprintf(&buf, "<pre>%s</pre>", status);
+	send_http_page(r, "WiFiDog Status", buf);
+	free(buf);
 	free(status);
 }
 /** @brief Convenience function to redirect the web browser to the auth server
@@ -176,6 +181,7 @@ void http_send_redirect_to_auth(request *r, char *urlFragment, char *text)
  * @param text The text to include in the redirect header and the manual redirect link title.  NULL is acceptable */
 void http_send_redirect(request *r, char *url, char *text)
 {
+		char *message = NULL;
 		char *header = NULL;
 		char *response = NULL;
 							/* Re-direct them to auth server */
@@ -197,17 +203,9 @@ void http_send_redirect(request *r, char *url, char *text)
 		httpdAddHeader(r, header);
 		free(response);
 		free(header);	
-		if(text) {
-			http_wifidog_header(r, text);
-		}
-		else {
-			http_wifidog_header(r, "Redirection to message");
-		}		
-
-		httpdPrintf(r, "Please <a href='%s'>click here</a>.",
-			url
-		);
-		http_wifidog_footer(r);
+		safe_asprintf(&message, "Please <a href='%s'>click here</a>.", url);
+		send_http_page(r, text ? text : "Redirection to message", message);
+		free(message);
 }
 
 void 
@@ -222,9 +220,7 @@ http_callback_auth(httpd *webserver, request *r)
 		if (!(mac = arp_get(r->clientAddr))) {
 			/* We could not get their MAC address */
 			debug(LOG_ERR, "Failed to retrieve MAC address for ip %s", r->clientAddr);
-			http_wifidog_header(r, "WiFiDog Error");
-			httpdOutput(r, "Failed to retrieve your MAC address");
-			http_wifidog_footer(r);
+			send_http_page(r, "WiFiDog Error", "Failed to retrieve your MAC address");
 		} else {
 			/* We have their MAC address */
 
@@ -276,119 +272,45 @@ http_callback_auth(httpd *webserver, request *r)
 		}
 	} else {
 		/* They did not supply variable "token" */
-		http_wifidog_header(r, "WiFiDog Error");
-		httpdOutput(r, "Invalid token");
-		http_wifidog_footer(r);
+		send_http_page(r, "WiFiDog error", "Invalid token");
 	}
 }
 
-void
-http_wifidog_header(request *r, char *title)
+void send_http_page(request *r, const char *title, const char* message)
 {
-    httpdOutput(r, "<html>\n");
-    httpdOutput(r, "<head>\n");
-    httpdPrintf(r, "<title>%s</title>\n", title);
-    httpdOutput(r, "<meta HTTP-EQUIV='Pragma' CONTENT='no-cache'>\n");
+    s_config	*config = config_get_config();
+    unsigned char *buffer;
+    struct stat stat_info;
+    int fd;
+    ssize_t written;
 
-    httpdOutput(r, "<style>\n");
-    httpdOutput(r, "body {\n");
-    httpdOutput(r, "  margin: 10px 60px 0 60px; \n");
-    httpdOutput(r, "  font-family : bitstream vera sans, sans-serif;\n");
-    httpdOutput(r, "  color: #46a43a;\n");
-    httpdOutput(r, "}\n");
+    fd=open(config->htmlmsgfile, O_RDONLY);
+    if (fd==-1) {
+        debug(LOG_CRIT, "Failed to open HTML message file %s: %s", config->htmlmsgfile, strerror(errno));
+        return;
+    }
 
-    httpdOutput(r, "a {\n");
-    httpdOutput(r, "  color: #46a43a;\n");
-    httpdOutput(r, "}\n");
+    if (fstat(fd, &stat_info)==-1) {
+        debug(LOG_CRIT, "Failed to stat HTML message file: %s", strerror(errno));
+        close(fd);
+        return;
+    }
 
-    httpdOutput(r, "a:active {\n");
-    httpdOutput(r, "  color: #46a43a;\n");
-    httpdOutput(r, "}\n");
+    buffer=(unsigned char*)safe_malloc(stat_info.st_size+1);
+    written=read(fd, buffer, stat_info.st_size);
+    if (written==-1) {
+        debug(LOG_CRIT, "Failed to read HTML message file: %s", strerror(errno));
+        free(buffer);
+        close(fd);
+        return;
+    }
+    close(fd);
 
-    httpdOutput(r, "a:link {\n");
-    httpdOutput(r, "  color: #46a43a;\n");
-    httpdOutput(r, "}\n");
-
-    httpdOutput(r, "a:visited {\n");
-    httpdOutput(r, "  color: #46a43a;\n");
-    httpdOutput(r, "}\n");
-
-    httpdOutput(r, "#header {\n");
-    httpdOutput(r, "  height: 30px;\n");
-    httpdOutput(r, "  background-color: #B4F663;\n");
-    httpdOutput(r, "  padding: 20px;\n");
-    httpdOutput(r, "  font-size: 20pt;\n");
-    httpdOutput(r, "  text-align: center;\n");
-    httpdOutput(r, "  border: 2px solid #46a43a;\n");
-    httpdOutput(r, "  border-bottom: 0;\n");
-    httpdOutput(r, "}\n");
-
-    httpdOutput(r, "#menu {\n");
-    httpdOutput(r, "  width: 200px;\n");
-    httpdOutput(r, "  float: right;\n");
-    httpdOutput(r, "  background-color: #B4F663;\n");
-    httpdOutput(r, "  border: 2px solid #46a43a;\n");
-    httpdOutput(r, "  font-size: 80%;\n");
-    httpdOutput(r, "  min-height: 300px;\n");
-    httpdOutput(r, "}\n");
-
-    httpdOutput(r, "#menu h2 {\n");
-    httpdOutput(r, "  margin: 0;\n");
-    httpdOutput(r, "  background-color: #46a43a;\n");
-    httpdOutput(r, "  text-align: center;\n");
-    httpdOutput(r, "  color: #B4F663;\n");
-    httpdOutput(r, "}\n");
-
-    httpdOutput(r, "#copyright {\n");
-    httpdOutput(r, "}\n");
-
-    httpdOutput(r, "#content {\n");
-    httpdOutput(r, "  padding: 20px;\n");
-    httpdOutput(r, "  border: 2px solid #46a43a;\n");
-    httpdOutput(r, "  min-height: 300px;\n");
-    httpdOutput(r, "}\n");
-    httpdOutput(r, "</style>\n");
-
-    httpdOutput(r, "</head>\n");
-
-    httpdOutput(r, "<body\n");
-
-    httpdOutput(r, "<div id=\"header\">\n");
-    httpdPrintf(r, "    %s\n", title);
-    httpdOutput(r, "</div>\n");
-
-    httpdOutput(r, "<div id=\"menu\">\n");
-
-
-    httpdOutput(r, "    <h2>Info</h2>\n");
-    httpdOutput(r, "    <ul>\n");
-    httpdOutput(r, "    <li>Version: " VERSION "\n");
-    httpdPrintf(r, "    <li>Node ID: %s\n", config_get_config()->gw_id);
-    httpdOutput(r, "    </ul>\n");
-    httpdOutput(r, "    <br>\n");
-
-    httpdOutput(r, "    <h2>Menu</h2>\n");
-    httpdOutput(r, "    <ul>\n");
-    httpdOutput(r, "    <li><a href='/wifidog/status'>WiFiDog Status</a>\n");
-    httpdOutput(r, "    <li><a href='/wifidog/about'>About WiFiDog</a>\n");
-    httpdOutput(r, "    <li><a href='http://www.wifidog.org'>WiFiDog's homepage</a>\n");
-    httpdOutput(r, "    </ul>\n");
-    httpdOutput(r, "</div>\n");
-
-    httpdOutput(r, "<div id=\"content\">\n");
-    httpdPrintf(r, "<h2>%s</h2>\n", title);
+    buffer[written]=0;
+    httpdAddVariable(r, "title", title);
+    httpdAddVariable(r, "message", message);
+    httpdAddVariable(r, "nodeID", config->gw_id);
+    httpdOutput(r, buffer);
+    free(buffer);
 }
 
-void
-http_wifidog_footer(request *r)
-{
-	httpdOutput(r, "</div>\n");
-
-    httpdOutput(r, "<div id=\"copyright\">\n");
-    httpdOutput(r, "Copyright (C) 2004-2005.  This software is released under the GNU GPL license.\n");
-    httpdOutput(r, "</div>\n");
-
-
-	httpdOutput(r, "</body>\n");
-	httpdOutput(r, "</html>\n");
-}

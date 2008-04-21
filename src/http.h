@@ -40,10 +40,8 @@ void http_callback_status(httpd *webserver, request *r);
 /**@brief Callback for libhttpd, main entry point post login for auth confirmation */
 void http_callback_auth(httpd *webserver, request *r);
 
-/** @brief Sends HTML header+menu to web browser */
-void http_wifidog_header(request *r, char *title);
-/** @brief Sends HTML footer to web browser */
-void http_wifidog_footer(request *r);
+/** @brief Sends a HTML page to web browser */
+void send_http_page(request *r, const char *title, const char* message);
 
 /** @brief Sends a redirect to the web browser */
 void http_send_redirect(request *r, char *url, char *text);
