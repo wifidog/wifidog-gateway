@@ -27,6 +27,8 @@
 #ifndef _FIREWALL_H_
 #define _FIREWALL_H_
 
+#include "client_list.h"
+
 extern int icmp_fd;
 int icmp_fd;
 
@@ -70,5 +72,8 @@ void icmp_ping(const char *host);
 
 /** @brief cheap random */
 unsigned short rand16(void);
+
+/** @brief Logout a client and report to auth server. */
+void logout_client(t_client *client);
 
 #endif /* _FIREWALL_H_ */

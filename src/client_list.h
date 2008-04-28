@@ -76,8 +76,14 @@ t_client *client_list_find_by_mac(const char *mac); /* needed by wdctl_thread.c 
 /** @brief Finds a client by its token */
 t_client *client_list_find_by_token(const char *token);
 
-/** @brief Deletes a client from the connections list */
+/** @brief Deletes a client from the connections list and frees its memory*/
 void client_list_delete(t_client *client);
+
+/** @brief Removes a client from the connections list */
+void client_list_remove(t_client *client);
+
+/** @brief Free memory associated with a client */
+void client_free_node(t_client *client);
 
 #define LOCK_CLIENT_LIST() do { \
 	debug(LOG_DEBUG, "Locking client list"); \

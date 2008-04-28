@@ -282,15 +282,7 @@ fw_sync_with_authserver(void)
                 /* Timing out user */
                 debug(LOG_INFO, "%s - Inactive for more than %ld seconds, removing client and denying in firewall",
                         p1->ip, config->checkinterval * config->clienttimeout);
-                fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
-                client_list_delete(p1);
-
-                /* Advertise the logout if we have an auth server */
-                if (config->auth_servers != NULL) {
-					UNLOCK_CLIENT_LIST();
-					auth_server_request(&authresponse, REQUEST_TYPE_LOGOUT, ip, mac, token, 0, 0);
-					LOCK_CLIENT_LIST();
-                }
+		logout_client(p1);
             } else {
                 /*
                  * This handles any change in
@@ -360,6 +352,40 @@ fw_sync_with_authserver(void)
     }
     UNLOCK_CLIENT_LIST();
 }
+
+/**
+ * @brief Logout a client and report to auth server.
+ *
+ * This function assumes it is being called with the client lock held! This
+ * function remove the client from the client list and free its memory, so
+ * client is no langer valid when this method returns.
+ *
+ * @param client Points to the client to be logged out
+ */
+void
+logout_client(t_client *client)
+{
+	t_authresponse  authresponse;
+	const s_config *config = config_get_config();
+	fw_deny(client->ip, client->mac, client->fw_connection_state);
+	client_list_remove(client);
+
+	/* Advertise the logout if we have an auth server */
+	if (config->auth_servers != NULL) {
+		UNLOCK_CLIENT_LIST();
+		auth_server_request(&authresponse, REQUEST_TYPE_LOGOUT,
+				client->ip, client->mac, client->token,
+				client->counters.incoming,
+				client->counters.outgoing);
+
+		if (authresponse.authcode==AUTH_ERROR)
+			debug(LOG_WARNING, "Auth server error when reporting logout");
+		LOCK_CLIENT_LIST();
+	}
+
+	client_free_node(client);
+}
+
 
 void
 icmp_ping(const char *host)

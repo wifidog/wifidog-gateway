@@ -338,14 +338,8 @@ http_callback_disconnect(httpd *webserver, request *r)
 			return -1;
 		}
 
-		/* TODO: get current firewall counters, set counters to auth server,
-		 * send disconnect to auth server.
-		 *
-		 * XXX: this should share code with wdctl_reset
-		 */
-		fw_deny(client->ip, client->mac, client->fw_connection_state);
-		client_list_delete(client);
-
+		/* TODO: get current firewall counters */
+                logout_client(client);
 		UNLOCK_CLIENT_LIST();
 
 	} else {
