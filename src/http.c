@@ -321,9 +321,18 @@ http_callback_auth(httpd *webserver, request *r)
 void
 http_callback_disconnect(httpd *webserver, request *r)
 {
+	const s_config	*config = config_get_config();
 	/* XXX How do you change the status code for the response?? */
 	httpVar	*token	= httpdGetVariableByName(r, "token");
 	httpVar	*mac	= httpdGetVariableByName(r, "mac");
+
+	if (config->httpdusername &&
+			(strcmp(config->httpdusername, r->request.authUser) ||
+			 strcmp(config->httpdpassword, r->request.authPassword))) {
+		debug(LOG_INFO, "Disconnect requested, forcing authentication");
+		httpdForceAuthenticate(r, config->httpdrealm);
+		return;
+	}
 
 	if (token && mac) {
 		t_client *client;
