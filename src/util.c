@@ -40,9 +40,9 @@
 #include <sys/unistd.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>
+#include <arpa/inet.h>
 
 #if defined(__NetBSD__)
-#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <ifaddrs.h>
 #include <net/if.h>
