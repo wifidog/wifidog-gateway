@@ -1,4 +1,7 @@
 # $Id$
+2008-07-20 Alexandre Carmel-Veilleux <acv@miniguru.ca>
+	* src/util.c: Fixed #include bug that caused segfaults on newer Linux
+
 2008-04-21 Alexandre Carmel-Veilleux <acv@miniguru.ca>
 	* Integrated patch #452 from Wichert Akkerman <wichert@wiggy.net>: Add const to function arguments in libhttpd to enforce more type checking and prevent certain class of problems.
 	* Compatiblity fix: Libhttpd assumes that type u_int is defined. Added an #ifndef/#include <sys/types.h> pair to httpd.h to make sure that assertion is true.
