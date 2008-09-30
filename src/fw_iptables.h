@@ -31,17 +31,17 @@
 
 /*@{*/ 
 /**Iptable table names used by WifiDog */
-#define TABLE_WIFIDOG_OUTGOING  "WiFiDog_Outgoing"
-#define TABLE_WIFIDOG_WIFI_TO_INTERNET "WiFiDog_WIFI2Internet"
-#define TABLE_WIFIDOG_WIFI_TO_ROUTER "WiFiDog_WIFI2Router"
-#define TABLE_WIFIDOG_INCOMING  "WiFiDog_Incoming"
-#define TABLE_WIFIDOG_AUTHSERVERS "WiFiDog_AuthServers"
-#define TABLE_WIFIDOG_GLOBAL  "WiFiDog_Global"
-#define TABLE_WIFIDOG_VALIDATE  "WiFiDog_Validate"
-#define TABLE_WIFIDOG_KNOWN     "WiFiDog_Known"
-#define TABLE_WIFIDOG_UNKNOWN   "WiFiDog_Unknown"
-#define TABLE_WIFIDOG_LOCKED    "WiFiDog_Locked"
-#define TABLE_WIFIDOG_TRUSTED    "WiFiDog_Trusted"
+#define TABLE_WIFIDOG_OUTGOING  "WiFiDog_$ID$_Outgoing"
+#define TABLE_WIFIDOG_WIFI_TO_INTERNET "WiFiDog_$ID$_WIFI2Internet"
+#define TABLE_WIFIDOG_WIFI_TO_ROUTER "WiFiDog_$ID$_WIFI2Router"
+#define TABLE_WIFIDOG_INCOMING  "WiFiDog_$ID$_Incoming"
+#define TABLE_WIFIDOG_AUTHSERVERS "WiFiDog_$ID$_AuthServers"
+#define TABLE_WIFIDOG_GLOBAL  "WiFiDog_$ID$_Global"
+#define TABLE_WIFIDOG_VALIDATE  "WiFiDog_$ID$_Validate"
+#define TABLE_WIFIDOG_KNOWN     "WiFiDog_$ID$_Known"
+#define TABLE_WIFIDOG_UNKNOWN   "WiFiDog_$ID$_Unknown"
+#define TABLE_WIFIDOG_LOCKED    "WiFiDog_$ID$_Locked"
+#define TABLE_WIFIDOG_TRUSTED    "WiFiDog_$ID$_Trusted"
 /*@}*/ 
 
 /** Used by iptables_fw_access to select if the client should be granted of denied access */

@@ -1,6 +1,7 @@
 # $Id$
 
 2008-09-30 Wichert Akkerman <wichert@wiggy.net>
+	* Include the gateway id in the firewall table names. Fixes ticket #466
 	* URL encode the token before transmitting (it was already decoded).
 	  Fixes ticket #473
 	* Clean up compiler warnings.
