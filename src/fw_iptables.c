@@ -435,7 +435,10 @@ iptables_fw_destroy_mention(
 	char *command2 = NULL;
 	char line[MAX_BUF];
 	char rulenum[10];
+	char *victim = safe_strdup(mention);
 	int deleted = 0;
+
+	iptables_insert_gateway_id(&victim);
 
 	debug(LOG_DEBUG, "Attempting to destroy all mention of %s from %s.%s", mention, table, chain);
 
@@ -467,6 +470,7 @@ iptables_fw_destroy_mention(
 	}
 
 	free(command);
+	free(victim);
 
 	if (deleted) {
 		/* Recurse just in case there are more in the same table+chain */
