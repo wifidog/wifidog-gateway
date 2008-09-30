@@ -141,6 +141,9 @@ typedef struct {
 				     replying to a request */
     int httpdmaxconn;		/**< @brief Used by libhttpd, not sure what it
 				     does */
+    char *httpdrealm;		/**< @brief HTTP Authentication realm */
+    char *httpdusername;	/**< @brief Username for HTTP authentication */
+    char *httpdpassword;	/**< @brief Password for HTTP authentication */
     int clienttimeout;		/**< @brief How many CheckIntervals before a client
 				     must be re-authenticated */
     int checkinterval;		/**< @brief Frequency the the client timeout check

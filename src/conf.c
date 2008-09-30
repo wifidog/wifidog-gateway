@@ -84,6 +84,9 @@ typedef enum {
 	oAuthServAuthScriptPathFragment,
 	oHTTPDMaxConn,
 	oHTTPDName,
+	oHTTPDRealm,
+        oHTTPDUsername,
+        oHTTPDPassword,
 	oClientTimeout,
 	oCheckInterval,
 	oWdctlSocket,
@@ -111,6 +114,9 @@ static const struct {
 	{ "authserver",         oAuthServer },
 	{ "httpdmaxconn",       oHTTPDMaxConn },
 	{ "httpdname",          oHTTPDName },
+	{ "httpdrealm",		oHTTPDRealm },
+	{ "httpdusername",	oHTTPDUsername },
+	{ "httpdpassword",	oHTTPDPassword },
 	{ "clienttimeout",      oClientTimeout },
 	{ "checkinterval",      oCheckInterval },
 	{ "syslogfacility", 	oSyslogFacility },
@@ -165,6 +171,9 @@ config_init(void)
 	config.gw_port = DEFAULT_GATEWAYPORT;
 	config.auth_servers = NULL;
 	config.httpdname = NULL;
+	config.httpdrealm = DEFAULT_HTTPDNAME;
+	config.httpdusername = NULL;
+	config.httpdpassword = NULL;
 	config.clienttimeout = DEFAULT_CLIENTTIMEOUT;
 	config.checkinterval = DEFAULT_CHECKINTERVAL;
 	config.syslog_facility = DEFAULT_SYSLOG_FACILITY;
@@ -705,6 +714,15 @@ config_read(char *filename)
 				case oHTTPDMaxConn:
 					sscanf(p1, "%d", &config.httpdmaxconn);
 					break;
+				case oHTTPDRealm:
+					config.httpdrealm = safe_strdup(p1);
+					break;
+				case oHTTPDUsername:
+					config.httpdusername = safe_strdup(p1);
+					break;
+				case oHTTPDPassword:
+					config.httpdpassword = safe_strdup(p1);
+					break;
 				case oBadOption:
 					debug(LOG_ERR, "Bad option on line %d "
 							"in %s.", linenum,
@@ -732,6 +750,11 @@ config_read(char *filename)
 				}
 			}
 		}
+	}
+
+	if (config.httpdusername && !config.httpdpassword) {
+		debug(LOG_ERR, "HTTPDUserName requires a HTTPDPassword to be set.");
+		exit(-1);
 	}
 
 	fclose(fd);
