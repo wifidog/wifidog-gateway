@@ -131,38 +131,38 @@ iptables_do_command(const char *format, ...)
 static char *
 iptables_compile(const char * table, const char *chain, const t_firewall_rule *rule)
 {
-    char	command[MAX_BUF],
-    		*mode;
-    
-    memset(command, 0, MAX_BUF);
-    
-    if (rule->block_allow == 1) {
-        mode = safe_strdup("ACCEPT");
-    } else {
-        mode = safe_strdup("REJECT");
-    }
-    
-    snprintf(command, sizeof(command),  "-t %s -A %s ",table, chain);
-    if (rule->mask != NULL) {
-        snprintf((command + strlen(command)), (sizeof(command) - 
-                strlen(command)), "-d %s ", rule->mask);
-    }
-    if (rule->protocol != NULL) {
-        snprintf((command + strlen(command)), (sizeof(command) -
-                strlen(command)), "-p %s ", rule->protocol);
-    }
-    if (rule->port != NULL) {
-        snprintf((command + strlen(command)), (sizeof(command) -
-                strlen(command)), "--dport %s ", rule->port);
-    }
-    snprintf((command + strlen(command)), (sizeof(command) - 
-            strlen(command)), "-j %s", mode);
-    
-    free(mode);
+        char	command[MAX_BUF],
+                *mode;
 
-    /* XXX The buffer command, an automatic variable, will get cleaned
-     * off of the stack when we return, so we strdup() it. */
-    return(safe_strdup(command));
+        memset(command, 0, MAX_BUF);
+
+        if (rule->block_allow == 1) {
+                mode = safe_strdup("ACCEPT");
+        } else {
+                mode = safe_strdup("REJECT");
+        }
+
+        snprintf(command, sizeof(command),  "-t %s -A %s ",table, chain);
+        if (rule->mask != NULL) {
+                snprintf((command + strlen(command)), (sizeof(command) - 
+                                        strlen(command)), "-d %s ", rule->mask);
+        }
+        if (rule->protocol != NULL) {
+                snprintf((command + strlen(command)), (sizeof(command) -
+                                        strlen(command)), "-p %s ", rule->protocol);
+        }
+        if (rule->port != NULL) {
+                snprintf((command + strlen(command)), (sizeof(command) -
+                                        strlen(command)), "--dport %s ", rule->port);
+        }
+        snprintf((command + strlen(command)), (sizeof(command) - 
+                                strlen(command)), "-j %s", mode);
+
+        free(mode);
+
+        /* XXX The buffer command, an automatic variable, will get cleaned
+         * off of the stack when we return, so we strdup() it. */
+        return(safe_strdup(command));
 }
 
 /**

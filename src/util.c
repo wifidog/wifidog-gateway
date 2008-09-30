@@ -96,32 +96,32 @@ long served_this_session = 0;
 int
 execute(char *cmd_line, int quiet)
 {
-    int pid,
-        status,
-        rc;
+        int pid,
+            status,
+            rc;
 
-    const char *new_argv[4];
-    new_argv[0] = "/bin/sh";
-    new_argv[1] = "-c";
-    new_argv[2] = cmd_line;
-    new_argv[3] = NULL;
+        const char *new_argv[4];
+        new_argv[0] = "/bin/sh";
+        new_argv[1] = "-c";
+        new_argv[2] = cmd_line;
+        new_argv[3] = NULL;
 
-	 pid = safe_fork();
-	 if (pid == 0) {    /* for the child process:         */
-        /* We don't want to see any errors if quiet flag is on */
-        if (quiet) close(2);
-        if (execvp("/bin/sh", (char *const *)new_argv) < 0) {    /* execute the command  */
-            debug(LOG_ERR, "execvp(): %s", strerror(errno));
-            exit(1);
+        pid = safe_fork();
+        if (pid == 0) {    /* for the child process:         */
+                /* We don't want to see any errors if quiet flag is on */
+                if (quiet) close(2);
+                if (execvp("/bin/sh", (char *const *)new_argv) < 0) {    /* execute the command  */
+                        debug(LOG_ERR, "execvp(): %s", strerror(errno));
+                        exit(1);
+                }
         }
-    }
-	 else {        /* for the parent:      */
-		debug(LOG_DEBUG, "Waiting for PID %d to exit", pid);
-		rc = waitpid(pid, &status, 0);
-		debug(LOG_DEBUG, "Process PID %d exited", rc);
-    }
+        else {        /* for the parent:      */
+                debug(LOG_DEBUG, "Waiting for PID %d to exit", pid);
+                rc = waitpid(pid, &status, 0);
+                debug(LOG_DEBUG, "Process PID %d exited", rc);
+        }
 
-    return (WEXITSTATUS(status));
+        return (WEXITSTATUS(status));
 }
 
 struct in_addr *
