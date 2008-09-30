@@ -1,6 +1,7 @@
 # $Id$
 
 2008-09-30 Wichert Akkerman <wichert@wiggy.net>
+	* Clean up compiler warnings (mostly signed/unsigned comparisons)
 	* Security: strncpy may not NUL-terminate strings, so enforce this
 	  ourselves.
 	* Make it possible to protect the status page

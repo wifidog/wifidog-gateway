@@ -62,10 +62,11 @@ extern pthread_mutex_t	config_mutex;
 @param outgoing Current counter of the client's total outgoing traffic, in bytes 
 */
 t_authcode
-auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, char *mac, char *token, unsigned long long int incoming, unsigned long long int outgoing)
+auth_server_request(t_authresponse *authresponse, const char *request_type, const char *ip, const char *mac, const char *token, unsigned long long int incoming, unsigned long long int outgoing)
 {
 	int sockfd;
-	size_t	numbytes, totalbytes;
+	ssize_t	numbytes;
+	size_t totalbytes;
 	char buf[MAX_BUF];
 	char *tmp;
 	int done, nfds;

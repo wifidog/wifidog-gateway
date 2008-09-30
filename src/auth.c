@@ -60,7 +60,7 @@ extern long served_this_session;
 @todo This thread loops infinitely, need a watchdog to verify that it is still running?
 */  
 void
-thread_client_timeout_check(void *arg)
+thread_client_timeout_check(const void *arg)
 {
 	pthread_cond_t		cond = PTHREAD_COND_INITIALIZER;
 	pthread_mutex_t		cond_mutex = PTHREAD_MUTEX_INITIALIZER;

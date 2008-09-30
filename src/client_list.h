@@ -61,20 +61,20 @@ t_client *client_get_first_client(void);
 void client_list_init(void);
 
 /** @brief Adds a new client to the connections list */
-t_client *client_list_append(char *ip, char *mac, char *token);
+t_client *client_list_append(const char *ip, const char *mac, const char *token);
 
 /** @brief Finds a client by its IP and MAC */
-t_client *client_list_find(char *ip, char *mac);
+t_client *client_list_find(const char *ip, const char *mac);
 
 /** @brief Finds a client only by its IP */
-t_client *client_list_find_by_ip(char *ip); /* needed by fw_iptables.c, auth.c 
+t_client *client_list_find_by_ip(const char *ip); /* needed by fw_iptables.c, auth.c 
 					     * and wdctl_thread.c */
 
 /** @brief Finds a client only by its Mac */
-t_client *client_list_find_by_mac(char *mac); /* needed by wdctl_thread.c */
+t_client *client_list_find_by_mac(const char *mac); /* needed by wdctl_thread.c */
 
 /** @brief Finds a client by its token */
-t_client *client_list_find_by_token(char *token);
+t_client *client_list_find_by_token(const char *token);
 
 /** @brief Deletes a client from the connections list */
 void client_list_delete(t_client *client);

@@ -46,7 +46,13 @@
 #define GATEWAY_MESSAGE_ACCOUNT_LOGGED_OUT     "logged-out"
 
 /** @brief Initiates a transaction with the auth server */
-t_authcode auth_server_request(t_authresponse *authresponse, char *request_type, char *ip, char *mac, char *token, unsigned long long int incoming, unsigned long long int outgoing);
+t_authcode auth_server_request(t_authresponse *authresponse,
+			const char *request_type,
+			const char *ip,
+			const char *mac,
+			const char *token,
+			unsigned long long int incoming,
+			unsigned long long int outgoing);
 
 /** @brief Tries really hard to connect to an auth server.  Returns a connected file descriptor or -1 on error */
 int connect_auth_server();

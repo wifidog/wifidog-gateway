@@ -51,6 +51,7 @@
 #endif
 
 #ifdef __linux__
+#include <netinet/in.h>
 #include <net/if.h>
 #endif
 
@@ -154,7 +155,7 @@ wd_gethostbyname(const char *name)
 }
 
 char *
-get_iface_ip(char *ifname)
+get_iface_ip(const char *ifname)
 {
 #if defined(__linux__)
 	struct ifreq if_data;
@@ -180,7 +181,7 @@ get_iface_ip(char *ifname)
 	memcpy ((void *) &ip, (void *) &if_data.ifr_addr.sa_data + 2, 4);
 	in.s_addr = ip;
 
-	ip_str = (char *)inet_ntoa(in);
+	ip_str = inet_ntoa(in);
 	close(sockd);
 	return safe_strdup(ip_str);
 #elif defined(__NetBSD__)
@@ -212,7 +213,7 @@ out:
 }
 
 char *
-get_iface_mac(char *ifname)
+get_iface_mac(const char *ifname)
 {
 #if defined(__linux__)
     int r, s;

@@ -63,10 +63,10 @@ void iptables_fw_clear_authservers(void);
 int iptables_fw_destroy(void);
 
 /** @brief Helper function for iptables_fw_destroy */
-int iptables_fw_destroy_mention( char * table, char * chain, char * mention);
+int iptables_fw_destroy_mention( const char * table, const char * chain, const char * mention);
 
 /** @brief Define the access of a specific client */
-int iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag);
+int iptables_fw_access(fw_access_t type, const char *ip, const char *mac, int tag);
 
 /** @brief All counters in the client list */
 int iptables_fw_counters_update(void);

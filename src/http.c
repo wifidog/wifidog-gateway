@@ -289,7 +289,7 @@ http_callback_auth(httpd *webserver, request *r)
 void send_http_page(request *r, const char *title, const char* message)
 {
     s_config	*config = config_get_config();
-    unsigned char *buffer;
+    char *buffer;
     struct stat stat_info;
     int fd;
     ssize_t written;
@@ -306,7 +306,7 @@ void send_http_page(request *r, const char *title, const char* message)
         return;
     }
 
-    buffer=(unsigned char*)safe_malloc(stat_info.st_size+1);
+    buffer=(char*)safe_malloc(stat_info.st_size+1);
     written=read(fd, buffer, stat_info.st_size);
     if (written==-1) {
         debug(LOG_CRIT, "Failed to read HTML message file: %s", strerror(errno));

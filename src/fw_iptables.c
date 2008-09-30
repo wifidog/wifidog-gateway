@@ -48,9 +48,9 @@
 #include "util.h"
 #include "client_list.h"
 
-static int iptables_do_command(char *format, ...);
-static char *iptables_compile(char *, char *, t_firewall_rule *);
-static void iptables_load_ruleset(char *, char *, char *);
+static int iptables_do_command(const char *format, ...);
+static char *iptables_compile(const char *, const char *, const t_firewall_rule *);
+static void iptables_load_ruleset(const char *, const char *, const char *);
 
 extern pthread_mutex_t	client_list_mutex;
 extern pthread_mutex_t	config_mutex;
@@ -62,7 +62,7 @@ static int fw_quiet = 0;
 /** @internal 
  * */
 static int
-iptables_do_command(char *format, ...)
+iptables_do_command(const char *format, ...)
 {
     va_list vlist;
     char *fmt_cmd,
@@ -81,6 +81,9 @@ iptables_do_command(char *format, ...)
 	
     rc = execute(cmd, fw_quiet);
 
+    if (rc!=0)
+        debug(LOG_ERR, "iptables comand tailed: %s", cmd);
+
     free(cmd);
 
     return rc;
@@ -95,7 +98,7 @@ iptables_do_command(char *format, ...)
  * @arg rule Definition of a rule into a struct, from conf.c.
  */
 static char *
-iptables_compile(char * table, char *chain, t_firewall_rule *rule)
+iptables_compile(const char * table, const char *chain, const t_firewall_rule *rule)
 {
     char	command[MAX_BUF],
     		*mode;
@@ -139,7 +142,7 @@ iptables_compile(char * table, char *chain, t_firewall_rule *rule)
  * @arg chain IPTables chain the rules go into
  */
 static void
-iptables_load_ruleset(char * table, char *ruleset, char *chain)
+iptables_load_ruleset(const char * table, const char *ruleset, const char *chain)
 {
 	t_firewall_rule		*rule;
 	char			*cmd;
@@ -166,7 +169,7 @@ iptables_fw_clear_authservers(void)
 void
 iptables_fw_set_authservers(void)
 {
-    s_config *config;
+    const s_config *config;
     t_auth_serv *auth_server;
    
     config = config_get_config();
@@ -185,14 +188,14 @@ iptables_fw_set_authservers(void)
 int
 iptables_fw_init(void)
 {
-    s_config *config;
-	 char * gw_interface = NULL;
-	 char * gw_address = NULL;
-	 char * ext_interface = NULL;
-	 int gw_port = 0;
-     t_trusted_mac *p;
+	const s_config *config;
+	char * gw_interface = NULL;
+	char * gw_address = NULL;
+	char * ext_interface = NULL;
+	int gw_port = 0;
+	t_trusted_mac *p;
    
-    fw_quiet = 0;
+	fw_quiet = 0;
 
 	 LOCK_CONFIG();
     config = config_get_config();
@@ -399,9 +402,9 @@ iptables_fw_destroy(void)
  */
 int
 iptables_fw_destroy_mention(
-		char * table,
-		char * chain,
-		char * mention
+		const char * table,
+		const char * chain,
+		const char * mention
 ) {
 	FILE *p = NULL;
 	char *command = NULL;
@@ -450,7 +453,7 @@ iptables_fw_destroy_mention(
 
 /** Set if a specific client has access through the firewall */
 int
-iptables_fw_access(fw_access_t type, char *ip, char *mac, int tag)
+iptables_fw_access(fw_access_t type, const char *ip, const char *mac, int tag)
 {
     int rc;
 

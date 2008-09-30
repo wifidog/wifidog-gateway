@@ -56,6 +56,6 @@ typedef struct _t_authresponse {
 void authenticate_client(request *);
 
 /** @brief Periodically check if connections expired */
-void thread_client_timeout_check(void *arg);
+void thread_client_timeout_check(const void *arg);
 
 #endif

@@ -165,7 +165,7 @@ void config_init(void);
 void config_init_override(void);
 
 /** @brief Reads the configuration file */
-void config_read(char *filename);
+void config_read(const char *filename);
 
 /** @brief Check that the configuration is valid */
 void config_validate(void);
@@ -177,7 +177,7 @@ t_auth_serv *get_auth_server(void);
 void mark_auth_server_bad(t_auth_serv *);
 
 /** @brief Fetch a firewall rule set. */
-t_firewall_rule *get_ruleset(char *);
+t_firewall_rule *get_ruleset(const char *);
 
 void parse_trusted_mac_list(char *);
 

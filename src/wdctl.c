@@ -46,7 +46,7 @@ static void usage(void);
 static void init_config(void);
 static void parse_commandline(int, char **);
 static int connect_to_server(char *);
-static int send_request(int, char *);
+static size_t send_request(int, char *);
 static void wdctl_status(void);
 static void wdctl_stop(void);
 static void wdctl_reset(void);
@@ -166,11 +166,11 @@ connect_to_server(char *sock_name)
 	return sock;
 }
 
-static int
+static size_t
 send_request(int sock, char *request)
 {
-	ssize_t	len,
-		written;
+	size_t	len;
+        ssize_t written;
 		
 	len = 0;
 	while (len != strlen(request)) {
@@ -183,7 +183,7 @@ send_request(int sock, char *request)
 		len += written;
 	}
 
-	return((int)len);
+	return len;
 }
 
 static void
@@ -238,8 +238,8 @@ wdctl_reset(void)
 	int	sock;
 	char	buffer[4096];
 	char	request[64];
-	int	len,
-		rlen;
+	size_t	len;
+	int	rlen;
 
 	sock = connect_to_server(config.socket);
 		
