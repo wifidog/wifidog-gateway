@@ -124,7 +124,7 @@ execute(char *cmd_line, int quiet)
         return (WEXITSTATUS(status));
 }
 
-struct in_addr *
+	struct in_addr *
 wd_gethostbyname(const char *name)
 {
 	struct hostent *he;
@@ -133,7 +133,7 @@ wd_gethostbyname(const char *name)
 	/* XXX Calling function is reponsible for free() */
 
 	h_addr = safe_malloc(sizeof(struct in_addr));
-	
+
 	LOCK_GHBN();
 
 	he = gethostbyname(name);
@@ -148,13 +148,13 @@ wd_gethostbyname(const char *name)
 
 	in_addr_temp = (struct in_addr *)he->h_addr_list[0];
 	h_addr->s_addr = in_addr_temp->s_addr;
-	
+
 	UNLOCK_GHBN();
 
 	return h_addr;
 }
 
-char *
+	char *
 get_iface_ip(const char *ifname)
 {
 #if defined(__linux__)
@@ -195,7 +195,7 @@ get_iface_ip(const char *ifname)
 	/* XXX arbitrarily pick the first IPv4 address */
 	for (ifa = ifap; ifa != NULL; ifa = ifa->ifa_next) {
 		if (strcmp(ifa->ifa_name, ifname) == 0 &&
-		    ifa->ifa_addr->sa_family == AF_INET)
+				ifa->ifa_addr->sa_family == AF_INET)
 			break;
 	}
 	if (ifa == NULL) {
@@ -203,7 +203,7 @@ get_iface_ip(const char *ifname)
 		goto out;
 	}
 	str = safe_strdup(inet_ntoa(
-	    ((struct sockaddr_in *)ifa->ifa_addr)->sin_addr));
+				((struct sockaddr_in *)ifa->ifa_addr)->sin_addr));
 out:
 	freeifaddrs(ifap);
 	return str;
@@ -212,41 +212,41 @@ out:
 #endif
 }
 
-char *
+	char *
 get_iface_mac(const char *ifname)
 {
 #if defined(__linux__)
-    int r, s;
-    struct ifreq ifr;
-    char *hwaddr, mac[13];
-    
-    strcpy(ifr.ifr_name, ifname);
+	int r, s;
+	struct ifreq ifr;
+	char *hwaddr, mac[13];
 
-    s = socket(PF_INET, SOCK_DGRAM, 0);
-    if (-1 == s) {
-       debug(LOG_ERR, "get_iface_mac socket: %s", strerror(errno));
-       return NULL;
-    }
+	strcpy(ifr.ifr_name, ifname);
 
-    r = ioctl(s, SIOCGIFHWADDR, &ifr);
-    if (r == -1) {
-       debug(LOG_ERR, "get_iface_mac ioctl(SIOCGIFHWADDR): %s", strerror(errno));
-       close(s);
-       return NULL;
-    }
+	s = socket(PF_INET, SOCK_DGRAM, 0);
+	if (-1 == s) {
+		debug(LOG_ERR, "get_iface_mac socket: %s", strerror(errno));
+		return NULL;
+	}
 
-    hwaddr = ifr.ifr_hwaddr.sa_data;
-    close(s);
-    snprintf(mac, sizeof(mac), "%02X%02X%02X%02X%02X%02X", 
-       hwaddr[0] & 0xFF,
-       hwaddr[1] & 0xFF,
-       hwaddr[2] & 0xFF,
-       hwaddr[3] & 0xFF,
-       hwaddr[4] & 0xFF,
-       hwaddr[5] & 0xFF
-       );
-       
-    return safe_strdup(mac);
+	r = ioctl(s, SIOCGIFHWADDR, &ifr);
+	if (r == -1) {
+		debug(LOG_ERR, "get_iface_mac ioctl(SIOCGIFHWADDR): %s", strerror(errno));
+		close(s);
+		return NULL;
+	}
+
+	hwaddr = ifr.ifr_hwaddr.sa_data;
+	close(s);
+	snprintf(mac, sizeof(mac), "%02X%02X%02X%02X%02X%02X", 
+			hwaddr[0] & 0xFF,
+			hwaddr[1] & 0xFF,
+			hwaddr[2] & 0xFF,
+			hwaddr[3] & 0xFF,
+			hwaddr[4] & 0xFF,
+			hwaddr[5] & 0xFF
+		);
+
+	return safe_strdup(mac);
 #elif defined(__NetBSD__)
 	struct ifaddrs *ifa, *ifap;
 	const char *hwaddr;
@@ -259,7 +259,7 @@ get_iface_mac(const char *ifname)
 	}
 	for (ifa = ifap; ifa != NULL; ifa = ifa->ifa_next) {
 		if (strcmp(ifa->ifa_name, ifname) == 0 &&
-		    ifa->ifa_addr->sa_family == AF_LINK)
+				ifa->ifa_addr->sa_family == AF_LINK)
 			break;
 	}
 	if (ifa == NULL) {
@@ -269,273 +269,273 @@ get_iface_mac(const char *ifname)
 	sdl = (struct sockaddr_dl *)ifa->ifa_addr;
 	hwaddr = LLADDR(sdl);
 	snprintf(mac, sizeof(mac), "%02X%02X%02X%02X%02X%02X",
-	    hwaddr[0] & 0xFF, hwaddr[1] & 0xFF,
-	    hwaddr[2] & 0xFF, hwaddr[3] & 0xFF,
-	    hwaddr[4] & 0xFF, hwaddr[5] & 0xFF);
+			hwaddr[0] & 0xFF, hwaddr[1] & 0xFF,
+			hwaddr[2] & 0xFF, hwaddr[3] & 0xFF,
+			hwaddr[4] & 0xFF, hwaddr[5] & 0xFF);
 
 	str = safe_strdup(mac);
 out:
 	freeifaddrs(ifap);
 	return str;
 #else
-    return NULL;
+	return NULL;
 #endif
 }
 
-char *
+	char *
 get_ext_iface(void)
 {
 #ifdef __linux__
-    FILE *input;
-    char *device, *gw;
-    int i = 1;
-    int keep_detecting = 1;
-    pthread_cond_t		cond = PTHREAD_COND_INITIALIZER;
-    pthread_mutex_t		cond_mutex = PTHREAD_MUTEX_INITIALIZER;
-    struct	timespec	timeout;
-    device = (char *)malloc(16);
-    gw = (char *)malloc(16);
-    debug(LOG_DEBUG, "get_ext_iface(): Autodectecting the external interface from routing table");
-    while(keep_detecting) {
-        input = fopen("/proc/net/route", "r");
-        while (!feof(input)) {
-	    /* XXX scanf(3) is unsafe, risks overrun */ 
-            fscanf(input, "%s %s %*s %*s %*s %*s %*s %*s %*s %*s %*s\n", device, gw);
-            if (strcmp(gw, "00000000") == 0) {
-                free(gw);
-                debug(LOG_INFO, "get_ext_iface(): Detected %s as the default interface after try %d", device, i);
-                return device;
-            }
-        }
-        fclose(input);
-        debug(LOG_ERR, "get_ext_iface(): Failed to detect the external interface after try %d (maybe the interface is not up yet?).  Retry limit: %d", i, NUM_EXT_INTERFACE_DETECT_RETRY);
-	/* Sleep for EXT_INTERFACE_DETECT_RETRY_INTERVAL seconds */
-	timeout.tv_sec = time(NULL) + EXT_INTERFACE_DETECT_RETRY_INTERVAL;
-	timeout.tv_nsec = 0;
-	/* Mutex must be locked for pthread_cond_timedwait... */
-	pthread_mutex_lock(&cond_mutex);	
-	/* Thread safe "sleep" */
-	pthread_cond_timedwait(&cond, &cond_mutex, &timeout);
-	/* No longer needs to be locked */
-	pthread_mutex_unlock(&cond_mutex);
-	    //for (i=1; i<=NUM_EXT_INTERFACE_DETECT_RETRY; i++) {
-	    if (NUM_EXT_INTERFACE_DETECT_RETRY != 0 && i>NUM_EXT_INTERFACE_DETECT_RETRY) {
-	    	keep_detecting = 0;
-	    }
-	    i++;
-    }
-    debug(LOG_ERR, "get_ext_iface(): Failed to detect the external interface after %d tries, aborting", i);
-    exit(1);
-    free(device);
-    free(gw);
+	FILE *input;
+	char *device, *gw;
+	int i = 1;
+	int keep_detecting = 1;
+	pthread_cond_t		cond = PTHREAD_COND_INITIALIZER;
+	pthread_mutex_t		cond_mutex = PTHREAD_MUTEX_INITIALIZER;
+	struct	timespec	timeout;
+	device = (char *)malloc(16);
+	gw = (char *)malloc(16);
+	debug(LOG_DEBUG, "get_ext_iface(): Autodectecting the external interface from routing table");
+	while(keep_detecting) {
+		input = fopen("/proc/net/route", "r");
+		while (!feof(input)) {
+			/* XXX scanf(3) is unsafe, risks overrun */ 
+			fscanf(input, "%s %s %*s %*s %*s %*s %*s %*s %*s %*s %*s\n", device, gw);
+			if (strcmp(gw, "00000000") == 0) {
+				free(gw);
+				debug(LOG_INFO, "get_ext_iface(): Detected %s as the default interface after try %d", device, i);
+				return device;
+			}
+		}
+		fclose(input);
+		debug(LOG_ERR, "get_ext_iface(): Failed to detect the external interface after try %d (maybe the interface is not up yet?).  Retry limit: %d", i, NUM_EXT_INTERFACE_DETECT_RETRY);
+		/* Sleep for EXT_INTERFACE_DETECT_RETRY_INTERVAL seconds */
+		timeout.tv_sec = time(NULL) + EXT_INTERFACE_DETECT_RETRY_INTERVAL;
+		timeout.tv_nsec = 0;
+		/* Mutex must be locked for pthread_cond_timedwait... */
+		pthread_mutex_lock(&cond_mutex);	
+		/* Thread safe "sleep" */
+		pthread_cond_timedwait(&cond, &cond_mutex, &timeout);
+		/* No longer needs to be locked */
+		pthread_mutex_unlock(&cond_mutex);
+		//for (i=1; i<=NUM_EXT_INTERFACE_DETECT_RETRY; i++) {
+		if (NUM_EXT_INTERFACE_DETECT_RETRY != 0 && i>NUM_EXT_INTERFACE_DETECT_RETRY) {
+			keep_detecting = 0;
+		}
+		i++;
+	}
+	debug(LOG_ERR, "get_ext_iface(): Failed to detect the external interface after %d tries, aborting", i);
+	exit(1);
+	free(device);
+	free(gw);
 #endif
-    return NULL;
-}
-
-void mark_online() {
-	int before;
-	int after;
-
-	before = is_online();
-	time(&last_online_time);
-	after = is_online();
-
-	if (before != after) {
-		debug(LOG_INFO, "ONLINE status became %s", (after ? "ON" : "OFF"));
+	return NULL;
 	}
 
-}
+	void mark_online() {
+		int before;
+		int after;
 
-void mark_offline() {
-	int before;
-	int after;
+		before = is_online();
+		time(&last_online_time);
+		after = is_online();
 
-	before = is_online();
-	time(&last_offline_time);
-	after = is_online();
+		if (before != after) {
+			debug(LOG_INFO, "ONLINE status became %s", (after ? "ON" : "OFF"));
+		}
 
-	if (before != after) {
-		debug(LOG_INFO, "ONLINE status became %s", (after ? "ON" : "OFF"));
 	}
 
-	/* If we're offline it definately means the auth server is offline */
-	mark_auth_offline();
+	void mark_offline() {
+		int before;
+		int after;
 
-}
+		before = is_online();
+		time(&last_offline_time);
+		after = is_online();
 
-int is_online() {
-	if (last_online_time == 0 || (last_offline_time - last_online_time) >= (config_get_config()->checkinterval * 2) ) {
-		/* We're probably offline */
-		return (0);
-	}
-	else {
-		/* We're probably online */
-		return (1);
-	}
-}
+		if (before != after) {
+			debug(LOG_INFO, "ONLINE status became %s", (after ? "ON" : "OFF"));
+		}
 
-void mark_auth_online() {
-	int before;
-	int after;
+		/* If we're offline it definately means the auth server is offline */
+		mark_auth_offline();
 
-	before = is_auth_online();
-	time(&last_auth_online_time);
-	after = is_auth_online();
-
-	if (before != after) {
-		debug(LOG_INFO, "AUTH_ONLINE status became %s", (after ? "ON" : "OFF"));
 	}
 
-	/* If auth server is online it means we're definately online */
-	mark_online();
-
-}
-
-void mark_auth_offline() {
-	int before;
-	int after;
-
-	before = is_auth_online();
-	time(&last_auth_offline_time);
-	after = is_auth_online();
-
-	if (before != after) {
-		debug(LOG_INFO, "AUTH_ONLINE status became %s", (after ? "ON" : "OFF"));
-	}
-
-}
-
-int is_auth_online() {
-	if (!is_online()) {
-		/* If we're not online auth is definately not online :) */
-		return (0);
-	}
-	else if (last_auth_online_time == 0 || (last_auth_offline_time - last_auth_online_time) >= (config_get_config()->checkinterval * 2) ) {
-		/* Auth is  probably offline */
-		return (0);
-	}
-	else {
-		/* Auth is probably online */
-		return (1);
-	}
-}
-
-/*
- * @return A string containing human-readable status text. MUST BE free()d by caller
- */
-char * get_status_text() {
-	char buffer[STATUS_BUF_SIZ];
-	ssize_t len;
-	s_config *config;
-	t_auth_serv *auth_server;
-	t_client	*first;
-	int		count;
-	unsigned long int uptime = 0;
-	unsigned int days = 0, hours = 0, minutes = 0, seconds = 0;
-     t_trusted_mac *p;
-	
-	len = 0;
-	snprintf(buffer, (sizeof(buffer) - len), "WiFiDog status\n\n");
-	len = strlen(buffer);
-
-	uptime = time(NULL) - started_time;
-	days    = uptime / (24 * 60 * 60);
-	uptime -= days * (24 * 60 * 60);
-	hours   = uptime / (60 * 60);
-	uptime -= hours * (60 * 60);
-	minutes = uptime / 60;
-	uptime -= minutes * 60;
-	seconds = uptime;
-
-	snprintf((buffer + len), (sizeof(buffer) - len), "Version: " VERSION "\n");
-	len = strlen(buffer);
-
-	snprintf((buffer + len), (sizeof(buffer) - len), "Uptime: %ud %uh %um %us\n", days, hours, minutes, seconds);
-	len = strlen(buffer);
-
-	snprintf((buffer + len), (sizeof(buffer) - len), "Has been restarted: ");
-	len = strlen(buffer);
-	if (restart_orig_pid) {
-		snprintf((buffer + len), (sizeof(buffer) - len), "yes (from PID %d)\n", restart_orig_pid);
-		len = strlen(buffer);
-	}
-	else {
-		snprintf((buffer + len), (sizeof(buffer) - len), "no\n");
-		len = strlen(buffer);
-	}
-	
-	snprintf((buffer + len), (sizeof(buffer) - len), "Internet Connectivity: %s\n", (is_online() ? "yes" : "no"));
-	len = strlen(buffer);
-	
-	snprintf((buffer + len), (sizeof(buffer) - len), "Auth server reachable: %s\n", (is_auth_online() ? "yes" : "no"));
-	len = strlen(buffer);
-
-	snprintf((buffer + len), (sizeof(buffer) - len), "Clients served this session: %lu\n\n", served_this_session);
-	len = strlen(buffer);
-
-	LOCK_CLIENT_LIST();
-	
-	first = client_get_first_client();
-	
-	if (first == NULL) {
-		count = 0;
-	} else {
-		count = 1;
-		while (first->next != NULL) {
-			first = first->next;
-			count++;
+	int is_online() {
+		if (last_online_time == 0 || (last_offline_time - last_online_time) >= (config_get_config()->checkinterval * 2) ) {
+			/* We're probably offline */
+			return (0);
+		}
+		else {
+			/* We're probably online */
+			return (1);
 		}
 	}
-	
-	snprintf((buffer + len), (sizeof(buffer) - len), "%d clients "
-			"connected.\n", count);
-	len = strlen(buffer);
 
-	first = client_get_first_client();
+	void mark_auth_online() {
+		int before;
+		int after;
 
-	count = 0;
-	while (first != NULL) {
-		snprintf((buffer + len), (sizeof(buffer) - len), "\nClient %d\n", count);
-		len = strlen(buffer);
+		before = is_auth_online();
+		time(&last_auth_online_time);
+		after = is_auth_online();
 
-		snprintf((buffer + len), (sizeof(buffer) - len), "  IP: %s MAC: %s\n", first->ip, first->mac);
-		len = strlen(buffer);
+		if (before != after) {
+			debug(LOG_INFO, "AUTH_ONLINE status became %s", (after ? "ON" : "OFF"));
+		}
 
-		snprintf((buffer + len), (sizeof(buffer) - len), "  Token: %s\n", first->token);
-		len = strlen(buffer);
+		/* If auth server is online it means we're definately online */
+		mark_online();
 
-		snprintf((buffer + len), (sizeof(buffer) - len), "  Downloaded: %llu\n  Uploaded: %llu\n" , first->counters.incoming, first->counters.outgoing);
-		len = strlen(buffer);
-
-		count++;
-		first = first->next;
 	}
 
-	UNLOCK_CLIENT_LIST();
+	void mark_auth_offline() {
+		int before;
+		int after;
 
-    config = config_get_config();
-    
-    if (config->trustedmaclist != NULL) {
-        snprintf((buffer + len), (sizeof(buffer) - len), "\nTrusted MAC addresses:\n");
-        len = strlen(buffer);
+		before = is_auth_online();
+		time(&last_auth_offline_time);
+		after = is_auth_online();
 
-        for (p = config->trustedmaclist; p != NULL; p = p->next) {
-            snprintf((buffer + len), (sizeof(buffer) - len), "  %s\n", p->mac);
-            len = strlen(buffer);
-        }
-    }
+		if (before != after) {
+			debug(LOG_INFO, "AUTH_ONLINE status became %s", (after ? "ON" : "OFF"));
+		}
 
-    snprintf((buffer + len), (sizeof(buffer) - len), "\nAuthentication servers:\n");
-    len = strlen(buffer);
+	}
 
-    LOCK_CONFIG();
+	int is_auth_online() {
+		if (!is_online()) {
+			/* If we're not online auth is definately not online :) */
+			return (0);
+		}
+		else if (last_auth_online_time == 0 || (last_auth_offline_time - last_auth_online_time) >= (config_get_config()->checkinterval * 2) ) {
+			/* Auth is  probably offline */
+			return (0);
+		}
+		else {
+			/* Auth is probably online */
+			return (1);
+		}
+	}
 
-    for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
-        snprintf((buffer + len), (sizeof(buffer) - len), "  Host: %s (%s)\n", auth_server->authserv_hostname, auth_server->last_ip);
-        len = strlen(buffer);
-    }
+	/*
+	 * @return A string containing human-readable status text. MUST BE free()d by caller
+	 */
+	char * get_status_text() {
+		char buffer[STATUS_BUF_SIZ];
+		ssize_t len;
+		s_config *config;
+		t_auth_serv *auth_server;
+		t_client	*first;
+		int		count;
+		unsigned long int uptime = 0;
+		unsigned int days = 0, hours = 0, minutes = 0, seconds = 0;
+		t_trusted_mac *p;
 
-    UNLOCK_CONFIG();
+		len = 0;
+		snprintf(buffer, (sizeof(buffer) - len), "WiFiDog status\n\n");
+		len = strlen(buffer);
 
-	return safe_strdup(buffer);
-}
+		uptime = time(NULL) - started_time;
+		days    = uptime / (24 * 60 * 60);
+		uptime -= days * (24 * 60 * 60);
+		hours   = uptime / (60 * 60);
+		uptime -= hours * (60 * 60);
+		minutes = uptime / 60;
+		uptime -= minutes * 60;
+		seconds = uptime;
+
+		snprintf((buffer + len), (sizeof(buffer) - len), "Version: " VERSION "\n");
+		len = strlen(buffer);
+
+		snprintf((buffer + len), (sizeof(buffer) - len), "Uptime: %ud %uh %um %us\n", days, hours, minutes, seconds);
+		len = strlen(buffer);
+
+		snprintf((buffer + len), (sizeof(buffer) - len), "Has been restarted: ");
+		len = strlen(buffer);
+		if (restart_orig_pid) {
+			snprintf((buffer + len), (sizeof(buffer) - len), "yes (from PID %d)\n", restart_orig_pid);
+			len = strlen(buffer);
+		}
+		else {
+			snprintf((buffer + len), (sizeof(buffer) - len), "no\n");
+			len = strlen(buffer);
+		}
+
+		snprintf((buffer + len), (sizeof(buffer) - len), "Internet Connectivity: %s\n", (is_online() ? "yes" : "no"));
+		len = strlen(buffer);
+
+		snprintf((buffer + len), (sizeof(buffer) - len), "Auth server reachable: %s\n", (is_auth_online() ? "yes" : "no"));
+		len = strlen(buffer);
+
+		snprintf((buffer + len), (sizeof(buffer) - len), "Clients served this session: %lu\n\n", served_this_session);
+		len = strlen(buffer);
+
+		LOCK_CLIENT_LIST();
+
+		first = client_get_first_client();
+
+		if (first == NULL) {
+			count = 0;
+		} else {
+			count = 1;
+			while (first->next != NULL) {
+				first = first->next;
+				count++;
+			}
+		}
+
+		snprintf((buffer + len), (sizeof(buffer) - len), "%d clients "
+				"connected.\n", count);
+		len = strlen(buffer);
+
+		first = client_get_first_client();
+
+		count = 0;
+		while (first != NULL) {
+			snprintf((buffer + len), (sizeof(buffer) - len), "\nClient %d\n", count);
+			len = strlen(buffer);
+
+			snprintf((buffer + len), (sizeof(buffer) - len), "  IP: %s MAC: %s\n", first->ip, first->mac);
+			len = strlen(buffer);
+
+			snprintf((buffer + len), (sizeof(buffer) - len), "  Token: %s\n", first->token);
+			len = strlen(buffer);
+
+			snprintf((buffer + len), (sizeof(buffer) - len), "  Downloaded: %llu\n  Uploaded: %llu\n" , first->counters.incoming, first->counters.outgoing);
+			len = strlen(buffer);
+
+			count++;
+			first = first->next;
+		}
+
+		UNLOCK_CLIENT_LIST();
+
+		config = config_get_config();
+
+		if (config->trustedmaclist != NULL) {
+			snprintf((buffer + len), (sizeof(buffer) - len), "\nTrusted MAC addresses:\n");
+			len = strlen(buffer);
+
+			for (p = config->trustedmaclist; p != NULL; p = p->next) {
+				snprintf((buffer + len), (sizeof(buffer) - len), "  %s\n", p->mac);
+				len = strlen(buffer);
+			}
+		}
+
+		snprintf((buffer + len), (sizeof(buffer) - len), "\nAuthentication servers:\n");
+		len = strlen(buffer);
+
+		LOCK_CONFIG();
+
+		for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
+			snprintf((buffer + len), (sizeof(buffer) - len), "  Host: %s (%s)\n", auth_server->authserv_hostname, auth_server->last_ip);
+			len = strlen(buffer);
+		}
+
+		UNLOCK_CONFIG();
+
+		return safe_strdup(buffer);
+	}

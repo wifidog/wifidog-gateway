@@ -128,41 +128,41 @@ iptables_do_command(const char *format, ...)
  * @arg chain Chain that the command will be (-A)ppended to.
  * @arg rule Definition of a rule into a struct, from conf.c.
  */
-static char *
+	static char *
 iptables_compile(const char * table, const char *chain, const t_firewall_rule *rule)
 {
-        char	command[MAX_BUF],
-                *mode;
+	char	command[MAX_BUF],
+		*mode;
 
-        memset(command, 0, MAX_BUF);
+	memset(command, 0, MAX_BUF);
 
-        if (rule->block_allow == 1) {
-                mode = safe_strdup("ACCEPT");
-        } else {
-                mode = safe_strdup("REJECT");
-        }
+	if (rule->block_allow == 1) {
+		mode = safe_strdup("ACCEPT");
+	} else {
+		mode = safe_strdup("REJECT");
+	}
 
-        snprintf(command, sizeof(command),  "-t %s -A %s ",table, chain);
-        if (rule->mask != NULL) {
-                snprintf((command + strlen(command)), (sizeof(command) - 
-                                        strlen(command)), "-d %s ", rule->mask);
-        }
-        if (rule->protocol != NULL) {
-                snprintf((command + strlen(command)), (sizeof(command) -
-                                        strlen(command)), "-p %s ", rule->protocol);
-        }
-        if (rule->port != NULL) {
-                snprintf((command + strlen(command)), (sizeof(command) -
-                                        strlen(command)), "--dport %s ", rule->port);
-        }
-        snprintf((command + strlen(command)), (sizeof(command) - 
-                                strlen(command)), "-j %s", mode);
+	snprintf(command, sizeof(command),  "-t %s -A %s ",table, chain);
+	if (rule->mask != NULL) {
+		snprintf((command + strlen(command)), (sizeof(command) - 
+					strlen(command)), "-d %s ", rule->mask);
+	}
+	if (rule->protocol != NULL) {
+		snprintf((command + strlen(command)), (sizeof(command) -
+					strlen(command)), "-p %s ", rule->protocol);
+	}
+	if (rule->port != NULL) {
+		snprintf((command + strlen(command)), (sizeof(command) -
+					strlen(command)), "--dport %s ", rule->port);
+	}
+	snprintf((command + strlen(command)), (sizeof(command) - 
+				strlen(command)), "-j %s", mode);
 
-        free(mode);
+	free(mode);
 
-        /* XXX The buffer command, an automatic variable, will get cleaned
-         * off of the stack when we return, so we strdup() it. */
-        return(safe_strdup(command));
+	/* XXX The buffer command, an automatic variable, will get cleaned
+	 * off of the stack when we return, so we strdup() it. */
+	return(safe_strdup(command));
 }
 
 /**
@@ -172,14 +172,14 @@ iptables_compile(const char * table, const char *chain, const t_firewall_rule *r
  * @arg table Table containing the chain.
  * @arg chain IPTables chain the rules go into
  */
-static void
+	static void
 iptables_load_ruleset(const char * table, const char *ruleset, const char *chain)
 {
 	t_firewall_rule		*rule;
 	char			*cmd;
 
 	debug(LOG_DEBUG, "Load ruleset %s into table %s, chain %s", ruleset, table, chain);
-	
+
 	for (rule = get_ruleset(ruleset); rule != NULL; rule = rule->next) {
 		cmd = iptables_compile(table, chain, rule);
 		debug(LOG_DEBUG, "Loading rule \"%s\" into table %s, chain %s", cmd, table, chain);
@@ -190,33 +190,33 @@ iptables_load_ruleset(const char * table, const char *ruleset, const char *chain
 	debug(LOG_DEBUG, "Ruleset %s loaded into table %s, chain %s", ruleset, table, chain);
 }
 
-void
+	void
 iptables_fw_clear_authservers(void)
 {
-    iptables_do_command("-t filter -F " TABLE_WIFIDOG_AUTHSERVERS);
-    iptables_do_command("-t nat -F " TABLE_WIFIDOG_AUTHSERVERS);
+	iptables_do_command("-t filter -F " TABLE_WIFIDOG_AUTHSERVERS);
+	iptables_do_command("-t nat -F " TABLE_WIFIDOG_AUTHSERVERS);
 }
 
-void
+	void
 iptables_fw_set_authservers(void)
 {
-    const s_config *config;
-    t_auth_serv *auth_server;
-   
-    config = config_get_config();
-    
-    for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
-	    if (auth_server->last_ip && strcmp(auth_server->last_ip, "0.0.0.0") != 0) {
-	        iptables_do_command("-t filter -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->last_ip);
-	        iptables_do_command("-t nat -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->last_ip);
-	    }
-    }
+	const s_config *config;
+	t_auth_serv *auth_server;
+
+	config = config_get_config();
+
+	for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
+		if (auth_server->last_ip && strcmp(auth_server->last_ip, "0.0.0.0") != 0) {
+			iptables_do_command("-t filter -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->last_ip);
+			iptables_do_command("-t nat -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->last_ip);
+		}
+	}
 
 }
 
 /** Initialize the firewall rules
- */
-int
+*/
+	int
 iptables_fw_init(void)
 {
 	const s_config *config;
@@ -350,28 +350,28 @@ iptables_fw_init(void)
  * This is used when we do a clean shutdown of WiFiDog and when it starts to make
  * sure there are no rules left over
  */
-int
+	int
 iptables_fw_destroy(void)
 {
-    fw_quiet = 1;
+	fw_quiet = 1;
 
-	 debug(LOG_DEBUG, "Destroying our iptables entries");
+	debug(LOG_DEBUG, "Destroying our iptables entries");
 
-	 /*
-	  *
-	  * Everything in the MANGLE table
-	  *
-	  */
-	 debug(LOG_DEBUG, "Destroying chains in the MANGLE table");
-	 iptables_fw_destroy_mention("mangle", "PREROUTING", TABLE_WIFIDOG_TRUSTED);
-	 iptables_fw_destroy_mention("mangle", "PREROUTING", TABLE_WIFIDOG_OUTGOING);
-	 iptables_fw_destroy_mention("mangle", "POSTROUTING", TABLE_WIFIDOG_INCOMING);
-    iptables_do_command("-t mangle -F " TABLE_WIFIDOG_TRUSTED);
-    iptables_do_command("-t mangle -F " TABLE_WIFIDOG_OUTGOING);
-    iptables_do_command("-t mangle -F " TABLE_WIFIDOG_INCOMING);
-    iptables_do_command("-t mangle -X " TABLE_WIFIDOG_TRUSTED);
-    iptables_do_command("-t mangle -X " TABLE_WIFIDOG_OUTGOING);
-    iptables_do_command("-t mangle -X " TABLE_WIFIDOG_INCOMING);
+	/*
+	 *
+	 * Everything in the MANGLE table
+	 *
+	 */
+	debug(LOG_DEBUG, "Destroying chains in the MANGLE table");
+	iptables_fw_destroy_mention("mangle", "PREROUTING", TABLE_WIFIDOG_TRUSTED);
+	iptables_fw_destroy_mention("mangle", "PREROUTING", TABLE_WIFIDOG_OUTGOING);
+	iptables_fw_destroy_mention("mangle", "POSTROUTING", TABLE_WIFIDOG_INCOMING);
+	iptables_do_command("-t mangle -F " TABLE_WIFIDOG_TRUSTED);
+	iptables_do_command("-t mangle -F " TABLE_WIFIDOG_OUTGOING);
+	iptables_do_command("-t mangle -F " TABLE_WIFIDOG_INCOMING);
+	iptables_do_command("-t mangle -X " TABLE_WIFIDOG_TRUSTED);
+	iptables_do_command("-t mangle -X " TABLE_WIFIDOG_OUTGOING);
+	iptables_do_command("-t mangle -X " TABLE_WIFIDOG_INCOMING);
 
 	/*
 	 *
@@ -381,41 +381,41 @@ iptables_fw_destroy(void)
 	debug(LOG_DEBUG, "Destroying chains in the NAT table");
 	iptables_fw_destroy_mention("nat", "PREROUTING", TABLE_WIFIDOG_OUTGOING);
 	iptables_do_command("-t nat -F " TABLE_WIFIDOG_AUTHSERVERS);
-    iptables_do_command("-t nat -F " TABLE_WIFIDOG_OUTGOING);
-    iptables_do_command("-t nat -F " TABLE_WIFIDOG_WIFI_TO_ROUTER);
-    iptables_do_command("-t nat -F " TABLE_WIFIDOG_WIFI_TO_INTERNET);
-    iptables_do_command("-t nat -F " TABLE_WIFIDOG_GLOBAL);
-    iptables_do_command("-t nat -F " TABLE_WIFIDOG_UNKNOWN);
+	iptables_do_command("-t nat -F " TABLE_WIFIDOG_OUTGOING);
+	iptables_do_command("-t nat -F " TABLE_WIFIDOG_WIFI_TO_ROUTER);
+	iptables_do_command("-t nat -F " TABLE_WIFIDOG_WIFI_TO_INTERNET);
+	iptables_do_command("-t nat -F " TABLE_WIFIDOG_GLOBAL);
+	iptables_do_command("-t nat -F " TABLE_WIFIDOG_UNKNOWN);
 	iptables_do_command("-t nat -X " TABLE_WIFIDOG_AUTHSERVERS);
-    iptables_do_command("-t nat -X " TABLE_WIFIDOG_OUTGOING);
-    iptables_do_command("-t nat -X " TABLE_WIFIDOG_WIFI_TO_ROUTER);
-    iptables_do_command("-t nat -X " TABLE_WIFIDOG_WIFI_TO_INTERNET);
-    iptables_do_command("-t nat -X " TABLE_WIFIDOG_GLOBAL);
-    iptables_do_command("-t nat -X " TABLE_WIFIDOG_UNKNOWN);
+	iptables_do_command("-t nat -X " TABLE_WIFIDOG_OUTGOING);
+	iptables_do_command("-t nat -X " TABLE_WIFIDOG_WIFI_TO_ROUTER);
+	iptables_do_command("-t nat -X " TABLE_WIFIDOG_WIFI_TO_INTERNET);
+	iptables_do_command("-t nat -X " TABLE_WIFIDOG_GLOBAL);
+	iptables_do_command("-t nat -X " TABLE_WIFIDOG_UNKNOWN);
 
-	 /*
-	  *
-	  * Everything in the FILTER table
-	  *
-	  */
-	 debug(LOG_DEBUG, "Destroying chains in the FILTER table");
-	 iptables_fw_destroy_mention("filter", "FORWARD", TABLE_WIFIDOG_WIFI_TO_INTERNET);
-	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_WIFI_TO_INTERNET);
-	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_AUTHSERVERS);
-	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_LOCKED);
-	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_GLOBAL);
-	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_VALIDATE);
-	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_KNOWN);
-	 iptables_do_command("-t filter -F " TABLE_WIFIDOG_UNKNOWN);
-	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_WIFI_TO_INTERNET);
-	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_AUTHSERVERS);
-	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_LOCKED);
-	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_GLOBAL);
-	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_VALIDATE);
-	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_KNOWN);
-	 iptables_do_command("-t filter -X " TABLE_WIFIDOG_UNKNOWN);
+	/*
+	 *
+	 * Everything in the FILTER table
+	 *
+	 */
+	debug(LOG_DEBUG, "Destroying chains in the FILTER table");
+	iptables_fw_destroy_mention("filter", "FORWARD", TABLE_WIFIDOG_WIFI_TO_INTERNET);
+	iptables_do_command("-t filter -F " TABLE_WIFIDOG_WIFI_TO_INTERNET);
+	iptables_do_command("-t filter -F " TABLE_WIFIDOG_AUTHSERVERS);
+	iptables_do_command("-t filter -F " TABLE_WIFIDOG_LOCKED);
+	iptables_do_command("-t filter -F " TABLE_WIFIDOG_GLOBAL);
+	iptables_do_command("-t filter -F " TABLE_WIFIDOG_VALIDATE);
+	iptables_do_command("-t filter -F " TABLE_WIFIDOG_KNOWN);
+	iptables_do_command("-t filter -F " TABLE_WIFIDOG_UNKNOWN);
+	iptables_do_command("-t filter -X " TABLE_WIFIDOG_WIFI_TO_INTERNET);
+	iptables_do_command("-t filter -X " TABLE_WIFIDOG_AUTHSERVERS);
+	iptables_do_command("-t filter -X " TABLE_WIFIDOG_LOCKED);
+	iptables_do_command("-t filter -X " TABLE_WIFIDOG_GLOBAL);
+	iptables_do_command("-t filter -X " TABLE_WIFIDOG_VALIDATE);
+	iptables_do_command("-t filter -X " TABLE_WIFIDOG_KNOWN);
+	iptables_do_command("-t filter -X " TABLE_WIFIDOG_UNKNOWN);
 
-    return 1;
+	return 1;
 }
 
 /*
@@ -429,7 +429,7 @@ iptables_fw_destroy_mention(
 		const char * table,
 		const char * chain,
 		const char * mention
-) {
+		) {
 	FILE *p = NULL;
 	char *command = NULL;
 	char *command2 = NULL;
@@ -440,7 +440,7 @@ iptables_fw_destroy_mention(
 	debug(LOG_DEBUG, "Attempting to destroy all mention of %s from %s.%s", mention, table, chain);
 
 	safe_asprintf(&command, "iptables -t %s -L %s -n --line-numbers -v", table, chain);
-        iptables_insert_gateway_id(&command);
+	iptables_insert_gateway_id(&command);
 
 	if ((p = popen(command, "r"))) {
 		/* Skip first 2 lines */
@@ -477,118 +477,118 @@ iptables_fw_destroy_mention(
 }
 
 /** Set if a specific client has access through the firewall */
-int
+	int
 iptables_fw_access(fw_access_t type, const char *ip, const char *mac, int tag)
 {
-    int rc;
+	int rc;
 
-    fw_quiet = 0;
+	fw_quiet = 0;
 
-    switch(type) {
-        case FW_ACCESS_ALLOW:
-            iptables_do_command("-t mangle -A " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
-            rc = iptables_do_command("-t mangle -A " TABLE_WIFIDOG_INCOMING " -d %s -j ACCEPT", ip);
-            break;
-        case FW_ACCESS_DENY:
-            iptables_do_command("-t mangle -D " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
-            rc = iptables_do_command("-t mangle -D " TABLE_WIFIDOG_INCOMING " -d %s -j ACCEPT", ip);
-            break;
-        default:
-            rc = -1;
-            break;
-    }
+	switch(type) {
+		case FW_ACCESS_ALLOW:
+			iptables_do_command("-t mangle -A " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
+			rc = iptables_do_command("-t mangle -A " TABLE_WIFIDOG_INCOMING " -d %s -j ACCEPT", ip);
+			break;
+		case FW_ACCESS_DENY:
+			iptables_do_command("-t mangle -D " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
+			rc = iptables_do_command("-t mangle -D " TABLE_WIFIDOG_INCOMING " -d %s -j ACCEPT", ip);
+			break;
+		default:
+			rc = -1;
+			break;
+	}
 
-    return rc;
+	return rc;
 }
 
 /** Update the counters of all the clients in the client list */
-int
+	int
 iptables_fw_counters_update(void)
 {
-    FILE *output;
-    char *script,
-        ip[16],
-        rc;
-    unsigned long long int counter;
-    t_client *p1;
-	 struct in_addr tempaddr;
+	FILE *output;
+	char *script,
+	     ip[16],
+	     rc;
+	unsigned long long int counter;
+	t_client *p1;
+	struct in_addr tempaddr;
 
-    /* Look for outgoing traffic */
-    safe_asprintf(&script, "%s %s", "iptables", "-v -n -x -t mangle -L " TABLE_WIFIDOG_OUTGOING);
-    iptables_insert_gateway_id(&script);
-    output = popen(script, "r");
-    free(script);
-    if (!output) {
-        debug(LOG_ERR, "popen(): %s", strerror(errno));
-        return -1;
-    }
+	/* Look for outgoing traffic */
+	safe_asprintf(&script, "%s %s", "iptables", "-v -n -x -t mangle -L " TABLE_WIFIDOG_OUTGOING);
+	iptables_insert_gateway_id(&script);
+	output = popen(script, "r");
+	free(script);
+	if (!output) {
+		debug(LOG_ERR, "popen(): %s", strerror(errno));
+		return -1;
+	}
 
-    /* skip the first two lines */
-    while (('\n' != fgetc(output)) && !feof(output))
-        ;
-    while (('\n' != fgetc(output)) && !feof(output))
-        ;
-    while (output && !(feof(output))) {
-        rc = fscanf(output, "%*s %llu %*s %*s %*s %*s %*s %15[0-9.] %*s %*s %*s %*s %*s 0x%*u", &counter, ip);
-        if (2 == rc && EOF != rc) {
-			  /* Sanity*/
-			  if (!inet_aton(ip, &tempaddr)) {
-				  debug(LOG_WARNING, "I was supposed to read an IP address but instead got [%s] - ignoring it", ip);
-				  continue;
-			  }
-            debug(LOG_DEBUG, "Read outgoing traffic for %s: Bytes=%llu", ip, counter);
-	    LOCK_CLIENT_LIST();
-            if ((p1 = client_list_find_by_ip(ip))) {
-                if ((p1->counters.outgoing - p1->counters.outgoing_history) < counter) {
-                    p1->counters.outgoing = p1->counters.outgoing_history + counter;
-                    p1->counters.last_updated = time(NULL);
-                    debug(LOG_DEBUG, "%s - Updated counter.outgoing to %llu bytes.  Updated last_updated to %d", ip, counter, p1->counters.last_updated);
-                }
-            } else {
-                debug(LOG_ERR, "Could not find %s in client list", ip);
-            }
-	    UNLOCK_CLIENT_LIST();
-        }
-    }
-    pclose(output);
+	/* skip the first two lines */
+	while (('\n' != fgetc(output)) && !feof(output))
+		;
+	while (('\n' != fgetc(output)) && !feof(output))
+		;
+	while (output && !(feof(output))) {
+		rc = fscanf(output, "%*s %llu %*s %*s %*s %*s %*s %15[0-9.] %*s %*s %*s %*s %*s 0x%*u", &counter, ip);
+		if (2 == rc && EOF != rc) {
+			/* Sanity*/
+			if (!inet_aton(ip, &tempaddr)) {
+				debug(LOG_WARNING, "I was supposed to read an IP address but instead got [%s] - ignoring it", ip);
+				continue;
+			}
+			debug(LOG_DEBUG, "Read outgoing traffic for %s: Bytes=%llu", ip, counter);
+			LOCK_CLIENT_LIST();
+			if ((p1 = client_list_find_by_ip(ip))) {
+				if ((p1->counters.outgoing - p1->counters.outgoing_history) < counter) {
+					p1->counters.outgoing = p1->counters.outgoing_history + counter;
+					p1->counters.last_updated = time(NULL);
+					debug(LOG_DEBUG, "%s - Updated counter.outgoing to %llu bytes.  Updated last_updated to %d", ip, counter, p1->counters.last_updated);
+				}
+			} else {
+				debug(LOG_ERR, "Could not find %s in client list", ip);
+			}
+			UNLOCK_CLIENT_LIST();
+		}
+	}
+	pclose(output);
 
-    /* Look for incoming traffic */
-    safe_asprintf(&script, "%s %s", "iptables", "-v -n -x -t mangle -L " TABLE_WIFIDOG_INCOMING);
-    iptables_insert_gateway_id(&script);
-    output = popen(script, "r");
-    free(script);
-    if (!output) {
-        debug(LOG_ERR, "popen(): %s", strerror(errno));
-        return -1;
-    }
+	/* Look for incoming traffic */
+	safe_asprintf(&script, "%s %s", "iptables", "-v -n -x -t mangle -L " TABLE_WIFIDOG_INCOMING);
+	iptables_insert_gateway_id(&script);
+	output = popen(script, "r");
+	free(script);
+	if (!output) {
+		debug(LOG_ERR, "popen(): %s", strerror(errno));
+		return -1;
+	}
 
-    /* skip the first two lines */
-    while (('\n' != fgetc(output)) && !feof(output))
-        ;
-    while (('\n' != fgetc(output)) && !feof(output))
-        ;
-    while (output && !(feof(output))) {
-        rc = fscanf(output, "%*s %llu %*s %*s %*s %*s %*s %*s %15[0-9.]", &counter, ip);
-        if (2 == rc && EOF != rc) {
-			  /* Sanity*/
-			  if (!inet_aton(ip, &tempaddr)) {
-				  debug(LOG_WARNING, "I was supposed to read an IP address but instead got [%s] - ignoring it", ip);
-				  continue;
-			  }
-            debug(LOG_DEBUG, "Read incoming traffic for %s: Bytes=%llu", ip, counter);
-	    LOCK_CLIENT_LIST();
-            if ((p1 = client_list_find_by_ip(ip))) {
-                if ((p1->counters.incoming - p1->counters.incoming_history) < counter) {
-                    p1->counters.incoming = p1->counters.incoming_history + counter;
-                    debug(LOG_DEBUG, "%s - Updated counter.incoming to %llu bytes", ip, counter);
-                }
-            } else {
-                debug(LOG_ERR, "Could not find %s in client list", ip);
-            }
-	    UNLOCK_CLIENT_LIST();
-        }
-    }
-    pclose(output);
+	/* skip the first two lines */
+	while (('\n' != fgetc(output)) && !feof(output))
+		;
+	while (('\n' != fgetc(output)) && !feof(output))
+		;
+	while (output && !(feof(output))) {
+		rc = fscanf(output, "%*s %llu %*s %*s %*s %*s %*s %*s %15[0-9.]", &counter, ip);
+		if (2 == rc && EOF != rc) {
+			/* Sanity*/
+			if (!inet_aton(ip, &tempaddr)) {
+				debug(LOG_WARNING, "I was supposed to read an IP address but instead got [%s] - ignoring it", ip);
+				continue;
+			}
+			debug(LOG_DEBUG, "Read incoming traffic for %s: Bytes=%llu", ip, counter);
+			LOCK_CLIENT_LIST();
+			if ((p1 = client_list_find_by_ip(ip))) {
+				if ((p1->counters.incoming - p1->counters.incoming_history) < counter) {
+					p1->counters.incoming = p1->counters.incoming_history + counter;
+					debug(LOG_DEBUG, "%s - Updated counter.incoming to %llu bytes", ip, counter);
+				}
+			} else {
+				debug(LOG_ERR, "Could not find %s in client list", ip);
+			}
+			UNLOCK_CLIENT_LIST();
+		}
+	}
+	pclose(output);
 
-    return 1;
+	return 1;
 }
