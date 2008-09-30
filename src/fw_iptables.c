@@ -440,7 +440,7 @@ iptables_fw_destroy_mention(
 
 	iptables_insert_gateway_id(&victim);
 
-	debug(LOG_DEBUG, "Attempting to destroy all mention of %s from %s.%s", mention, table, chain);
+	debug(LOG_DEBUG, "Attempting to destroy all mention of %s from %s.%s", victim, table, chain);
 
 	safe_asprintf(&command, "iptables -t %s -L %s -n --line-numbers -v", table, chain);
 	iptables_insert_gateway_id(&command);
@@ -451,12 +451,12 @@ iptables_fw_destroy_mention(
 		while (!feof(p) && fgetc(p) != '\n');
 		/* Loop over entries */
 		while (fgets(line, sizeof(line), p)) {
-			/* Look for mention */
-			if (strstr(line, mention)) {
-				/* Found mention - Get the rule number into rulenum*/
+			/* Look for victim */
+			if (strstr(line, victim)) {
+				/* Found victim - Get the rule number into rulenum*/
 				if (sscanf(line, "%9[0-9]", rulenum) == 1) {
 					/* Delete the rule: */
-					debug(LOG_DEBUG, "Deleting rule %s from %s.%s because it mentions %s", rulenum, table, chain, mention);
+					debug(LOG_DEBUG, "Deleting rule %s from %s.%s because it mentions %s", rulenum, table, chain, victim);
 					safe_asprintf(&command2, "-t %s -D %s %s", table, chain, rulenum);
 					iptables_do_command(command2);
 					free(command2);
