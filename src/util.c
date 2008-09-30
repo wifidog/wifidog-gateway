@@ -110,16 +110,18 @@ execute(char *cmd_line, int quiet)
         if (pid == 0) {    /* for the child process:         */
                 /* We don't want to see any errors if quiet flag is on */
                 if (quiet) close(2);
-                if (execvp("/bin/sh", (char *const *)new_argv) < 0) {    /* execute the command  */
+                if (execvp("/bin/sh", (char *const *)new_argv) == -1) {    /* execute the command  */
                         debug(LOG_ERR, "execvp(): %s", strerror(errno));
-                        exit(1);
-                }
+                } else {
+                        debug(LOG_ERR, "execvp() failed");
+		}
+		exit(1);
         }
-        else {        /* for the parent:      */
-                debug(LOG_DEBUG, "Waiting for PID %d to exit", pid);
-                rc = waitpid(pid, &status, 0);
-                debug(LOG_DEBUG, "Process PID %d exited", rc);
-        }
+
+        /* for the parent:      */
+	debug(LOG_DEBUG, "Waiting for PID %d to exit", pid);
+	rc = waitpid(pid, &status, 0);
+	debug(LOG_DEBUG, "Process PID %d exited", rc);
 
         return (WEXITSTATUS(status));
 }
