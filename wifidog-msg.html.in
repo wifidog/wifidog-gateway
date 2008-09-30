@@ -36,6 +36,10 @@ a:visited {
   border-bottom: 0;
 }
 
+#header h2 {
+  margin: 0pt;
+}
+
 #menu {
   width: 200px;
   float: right;
