@@ -1,6 +1,8 @@
 # $Id$
 
 2008-09-30 Wichert Akkerman <wichert@wiggy.net>
+	* Include the gw_id in auth server updates so the client does not have
+	  to keep track of it in a session.
 	* Include the gateway id in the firewall table names. Fixes ticket #466
 	* URL encode the token before transmitting (it was already decoded).
 	  Fixes ticket #473
