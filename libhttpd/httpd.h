@@ -112,9 +112,9 @@ typedef	struct {
 		userAgent[HTTP_MAX_URL],
 		referer[HTTP_MAX_URL],
 		contentType[HTTP_MAX_URL],
-		authUser[HTTP_MAX_AUTH],
-		authPassword[HTTP_MAX_AUTH];
 #endif
+	char	authUser[HTTP_MAX_AUTH];
+	char	authPassword[HTTP_MAX_AUTH];
 } httpReq;
 
 
@@ -235,6 +235,8 @@ httpVar *httpdGetNextVariableByPrefix __ANSI_PROTO((httpVar*, const char*));
 
 httpAcl *httpdAddAcl __ANSI_PROTO((httpd*, httpAcl*, char*, int));
 
+void httpdAuthenticate __ANSI_PROTO((request*, const char*));
+void httpdForceAuthenticate __ANSI_PROTO((request*, const char*));
 
 /***********************************************************************
 ** Standard header file footer.  

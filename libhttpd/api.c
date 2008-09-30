@@ -485,7 +485,6 @@ int httpdReadRequest(httpd *server, request *r)
 			}
 			*/
 #endif
-#if 0
 			if (strncasecmp(buf,"Authorization: ",15) == 0)
 			{
 				cp = index(buf,':') + 2;
@@ -513,7 +512,6 @@ int httpdReadRequest(httpd *server, request *r)
 						authBuf, HTTP_MAX_AUTH);
 				}
 			}
-#endif
 #if 0
 			if (strncasecmp(buf,"Referer: ",9) == 0)
 			{
@@ -1019,7 +1017,7 @@ void httpdSetErrorLog(server, fp)
 	server->errorLog = fp;
 }
 
-void httpdAuthenticate(request *r, char *realm)
+void httpdAuthenticate(request *r, const char *realm)
 {
 	char	buffer[255];
 
@@ -1034,7 +1032,7 @@ void httpdAuthenticate(request *r, char *realm)
 }
 
 
-void httpdForceAuthenticate(request *r, char *realm)
+void httpdForceAuthenticate(request *r, const char *realm)
 {
 	char	buffer[255];
 
