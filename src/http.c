@@ -137,8 +137,18 @@ http_callback_about(httpd *webserver, request *r)
 void 
 http_callback_status(httpd *webserver, request *r)
 {
+	const s_config *config = config_get_config();
 	char * status = NULL;
 	char *buf;
+
+	if (config->httpdusername && 
+			(strcmp(config->httpdusername, r->request.authUser) ||
+			 strcmp(config->httpdpassword, r->request.authPassword))) {
+		debug(LOG_INFO, "Status page requested, forcing authentication");
+		httpdForceAuthenticate(r, config->httpdrealm);
+		return;
+	}
+
 	status = get_status_text();
 	safe_asprintf(&buf, "<pre>%s</pre>", status);
 	send_http_page(r, "WiFiDog Status", buf);
