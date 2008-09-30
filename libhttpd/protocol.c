@@ -467,6 +467,7 @@ httpDir *_httpd_findContentDir(server, dir, createFlag)
 		*curChild;
 
 	strncpy(buffer, dir, HTTP_MAX_URL);
+        buffer[HTTP_MAX_URL-1]=0;
 	curItem = server->content;
 	curDir = strtok(buffer,"/");
 	while(curDir)
