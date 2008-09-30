@@ -113,7 +113,7 @@ iptables_do_command(const char *format, ...)
 	rc = execute(cmd, fw_quiet);
 
 	if (rc!=0)
-		debug(LOG_ERR, "iptables comand failed: %s", cmd);
+		debug(LOG_ERR, "iptables comand failed(%d): %s", rc, cmd);
 
 	free(cmd);
 
