@@ -69,6 +69,7 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 	size_t totalbytes;
 	char buf[MAX_BUF];
 	char *tmp;
+        char *safe_token;
 	int done, nfds;
 	fd_set			readfds;
 	struct timeval		timeout;
@@ -89,6 +90,7 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 	 * everywhere.
 	 */
 	memset(buf, 0, sizeof(buf));
+        safe_token=httpdUrlEncode(token);
 	snprintf(buf, (sizeof(buf) - 1),
 		"GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu HTTP/1.0\r\n"
 		"User-Agent: WiFiDog %s\r\n"
@@ -99,12 +101,14 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 		request_type,
 		ip,
 		mac,
-		token,
+		safe_token,
 		incoming,
 		outgoing,
 		VERSION,
 		auth_server->authserv_hostname
 	);
+
+        free(safe_token);
 
 	debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", buf);
 	send(sockfd, buf, strlen(buf), 0);
