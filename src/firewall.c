@@ -135,7 +135,7 @@ arp_get(char *req_ip)
 
 	 /* Find ip, copy mac in reply */
 	 reply = NULL;
-    while (!feof(proc) && (fscanf(proc, " %15[0-9.] %*s %*s %17[A-F0-9:] %*s %*s", ip, mac) == 2)) {
+    while (!feof(proc) && (fscanf(proc, " %15[0-9.] %*s %*s %17[A-Fa-f0-9:] %*s %*s", ip, mac) == 2)) {
 		  if (strcmp(ip, req_ip) == 0) {
 				reply = safe_strdup(mac);
 				break;
@@ -248,7 +248,7 @@ fw_sync_with_authserver(void)
 	    UNLOCK_CLIENT_LIST();
         /* Ping the client, if he responds it'll keep activity on the link.
          * However, if the firewall blocks it, it will not help.  The suggested
-         * way to deal witht his is to keep the DHCP lease time extremely 
+         * way to deal witht his is to keep the DHCP lease time extremely
          * short:  Shorter than config->checkinterval * config->clienttimeout */
         icmp_ping(ip);
         /* Update the counters on the remote server only if we have an auth server */
@@ -256,7 +256,7 @@ fw_sync_with_authserver(void)
             auth_server_request(&authresponse, REQUEST_TYPE_COUNTERS, ip, mac, token, incoming, outgoing);
         }
 	    LOCK_CLIENT_LIST();
-	
+
         if (!(p1 = client_list_find(ip, mac))) {
             debug(LOG_ERR, "Node %s was freed while being re-validated!", ip);
         } else {
@@ -353,7 +353,7 @@ icmp_ping(char *host)
 {
 	struct sockaddr_in saddr;
 #if defined(__linux__) || defined(__NetBSD__)
-	struct { 
+	struct {
 		struct ip ip;
 		struct icmp icmp;
 	} packet;
@@ -378,7 +378,7 @@ icmp_ping(char *host)
 		j += ((unsigned short *)&packet.icmp)[i];
 
 	while (j >> 16)
-		j = (j & 0xffff) + (j >> 16);  
+		j = (j & 0xffff) + (j >> 16);
 
 	packet.icmp.icmp_cksum = (j == 0xffff) ? j : ~j;
 
@@ -414,7 +414,7 @@ unsigned short rand16(void) {
 
     /* Some rand() implementations have less randomness in low bits
      * than in high bits, so we only pay attention to the high ones.
-     * But most implementations don't touch the high bit, so we 
+     * But most implementations don't touch the high bit, so we
      * ignore that one.
      **/
       return( (unsigned short) (rand() >> 15) );
