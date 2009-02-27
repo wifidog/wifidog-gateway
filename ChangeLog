@@ -1,6 +1,7 @@
 # $Id$
 2009-02-27 Benoit Gr�goire  <bock@step.polymtl.ca>
 	* Fix #488 and #493 (arp_get() in firewall.c couldn't parse lowercase mac's from /proc/net/arp) with patch from	jch@pps.jussieu.fr.  Otherwise wifidog wouldn't work with recent openwrt and Ubuntu.
+	* Fix #525
 	
 2008-09-30 Wichert Akkerman <wichert@wiggy.net>
 	* Add exitcode to iptables failure errors.
