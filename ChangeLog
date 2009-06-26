@@ -1,5 +1,8 @@
 # $Id$
-2009-02-27 Benoit Gr�goire  <bock@step.polymtl.ca>
+2009-02-27 Benoit Grégoire  <bock@step.polymtl.ca>
+	* Fix #518
+
+2009-02-27 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Fix #488 and #493 (arp_get() in firewall.c couldn't parse lowercase mac's from /proc/net/arp) with patch from	jch@pps.jussieu.fr.  Otherwise wifidog wouldn't work with recent openwrt and Ubuntu.
 	* Fix #525
 	
@@ -23,25 +26,25 @@
 	* Compatiblity fix: Libhttpd assumes that type u_int is defined. Added an #ifndef/#include <sys/types.h> pair to httpd.h to make sure that assertion is true.
 	* Integrated patch #453 from Wichert Akkerman <wichert@wiggy.net>: Add configurable html to wifidog error messages. This has been a long-requested feature.
 
-2008-04-13 Benoit Gr�goire  <bock@step.polymtl.ca>
+2008-04-13 Benoit Grégoire  <bock@step.polymtl.ca>
 	* contrib/build-openwrt-kamikazeipk/wifidog/Makefile:  Add iptables userspace dependencies
 	* Release 1.1.5
 	
-2008-03-24 Benoit Gr�goire  <bock@step.polymtl.ca>
+2008-03-24 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Integrate with OpenWRT kamikaze build system
 
-2007-11-01 Benoit Gr�goire  <bock@step.polymtl.ca>
+2007-11-01 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Apply portability patches by David Young <dyoung@pobox.com>.  These have been reviewed, but not tested.
 
-2007-10-18 Benoit Gr�goire  <bock@step.polymtl.ca>
+2007-10-18 Benoit Grégoire  <bock@step.polymtl.ca>
 	* fw_iptables.c: From Philippe April:  reverted change made in 1241 so we properly remove the entry from mangle.WiFiDog_Incoming when kicking out users, it was affecting statistics 
 	* Update doxygen.cfg.in for latest version and to fix path ambiguity during make dist.
 	* Release 1.1.4
 
-2007-07-06 Benoit Gr�goire  <bock@step.polymtl.ca>
+2007-07-06 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Makefile.am:  Slight change in make ipk tagrget.  It seems that sometimes builddir isn't defined.  srcdir works just as well in this case.
 	
-2007-06-27 Benoit Gr�goire  <bock@step.polymtl.ca>
+2007-06-27 Benoit Grégoire  <bock@step.polymtl.ca>
 	* util.c:  Fix while loop initialisation bug
 	* conf.h:  Forgot to change the value of NUM_EXT_INTERFACE_DETECT_RETRY to actually make it wait forever.
 	* Remove hardcoded authserver paths.  Can now be defined in the config file (auth server section).
@@ -49,7 +52,7 @@
 	* Add manual logout URL, based in part on work by David Bird
 	* Release 1.1.3 final
 	
-2007-06-24 Benoit Gr�goire  <bock@step.polymtl.ca>
+2007-06-24 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Close #321:  Make the Gateway retry forever if it cannot find it's interface.  You never know when someone may finally replug the network cable or something...
 	* Close #332:  Apply patch from Laurent Marchal. biguphpc<AT>gmail<DOT>com
 	* fw_iptables.c:  Fix error in iptables_fw_access().  Rules were created as ACCEPT instead of DROP
@@ -57,23 +60,23 @@
 	* doc/wifidog_firewall_map.dia:  At long last, full documentation of the firewall.  We would have avoided a lot of stupid mistakes if we produced that sooner.
 	* Release 1.1.3_rc1
 
-2007-05-24 Benoit Gr�goire  <bock@step.polymtl.ca>
+2007-05-24 Benoit Grégoire  <bock@step.polymtl.ca>
 	* wdctl_thread.c:  Fix #324, again.  Credit goes to Medea, I misunderstood his instructons.
 	* From David Bird <david@coova.com> libhttpd/: Fix #266 - don't process query string parameters and keep them in that request.path.
 
-2007-05-18 Benoit Gr�goire  <bock@step.polymtl.ca>
+2007-05-18 Benoit Grégoire  <bock@step.polymtl.ca>
 	* wdctl_thread.c:  Fix #324
 	
-2007-04-26 Benoit Gr�goire  <bock@step.polymtl.ca>
+2007-04-26 Benoit Grégoire  <bock@step.polymtl.ca>
 	* wifidog.conf:  Improve comments and add examples of blocking access to the upstream LAN.
 
-2007-04-26 Benoit Gr�goire  <bock@step.polymtl.ca>
+2007-04-26 Benoit Grégoire  <bock@step.polymtl.ca>
 	* conf.h:  The DEFAULT_CHECKINTERVAL was 5 instead of 60 (as stated in the config file) which caused huge needless load on the auth servers, and needless ping traffic towards the clients if it wasn't manually set.
 
-2007-04-09 Benoit Gr�goire  <bock@step.polymtl.ca>
+2007-04-09 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Makefile.am:  Slight path fix when using building make ipk.  Tell me if you have trouble with this
 
-2007-01-06 Benoit Gr�goire  <bock@step.polymtl.ca>
+2007-01-06 Benoit Grégoire  <bock@step.polymtl.ca>
 	* contrib/ Add contrib dir to collect the scripts and other code distributed with, but not really part of wifidog.
 	* Include the scripts used to build a ipkg on Openwrt RC6 and 0.9
 	* Modify the build system to finally be able to build wifidog directly from the wifidog directory using the same files 
@@ -84,11 +87,11 @@
 	* scripts/openwrt/ remove obsolete dir.
 	* contrib/dump_fw.sh:  Convenience script for firewall debugging.
 		
-2007-01-06 Benoit Gr�goire  <bock@step.polymtl.ca>
+2007-01-06 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Documentation update in the code
 	* Released 1.1.3_beta6
 
-2006-10-26 Benoit Gr�goire  <bock@step.polymtl.ca>
+2006-10-26 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/conf.h: Fix #238 by using $sysconfdir to compute the default config-file location.
 	
 2006-10-08 Alexandre Carmel-Veilleux <acv@miniguru.ca>
@@ -96,7 +99,7 @@
 	* Broken down some printf's on multiple lines.
 	* Added comments.
 
-2006-09-14 Benoit Gr�goire  <bock@step.polymtl.ca>
+2006-09-14 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/util.c, src/conf.h: Fix autodectection of the External interface if not specified in the config file.  If the interface (typically pppoe) wasn't yet fully up when wifidog starts, wifidog would stop every connection from going trough.  It will now retry every second for up to two minutes, and then exit with a fatal error if it can't successfully detect it.
 
 2006-02-23 Philippe April <philippe@ilesansfil.org>
@@ -107,19 +110,19 @@
 	* Fixed wdctl reset problem
 	* Released 1.1.3_beta4
 
-2006-02-06 Benoit Gr�goire  <bock@step.polymtl.ca>
+2006-02-06 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/fw_iptables.c: Fix deleting the rules on shutdown.
 
-2006-01-31 Benoit Gr�goire  <bock@step.polymtl.ca>
+2006-01-31 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Release 1.1.3_beta2
 	
-2006-01-31 Benoit Gr�goire  <bock@step.polymtl.ca>
+2006-01-31 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/fw_iptables.c:  Add the global ruleset to the nat table to fix #65.
 	Add the table parameter to iptables_load_ruleset() and iptables_compile
 	* libhttpd/protocol.c:  Fix pointer type mismatch
     * src/conf.c,h:  Remove deprecated option AuthServMaxTries (which was already ignored anyway.	
 	
-2006-01-23 Benoit Gr�goire  <bock@step.polymtl.ca>
+2006-01-23 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/conf.h:  Fix the value of DEFAULT_AUTHSERVPATH and completely wrong code comment.  Not the default indicated in the config file and the define are in sync.
 
 2006-01-17 Mina Naguib <mina@ilesansfil.org>
@@ -422,10 +425,10 @@
 	* src/conf.c: NULL-fill auth_server struct so that
 	  auth_server->last_ip always equals NULL when first filled.
 
-2004-12-16 Benoit Gr�goire  <bock@step.polymtl.ca>
+2004-12-16 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/fw_iptables.c: Display iptables command that is run in debug mode.
 	
-2004-12-07 Benoit Gr�goire  <bock@step.polymtl.ca>
+2004-12-07 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/firewall.c: Fix reversed incoming and outgoing connections in statistics code
 	* bump version to alpha3
 
@@ -448,7 +451,7 @@
 	* src/fw_iptables.[ch]: Firewall rule set enacting code.
 	* configure.in: bumped version to 1.1.0-alpha2
 
-2004-11-18 Benoit Gr�goire  <bock@step.polymtl.ca>
+2004-11-18 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/ping_thread.c: Merge phil's bug fixes from stable branch
 	* ipkg/rules:  Merge phil's bug fixes from stable branch
 	* configure.in:  Set version to 1.1.0alpha
@@ -536,7 +539,7 @@
 	* ChangeLog: Benoit's last update entry was set in the future ;-).
 	* All over src/: Compiled with -Wall and fixed all nagging.
 
-2004-08-30 Benoit Gr�goire  <bock@step.polymtl.ca>
+2004-08-30 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Makefile.am: Add rpm target
 	* wifidog.spec.in:  Rework spec file.  Now works and include the init script
 	* ipkg/rules:  Deal with the incomplete init.d system of the OpenWrt.   Install scripts/init.d/wifidog as /usr/bin/wifidog-init, and call wifidog-init start from S65wifidog. 
@@ -544,7 +547,7 @@
 	* scripts/init.d/wifidog:  Fix performance and protability problem.  Make it chkconfig compliant.  Test that chkconfig --add wifidog works (at least on mandrake)
  	* src/wdctl.c:  Change some message, make sure wdctl return 0 unless there is an error.
 	
-2004-08-30 Benoit Gr�goire  <bock@step.polymtl.ca>
+2004-08-30 Benoit Grégoire  <bock@step.polymtl.ca>
 	* README.openwrt:  Documentation update
 	* Makefile.am:  Make a ipkg target to ease WRT54G installation
 	* ipkg/rules:  Add wdctl and the init.d script.
@@ -570,7 +573,7 @@
 	* Makefile.am: Include debian/* files.
 	* We should now be able to package .deb and .rpm from dist.
 
-2004-08-27 Benoit Gr�goire  <bock@step.polymtl.ca>
+2004-08-27 Benoit Grégoire  <bock@step.polymtl.ca>
 	* README.openwrt,src/conf.c,h:  Documentation update
 	* src/gateway.c, src/ping_thread.c, src/wdctl.c, src/wdctl_thread.c:  Fix linking problems related to errno.h and extern int errno 
 	
@@ -580,13 +583,13 @@
 2004-08-25 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* src/auth.c: Path as changed in 1.26 was preceded by a /, the path already contains a / so it would yield http://host//path/
 
-2004-08-25 Benoit Gr�goire  <bock@step.polymtl.ca>
+2004-08-25 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/auth.c:  Remove hardcoded path.
 	
-2004-08-23 Benoit Gr�goire  <bock@step.polymtl.ca>
+2004-08-23 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/ping_thread.c:  Send the gateway id to the central server during ping, so the server know which gateway checked in, and then knows for sure that it is up (well, once the server implements it...).
 	
-2004-08-23 Benoit Gr�goire  <bock@step.polymtl.ca>
+2004-08-23 Benoit Grégoire  <bock@step.polymtl.ca>
 	* src/centralserver.c:  Fix path for auth by appending /auth/ to auth_server->authserv_path.  Wifidog works again.
 	
 2004-08-20 Alexandre Carmel-Veilleux <acv@acv.ca>
@@ -622,7 +625,7 @@
 2004-08-03 Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Fixed broken sockaddr_un usage in wdctl.c and wdctl_thread.c
 
-2004-08-01 Benoit Gr�goire  <bock@step.polymtl.ca>
+2004-08-01 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Delete everything in phpauth, it will now live in it's own module (wifidog-auth)
 
 2004-08-01 Alexandre Carmel-Veilleux <acv@acv.ca>
@@ -652,7 +655,7 @@
 2004-05-28 Philippe April <papril777@yahoo.com>
     * Fixed bugs implemented after major changes
 
-2004-05-27 Benoit Gr�goire  <bock@step.polymtl.ca>
+2004-05-27 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Massive Doxygen update in all files.  IMPORTANT: The new convention is:  @brief in the .h, long description and parameters in the .c
 	* Cleaned up some more issues in my notes taken at the formal review
 	* client_list.c,h:  Make client_list_free_node() private, define and document client_list_mutex here
@@ -736,7 +739,7 @@
 2004-04-19  Philippe April <papril777@yahoo.com>
 	* Changed some debugging severity
 
-2004-04-19  Benoit Gr�goire  <bock@step.polymtl.ca>
+2004-04-19  Benoit Grégoire  <bock@step.polymtl.ca>
 	* Properly integrate libhttpd into the source tree ;)  Note that this will create a proper system wide shared library for libghttpd.  Still to be done:  1- Store Mina's patch somewhere,  in case we want to upgrade libhttpd.  2-Add configure option not to build httpd, and use an already installed one.
 
 2004-04-18  Alexandre Carmel-Veilleux <acv@acv.ca>
@@ -849,6 +852,6 @@
 2004-03-09  Alexandre Carmel-Veilleux <acv@acv.ca>
 	* Tiny change to increase cross-platform compatibility. It can now build on OS X and it comes close to building on my old BSD box.
 
-2004-03-08  Benoit Gr�goire  <bock@step.polymtl.ca>
+2004-03-08  Benoit Grégoire  <bock@step.polymtl.ca>
 	* Initial CVS import.  Integrate a standrad GNU build system and Doxygen to the build process.  Add Doxygen and CVS headers, .cvsignores, etc.  Note that the imported code is Philippe April (papril777 at yahoo.com)'s work.  Tell me if I forgot anything.  Please note that the paths in the src/fw* scripts are still hardcoded.  Don't forget to update the ChangeLog file every commit and add doxygen comments to your code.  Happy hacking.
 
