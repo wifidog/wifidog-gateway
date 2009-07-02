@@ -94,7 +94,7 @@ a:visited {
 </div>
 
 <div id="content">
-<h2>$(message)</h2>
+<h2>$message</h2>
 </div>
 
 <div id="copyright">

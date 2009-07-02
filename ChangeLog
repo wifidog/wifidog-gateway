@@ -1,5 +1,8 @@
 # $Id$
-2009-02-27 Benoit Grégoire  <bock@step.polymtl.ca>
+2009-07-02 Benoit Grégoire  <bock@step.polymtl.ca>
+	* Re-fix #505, #525 and fix #584, sorry about that.
+
+2009-06-26 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Fix #518
 
 2009-02-27 Benoit Grégoire  <bock@step.polymtl.ca>
