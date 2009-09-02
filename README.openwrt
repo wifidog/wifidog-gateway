@@ -34,12 +34,14 @@ For OpenWRT 0.9 (Whiterussian):
 	cd wifidog
 	make whiterussianipk OPENWRTSDK=~/OpenWrt-SDK-Linux-i686-1/
 
-For OpenWRT Kamikaze:
+For OpenWRT Kamikaze up till 7.09:
 	cd ~ 
 	wget http://downloads.openwrt.org/kamikaze/7.09/brcm-2.4/OpenWrt-SDK-brcm-2.4-for-Linux-x86_64.tar.bz2
 	tar -jxvf OpenWrt-SDK-brcm-2.4-for-Linux-x86_64.tar.bz2
 	cd wifidog
 	make kamikazeipk OPENWRTSDK=~/OpenWrt-SDK-brcm-2.4-for-Linux-x86_64
+	
+For OpenWRT Kamikaze 8.09 and up, there is no SDK available and the 7.09 SDK does not work.  So Option 1 is not an option.  Option 2 is not an option either since building the SDK did not seem to work (https://forum.openwrt.org/viewtopic.php?id=17879).  So jump to Option 3!
 
    If it works (!) you will have an ipkg file in $(OPENWRTSDK)/bin/packages/
    You can then boot up your OpenWrt
@@ -69,15 +71,26 @@ make #(could take hours downloading and compiling all dependencies)
 Follow the instructions in Option 1, using the SDK you build instead of downloading it.
 
 Option 3. Use the full buildroot directly (time consuming...)
-cd wifidog
-make dist
-cd ~
-wget http://downloads.openwrt.org/kamikaze/7.09/kamikaze_7.09.tar.bz2
-tar -jxvf kamikaze_7.09.tar.bz2
-cp -R wifidog/contrib/build-openwrt-kamikazeipk/wifidog kamikaze_7.09/package/
-cp wifidog/wifidog-1.1.5.tar.gz kamikaze_7.09/dl/
-cd kamikaze_7.09
-make menuconfig #(Follow instructions on OpenWRT's site to setup your buildroot for your platform)
-make #(could take hours downloading and compiling all dependencies)
+   cd wifidog
+   make dist
+   cd ~
+   wget http://downloads.openwrt.org/kamikaze/7.09/kamikaze_7.09.tar.bz2
+   tar -jxvf kamikaze_7.09.tar.bz2
+   cp -R wifidog/contrib/build-openwrt-kamikazeipk/wifidog kamikaze_7.09/package/
+   cp wifidog/wifidog-1.1.5.tar.gz kamikaze_7.09/dl/
+   cd kamikaze_7.09
+   make menuconfig #(Follow instructions on OpenWRT's site to setup your buildroot for your platform)
+   make #(could take hours downloading and compiling all dependencies)
 
+For Kamikaze 8.09 and up, there is an extra dependency to add to the package, so here would be the new procedure
+   cd wifidog
+   make dist
+   cd ~
+   wget http://downloads.openwrt.org/kamikaze/8.09/kamikaze_8.09.tar.bz2
+   tar -jxvf kamikaze_8.09.tar.bz2
+   cp -R wifidog/contrib/build-openwrt-kamikazeipk8.09up/wifidog kamikaze_8.09/package/
+   cp wifidog/wifidog-1.1.5.tar.gz kamikaze_8.09/dl/
+   cd kamikaze_8.09
+   make menuconfig #(Follow instructions on OpenWRT's site to setup your buildroot for your platform)
+   make #(could take hours downloading and compiling all dependencies)
 
