@@ -83,7 +83,7 @@ iptables_insert_gateway_id(char **input)
 		memcpy(token, "%1$s", 4);
 
 	config = config_get_config();
-	safe_asprintf(&buffer, *input, config->gw_id);
+	safe_asprintf(&buffer, *input, config->gw_interface);
 
 	free(*input);
 	*input=buffer;
@@ -533,7 +533,8 @@ iptables_fw_counters_update(void)
 	while (('\n' != fgetc(output)) && !feof(output))
 		;
 	while (output && !(feof(output))) {
-		rc = fscanf(output, "%*s %llu %*s %*s %*s %*s %*s %15[0-9.] %*s %*s %*s %*s %*s 0x%*u", &counter, ip);
+		rc = fscanf(output, "%*s %llu %*s %*s %*s %*s %*s %15[0-9.] %*s %*s %*s %*s %*s %*s", &counter, ip);
+		//rc = fscanf(output, "%*s %llu %*s %*s %*s %*s %*s %15[0-9.] %*s %*s %*s %*s %*s 0x%*u", &counter, ip);
 		if (2 == rc && EOF != rc) {
 			/* Sanity*/
 			if (!inet_aton(ip, &tempaddr)) {

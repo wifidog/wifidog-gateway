@@ -1,4 +1,10 @@
 # $Id$
+
+2009-09-17 Geneviève Bastien <gbastien@versatic.net>
+	* Documented #537
+	* Fixed #472, patch by Jean-Philippe Menil
+	* Fixed #515, using the gateway interface instead of the gateway id in the iptables chain
+
 2009-07-02 Benoit Grégoire  <bock@step.polymtl.ca>
 	* Re-fix #505, #525 and fix #584, sorry about that.
 

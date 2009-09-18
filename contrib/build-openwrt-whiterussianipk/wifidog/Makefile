@@ -7,7 +7,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=wifidog
 PKG_VERSION:=1.1.5
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 PKG_MD5SUM:=842b21e1b02d0a90677b289d794e0e21
 PKG_SOURCE_URL:= @SF/$(PKG_NAME)
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -49,6 +49,7 @@ $(IPKG_WIFIDOG):
 	install -m0755 -d $(IDIR_WIFIDOG)/etc/init.d
 	install -m0755 ./files/$(PKG_NAME).init $(IDIR_WIFIDOG)/etc/init.d/S65wifidog
 	install -m0644 $(PKG_BUILD_DIR)/wifidog.conf $(IDIR_WIFIDOG)/etc/
+	install -m0644 $(PKG_BUILD_DIR)/wifidog-msg.html $(IDIR_WIFIDOG)/etc/
 	install -m0755 -d $(IDIR_WIFIDOG)/usr/bin
 	install -m0755 -d $(IDIR_WIFIDOG)/usr/lib
 	install -m0755 $(PKG_BUILD_DIR)/scripts/init.d/wifidog $(IDIR_WIFIDOG)/usr/bin/wifidog-init
