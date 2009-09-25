@@ -10,8 +10,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=wifidog
-PKG_VERSION:=1.1.5
-PKG_RELEASE:=2
+PKG_VERSION:=20090925
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:= @SF/$(PKG_NAME)
@@ -53,8 +53,8 @@ define Package/wifidog/install
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libhttpd.so* $(1)/usr/lib/
 	$(INSTALL_DIR) $(1)/etc
-	$(INSTALL_CONF) $(PKG_BUILD_DIR)/wifidog.conf $(1)/etc/
-	$(INSTALL_CONF) $(PKG_BUILD_DIR)/wifidog-msg.html $(1)/etc/
+	$(INSTALL_DATA) ./files/wifidog.conf $(1)/etc/
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/wifidog-msg.html $(1)/etc/
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/$(PKG_NAME).init $(1)/etc/init.d/wifidog
 endef

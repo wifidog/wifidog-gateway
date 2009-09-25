@@ -1,5 +1,9 @@
 # $Id$
 
+2009-09-25 Geneviève Bastien <gbastien@versatic.net>
+	* Release 20090925
+	* Update contrib Makefiles
+
 2009-09-17 Geneviève Bastien <gbastien@versatic.net>
 	* Documented #537
 	* Fixed #472, patch by Jean-Philippe Menil
