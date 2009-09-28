@@ -1,4 +1,6 @@
 # $Id$
+2009-09-28 Benoit Grégoire  <benoitg@coeus.ca>
+	* Fix #471, patch by  wichert
 
 2009-09-25 Geneviève Bastien <gbastien@versatic.net>
 	* Release 20090925

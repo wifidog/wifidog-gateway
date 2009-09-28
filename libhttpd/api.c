@@ -532,9 +532,10 @@ int httpdReadRequest(httpd *server, request *r)
 			 * present. */
 			if (strncasecmp(buf,"Host: ",6) == 0)
 			{
-				cp = index(buf,':') + 2;
+				cp = index(buf,':');
 				if(cp)
 				{
+					cp += 2;
 					strncpy(r->request.host,cp,
 						HTTP_MAX_URL);
 					r->request.host[HTTP_MAX_URL-1]=0;
