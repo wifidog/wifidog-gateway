@@ -471,14 +471,14 @@ int httpdReadRequest(httpd *server, request *r)
 					*val,
 					*end;
 
-				var = index(buf,':');
+				var = strchr(buf,':');
 				while(var)
 				{
 					var++;
-					val = index(var, '=');
+					val = strchr(var, '=');
 					*val = 0;
 					val++;
-					end = index(val,';');
+					end = strchr(val,';');
 					if(end)
 						*end = 0;
 					httpdAddVariable(r, var, val);
@@ -489,7 +489,7 @@ int httpdReadRequest(httpd *server, request *r)
 #endif
 			if (strncasecmp(buf,"Authorization: ",15) == 0)
 			{
-				cp = index(buf,':') + 2;
+				cp = strchr(buf,':') + 2;
 				if (strncmp(cp,"Basic ", 6) != 0)
 				{
 					/* Unknown auth method */
@@ -498,11 +498,11 @@ int httpdReadRequest(httpd *server, request *r)
 				{
 					char 	authBuf[100];
 
-					cp = index(cp,' ') + 1;
+					cp = strchr(cp,' ') + 1;
 					_httpd_decode(cp, authBuf, 100);
 					r->request.authLength = 
 						strlen(authBuf);
-					cp = index(authBuf,':');
+					cp = strchr(authBuf,':');
 					if (cp)
 					{
 						*cp = 0;
@@ -519,7 +519,7 @@ int httpdReadRequest(httpd *server, request *r)
 #if 0
 			if (strncasecmp(buf,"Referer: ",9) == 0)
 			{
-				cp = index(buf,':') + 2;
+				cp = strchr(buf,':') + 2;
 				if(cp)
 				{
 					strncpy(r->request.referer,cp,
@@ -532,7 +532,7 @@ int httpdReadRequest(httpd *server, request *r)
 			 * present. */
 			if (strncasecmp(buf,"Host: ",6) == 0)
 			{
-				cp = index(buf,':');
+				cp = strchr(buf,':');
 				if(cp)
 				{
 					cp += 2;
@@ -545,13 +545,13 @@ int httpdReadRequest(httpd *server, request *r)
 #if 0
 			if (strncasecmp(buf,"If-Modified-Since: ",19) == 0)
 			{
-				cp = index(buf,':') + 2;
+				cp = strchr(buf,':') + 2;
 				if(cp)
 				{
 					strncpy(r->request.ifModified,cp,
 						HTTP_MAX_URL);
 					r->request.ifModified[HTTP_MAX_URL-1]=0;
-					cp = index(r->request.ifModified,
+					cp = strchr(r->request.ifModified,
 						';');
 					if (cp)
 						*cp = 0;
@@ -559,7 +559,7 @@ int httpdReadRequest(httpd *server, request *r)
 			}
 			if (strncasecmp(buf,"Content-Type: ",14) == 0)
 			{
-				cp = index(buf,':') + 2;
+				cp = strchr(buf,':') + 2;
 				if(cp)
 				{
 					strncpy(r->request.contentType,cp,
@@ -569,7 +569,7 @@ int httpdReadRequest(httpd *server, request *r)
 			}
 			if (strncasecmp(buf,"Content-Length: ",16) == 0)
 			{
-				cp = index(buf,':') + 2;
+				cp = strchr(buf,':') + 2;
 				if(cp)
 					r->request.contentLength=atoi(cp);
 			}
@@ -598,7 +598,7 @@ int httpdReadRequest(httpd *server, request *r)
 	/*
 	** Process any URL data
 	*/
-	cp = index(r->request.path,'?');
+	cp = strchr(r->request.path,'?');
 	if (cp != NULL)
 	{
 		*cp++ = 0;
@@ -957,7 +957,7 @@ void httpdProcessRequest(httpd *server, request *r)
 	r->response.responseLength = 0;
 	strncpy(dirName, httpdRequestPath(r), HTTP_MAX_URL);
 	dirName[HTTP_MAX_URL-1]=0;
-	cp = rindex(dirName, '/');
+	cp = strrchr(dirName, '/');
 	if (cp == NULL)
 	{
 		printf("Invalid request path '%s'\n",dirName);

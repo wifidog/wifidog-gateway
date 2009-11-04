@@ -52,22 +52,22 @@ static int scanCidr(val, result, length)
 
 	cp = val;
 	res1 = atoi(cp);
-	cp = index(cp,'.');
+	cp = strchr(cp,'.');
 	if (!cp)
 		return(-1);
 	cp++;
 	res2 = atoi(cp);
-	cp = index(cp,'.');
+	cp = strchr(cp,'.');
 	if (!cp)
 		return(-1);
 	cp++;
 	res3 = atoi(cp);
-	cp = index(cp,'.');
+	cp = strchr(cp,'.');
 	if (!cp)
 		return(-1);
 	cp++;
 	res4 = atoi(cp);
-	cp = index(cp,'/');
+	cp = strchr(cp,'/');
 	if (!cp)
 	{
 		res5 = 32;

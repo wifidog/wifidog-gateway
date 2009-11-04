@@ -114,8 +114,8 @@ execute(char *cmd_line, int quiet)
                         debug(LOG_ERR, "execvp(): %s", strerror(errno));
                 } else {
                         debug(LOG_ERR, "execvp() failed");
-		}
-		exit(1);
+                }
+                exit(1);
         }
 
         /* for the parent:      */

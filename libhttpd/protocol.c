@@ -607,7 +607,7 @@ void _httpd_sendFile(httpd *server, request *r, char *path)
 	char	*suffix;
 	struct 	stat sbuf;
 
-	suffix = rindex(path, '.');
+	suffix = strrchr(path, '.');
 	if (suffix != NULL)
 	{
 		if (strcasecmp(suffix,".gif") == 0) 
