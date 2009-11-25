@@ -63,8 +63,9 @@ extern pthread_mutex_t	client_list_mutex;
 void
 http_callback_404(httpd *webserver, request *r)
 {
-	char		tmp_url[MAX_BUF],
-			*url;
+	char tmp_url[MAX_BUF],
+			*url,
+			*mac;
 	s_config	*config = config_get_config();
 	t_auth_serv	*auth_server = get_auth_server();
 
@@ -115,6 +116,15 @@ http_callback_404(httpd *webserver, request *r)
 			config->gw_port, 
 			config->gw_id,
 			url);
+
+		if (!(mac = arp_get(r->clientAddr))) {
+			/* We could not get their MAC address */
+			debug(LOG_INFO, "Failed to retrieve MAC address for ip %s, so not putting in the login request", r->clientAddr);
+		} else {
+			debug(LOG_INFO, "Got client MAC address for ip %s: %s", r->clientAddr, mac);
+			safe_asprintf(&urlFragment, "%s&mac=%s", urlFragment, mac);
+		}
+
 		debug(LOG_INFO, "Captured %s requesting [%s] and re-directing them to login page", r->clientAddr, url);
 		http_send_redirect_to_auth(r, urlFragment, "Redirect to login page");
 		free(urlFragment);
