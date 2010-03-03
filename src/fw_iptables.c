@@ -555,7 +555,11 @@ iptables_fw_counters_update(void)
 					debug(LOG_DEBUG, "%s - Updated counter.outgoing to %llu bytes.  Updated last_updated to %d", ip, counter, p1->counters.last_updated);
 				}
 			} else {
-				debug(LOG_ERR, "Could not find %s in client list", ip);
+				debug(LOG_ERR, "iptables_fw_counters_update(): Could not find %s in client list, this should not happen unless if the gateway crashed", ip);
+				debug(LOG_ERR, "Preventively deleting firewall rules for %s in table %s", ip, TABLE_WIFIDOG_OUTGOING);
+				iptables_fw_destroy_mention("mangle", TABLE_WIFIDOG_OUTGOING, ip);
+				debug(LOG_ERR, "Preventively deleting firewall rules for %s in table %s", ip, TABLE_WIFIDOG_INCOMING);
+				iptables_fw_destroy_mention("mangle", TABLE_WIFIDOG_INCOMING, ip);
 			}
 			UNLOCK_CLIENT_LIST();
 		}
@@ -593,7 +597,11 @@ iptables_fw_counters_update(void)
 					debug(LOG_DEBUG, "%s - Updated counter.incoming to %llu bytes", ip, counter);
 				}
 			} else {
-				debug(LOG_ERR, "Could not find %s in client list", ip);
+				debug(LOG_ERR, "iptables_fw_counters_update(): Could not find %s in client list, this should not happen unless if the gateway crashed", ip);
+				debug(LOG_ERR, "Preventively deleting firewall rules for %s in table %s", ip, TABLE_WIFIDOG_OUTGOING);
+				iptables_fw_destroy_mention("mangle", TABLE_WIFIDOG_OUTGOING, ip);
+				debug(LOG_ERR, "Preventively deleting firewall rules for %s in table %s", ip, TABLE_WIFIDOG_INCOMING);
+				iptables_fw_destroy_mention("mangle", TABLE_WIFIDOG_INCOMING, ip);
 			}
 			UNLOCK_CLIENT_LIST();
 		}

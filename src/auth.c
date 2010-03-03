@@ -106,7 +106,7 @@ authenticate_client(request *r)
 	client = client_list_find_by_ip(r->clientAddr);
 
 	if (client == NULL) {
-		debug(LOG_ERR, "Could not find client for %s", r->clientAddr);
+		debug(LOG_ERR, "authenticate_client(): Could not find client for %s", r->clientAddr);
 		UNLOCK_CLIENT_LIST();
 		return;
 	}
@@ -129,7 +129,7 @@ authenticate_client(request *r)
 	client = client_list_find(r->clientAddr, mac);
 	
 	if (client == NULL) {
-		debug(LOG_ERR, "Could not find client node for %s (%s)", r->clientAddr, mac);
+		debug(LOG_ERR, "authenticate_client(): Could not find client node for %s (%s)", r->clientAddr, mac);
 		UNLOCK_CLIENT_LIST();
 		free(token);
 		free(mac);
@@ -153,7 +153,8 @@ authenticate_client(request *r)
 
 	case AUTH_DENIED:
 		/* Central server said invalid token */
-		debug(LOG_INFO, "Got DENIED from central server authenticating token %s from %s at %s - redirecting them to denied message", client->token, client->ip, client->mac);
+		debug(LOG_INFO, "Got DENIED from central server authenticating token %s from %s at %s - deleting from firewall and redirecting them to denied message", client->token, client->ip, client->mac);
+		fw_deny(client->ip, client->mac, FW_MARK_KNOWN);
 		safe_asprintf(&urlFragment, "%smessage=%s",
 			auth_server->authserv_msg_script_path_fragment,
 			GATEWAY_MESSAGE_DENIED
