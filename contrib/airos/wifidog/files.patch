@@ -16,7 +16,7 @@
 +#adding wifidog to startup programs
 +if [ -f /usr/etc/init.d/wifidog ]; then
 +	cp -f /usr/etc/init.d/wifidog /etc/sysinit/wifidog.conf
-+	echo "null::respawn:/usr/bin/wifidog-init start" >> /etc/inittab
++	echo "null::respawn:/usr/bin/wifidog -f" >> /etc/inittab
 +	echo "wifidog" >> /etc/startup.list
 +fi
 +
@@ -34,7 +34,7 @@
 +#adding wifidog to startup programs
 +if [ -f /usr/etc/init.d/wifidog ]; then
 +	cp -f /usr/etc/init.d/wifidog /etc/sysinit/wifidog.conf
-+	echo "null::respawn:/usr/bin/wifidog-init start" >> /etc/inittab
++	echo "null::respawn:/usr/bin/wifidog -f" >> /etc/inittab
 +	echo "wifidog" >> /etc/startup.list
 +fi
 
