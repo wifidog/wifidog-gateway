@@ -844,9 +844,14 @@ void httpdSetContentType(request *r, const char *type)
 
 void httpdAddHeader(request *r, const char *msg)
 {
-	strcat(r->response.headers,msg);
-	if (msg[strlen(msg) - 1] != '\n')
-		strcat(r->response.headers,"\n");
+	int size;
+	size = HTTP_MAX_HEADERS - 2 - strlen(r->response.headers);
+	if(size > 0)
+	{	
+		strncat(r->response.headers,msg,size);
+		if (r->response.headers[strlen(r->response.headers) - 1] != '\n')
+			strcat(r->response.headers,"\n");
+	}
 }
 
 void httpdSetCookie(request *r, const char *name, const char *value)

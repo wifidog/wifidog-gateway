@@ -110,19 +110,25 @@ http_callback_404(httpd *webserver, request *r)
 	else {
 		/* Re-direct them to auth server */
 		char *urlFragment;
-		safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&url=%s",
-			auth_server->authserv_login_script_path_fragment,
-			config->gw_address,
-			config->gw_port, 
-			config->gw_id,
-			url);
 
 		if (!(mac = arp_get(r->clientAddr))) {
 			/* We could not get their MAC address */
 			debug(LOG_INFO, "Failed to retrieve MAC address for ip %s, so not putting in the login request", r->clientAddr);
-		} else {
+			safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&url=%s",
+				auth_server->authserv_login_script_path_fragment,
+				config->gw_address,
+				config->gw_port, 
+				config->gw_id,
+				url);
+		} else {			
 			debug(LOG_INFO, "Got client MAC address for ip %s: %s", r->clientAddr, mac);
-			safe_asprintf(&urlFragment, "%s&mac=%s", urlFragment, mac);
+			safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&mac=%s&url=%s",
+				auth_server->authserv_login_script_path_fragment,
+				config->gw_address,
+				config->gw_port, 
+				config->gw_id,
+				mac,
+				url);
 		}
 
 		debug(LOG_INFO, "Captured %s requesting [%s] and re-directing them to login page", r->clientAddr, url);
