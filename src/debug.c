@@ -46,24 +46,29 @@ _debug(char *filename, int line, int level, char *format, ...)
     time(&ts);
 
     if (config->debuglevel >= level) {
-        va_start(vlist, format);
 
         if (level <= LOG_WARNING) {
             fprintf(stderr, "[%d][%.24s][%u](%s:%d) ", level, ctime_r(&ts, buf), getpid(),
 			    filename, line);
+            va_start(vlist, format);
             vfprintf(stderr, format, vlist);
+            va_end(vlist);
             fputc('\n', stderr);
         } else if (!config->daemon) {
             fprintf(stdout, "[%d][%.24s][%u](%s:%d) ", level, ctime_r(&ts, buf), getpid(),
 			    filename, line);
+            va_start(vlist, format);
             vfprintf(stdout, format, vlist);
+            va_end(vlist);
             fputc('\n', stdout);
             fflush(stdout);
         }
 
         if (config->log_syslog) {
             openlog("wifidog", LOG_PID, config->syslog_facility);
+            va_start(vlist, format);
             vsyslog(level, format, vlist);
+            va_end(vlist);
             closelog();
         }
     }
