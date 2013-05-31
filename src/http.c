@@ -172,10 +172,10 @@ http_callback_status(httpd *webserver, request *r)
 	free(status);
 }
 /** @brief Convenience function to redirect the web browser to the auth server
- * @param r The request 
+ * @param r The request
  * @param urlFragment The end of the auth server URL to redirect to (the part after path)
  * @param text The text to include in the redirect header ant the mnual redirect title */
-void http_send_redirect_to_auth(request *r, char *urlFragment, char *text)
+void http_send_redirect_to_auth(request *r, const char *urlFragment, const char *text)
 {
 	char *protocol = NULL;
 	int port = 80;
@@ -202,10 +202,10 @@ void http_send_redirect_to_auth(request *r, char *urlFragment, char *text)
 }
 
 /** @brief Sends a redirect to the web browser 
- * @param r The request 
+ * @param r The request
  * @param url The url to redirect to
  * @param text The text to include in the redirect header and the manual redirect link title.  NULL is acceptable */
-void http_send_redirect(request *r, char *url, char *text)
+void http_send_redirect(request *r, const char *url, const char *text)
 {
 		char *message = NULL;
 		char *header = NULL;

@@ -44,7 +44,7 @@ void http_callback_auth(httpd *webserver, request *r);
 void send_http_page(request *r, const char *title, const char* message);
 
 /** @brief Sends a redirect to the web browser */
-void http_send_redirect(request *r, char *url, char *text);
+void http_send_redirect(request *r, const char *url, const char *text);
 /** @brief Convenience function to redirect the web browser to the authe server */
-void http_send_redirect_to_auth(request *r, char *urlFragment, char *text);
+void http_send_redirect_to_auth(request *r, const char *urlFragment, const char *text);
 #endif /* _HTTP_H_ */

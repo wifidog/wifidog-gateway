@@ -45,8 +45,8 @@ s_config config;
 static void usage(void);
 static void init_config(void);
 static void parse_commandline(int, char **);
-static int connect_to_server(char *);
-static size_t send_request(int, char *);
+static int connect_to_server(const char *);
+static size_t send_request(int, const char *);
 static void wdctl_status(void);
 static void wdctl_stop(void);
 static void wdctl_reset(void);
@@ -146,7 +146,7 @@ parse_commandline(int argc, char **argv)
 }
 
 static int
-connect_to_server(char *sock_name)
+connect_to_server(const char *sock_name)
 {
 	int sock;
 	struct sockaddr_un	sa_un;
@@ -167,7 +167,7 @@ connect_to_server(char *sock_name)
 }
 
 static size_t
-send_request(int sock, char *request)
+send_request(int sock, const char *request)
 {
 	size_t	len;
         ssize_t written;

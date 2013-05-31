@@ -62,7 +62,7 @@ extern char ** restartargv;
 static void *thread_wdctl_handler(void *);
 static void wdctl_status(int);
 static void wdctl_stop(int);
-static void wdctl_reset(int, char *);
+static void wdctl_reset(int, const char *);
 static void wdctl_restart(int);
 
 /** Launches a thread that monitors the control socket for request
@@ -363,7 +363,7 @@ wdctl_restart(int afd)
 }
 
 static void
-wdctl_reset(int fd, char *arg)
+wdctl_reset(int fd, const char *arg)
 {
 	t_client	*node;
 

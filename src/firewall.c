@@ -89,7 +89,7 @@ extern pid_t restart_orig_pid;
  * @return Return code of the command
  */
 int
-fw_allow(char *ip, char *mac, int fw_connection_state)
+fw_allow(const char *ip, const char *mac, int fw_connection_state)
 {
     debug(LOG_DEBUG, "Allowing %s %s with fw_connection_state %d", ip, mac, fw_connection_state);
 
@@ -104,7 +104,7 @@ fw_allow(char *ip, char *mac, int fw_connection_state)
  * @return Return code of the command
  */
 int
-fw_deny(char *ip, char *mac, int fw_connection_state)
+fw_deny(const char *ip, const char *mac, int fw_connection_state)
 {
     debug(LOG_DEBUG, "Denying %s %s with fw_connection_state %d", ip, mac, fw_connection_state);
 
@@ -119,7 +119,7 @@ fw_deny(char *ip, char *mac, int fw_connection_state)
  * @todo Make this function portable (using shell scripts?)
  */
 char           *
-arp_get(char *req_ip)
+arp_get(const char *req_ip)
 {
     FILE           *proc;
 	 char ip[16];
@@ -349,7 +349,7 @@ fw_sync_with_authserver(void)
 }
 
 void
-icmp_ping(char *host)
+icmp_ping(const char *host)
 {
 	struct sockaddr_in saddr;
 #if defined(__linux__) || defined(__NetBSD__)

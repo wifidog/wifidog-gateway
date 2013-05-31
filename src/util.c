@@ -94,7 +94,7 @@ long served_this_session = 0;
  * @return Return code of the command
  */
 int
-execute(char *cmd_line, int quiet)
+execute(const char *cmd_line, int quiet)
 {
         int pid,
             status,

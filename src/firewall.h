@@ -50,19 +50,19 @@ void fw_set_authservers(void);
 int fw_destroy(void);
 
 /** @brief Allow a user through the firewall*/
-int fw_allow(char *ip, char *mac, int profile);
+int fw_allow(const char *ip, const char *mac, int profile);
 
 /** @brief Deny a client access through the firewall*/
-int fw_deny(char *ip, char *mac, int profile);
+int fw_deny(const char *ip, const char *mac, int profile);
 
 /** @brief Refreshes the entire client list */
 void fw_sync_with_authserver(void);
 
 /** @brief Get an IP's MAC address from the ARP cache.*/
-char *arp_get(char *req_ip);
+char *arp_get(const char *req_ip);
 
 /** @brief ICMP Ping an IP */
-void icmp_ping(char *host);
+void icmp_ping(const char *host);
 
 /** @brief cheap random */
 unsigned short rand16(void);

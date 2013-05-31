@@ -783,7 +783,7 @@ parse_boolean_value(char *line)
 	return -1;
 }
 
-void parse_trusted_mac_list(char *ptr) {
+void parse_trusted_mac_list(const char *ptr) {
 	char *ptrcopy = NULL;
 	char *possiblemac = NULL;
 	char *mac = NULL;
