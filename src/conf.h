@@ -151,6 +151,7 @@ typedef struct {
     int log_syslog;		/**< @brief boolean, wether to log to syslog */
     int syslog_facility;	/**< @brief facility to use when using syslog for
 				     logging */
+    int proxy_port;		/**< @brief Transparent proxy port (0 to disable) */
     t_firewall_ruleset	*rulesets;	/**< @brief firewall rules */
     t_trusted_mac *trustedmaclist; /**< @brief list of trusted macs */
 } s_config;

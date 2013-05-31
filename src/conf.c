@@ -95,6 +95,7 @@ typedef enum {
 	oFirewallRuleSet,
 	oTrustedMACList,
         oHtmlMessageFile,
+	oProxyPort,
 } OpCodes;
 
 /** @internal
@@ -134,6 +135,7 @@ static const struct {
 	{ "firewallrule",		oFirewallRule },
 	{ "trustedmaclist",		oTrustedMACList },
         { "htmlmessagefile",		oHtmlMessageFile },
+	{ "proxyport",			oProxyPort },
 	{ NULL,				oBadOption },
 };
 
@@ -182,6 +184,7 @@ config_init(void)
 	config.internal_sock = safe_strdup(DEFAULT_INTERNAL_SOCK);
 	config.rulesets = NULL;
 	config.trustedmaclist = NULL;
+	config.proxy_port = 0;
 }
 
 /**
@@ -755,6 +758,9 @@ config_read(const char *filename)
 					break;
 				case oHtmlMessageFile:
 					config.htmlmsgfile = safe_strdup(p1);
+					break;
+				case oProxyPort:
+					sscanf(p1, "%d", &config.proxy_port);
 					break;
 
 				}
