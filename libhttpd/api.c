@@ -308,12 +308,12 @@ request *httpdGetConnection(server, timeout)
 	httpd	*server;
 	struct	timeval *timeout;
 {
-	int	result;
-	fd_set	fds;
-	struct  sockaddr_in     addr;
-	size_t  addrLen;
-	char	*ipaddr;
-	request	*r;
+	int		result;
+	fd_set		fds;
+	struct  	sockaddr_in     addr;
+	socklen_t	addrLen;
+	char		*ipaddr;
+	request		*r;
 
 	FD_ZERO(&fds);
 	FD_SET(server->serverSock, &fds);

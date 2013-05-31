@@ -72,7 +72,7 @@ static void wdctl_restart(int);
 void
 thread_wdctl(void *arg)
 {
-	int	fd;
+	int	*fd;
 	char	*sock_name;
 	struct 	sockaddr_un	sa_un;
 	int result;
@@ -123,16 +123,19 @@ thread_wdctl(void *arg)
 	}
 
 	while (1) {
-		len = sizeof(sa_un); 
+		len = sizeof(sa_un);
 		memset(&sa_un, 0, len);
-		if ((fd = accept(wdctl_socket_server, (struct sockaddr *)&sa_un, &len)) == -1){
+		fd = (int *) safe_malloc(sizeof(int));
+		if ((*fd = accept(wdctl_socket_server, (struct sockaddr *)&sa_un, &len)) == -1){
 			debug(LOG_ERR, "Accept failed on control socket: %s",
 					strerror(errno));
+			free(fd);
 		} else {
 			debug(LOG_DEBUG, "Accepted connection on wdctl socket %d (%s)", fd, sa_un.sun_path);
 			result = pthread_create(&tid, NULL, &thread_wdctl_handler, (void *)fd);
 			if (result != 0) {
 				debug(LOG_ERR, "FATAL: Failed to create a new thread (wdctl handler) - exiting");
+				free(fd);
 				termination_handler(0);
 			}
 			pthread_detach(tid);
@@ -153,8 +156,8 @@ thread_wdctl_handler(void *arg)
 
 	debug(LOG_DEBUG, "Entering thread_wdctl_handler....");
 
-	fd = (int)arg;
-	
+	fd = *((int *) arg);
+	free(arg);
 	debug(LOG_DEBUG, "Read bytes and stuff from %d", fd);
 
 	/* Init variables */
@@ -214,7 +217,8 @@ wdctl_status(int fd)
 	status = get_status_text();
 	len = strlen(status);
 
-	write(fd, status, len);
+	if(write(fd, status, len) == -1)
+		debug(LOG_CRIT, "Write error: %s", strerror(errno));
 
 	free(status);
 }
@@ -374,7 +378,9 @@ wdctl_reset(int fd, char *arg)
 	else {
 		debug(LOG_DEBUG, "Client not found.");
 		UNLOCK_CLIENT_LIST();
-		write(fd, "No", 2);
+		if(write(fd, "No", 2) == -1)
+			debug(LOG_CRIT, "Unable to write No: %s", strerror(errno));
+
 		return;
 	}
 
@@ -385,10 +391,11 @@ wdctl_reset(int fd, char *arg)
 	 * is a manual command, I don't anticipate it'll be that useful. */
 	fw_deny(node->ip, node->mac, node->fw_connection_state);
 	client_list_delete(node);
-	
+
 	UNLOCK_CLIENT_LIST();
-	
-	write(fd, "Yes", 3);
-	
+
+	if(write(fd, "Yes", 3) == -1)
+		debug(LOG_CRIT, "Unable to write Yes: %s", strerror(errno));
+
 	debug(LOG_DEBUG, "Exiting wdctl_reset...");
 }

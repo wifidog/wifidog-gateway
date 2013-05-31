@@ -125,7 +125,9 @@ ping(void)
 	 * Populate uptime, memfree and load
 	 */
 	if ((fh = fopen("/proc/uptime", "r"))) {
-		fscanf(fh, "%lu", &sys_uptime);
+		if(fscanf(fh, "%lu", &sys_uptime) != 1)
+			debug(LOG_CRIT, "Failed to read uptime");
+
 		fclose(fh);
 	}
 	if ((fh = fopen("/proc/meminfo", "r"))) {
@@ -142,7 +144,9 @@ ping(void)
 		fclose(fh);
 	}
 	if ((fh = fopen("/proc/loadavg", "r"))) {
-		fscanf(fh, "%f", &sys_load);
+		if(fscanf(fh, "%f", &sys_load) != 1)
+			debug(LOG_CRIT, "Failed to read loadavg");
+
 		fclose(fh);
 	}
 

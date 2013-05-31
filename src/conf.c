@@ -246,14 +246,12 @@ parse_auth_server(FILE *file, const char *filename, int *linenum)
 	http_port = DEFAULT_AUTHSERVPORT;
 	ssl_port = DEFAULT_AUTHSERVSSLPORT;
 	ssl_available = DEFAULT_AUTHSERVSSLAVAILABLE;
-	
-	/* Read first line */	
-	memset(line, 0, MAX_BUF);
-	fgets(line, MAX_BUF - 1, file);
-	(*linenum)++; /* increment line counter. */
+
 
 	/* Parsing loop */
-	while ((line[0] != '\0') && (strchr(line, '}') == NULL)) {
+	while (memset(line, 0, MAX_BUF) && fgets(line, MAX_BUF - 1, file) && (strchr(line, '}') == NULL)) {
+		(*linenum)++; /* increment line counter. */
+
 		/* skip leading blank spaces */
 		for (p1 = line; isblank(*p1); p1++);
 
@@ -333,11 +331,6 @@ parse_auth_server(FILE *file, const char *filename, int *linenum)
 					break;
 			}
 		}
-
-		/* Read next line */
-		memset(line, 0, MAX_BUF);
-		fgets(line, MAX_BUF - 1, file);
-		(*linenum)++; /* increment line counter. */
 	}
 
 	/* only proceed if we have an host and a path */
@@ -410,14 +403,11 @@ parse_firewall_ruleset(const char *ruleset, FILE *file, const char *filename, in
 	int		opcode;
 
 	debug(LOG_DEBUG, "Adding Firewall Rule Set %s", ruleset);
-	
-	/* Read first line */	
-	memset(line, 0, MAX_BUF);
-	fgets(line, MAX_BUF - 1, file);
-	(*linenum)++; /* increment line counter. */
 
 	/* Parsing loop */
-	while ((line[0] != '\0') && (strchr(line, '}') == NULL)) {
+	while (memset(line, 0, MAX_BUF) && fgets(line, MAX_BUF - 1, file) && (strchr(line, '}') == NULL)) {
+		(*linenum)++; /* increment line counter. */
+
 		/* skip leading blank spaces */
 		for (p1 = line; isblank(*p1); p1++);
 
@@ -465,11 +455,6 @@ parse_firewall_ruleset(const char *ruleset, FILE *file, const char *filename, in
 					break;
 			}
 		}
-
-		/* Read next line */
-		memset(line, 0, MAX_BUF);
-		fgets(line, MAX_BUF - 1, file);
-		(*linenum)++; /* increment line counter. */
 	}
 
 	debug(LOG_DEBUG, "Firewall Rule Set %s added.", ruleset);

@@ -301,9 +301,8 @@ get_ext_iface(void)
 	while(keep_detecting) {
 		input = fopen("/proc/net/route", "r");
 		while (!feof(input)) {
-			/* XXX scanf(3) is unsafe, risks overrun */ 
-			fscanf(input, "%s %s %*s %*s %*s %*s %*s %*s %*s %*s %*s\n", device, gw);
-			if (strcmp(gw, "00000000") == 0) {
+			/* XXX scanf(3) is unsafe, risks overrun */
+			if ((fscanf(input, "%s %s %*s %*s %*s %*s %*s %*s %*s %*s %*s\n", device, gw) == 2) && strcmp(gw, "00000000") == 0) {
 				free(gw);
 				debug(LOG_INFO, "get_ext_iface(): Detected %s as the default interface after try %d", device, i);
 				return device;
