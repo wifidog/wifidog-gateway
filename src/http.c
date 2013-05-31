@@ -207,31 +207,20 @@ void http_send_redirect_to_auth(request *r, const char *urlFragment, const char 
  * @param text The text to include in the redirect header and the manual redirect link title.  NULL is acceptable */
 void http_send_redirect(request *r, const char *url, const char *text)
 {
-		char *message = NULL;
-		char *header = NULL;
-		char *response = NULL;
-							/* Re-direct them to auth server */
-		debug(LOG_DEBUG, "Redirecting client browser to %s", url);
-		safe_asprintf(&header, "Location: %s",
-			url
-		);
-		if(text) {
-			safe_asprintf(&response, "307 %s\n",
-				text
-			);	
-		}
-		else {
-			safe_asprintf(&response, "307 %s\n",
-				"Redirecting"
-			);		
-		}	
-		httpdSetResponse(r, response);
-		httpdAddHeader(r, header);
-		free(response);
-		free(header);	
-		safe_asprintf(&message, "Please <a href='%s'>click here</a>.", url);
-		send_http_page(r, text ? text : "Redirection to message", message);
-		free(message);
+	char *message = NULL;
+	char *header = NULL;
+	char *response = NULL;
+		/* Re-direct them to auth server */
+	debug(LOG_DEBUG, "Redirecting client browser to %s", url);
+	safe_asprintf(&header, "Location: %s", url);
+	safe_asprintf(&response, "302 %s\n", text ? text : "Redirecting");
+	httpdSetResponse(r, response);
+	httpdAddHeader(r, header);
+	free(response);
+	free(header);
+	safe_asprintf(&message, "Please <a href='%s'>click here</a>.", url);
+	send_http_page(r, text ? text : "Redirection to message", message);
+	free(message);
 }
 
 void 
