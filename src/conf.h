@@ -93,7 +93,7 @@ typedef struct _auth_serv_t {
  * Firewall rules
  */
 typedef struct _firewall_rule_t {
-    int block_allow;		/**< @brief 1 = Allow rule, 0 = Block rule */
+    int block_allow;		/**< @brief 0 = Block rule, 1 = Allow rule, 2 = Log Rule, 3 = Ulog Rule */
     char *protocol;		/**< @brief tcp, udp, etc ... */
     char *port;			/**< @brief Port to block/allow */
     char *mask;			/**< @brief Mask for the rule *destination* */
