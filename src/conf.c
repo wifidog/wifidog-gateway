@@ -467,7 +467,7 @@ static int
 _parse_firewall_rule(const char *ruleset, char *leftover)
 {
 	int i;
-	int block_allow = 0; /**< 0 == block, 1 == allow */
+	int block_allow = 0; /**< 0 == block, 1 == allow, 2 == log, 3 == ulog */
 	int all_nums = 1; /**< If 0, port contained non-numerics */
 	int finished = 0; /**< reached end of line */
 	char *token = NULL; /**< First word */
@@ -494,9 +494,13 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 		block_allow = 0;
 	} else if (!strcasecmp(token, "allow")) {
 		block_allow = 1;
+	} else if (!strcasecmp(token, "log")) {
+		block_allow = 2;
+	} else if (!strcasecmp(token, "ulog")) {
+		block_allow = 3;
 	} else {
 		debug(LOG_ERR, "Invalid rule type %s, expecting "
-				"\"block\" or \"allow\"", token);
+				"\"block\",\"allow\",\"log\" or \"ulog\"", token);
 		return -1;
 	}
 
