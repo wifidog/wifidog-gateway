@@ -494,9 +494,13 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 		block_allow = 0;
 	} else if (!strcasecmp(token, "allow")) {
 		block_allow = 1;
+	} else if (!strcasecmp(token, "log")) {
+		block_allow = 2;
+	} else if (!strcasecmp(token, "ulog")) {
+		block_allow = 3;
 	} else {
 		debug(LOG_ERR, "Invalid rule type %s, expecting "
-				"\"block\" or \"allow\"", token);
+				"\"block\",\"allow\",\"log\" or \"ulog\"", token);
 		return -1;
 	}
 
