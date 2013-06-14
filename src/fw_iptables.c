@@ -143,6 +143,10 @@ iptables_compile(const char * table, const char *chain, const t_firewall_rule *r
 
 	if (rule->block_allow == 1) {
 		mode = safe_strdup("ACCEPT");
+	} else if (rule->block_allow == 2) {
+		mode = safe_strdup("LOG");
+	} else if (rule->block_allow == 3) {
+		mode = safe_strdup("ULOG");
 	} else {
 		mode = safe_strdup("REJECT");
 	}
