@@ -1,5 +1,10 @@
 # $Id$
 
+2012-05-30
+	* Add many const by champtar
+	* Send http 302 instead of 307 by champtar
+	* Suppress all compilation warnings by champtar
+	* Add transparent proxy support (via iptables REDIRECT) 
 2012-08-28
 	* Fix #836, buffer overflow on long urls reported by Etienne CHAMPETIER
 	* Fix #835, segfaults reported by Etienne CHAMPETIER
