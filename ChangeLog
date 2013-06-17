@@ -1,8 +1,12 @@
 # $Id$
+
+2012-08-28
+	* Fix #836, buffer overflow on long urls reported by Etienne CHAMPETIER
+	* Fix #835, segfaults reported by Etienne CHAMPETIER
 2009-11-03
-    * Fix #625, does not display failure notice when quiet is set to true
-    * Fix #587, change index and rindex to strchr and strrchr
-    * Fix #548, trim leading spaces of the config file's options
+	* Fix #625, does not display failure notice when quiet is set to true
+	* Fix #587, change index and rindex to strchr and strrchr
+	* Fix #548, trim leading spaces of the config file's options
 
 2009-09-28 Benoit Grégoire  <benoitg@coeus.ca>
 	* Fix #471, patch by  wichert
