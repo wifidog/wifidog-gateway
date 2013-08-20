@@ -90,10 +90,21 @@ typedef struct _auth_serv_t {
 } t_auth_serv;
 
 /**
+ * Firewall targets
+ */
+typedef enum {
+    TARGET_DROP,
+    TARGET_REJECT,
+    TARGET_ACCEPT,
+    TARGET_LOG,
+    TARGET_ULOG
+} t_firewall_target;
+
+/**
  * Firewall rules
  */
 typedef struct _firewall_rule_t {
-    int block_allow;		/**< @brief 0 = Block rule, 1 = Allow rule, 2 = Log Rule, 3 = Ulog Rule */
+    t_firewall_target target;	/**< @brief t_firewall_target */
     char *protocol;		/**< @brief tcp, udp, etc ... */
     char *port;			/**< @brief Port to block/allow */
     char *mask;			/**< @brief Mask for the rule *destination* */

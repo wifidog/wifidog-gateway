@@ -141,14 +141,22 @@ iptables_compile(const char * table, const char *chain, const t_firewall_rule *r
 
 	memset(command, 0, MAX_BUF);
 
-	if (rule->block_allow == 1) {
-		mode = safe_strdup("ACCEPT");
-	} else if (rule->block_allow == 2) {
-		mode = safe_strdup("LOG");
-	} else if (rule->block_allow == 3) {
-		mode = safe_strdup("ULOG");
-	} else {
+	switch (rule->target){
+	case TARGET_DROP:
+		mode = safe_strdup("DROP");
+		break;
+	case TARGET_REJECT:
 		mode = safe_strdup("REJECT");
+		break;
+	case TARGET_ACCEPT:
+		mode = safe_strdup("ACCEPT");
+		break;
+	case TARGET_LOG:
+		mode = safe_strdup("LOG");
+		break;
+	case TARGET_ULOG:
+		mode = safe_strdup("ULOG");
+		break;
 	}
 
 	snprintf(command, sizeof(command),  "-t %s -A %s ",table, chain);
