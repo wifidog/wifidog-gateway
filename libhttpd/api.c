@@ -489,31 +489,35 @@ int httpdReadRequest(httpd *server, request *r)
 #endif
 			if (strncasecmp(buf,"Authorization: ",15) == 0)
 			{
-				cp = strchr(buf,':') + 2;
-				if (strncmp(cp,"Basic ", 6) != 0)
-				{
-					/* Unknown auth method */
-				}
-				else
-				{
-					char 	authBuf[100];
+				cp = strchr(buf,':');
+				if (cp) {
+					cp += 2;
 
-					cp = strchr(cp,' ') + 1;
-					_httpd_decode(cp, authBuf, 100);
-					r->request.authLength = 
-						strlen(authBuf);
-					cp = strchr(authBuf,':');
-					if (cp)
+					if (strncmp(cp,"Basic ", 6) != 0)
 					{
-						*cp = 0;
-						strncpy(
-						   r->request.authPassword,
-						   cp+1, HTTP_MAX_AUTH);
-                                                r->request.authPassword[HTTP_MAX_AUTH-1]=0;
+						/* Unknown auth method */
 					}
-					strncpy(r->request.authUser, 
-						authBuf, HTTP_MAX_AUTH);
-					r->request.authUser[HTTP_MAX_AUTH-1]=0;
+					else
+					{
+						char    authBuf[100];
+						
+						cp = strchr(cp,' ') + 1;
+						_httpd_decode(cp, authBuf, 100);
+						r->request.authLength =
+							strlen(authBuf);
+						cp = strchr(authBuf,':');
+						if (cp)
+						{
+							*cp = 0;
+							strncpy(
+							   r->request.authPassword,
+							   cp+1, HTTP_MAX_AUTH);
+							r->request.authPassword[HTTP_MAX_AUTH-1]=0;
+						}
+						strncpy(r->request.authUser,
+							authBuf, HTTP_MAX_AUTH);
+						r->request.authUser[HTTP_MAX_AUTH-1]=0;
+					}
 				}
 			}
 #if 0
