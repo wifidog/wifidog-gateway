@@ -1,6 +1,12 @@
 # $Id$
 2014-05-13
         * libhttpd crash on invalid HTTP headers (second part of the patch) by Benoit Grégoire
+2013-08-21
+        * add support for DROP target for firewall rules by Champtar
+2013-06-14
+	* add support for log, ulog target for firewall rules by jean-philippe menil and florida 
+2013-05-31        
+        Add transparent proxy support (via iptables REDIRECT) by Champtar (inspired by FFW team) 
 2012-05-30
 	* Add many const by champtar
 	* Send http 302 instead of 307 by champtar
