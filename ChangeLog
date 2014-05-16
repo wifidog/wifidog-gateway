@@ -1,5 +1,6 @@
 # $Id$
-
+2014-05-13
+        * libhttpd crash on invalid HTTP headers (second part of the patch) by Benoit Grégoire
 2012-05-30
 	* Add many const by champtar
 	* Send http 302 instead of 307 by champtar
