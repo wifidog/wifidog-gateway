@@ -39,6 +39,8 @@ void http_callback_about(httpd *webserver, request *r);
 void http_callback_status(httpd *webserver, request *r);
 /**@brief Callback for libhttpd, main entry point post login for auth confirmation */
 void http_callback_auth(httpd *webserver, request *r);
+/**@brief Callback for libhttpd */
+void http_callback_logout(httpd *webserver, request *r);
 
 /** @brief Sends a HTML page to web browser */
 void send_http_page(request *r, const char *title, const char* message);
