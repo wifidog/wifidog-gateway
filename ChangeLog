@@ -1,4 +1,6 @@
 # $Id$
+2014-08-31
+        * Fixed parsing process for AuthServer configurations by Kontinuation (github wifidog #24)
 2014-05-13
         * libhttpd crash on invalid HTTP headers (second part of the patch) by Benoit Grégoire
 2013-08-21
