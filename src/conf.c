@@ -264,6 +264,12 @@ parse_auth_server(FILE *file, const char *filename, int *linenum)
 			*p2 = '\0';
 		}
 
+		/* trim all blanks at the end of the line */
+		for (p2 = (p2 != NULL? p2 - 1: &line[MAX_BUF - 2]);
+		     isblank(*p2) && p2 > p1; p2--) {
+			*p2 = '\0';
+		}
+		
 		/* next, we coopt the parsing of the regular config */
 		if (strlen(p1) > 0) {
 			p2 = p1;
