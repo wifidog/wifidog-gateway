@@ -255,7 +255,7 @@ http_callback_auth(httpd *webserver, request *r)
 			    				    	
 			    fw_deny(client->ip, client->mac, client->fw_connection_state);
 			    client_list_delete(client);
-			    debug(LOG_DEBUG, "Got logout from %s", client->ip);
+			    debug(LOG_DEBUG, "Got logout from %s", ip);
 			    
 			    /* Advertise the logout if we have an auth server */
 			    if (config->auth_servers != NULL) {
