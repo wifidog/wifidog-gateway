@@ -229,7 +229,6 @@ http_callback_auth(httpd *webserver, request *r)
 	t_client	*client;
 	httpVar * token;
 	char	*mac;
-	httpVar *logout = httpdGetVariableByName(r, "logout");
 	if ((token = httpdGetVariableByName(r, "token"))) {
 		/* They supplied variable "token" */
 		if (!(mac = arp_get(r->clientAddr))) {
@@ -244,50 +243,71 @@ http_callback_auth(httpd *webserver, request *r)
 			if ((client = client_list_find(r->clientAddr, mac)) == NULL) {
 				debug(LOG_DEBUG, "New client for %s", r->clientAddr);
 				client_list_append(r->clientAddr, mac, token->value);
-			} else if (logout) {
-			    t_authresponse  authresponse;
-			    s_config *config = config_get_config();
-			    unsigned long long incoming = client->counters.incoming;
-			    unsigned long long outgoing = client->counters.outgoing;
-			    char *ip = safe_strdup(client->ip);
-			    char *urlFragment = NULL;
-			    t_auth_serv	*auth_server = get_auth_server();
-			    				    	
-			    fw_deny(client->ip, client->mac, client->fw_connection_state);
-			    client_list_delete(client);
-			    debug(LOG_DEBUG, "Got logout from %s", client->ip);
-			    
-			    /* Advertise the logout if we have an auth server */
-			    if (config->auth_servers != NULL) {
-					UNLOCK_CLIENT_LIST();
-					auth_server_request(&authresponse, REQUEST_TYPE_LOGOUT, ip, mac, token->value, 
-									    incoming, outgoing);
-					LOCK_CLIENT_LIST();
-					
-					/* Re-direct them to auth server */
-					debug(LOG_INFO, "Got manual logout from client ip %s, mac %s, token %s"
-					"- redirecting them to logout message", client->ip, client->mac, client->token);
-					safe_asprintf(&urlFragment, "%smessage=%s",
-						auth_server->authserv_msg_script_path_fragment,
-						GATEWAY_MESSAGE_ACCOUNT_LOGGED_OUT
-					);
-					http_send_redirect_to_auth(r, urlFragment, "Redirect to logout message");
-					free(urlFragment);
-			    }
-			    free(ip);
- 			} 
- 			else {
+			} else {
 				debug(LOG_DEBUG, "Client for %s is already in the client list", client->ip);
 			}
 			UNLOCK_CLIENT_LIST();
-			if (!logout) {
-				authenticate_client(r);
-			}
+			authenticate_client(r);
 			free(mac);
 		}
 	} else {
 		/* They did not supply variable "token" */
 		send_http_page(r, "WiFiDog error", "Invalid token");
+	}
+}
+
+void http_callback_logout(httpd *webserver, request *r)
+{
+	t_client *client;
+	s_config *config = config_get_config();
+
+	LOCK_CLIENT_LIST();
+	client = client_list_find_by_ip(r->clientAddr);
+
+	/* Send logout to auth server if client is logged in */
+	if (client != NULL) {
+		t_authresponse authresponse;
+		char *ip = strdup(client->ip);
+		char *mac = strdup(client->mac);
+		char *token = strdup(client->token);
+		unsigned long long incoming = client->counters.incoming;
+		unsigned long long outgoing = client->counters.outgoing;
+
+		debug(LOG_INFO, "Got manual logout from client ip %s, mac %s, token %s",
+			client->ip, client->mac, client->token);
+
+		fw_deny(client->ip, client->mac, client->fw_connection_state);
+		client_list_delete(client);
+
+		/* Unlock client list here since auth_server_request may take a while */
+		UNLOCK_CLIENT_LIST();
+
+		/* Advertise the logout if we have an auth server */
+		if (config->auth_servers != NULL) {
+			auth_server_request(&authresponse, REQUEST_TYPE_LOGOUT, ip,
+								mac, token, incoming, outgoing);
+		}
+
+		free(ip);
+		free(mac);
+		free(token);
+	} else {
+		/* Do nothing if the client is not in the client list (i.e. not logged in) */
+		debug(LOG_INFO, "Got manual logout from client %s, but client not in list", r->clientAddr);
+		UNLOCK_CLIENT_LIST();
+	}
+
+	if (config->auth_servers != NULL) {
+		/* Re-direct them to auth server */
+		char *urlFragment = NULL;
+		t_auth_serv	*auth_server = get_auth_server();
+
+		safe_asprintf(&urlFragment, "%smessage=%s",
+			auth_server->authserv_msg_script_path_fragment,
+			GATEWAY_MESSAGE_ACCOUNT_LOGGED_OUT
+		);
+		http_send_redirect_to_auth(r, urlFragment, "Redirect to logout message");
+		free(urlFragment);
 	}
 }
 
