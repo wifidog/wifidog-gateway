@@ -367,6 +367,8 @@ iptables_fw_init(void)
 	iptables_do_command("-t filter -A " TABLE_WIFIDOG_UNKNOWN " -j REJECT --reject-with icmp-port-unreachable");
 
 	UNLOCK_CONFIG();
+
+	free(ext_interface);
 	return 1;
 }
 
