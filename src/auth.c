@@ -97,6 +97,7 @@ authenticate_client(request *r)
 	t_authresponse	auth_response;
 	char	*mac,
 		*token;
+	httpVar *var;
 	char *urlFragment = NULL;
 	s_config	*config = NULL;
 	t_auth_serv	*auth_server = NULL;
@@ -112,8 +113,20 @@ authenticate_client(request *r)
 	}
 	
 	mac = safe_strdup(client->mac);
-	token = safe_strdup(client->token);
-	
+
+	/* Users could try to log in(so there is a valid token in
+	 * request) even after they have logged in, try to deal with
+	 * this */
+	if ((var = httpdGetVariableByName(r, "token")) != NULL) {
+		if (client->token)
+			free(client->token);
+
+		client->token = safe_strdup(var->value);
+		token = safe_strdup(var->value);
+	} else {
+		token = safe_strdup(client->token);
+	}
+
 	UNLOCK_CLIENT_LIST();
 	
 	/* 
