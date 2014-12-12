@@ -129,19 +129,20 @@ execute(const char *cmd_line, int quiet)
 	struct in_addr *
 wd_gethostbyname(const char *name)
 {
-	struct hostent *he;
-	struct in_addr *h_addr, *in_addr_temp;
+	struct hostent *he = NULL;
+	struct in_addr *addr = NULL;
+	struct in_addr *in_addr_temp = NULL;
 
 	/* XXX Calling function is reponsible for free() */
 
-	h_addr = safe_malloc(sizeof(struct in_addr));
+	addr = safe_malloc(sizeof(*addr));
 
 	LOCK_GHBN();
 
 	he = gethostbyname(name);
 
 	if (he == NULL) {
-		free(h_addr);
+		free(addr);
 		UNLOCK_GHBN();
 		return NULL;
 	}
@@ -149,11 +150,11 @@ wd_gethostbyname(const char *name)
 	mark_online();
 
 	in_addr_temp = (struct in_addr *)he->h_addr_list[0];
-	h_addr->s_addr = in_addr_temp->s_addr;
+	addr->s_addr = in_addr_temp->s_addr;
 
 	UNLOCK_GHBN();
 
-	return h_addr;
+	return addr;
 }
 
 	char *
