@@ -1,8 +1,10 @@
 # $Id$
 2014-12-19
-	* fix annoying access denied when re-login by Zhao-gang (github wifidog #40)
+        * fix annoying access denied when re-login by Zhao-gang (github wifidog #40)
 2014-12-08
         * Add IP to login script URL parameters by Sannis (github wifidog #36)
+2014-10-05
+        * iptables_fw_init: fix memory leak by Pawit Pornkitprasan (github wifidog #28)
 2014-08-31
         * Fixed parsing process for AuthServer configurations by Kontinuation (github wifidog #24)
 2014-05-13
