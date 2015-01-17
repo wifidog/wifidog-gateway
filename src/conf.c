@@ -795,6 +795,15 @@ parse_boolean_value(char *line)
 	return -1;
 }
 
+/* Parse possiblemac to see if it is valid MAC address format */
+int check_mac_format(char *possiblemac) {
+        char hex2[3];
+        return
+        sscanf(possiblemac,
+                "%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]",
+                hex2,hex2,hex2,hex2,hex2,hex2) == 6;
+}
+
 void parse_trusted_mac_list(const char *ptr) {
 	char *ptrcopy = NULL;
 	char *possiblemac = NULL;
@@ -809,25 +818,30 @@ void parse_trusted_mac_list(const char *ptr) {
 	ptrcopy = safe_strdup(ptr);
 
 	while ((possiblemac = strsep(&ptrcopy, ", "))) {
-		if (sscanf(possiblemac, " %17[A-Fa-f0-9:]", mac) == 1) {
+		/* check for valid format */
+		
+                if (!check_mac_format(possiblemac)) {
+                        debug(LOG_ERR, "[%s] not a valid MAC address to trust. See option TrustedMACList in wifidog.conf for correct this mistake.", possiblemac);
+                        return;
+                } else {
+			if (sscanf(possiblemac, " %17[A-Fa-f0-9:]", mac) == 1) {
 			/* Copy mac to the list */
 
-			debug(LOG_DEBUG, "Adding MAC address [%s] to trusted list", mac);
+				debug(LOG_DEBUG, "Adding MAC address [%s] to trusted list", mac);
 
-			if (config.trustedmaclist == NULL) {
-				config.trustedmaclist = safe_malloc(sizeof(t_trusted_mac));
-				config.trustedmaclist->mac = safe_strdup(mac);
-				config.trustedmaclist->next = NULL;
-			}
-			else {
+				if (config.trustedmaclist == NULL) {
+					config.trustedmaclist = safe_malloc(sizeof(t_trusted_mac));
+					config.trustedmaclist->mac = safe_strdup(mac);
+					config.trustedmaclist->next = NULL;
+				} else {
 				/* Advance to the last entry */
 				for (p = config.trustedmaclist; p->next != NULL; p = p->next);
 				p->next = safe_malloc(sizeof(t_trusted_mac));
 				p = p->next;
 				p->mac = safe_strdup(mac);
 				p->next = NULL;
+				}
 			}
-
 		}
 	}
 
