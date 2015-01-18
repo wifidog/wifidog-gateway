@@ -60,18 +60,18 @@ static void wdctl_restart(void);
 static void
 usage(void)
 {
-    printf("Usage: wdctl [options] command [arguments]\n");
-    printf("\n");
-    printf("options:\n");
-    printf("  -s <path>         Path to the socket\n");
-    printf("  -h                Print usage\n");
-    printf("\n");
-    printf("commands:\n");
-    printf("  reset [mac|ip]    Reset the specified mac or ip connection\n");
-    printf("  status            Obtain the status of wifidog\n");
-    printf("  stop              Stop the running wifidog\n");
-    printf("  restart           Re-start the running wifidog (without disconnecting active users!)\n");
-    printf("\n");
+    fprintf(stdout, "Usage: wdctl [options] command [arguments]\n");
+    fprintf(stdout, "\n");
+    fprintf(stdout, "options:\n");
+    fprintf(stdout, "  -s <path>         Path to the socket\n");
+    fprintf(stdout, "  -h                Print usage\n");
+    fprintf(stdout, "\n");
+    fprintf(stdout, "commands:\n");
+    fprintf(stdout, "  reset [mac|ip]    Reset the specified mac or ip connection\n");
+    fprintf(stdout, "  status            Obtain the status of wifidog\n");
+    fprintf(stdout, "  stop              Stop the running wifidog\n");
+    fprintf(stdout, "  restart           Re-start the running wifidog (without disconnecting active users!)\n");
+    fprintf(stdout, "\n");
 }
 
 /** @internal
@@ -202,7 +202,7 @@ wdctl_status(void)
 	
 	while ((len = read(sock, buffer, sizeof(buffer))) > 0) {
 		buffer[len] = '\0';
-		printf("%s", buffer);
+		fprintf(stdout, "%s", buffer);
 	}
 
 	shutdown(sock, 2);
@@ -225,7 +225,7 @@ wdctl_stop(void)
 	
 	while ((len = read(sock, buffer, sizeof(buffer))) > 0) {
 		buffer[len] = '\0';
-		printf("%s", buffer);
+		fprintf(stdout, "%s", buffer);
 	}
 
 	shutdown(sock, 2);
@@ -257,9 +257,9 @@ wdctl_reset(void)
 	}
 
 	if (strcmp(buffer, "Yes") == 0) {
-		printf("Connection %s successfully reset.\n", config.param);
+		fprintf(stdout, "Connection %s successfully reset.\n", config.param);
 	} else if (strcmp(buffer, "No") == 0) {
-		printf("Connection %s was not active.\n", config.param);
+		fprintf(stdout, "Connection %s was not active.\n", config.param);
 	} else {
 		fprintf(stderr, "wdctl: Error: WiFiDog sent an abnormal "
 				"reply.\n");
@@ -285,7 +285,7 @@ wdctl_restart(void)
 	
 	while ((len = read(sock, buffer, sizeof(buffer))) > 0) {
 		buffer[len] = '\0';
-		printf("%s", buffer);
+		fprintf(stdout, "%s", buffer);
 	}
 
 	shutdown(sock, 2);
