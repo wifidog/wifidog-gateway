@@ -57,18 +57,19 @@ pid_t restart_orig_pid = 0;
 static void
 usage(void)
 {
-    printf("Usage: wifidog [options]\n");
-    printf("\n");
-    printf("  -c [filename] Use this config file\n");
-    printf("  -f            Run in foreground\n");
-    printf("  -d <level>    Debug level\n");
-    printf("  -s            Log to syslog\n");
-    printf("  -w <path>     Wdctl socket path\n");
-    printf("  -h            Print usage\n");
-    printf("  -v            Print version information\n");
-    printf("  -x pid        Used internally by WiFiDog when re-starting itself *DO NOT ISSUE THIS SWITCH MANUAlLY*\n");
-    printf("  -i <path>     Internal socket path used when re-starting self\n");
-    printf("\n");
+    fprintf(stdout, "Usage: wifidog [options]\n");
+    fprintf(stdout, "\n");
+    fprintf(stdout, "options:\n");
+    fprintf(stdout, "  -c [filename] Use this config file\n");
+    fprintf(stdout, "  -f            Run in foreground\n");
+    fprintf(stdout, "  -d <level>    Debug level\n");
+    fprintf(stdout, "  -s            Log to syslog\n");
+    fprintf(stdout, "  -w <path>     Wdctl socket path\n");
+    fprintf(stdout, "  -h            Print usage\n");
+    fprintf(stdout, "  -v            Print version information\n");
+    fprintf(stdout, "  -x pid        Used internally by WiFiDog when re-starting itself *DO NOT ISSUE THIS SWITCH MANUAlLY*\n");
+    fprintf(stdout, "  -i <path>     Internal socket path used when re-starting self\n");
+    fprintf(stdout, "\n");
 }
 
 /** Uses getopt() to parse the command line and set configuration values
@@ -126,7 +127,7 @@ void parse_commandline(int argc, char **argv) {
 				break;
 
 			case 'v':
-				printf("This is WiFiDog version " VERSION "\n");
+				fprintf(stdout, "This is WiFiDog version " VERSION "\n");
 				exit(1);
 				break;
 
@@ -136,7 +137,7 @@ void parse_commandline(int argc, char **argv) {
 					restart_orig_pid = atoi(optarg);
 				}
 				else {
-					printf("The expected PID to the -x switch was not supplied!");
+					fprintf(stdout, "The expected PID to the -x switch was not supplied!");
 					exit(1);
 				}
 				break;
