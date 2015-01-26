@@ -225,7 +225,7 @@ ping(void)
 	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", request);
 	
 	if (strstr(request, "Pong") == 0) {
-		debug(LOG_WARNING, "Auth server did NOT say pong!");
+		debug(LOG_WARNING, "Auth server did NOT say Pong!");
 		/* FIXME */
 	}
 	else {
