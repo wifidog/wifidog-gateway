@@ -284,8 +284,8 @@ iptables_fw_init(void)
 
 	/* Create new chains */
 	iptables_do_command("-t nat -N " CHAIN_OUTGOING);
-	iptables_do_command("-t nat -N " CHAIN_WIFI_TO_ROUTER);
-	iptables_do_command("-t nat -N " CHAIN_WIFI_TO_INTERNET);
+	iptables_do_command("-t nat -N " CHAIN_TO_ROUTER);
+	iptables_do_command("-t nat -N " CHAIN_TO_INTERNET);
 	iptables_do_command("-t nat -N " CHAIN_GLOBAL);
 	iptables_do_command("-t nat -N " CHAIN_UNKNOWN);
 	iptables_do_command("-t nat -N " CHAIN_AUTHSERVERS);
@@ -293,20 +293,20 @@ iptables_fw_init(void)
 	/* Assign links and rules to these new chains */
 	iptables_do_command("-t nat -A PREROUTING -i %s -j " CHAIN_OUTGOING, config->gw_interface);
 
-	iptables_do_command("-t nat -A " CHAIN_OUTGOING " -d %s -j " CHAIN_WIFI_TO_ROUTER, config->gw_address);
-	iptables_do_command("-t nat -A " CHAIN_WIFI_TO_ROUTER " -j ACCEPT");
+	iptables_do_command("-t nat -A " CHAIN_OUTGOING " -d %s -j " CHAIN_TO_ROUTER, config->gw_address);
+	iptables_do_command("-t nat -A " CHAIN_TO_ROUTER " -j ACCEPT");
 
-	iptables_do_command("-t nat -A " CHAIN_OUTGOING " -j " CHAIN_WIFI_TO_INTERNET);
+	iptables_do_command("-t nat -A " CHAIN_OUTGOING " -j " CHAIN_TO_INTERNET);
 
 	if((proxy_port=config_get_config()->proxy_port) != 0){
 		debug(LOG_DEBUG,"Proxy port set, setting proxy rule");
-		iptables_do_command("-t nat -A " CHAIN_WIFI_TO_INTERNET " -p tcp --dport 80 -m mark --mark 0x%u -j REDIRECT --to-port %u", FW_MARK_KNOWN, proxy_port);
-		iptables_do_command("-t nat -A " CHAIN_WIFI_TO_INTERNET " -p tcp --dport 80 -m mark --mark 0x%u -j REDIRECT --to-port %u", FW_MARK_PROBATION, proxy_port);
+		iptables_do_command("-t nat -A " CHAIN_TO_INTERNET " -p tcp --dport 80 -m mark --mark 0x%u -j REDIRECT --to-port %u", FW_MARK_KNOWN, proxy_port);
+		iptables_do_command("-t nat -A " CHAIN_TO_INTERNET " -p tcp --dport 80 -m mark --mark 0x%u -j REDIRECT --to-port %u", FW_MARK_PROBATION, proxy_port);
 	}
 
-	iptables_do_command("-t nat -A " CHAIN_WIFI_TO_INTERNET " -m mark --mark 0x%u -j ACCEPT", FW_MARK_KNOWN);
-	iptables_do_command("-t nat -A " CHAIN_WIFI_TO_INTERNET " -m mark --mark 0x%u -j ACCEPT", FW_MARK_PROBATION);
-	iptables_do_command("-t nat -A " CHAIN_WIFI_TO_INTERNET " -j " CHAIN_UNKNOWN);
+	iptables_do_command("-t nat -A " CHAIN_TO_INTERNET " -m mark --mark 0x%u -j ACCEPT", FW_MARK_KNOWN);
+	iptables_do_command("-t nat -A " CHAIN_TO_INTERNET " -m mark --mark 0x%u -j ACCEPT", FW_MARK_PROBATION);
+	iptables_do_command("-t nat -A " CHAIN_TO_INTERNET " -j " CHAIN_UNKNOWN);
 
 	iptables_do_command("-t nat -A " CHAIN_UNKNOWN " -j " CHAIN_AUTHSERVERS);
 	iptables_do_command("-t nat -A " CHAIN_UNKNOWN " -j " CHAIN_GLOBAL);
@@ -320,7 +320,7 @@ iptables_fw_init(void)
 	 */
 
 	/* Create new chains */
-	iptables_do_command("-t filter -N " CHAIN_WIFI_TO_INTERNET);
+	iptables_do_command("-t filter -N " CHAIN_TO_INTERNET);
 	iptables_do_command("-t filter -N " CHAIN_AUTHSERVERS);
 	iptables_do_command("-t filter -N " CHAIN_LOCKED);
 	iptables_do_command("-t filter -N " CHAIN_GLOBAL);
@@ -331,38 +331,38 @@ iptables_fw_init(void)
 	/* Assign links and rules to these new chains */
 
 	/* Insert at the beginning */
-	iptables_do_command("-t filter -I FORWARD -i %s -j " CHAIN_WIFI_TO_INTERNET, config->gw_interface);
+	iptables_do_command("-t filter -I FORWARD -i %s -j " CHAIN_TO_INTERNET, config->gw_interface);
 
 
-	iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -m state --state INVALID -j DROP");
+	iptables_do_command("-t filter -A " CHAIN_TO_INTERNET " -m state --state INVALID -j DROP");
 
 	/* XXX: Why this? it means that connections setup after authentication
 	   stay open even after the connection is done... 
-	   iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -m state --state RELATED,ESTABLISHED -j ACCEPT");*/
+	   iptables_do_command("-t filter -A " CHAIN_TO_INTERNET " -m state --state RELATED,ESTABLISHED -j ACCEPT");*/
 
 	//Won't this rule NEVER match anyway?!?!? benoitg, 2007-06-23
-	//iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -i %s -m state --state NEW -j DROP", ext_interface);
+	//iptables_do_command("-t filter -A " CHAIN_TO_INTERNET " -i %s -m state --state NEW -j DROP", ext_interface);
 
 	/* TCPMSS rule for PPPoE */
-	iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -o %s -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu", ext_interface);
+	iptables_do_command("-t filter -A " CHAIN_TO_INTERNET " -o %s -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu", ext_interface);
 
-	iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -j " CHAIN_AUTHSERVERS);
+	iptables_do_command("-t filter -A " CHAIN_TO_INTERNET " -j " CHAIN_AUTHSERVERS);
 	iptables_fw_set_authservers();
 
-	iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -m mark --mark 0x%u -j " CHAIN_LOCKED, FW_MARK_LOCKED);
+	iptables_do_command("-t filter -A " CHAIN_TO_INTERNET " -m mark --mark 0x%u -j " CHAIN_LOCKED, FW_MARK_LOCKED);
 	iptables_load_ruleset("filter", "locked-users", CHAIN_LOCKED);
 
-	iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -j " CHAIN_GLOBAL);
+	iptables_do_command("-t filter -A " CHAIN_TO_INTERNET " -j " CHAIN_GLOBAL);
 	iptables_load_ruleset("filter", "global", CHAIN_GLOBAL);
 	iptables_load_ruleset("nat", "global", CHAIN_GLOBAL);
 
-	iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -m mark --mark 0x%u -j " CHAIN_VALIDATE, FW_MARK_PROBATION);
+	iptables_do_command("-t filter -A " CHAIN_TO_INTERNET " -m mark --mark 0x%u -j " CHAIN_VALIDATE, FW_MARK_PROBATION);
 	iptables_load_ruleset("filter", "validating-users", CHAIN_VALIDATE);
 
-	iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -m mark --mark 0x%u -j " CHAIN_KNOWN, FW_MARK_KNOWN);
+	iptables_do_command("-t filter -A " CHAIN_TO_INTERNET " -m mark --mark 0x%u -j " CHAIN_KNOWN, FW_MARK_KNOWN);
 	iptables_load_ruleset("filter", "known-users", CHAIN_KNOWN);
 
-	iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -j " CHAIN_UNKNOWN);
+	iptables_do_command("-t filter -A " CHAIN_TO_INTERNET " -j " CHAIN_UNKNOWN);
 	iptables_load_ruleset("filter", "unknown-users", CHAIN_UNKNOWN);
 	iptables_do_command("-t filter -A " CHAIN_UNKNOWN " -j REJECT --reject-with icmp-port-unreachable");
 
@@ -408,14 +408,14 @@ iptables_fw_destroy(void)
 	iptables_fw_destroy_mention("nat", "PREROUTING", CHAIN_OUTGOING);
 	iptables_do_command("-t nat -F " CHAIN_AUTHSERVERS);
 	iptables_do_command("-t nat -F " CHAIN_OUTGOING);
-	iptables_do_command("-t nat -F " CHAIN_WIFI_TO_ROUTER);
-	iptables_do_command("-t nat -F " CHAIN_WIFI_TO_INTERNET);
+	iptables_do_command("-t nat -F " CHAIN_TO_ROUTER);
+	iptables_do_command("-t nat -F " CHAIN_TO_INTERNET);
 	iptables_do_command("-t nat -F " CHAIN_GLOBAL);
 	iptables_do_command("-t nat -F " CHAIN_UNKNOWN);
 	iptables_do_command("-t nat -X " CHAIN_AUTHSERVERS);
 	iptables_do_command("-t nat -X " CHAIN_OUTGOING);
-	iptables_do_command("-t nat -X " CHAIN_WIFI_TO_ROUTER);
-	iptables_do_command("-t nat -X " CHAIN_WIFI_TO_INTERNET);
+	iptables_do_command("-t nat -X " CHAIN_TO_ROUTER);
+	iptables_do_command("-t nat -X " CHAIN_TO_INTERNET);
 	iptables_do_command("-t nat -X " CHAIN_GLOBAL);
 	iptables_do_command("-t nat -X " CHAIN_UNKNOWN);
 
@@ -425,15 +425,15 @@ iptables_fw_destroy(void)
 	 *
 	 */
 	debug(LOG_DEBUG, "Destroying chains in the FILTER table");
-	iptables_fw_destroy_mention("filter", "FORWARD", CHAIN_WIFI_TO_INTERNET);
-	iptables_do_command("-t filter -F " CHAIN_WIFI_TO_INTERNET);
+	iptables_fw_destroy_mention("filter", "FORWARD", CHAIN_TO_INTERNET);
+	iptables_do_command("-t filter -F " CHAIN_TO_INTERNET);
 	iptables_do_command("-t filter -F " CHAIN_AUTHSERVERS);
 	iptables_do_command("-t filter -F " CHAIN_LOCKED);
 	iptables_do_command("-t filter -F " CHAIN_GLOBAL);
 	iptables_do_command("-t filter -F " CHAIN_VALIDATE);
 	iptables_do_command("-t filter -F " CHAIN_KNOWN);
 	iptables_do_command("-t filter -F " CHAIN_UNKNOWN);
-	iptables_do_command("-t filter -X " CHAIN_WIFI_TO_INTERNET);
+	iptables_do_command("-t filter -X " CHAIN_TO_INTERNET);
 	iptables_do_command("-t filter -X " CHAIN_AUTHSERVERS);
 	iptables_do_command("-t filter -X " CHAIN_LOCKED);
 	iptables_do_command("-t filter -X " CHAIN_GLOBAL);
