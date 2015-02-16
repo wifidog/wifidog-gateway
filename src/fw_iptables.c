@@ -210,8 +210,8 @@ iptables_load_ruleset(const char * table, const char *ruleset, const char *chain
 	void
 iptables_fw_clear_authservers(void)
 {
-	iptables_do_command("-t filter -F " TABLE_WIFIDOG_AUTHSERVERS);
-	iptables_do_command("-t nat -F " TABLE_WIFIDOG_AUTHSERVERS);
+	iptables_do_command("-t filter -F " CHAIN_AUTHSERVERS);
+	iptables_do_command("-t nat -F " CHAIN_AUTHSERVERS);
 }
 
 	void
@@ -224,8 +224,8 @@ iptables_fw_set_authservers(void)
 
 	for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
 		if (auth_server->last_ip && strcmp(auth_server->last_ip, "0.0.0.0") != 0) {
-			iptables_do_command("-t filter -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->last_ip);
-			iptables_do_command("-t nat -A " TABLE_WIFIDOG_AUTHSERVERS " -d %s -j ACCEPT", auth_server->last_ip);
+			iptables_do_command("-t filter -A " CHAIN_AUTHSERVERS " -d %s -j ACCEPT", auth_server->last_ip);
+			iptables_do_command("-t nat -A " CHAIN_AUTHSERVERS " -d %s -j ACCEPT", auth_server->last_ip);
 		}
 	}
 
@@ -264,17 +264,17 @@ iptables_fw_init(void)
 	 */
 
 	/* Create new chains */
-	iptables_do_command("-t mangle -N " TABLE_WIFIDOG_TRUSTED);
-	iptables_do_command("-t mangle -N " TABLE_WIFIDOG_OUTGOING);
-	iptables_do_command("-t mangle -N " TABLE_WIFIDOG_INCOMING);
+	iptables_do_command("-t mangle -N " CHAIN_TRUSTED);
+	iptables_do_command("-t mangle -N " CHAIN_OUTGOING);
+	iptables_do_command("-t mangle -N " CHAIN_INCOMING);
 
 	/* Assign links and rules to these new chains */
-	iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_OUTGOING, config->gw_interface);
-	iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_TRUSTED, config->gw_interface);//this rule will be inserted before the prior one
-	iptables_do_command("-t mangle -I POSTROUTING 1 -o %s -j " TABLE_WIFIDOG_INCOMING, config->gw_interface);
+	iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " CHAIN_OUTGOING, config->gw_interface);
+	iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " CHAIN_TRUSTED, config->gw_interface);//this rule will be inserted before the prior one
+	iptables_do_command("-t mangle -I POSTROUTING 1 -o %s -j " CHAIN_INCOMING, config->gw_interface);
 
 	for (p = config->trustedmaclist; p != NULL; p = p->next)
-		iptables_do_command("-t mangle -A " TABLE_WIFIDOG_TRUSTED " -m mac --mac-source %s -j MARK --set-mark %d", p->mac, FW_MARK_KNOWN);
+		iptables_do_command("-t mangle -A " CHAIN_TRUSTED " -m mac --mac-source %s -j MARK --set-mark %d", p->mac, FW_MARK_KNOWN);
 
 	/*
 	 *
@@ -283,34 +283,34 @@ iptables_fw_init(void)
 	 */
 
 	/* Create new chains */
-	iptables_do_command("-t nat -N " TABLE_WIFIDOG_OUTGOING);
-	iptables_do_command("-t nat -N " TABLE_WIFIDOG_WIFI_TO_ROUTER);
-	iptables_do_command("-t nat -N " TABLE_WIFIDOG_WIFI_TO_INTERNET);
-	iptables_do_command("-t nat -N " TABLE_WIFIDOG_GLOBAL);
-	iptables_do_command("-t nat -N " TABLE_WIFIDOG_UNKNOWN);
-	iptables_do_command("-t nat -N " TABLE_WIFIDOG_AUTHSERVERS);
+	iptables_do_command("-t nat -N " CHAIN_OUTGOING);
+	iptables_do_command("-t nat -N " CHAIN_WIFI_TO_ROUTER);
+	iptables_do_command("-t nat -N " CHAIN_WIFI_TO_INTERNET);
+	iptables_do_command("-t nat -N " CHAIN_GLOBAL);
+	iptables_do_command("-t nat -N " CHAIN_UNKNOWN);
+	iptables_do_command("-t nat -N " CHAIN_AUTHSERVERS);
 
 	/* Assign links and rules to these new chains */
-	iptables_do_command("-t nat -A PREROUTING -i %s -j " TABLE_WIFIDOG_OUTGOING, config->gw_interface);
+	iptables_do_command("-t nat -A PREROUTING -i %s -j " CHAIN_OUTGOING, config->gw_interface);
 
-	iptables_do_command("-t nat -A " TABLE_WIFIDOG_OUTGOING " -d %s -j " TABLE_WIFIDOG_WIFI_TO_ROUTER, config->gw_address);
-	iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_ROUTER " -j ACCEPT");
+	iptables_do_command("-t nat -A " CHAIN_OUTGOING " -d %s -j " CHAIN_WIFI_TO_ROUTER, config->gw_address);
+	iptables_do_command("-t nat -A " CHAIN_WIFI_TO_ROUTER " -j ACCEPT");
 
-	iptables_do_command("-t nat -A " TABLE_WIFIDOG_OUTGOING " -j " TABLE_WIFIDOG_WIFI_TO_INTERNET);
+	iptables_do_command("-t nat -A " CHAIN_OUTGOING " -j " CHAIN_WIFI_TO_INTERNET);
 
 	if((proxy_port=config_get_config()->proxy_port) != 0){
 		debug(LOG_DEBUG,"Proxy port set, setting proxy rule");
-		iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -p tcp --dport 80 -m mark --mark 0x%u -j REDIRECT --to-port %u", FW_MARK_KNOWN, proxy_port);
-		iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -p tcp --dport 80 -m mark --mark 0x%u -j REDIRECT --to-port %u", FW_MARK_PROBATION, proxy_port);
+		iptables_do_command("-t nat -A " CHAIN_WIFI_TO_INTERNET " -p tcp --dport 80 -m mark --mark 0x%u -j REDIRECT --to-port %u", FW_MARK_KNOWN, proxy_port);
+		iptables_do_command("-t nat -A " CHAIN_WIFI_TO_INTERNET " -p tcp --dport 80 -m mark --mark 0x%u -j REDIRECT --to-port %u", FW_MARK_PROBATION, proxy_port);
 	}
 
-	iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j ACCEPT", FW_MARK_KNOWN);
-	iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j ACCEPT", FW_MARK_PROBATION);
-	iptables_do_command("-t nat -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_UNKNOWN);
+	iptables_do_command("-t nat -A " CHAIN_WIFI_TO_INTERNET " -m mark --mark 0x%u -j ACCEPT", FW_MARK_KNOWN);
+	iptables_do_command("-t nat -A " CHAIN_WIFI_TO_INTERNET " -m mark --mark 0x%u -j ACCEPT", FW_MARK_PROBATION);
+	iptables_do_command("-t nat -A " CHAIN_WIFI_TO_INTERNET " -j " CHAIN_UNKNOWN);
 
-	iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j " TABLE_WIFIDOG_AUTHSERVERS);
-	iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -j " TABLE_WIFIDOG_GLOBAL);
-	iptables_do_command("-t nat -A " TABLE_WIFIDOG_UNKNOWN " -p tcp --dport 80 -j REDIRECT --to-ports %d", gw_port);
+	iptables_do_command("-t nat -A " CHAIN_UNKNOWN " -j " CHAIN_AUTHSERVERS);
+	iptables_do_command("-t nat -A " CHAIN_UNKNOWN " -j " CHAIN_GLOBAL);
+	iptables_do_command("-t nat -A " CHAIN_UNKNOWN " -p tcp --dport 80 -j REDIRECT --to-ports %d", gw_port);
 
 
 	/*
@@ -320,51 +320,51 @@ iptables_fw_init(void)
 	 */
 
 	/* Create new chains */
-	iptables_do_command("-t filter -N " TABLE_WIFIDOG_WIFI_TO_INTERNET);
-	iptables_do_command("-t filter -N " TABLE_WIFIDOG_AUTHSERVERS);
-	iptables_do_command("-t filter -N " TABLE_WIFIDOG_LOCKED);
-	iptables_do_command("-t filter -N " TABLE_WIFIDOG_GLOBAL);
-	iptables_do_command("-t filter -N " TABLE_WIFIDOG_VALIDATE);
-	iptables_do_command("-t filter -N " TABLE_WIFIDOG_KNOWN);
-	iptables_do_command("-t filter -N " TABLE_WIFIDOG_UNKNOWN);
+	iptables_do_command("-t filter -N " CHAIN_WIFI_TO_INTERNET);
+	iptables_do_command("-t filter -N " CHAIN_AUTHSERVERS);
+	iptables_do_command("-t filter -N " CHAIN_LOCKED);
+	iptables_do_command("-t filter -N " CHAIN_GLOBAL);
+	iptables_do_command("-t filter -N " CHAIN_VALIDATE);
+	iptables_do_command("-t filter -N " CHAIN_KNOWN);
+	iptables_do_command("-t filter -N " CHAIN_UNKNOWN);
 
 	/* Assign links and rules to these new chains */
 
 	/* Insert at the beginning */
-	iptables_do_command("-t filter -I FORWARD -i %s -j " TABLE_WIFIDOG_WIFI_TO_INTERNET, config->gw_interface);
+	iptables_do_command("-t filter -I FORWARD -i %s -j " CHAIN_WIFI_TO_INTERNET, config->gw_interface);
 
 
-	iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m state --state INVALID -j DROP");
+	iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -m state --state INVALID -j DROP");
 
 	/* XXX: Why this? it means that connections setup after authentication
 	   stay open even after the connection is done... 
-	   iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m state --state RELATED,ESTABLISHED -j ACCEPT");*/
+	   iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -m state --state RELATED,ESTABLISHED -j ACCEPT");*/
 
 	//Won't this rule NEVER match anyway?!?!? benoitg, 2007-06-23
-	//iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -i %s -m state --state NEW -j DROP", ext_interface);
+	//iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -i %s -m state --state NEW -j DROP", ext_interface);
 
 	/* TCPMSS rule for PPPoE */
-	iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -o %s -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu", ext_interface);
+	iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -o %s -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu", ext_interface);
 
-	iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_AUTHSERVERS);
+	iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -j " CHAIN_AUTHSERVERS);
 	iptables_fw_set_authservers();
 
-	iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j " TABLE_WIFIDOG_LOCKED, FW_MARK_LOCKED);
-	iptables_load_ruleset("filter", "locked-users", TABLE_WIFIDOG_LOCKED);
+	iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -m mark --mark 0x%u -j " CHAIN_LOCKED, FW_MARK_LOCKED);
+	iptables_load_ruleset("filter", "locked-users", CHAIN_LOCKED);
 
-	iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_GLOBAL);
-	iptables_load_ruleset("filter", "global", TABLE_WIFIDOG_GLOBAL);
-	iptables_load_ruleset("nat", "global", TABLE_WIFIDOG_GLOBAL);
+	iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -j " CHAIN_GLOBAL);
+	iptables_load_ruleset("filter", "global", CHAIN_GLOBAL);
+	iptables_load_ruleset("nat", "global", CHAIN_GLOBAL);
 
-	iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j " TABLE_WIFIDOG_VALIDATE, FW_MARK_PROBATION);
-	iptables_load_ruleset("filter", "validating-users", TABLE_WIFIDOG_VALIDATE);
+	iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -m mark --mark 0x%u -j " CHAIN_VALIDATE, FW_MARK_PROBATION);
+	iptables_load_ruleset("filter", "validating-users", CHAIN_VALIDATE);
 
-	iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -m mark --mark 0x%u -j " TABLE_WIFIDOG_KNOWN, FW_MARK_KNOWN);
-	iptables_load_ruleset("filter", "known-users", TABLE_WIFIDOG_KNOWN);
+	iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -m mark --mark 0x%u -j " CHAIN_KNOWN, FW_MARK_KNOWN);
+	iptables_load_ruleset("filter", "known-users", CHAIN_KNOWN);
 
-	iptables_do_command("-t filter -A " TABLE_WIFIDOG_WIFI_TO_INTERNET " -j " TABLE_WIFIDOG_UNKNOWN);
-	iptables_load_ruleset("filter", "unknown-users", TABLE_WIFIDOG_UNKNOWN);
-	iptables_do_command("-t filter -A " TABLE_WIFIDOG_UNKNOWN " -j REJECT --reject-with icmp-port-unreachable");
+	iptables_do_command("-t filter -A " CHAIN_WIFI_TO_INTERNET " -j " CHAIN_UNKNOWN);
+	iptables_load_ruleset("filter", "unknown-users", CHAIN_UNKNOWN);
+	iptables_do_command("-t filter -A " CHAIN_UNKNOWN " -j REJECT --reject-with icmp-port-unreachable");
 
 	UNLOCK_CONFIG();
 
@@ -389,15 +389,15 @@ iptables_fw_destroy(void)
 	 *
 	 */
 	debug(LOG_DEBUG, "Destroying chains in the MANGLE table");
-	iptables_fw_destroy_mention("mangle", "PREROUTING", TABLE_WIFIDOG_TRUSTED);
-	iptables_fw_destroy_mention("mangle", "PREROUTING", TABLE_WIFIDOG_OUTGOING);
-	iptables_fw_destroy_mention("mangle", "POSTROUTING", TABLE_WIFIDOG_INCOMING);
-	iptables_do_command("-t mangle -F " TABLE_WIFIDOG_TRUSTED);
-	iptables_do_command("-t mangle -F " TABLE_WIFIDOG_OUTGOING);
-	iptables_do_command("-t mangle -F " TABLE_WIFIDOG_INCOMING);
-	iptables_do_command("-t mangle -X " TABLE_WIFIDOG_TRUSTED);
-	iptables_do_command("-t mangle -X " TABLE_WIFIDOG_OUTGOING);
-	iptables_do_command("-t mangle -X " TABLE_WIFIDOG_INCOMING);
+	iptables_fw_destroy_mention("mangle", "PREROUTING", CHAIN_TRUSTED);
+	iptables_fw_destroy_mention("mangle", "PREROUTING", CHAIN_OUTGOING);
+	iptables_fw_destroy_mention("mangle", "POSTROUTING", CHAIN_INCOMING);
+	iptables_do_command("-t mangle -F " CHAIN_TRUSTED);
+	iptables_do_command("-t mangle -F " CHAIN_OUTGOING);
+	iptables_do_command("-t mangle -F " CHAIN_INCOMING);
+	iptables_do_command("-t mangle -X " CHAIN_TRUSTED);
+	iptables_do_command("-t mangle -X " CHAIN_OUTGOING);
+	iptables_do_command("-t mangle -X " CHAIN_INCOMING);
 
 	/*
 	 *
@@ -405,19 +405,19 @@ iptables_fw_destroy(void)
 	 *
 	 */
 	debug(LOG_DEBUG, "Destroying chains in the NAT table");
-	iptables_fw_destroy_mention("nat", "PREROUTING", TABLE_WIFIDOG_OUTGOING);
-	iptables_do_command("-t nat -F " TABLE_WIFIDOG_AUTHSERVERS);
-	iptables_do_command("-t nat -F " TABLE_WIFIDOG_OUTGOING);
-	iptables_do_command("-t nat -F " TABLE_WIFIDOG_WIFI_TO_ROUTER);
-	iptables_do_command("-t nat -F " TABLE_WIFIDOG_WIFI_TO_INTERNET);
-	iptables_do_command("-t nat -F " TABLE_WIFIDOG_GLOBAL);
-	iptables_do_command("-t nat -F " TABLE_WIFIDOG_UNKNOWN);
-	iptables_do_command("-t nat -X " TABLE_WIFIDOG_AUTHSERVERS);
-	iptables_do_command("-t nat -X " TABLE_WIFIDOG_OUTGOING);
-	iptables_do_command("-t nat -X " TABLE_WIFIDOG_WIFI_TO_ROUTER);
-	iptables_do_command("-t nat -X " TABLE_WIFIDOG_WIFI_TO_INTERNET);
-	iptables_do_command("-t nat -X " TABLE_WIFIDOG_GLOBAL);
-	iptables_do_command("-t nat -X " TABLE_WIFIDOG_UNKNOWN);
+	iptables_fw_destroy_mention("nat", "PREROUTING", CHAIN_OUTGOING);
+	iptables_do_command("-t nat -F " CHAIN_AUTHSERVERS);
+	iptables_do_command("-t nat -F " CHAIN_OUTGOING);
+	iptables_do_command("-t nat -F " CHAIN_WIFI_TO_ROUTER);
+	iptables_do_command("-t nat -F " CHAIN_WIFI_TO_INTERNET);
+	iptables_do_command("-t nat -F " CHAIN_GLOBAL);
+	iptables_do_command("-t nat -F " CHAIN_UNKNOWN);
+	iptables_do_command("-t nat -X " CHAIN_AUTHSERVERS);
+	iptables_do_command("-t nat -X " CHAIN_OUTGOING);
+	iptables_do_command("-t nat -X " CHAIN_WIFI_TO_ROUTER);
+	iptables_do_command("-t nat -X " CHAIN_WIFI_TO_INTERNET);
+	iptables_do_command("-t nat -X " CHAIN_GLOBAL);
+	iptables_do_command("-t nat -X " CHAIN_UNKNOWN);
 
 	/*
 	 *
@@ -425,21 +425,21 @@ iptables_fw_destroy(void)
 	 *
 	 */
 	debug(LOG_DEBUG, "Destroying chains in the FILTER table");
-	iptables_fw_destroy_mention("filter", "FORWARD", TABLE_WIFIDOG_WIFI_TO_INTERNET);
-	iptables_do_command("-t filter -F " TABLE_WIFIDOG_WIFI_TO_INTERNET);
-	iptables_do_command("-t filter -F " TABLE_WIFIDOG_AUTHSERVERS);
-	iptables_do_command("-t filter -F " TABLE_WIFIDOG_LOCKED);
-	iptables_do_command("-t filter -F " TABLE_WIFIDOG_GLOBAL);
-	iptables_do_command("-t filter -F " TABLE_WIFIDOG_VALIDATE);
-	iptables_do_command("-t filter -F " TABLE_WIFIDOG_KNOWN);
-	iptables_do_command("-t filter -F " TABLE_WIFIDOG_UNKNOWN);
-	iptables_do_command("-t filter -X " TABLE_WIFIDOG_WIFI_TO_INTERNET);
-	iptables_do_command("-t filter -X " TABLE_WIFIDOG_AUTHSERVERS);
-	iptables_do_command("-t filter -X " TABLE_WIFIDOG_LOCKED);
-	iptables_do_command("-t filter -X " TABLE_WIFIDOG_GLOBAL);
-	iptables_do_command("-t filter -X " TABLE_WIFIDOG_VALIDATE);
-	iptables_do_command("-t filter -X " TABLE_WIFIDOG_KNOWN);
-	iptables_do_command("-t filter -X " TABLE_WIFIDOG_UNKNOWN);
+	iptables_fw_destroy_mention("filter", "FORWARD", CHAIN_WIFI_TO_INTERNET);
+	iptables_do_command("-t filter -F " CHAIN_WIFI_TO_INTERNET);
+	iptables_do_command("-t filter -F " CHAIN_AUTHSERVERS);
+	iptables_do_command("-t filter -F " CHAIN_LOCKED);
+	iptables_do_command("-t filter -F " CHAIN_GLOBAL);
+	iptables_do_command("-t filter -F " CHAIN_VALIDATE);
+	iptables_do_command("-t filter -F " CHAIN_KNOWN);
+	iptables_do_command("-t filter -F " CHAIN_UNKNOWN);
+	iptables_do_command("-t filter -X " CHAIN_WIFI_TO_INTERNET);
+	iptables_do_command("-t filter -X " CHAIN_AUTHSERVERS);
+	iptables_do_command("-t filter -X " CHAIN_LOCKED);
+	iptables_do_command("-t filter -X " CHAIN_GLOBAL);
+	iptables_do_command("-t filter -X " CHAIN_VALIDATE);
+	iptables_do_command("-t filter -X " CHAIN_KNOWN);
+	iptables_do_command("-t filter -X " CHAIN_UNKNOWN);
 
 	return 1;
 }
@@ -516,12 +516,12 @@ iptables_fw_access(fw_access_t type, const char *ip, const char *mac, int tag)
 
 	switch(type) {
 		case FW_ACCESS_ALLOW:
-			iptables_do_command("-t mangle -A " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
-			rc = iptables_do_command("-t mangle -A " TABLE_WIFIDOG_INCOMING " -d %s -j ACCEPT", ip);
+			iptables_do_command("-t mangle -A " CHAIN_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
+			rc = iptables_do_command("-t mangle -A " CHAIN_INCOMING " -d %s -j ACCEPT", ip);
 			break;
 		case FW_ACCESS_DENY:
-			iptables_do_command("-t mangle -D " TABLE_WIFIDOG_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
-			rc = iptables_do_command("-t mangle -D " TABLE_WIFIDOG_INCOMING " -d %s -j ACCEPT", ip);
+			iptables_do_command("-t mangle -D " CHAIN_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
+			rc = iptables_do_command("-t mangle -D " CHAIN_INCOMING " -d %s -j ACCEPT", ip);
 			break;
 		default:
 			rc = -1;
@@ -544,7 +544,7 @@ iptables_fw_counters_update(void)
 	struct in_addr tempaddr;
 
 	/* Look for outgoing traffic */
-	safe_asprintf(&script, "%s %s", "iptables", "-v -n -x -t mangle -L " TABLE_WIFIDOG_OUTGOING);
+	safe_asprintf(&script, "%s %s", "iptables", "-v -n -x -t mangle -L " CHAIN_OUTGOING);
 	iptables_insert_gateway_id(&script);
 	output = popen(script, "r");
 	free(script);
@@ -577,10 +577,10 @@ iptables_fw_counters_update(void)
 				}
 			} else {
 				debug(LOG_ERR, "iptables_fw_counters_update(): Could not find %s in client list, this should not happen unless if the gateway crashed", ip);
-				debug(LOG_ERR, "Preventively deleting firewall rules for %s in table %s", ip, TABLE_WIFIDOG_OUTGOING);
-				iptables_fw_destroy_mention("mangle", TABLE_WIFIDOG_OUTGOING, ip);
-				debug(LOG_ERR, "Preventively deleting firewall rules for %s in table %s", ip, TABLE_WIFIDOG_INCOMING);
-				iptables_fw_destroy_mention("mangle", TABLE_WIFIDOG_INCOMING, ip);
+				debug(LOG_ERR, "Preventively deleting firewall rules for %s in table %s", ip, CHAIN_OUTGOING);
+				iptables_fw_destroy_mention("mangle", CHAIN_OUTGOING, ip);
+				debug(LOG_ERR, "Preventively deleting firewall rules for %s in table %s", ip, CHAIN_INCOMING);
+				iptables_fw_destroy_mention("mangle", CHAIN_INCOMING, ip);
 			}
 			UNLOCK_CLIENT_LIST();
 		}
@@ -588,7 +588,7 @@ iptables_fw_counters_update(void)
 	pclose(output);
 
 	/* Look for incoming traffic */
-	safe_asprintf(&script, "%s %s", "iptables", "-v -n -x -t mangle -L " TABLE_WIFIDOG_INCOMING);
+	safe_asprintf(&script, "%s %s", "iptables", "-v -n -x -t mangle -L " CHAIN_INCOMING);
 	iptables_insert_gateway_id(&script);
 	output = popen(script, "r");
 	free(script);
@@ -619,10 +619,10 @@ iptables_fw_counters_update(void)
 				}
 			} else {
 				debug(LOG_ERR, "iptables_fw_counters_update(): Could not find %s in client list, this should not happen unless if the gateway crashed", ip);
-				debug(LOG_ERR, "Preventively deleting firewall rules for %s in table %s", ip, TABLE_WIFIDOG_OUTGOING);
-				iptables_fw_destroy_mention("mangle", TABLE_WIFIDOG_OUTGOING, ip);
-				debug(LOG_ERR, "Preventively deleting firewall rules for %s in table %s", ip, TABLE_WIFIDOG_INCOMING);
-				iptables_fw_destroy_mention("mangle", TABLE_WIFIDOG_INCOMING, ip);
+				debug(LOG_ERR, "Preventively deleting firewall rules for %s in table %s", ip, CHAIN_OUTGOING);
+				iptables_fw_destroy_mention("mangle", CHAIN_OUTGOING, ip);
+				debug(LOG_ERR, "Preventively deleting firewall rules for %s in table %s", ip, CHAIN_INCOMING);
+				iptables_fw_destroy_mention("mangle", CHAIN_INCOMING, ip);
 			}
 			UNLOCK_CLIENT_LIST();
 		}
