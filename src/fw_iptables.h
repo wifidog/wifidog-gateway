@@ -40,7 +40,7 @@
 #define CHAIN_VALIDATE  "WD_$ID$_VAL"
 #define CHAIN_KNOWN     "WD_$ID$_KNW"
 #define CHAIN_UNKNOWN   "WD_$ID$_UkN"
-#define CHAIN_LOCKED    "WD_$ID$_Locked"
+#define CHAIN_LOCKED    "WD_$ID$_LCK"
 #define CHAIN_TRUSTED    "WD_$ID$_TRU"
 /*@}*/ 
 
