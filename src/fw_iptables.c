@@ -158,22 +158,23 @@ iptables_compile(const char * table, const char *chain, const t_firewall_rule *r
 		mode = safe_strdup("ULOG");
 		break;
 	}
-
-	snprintf(command, sizeof(command),  "-t %s -A %s ",table, chain);
-	if (rule->mask != NULL) {
+        if (table!="nat" && mode!="REJECT") {
+		snprintf(command, sizeof(command),  "-t %s -A %s ",table, chain);
+		if (rule->mask != NULL) {
+			snprintf((command + strlen(command)), (sizeof(command) - 
+						strlen(command)), "-d %s ", rule->mask);
+		}
+		if (rule->protocol != NULL) {
+			snprintf((command + strlen(command)), (sizeof(command) -
+						strlen(command)), "-p %s ", rule->protocol);
+		}
+		if (rule->port != NULL) {
+			snprintf((command + strlen(command)), (sizeof(command) -
+						strlen(command)), "--dport %s ", rule->port);
+		}
 		snprintf((command + strlen(command)), (sizeof(command) - 
-					strlen(command)), "-d %s ", rule->mask);
-	}
-	if (rule->protocol != NULL) {
-		snprintf((command + strlen(command)), (sizeof(command) -
-					strlen(command)), "-p %s ", rule->protocol);
-	}
-	if (rule->port != NULL) {
-		snprintf((command + strlen(command)), (sizeof(command) -
-					strlen(command)), "--dport %s ", rule->port);
-	}
-	snprintf((command + strlen(command)), (sizeof(command) - 
-				strlen(command)), "-j %s", mode);
+					strlen(command)), "-j %s", mode);
+        }
 
 	free(mode);
 
