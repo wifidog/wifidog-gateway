@@ -521,14 +521,14 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 		TO_NEXT_WORD(leftover, finished);
 	}
 
-	/* should be exactly "port" */
+	/* Get the optional port or port range */
 	if (strncmp(leftover, "port", 4) == 0) {
 		TO_NEXT_WORD(leftover, finished);
 		/* Get port now */
 		port = leftover;
 		TO_NEXT_WORD(leftover, finished);
 		for (i = 0; *(port + i) != '\0'; i++)
-			if (!isdigit((unsigned char)*(port + i)))
+			if (!isdigit((unsigned char)*(port + i)) && ((unsigned char)*(port + i) != ':'))
 				all_nums = 0; /*< No longer only digits */
 		if (!all_nums) {
 			debug(LOG_ERR, "Invalid port %s", port);
