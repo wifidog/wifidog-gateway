@@ -30,18 +30,18 @@
 #include "firewall.h"
 
 /*@{*/ 
-/**Iptable table names used by WifiDog */
-#define TABLE_WIFIDOG_OUTGOING  "WiFiDog_$ID$_Outgoing"
-#define TABLE_WIFIDOG_WIFI_TO_INTERNET "WiFiDog_$ID$_WIFI2Internet"
-#define TABLE_WIFIDOG_WIFI_TO_ROUTER "WiFiDog_$ID$_WIFI2Router"
-#define TABLE_WIFIDOG_INCOMING  "WiFiDog_$ID$_Incoming"
-#define TABLE_WIFIDOG_AUTHSERVERS "WiFiDog_$ID$_AuthServers"
-#define TABLE_WIFIDOG_GLOBAL  "WiFiDog_$ID$_Global"
-#define TABLE_WIFIDOG_VALIDATE  "WiFiDog_$ID$_Validate"
-#define TABLE_WIFIDOG_KNOWN     "WiFiDog_$ID$_Known"
-#define TABLE_WIFIDOG_UNKNOWN   "WiFiDog_$ID$_Unknown"
-#define TABLE_WIFIDOG_LOCKED    "WiFiDog_$ID$_Locked"
-#define TABLE_WIFIDOG_TRUSTED    "WiFiDog_$ID$_Trusted"
+/**Iptable chain names used by WifiDog */
+#define CHAIN_OUTGOING  "WD_$ID$_OUT"
+#define CHAIN_TO_INTERNET "WD_$ID$_NET"
+#define CHAIN_TO_ROUTER "WD_$ID$_RTR"
+#define CHAIN_INCOMING  "WD_$ID$_INC"
+#define CHAIN_AUTHSERVERS "WD_$ID$_AUTH"
+#define CHAIN_GLOBAL  "WD_$ID$_GLB"
+#define CHAIN_VALIDATE  "WD_$ID$_VAL"
+#define CHAIN_KNOWN     "WD_$ID$_KNW"
+#define CHAIN_UNKNOWN   "WD_$ID$_UkN"
+#define CHAIN_LOCKED    "WD_$ID$_LCK"
+#define CHAIN_TRUSTED    "WD_$ID$_TRU"
 /*@}*/ 
 
 /** Used by iptables_fw_access to select if the client should be granted of denied access */
