@@ -85,8 +85,8 @@ typedef enum {
 	oHTTPDMaxConn,
 	oHTTPDName,
 	oHTTPDRealm,
-        oHTTPDUsername,
-        oHTTPDPassword,
+	oHTTPDUsername,
+	oHTTPDPassword,
 	oClientTimeout,
 	oCheckInterval,
 	oWdctlSocket,
@@ -94,7 +94,7 @@ typedef enum {
 	oFirewallRule,
 	oFirewallRuleSet,
 	oTrustedMACList,
-        oHtmlMessageFile,
+	oHtmlMessageFile,
 	oProxyPort,
 } OpCodes;
 
@@ -134,7 +134,7 @@ static const struct {
 	{ "firewallruleset",		oFirewallRuleSet },
 	{ "firewallrule",		oFirewallRule },
 	{ "trustedmaclist",		oTrustedMACList },
-        { "htmlmessagefile",		oHtmlMessageFile },
+	{ "htmlmessagefile",		oHtmlMessageFile },
 	{ "proxyport",			oProxyPort },
 	{ NULL,				oBadOption },
 };
@@ -153,7 +153,7 @@ static OpCodes config_parse_token(const char *cp, const char *filename, int line
 s_config *
 config_get_config(void)
 {
-    return &config;
+	return &config;
 }
 
 /** Sets the default config parameters and initialises the configuration system */
@@ -193,7 +193,7 @@ config_init(void)
 void
 config_init_override(void)
 {
-    if (config.daemon == -1) config.daemon = DEFAULT_DAEMON;
+	if (config.daemon == -1) config.daemon = DEFAULT_DAEMON;
 }
 
 /** @internal
@@ -521,14 +521,14 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 		TO_NEXT_WORD(leftover, finished);
 	}
 
-	/* should be exactly "port" */
+	/* Get the optional port or port range */
 	if (strncmp(leftover, "port", 4) == 0) {
 		TO_NEXT_WORD(leftover, finished);
 		/* Get port now */
 		port = leftover;
 		TO_NEXT_WORD(leftover, finished);
 		for (i = 0; *(port + i) != '\0'; i++)
-			if (!isdigit((unsigned char)*(port + i)))
+			if (!isdigit((unsigned char)*(port + i)) && ((unsigned char)*(port + i) != ':'))
 				all_nums = 0; /*< No longer only digits */
 		if (!all_nums) {
 			debug(LOG_ERR, "Invalid port %s", port);
@@ -795,6 +795,15 @@ parse_boolean_value(char *line)
 	return -1;
 }
 
+/* Parse possiblemac to see if it is valid MAC address format */
+int check_mac_format(char *possiblemac) {
+        char hex2[3];
+        return
+        sscanf(possiblemac,
+                "%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]",
+                hex2,hex2,hex2,hex2,hex2,hex2) == 6;
+}
+
 void parse_trusted_mac_list(const char *ptr) {
 	char *ptrcopy = NULL;
 	char *possiblemac = NULL;
@@ -809,25 +818,30 @@ void parse_trusted_mac_list(const char *ptr) {
 	ptrcopy = safe_strdup(ptr);
 
 	while ((possiblemac = strsep(&ptrcopy, ", "))) {
-		if (sscanf(possiblemac, " %17[A-Fa-f0-9:]", mac) == 1) {
+		/* check for valid format */
+		
+                if (!check_mac_format(possiblemac)) {
+                        debug(LOG_ERR, "[%s] not a valid MAC address to trust. See option TrustedMACList in wifidog.conf for correct this mistake.", possiblemac);
+                        return;
+                } else {
+			if (sscanf(possiblemac, " %17[A-Fa-f0-9:]", mac) == 1) {
 			/* Copy mac to the list */
 
-			debug(LOG_DEBUG, "Adding MAC address [%s] to trusted list", mac);
+				debug(LOG_DEBUG, "Adding MAC address [%s] to trusted list", mac);
 
-			if (config.trustedmaclist == NULL) {
-				config.trustedmaclist = safe_malloc(sizeof(t_trusted_mac));
-				config.trustedmaclist->mac = safe_strdup(mac);
-				config.trustedmaclist->next = NULL;
-			}
-			else {
+				if (config.trustedmaclist == NULL) {
+					config.trustedmaclist = safe_malloc(sizeof(t_trusted_mac));
+					config.trustedmaclist->mac = safe_strdup(mac);
+					config.trustedmaclist->next = NULL;
+				} else {
 				/* Advance to the last entry */
 				for (p = config.trustedmaclist; p->next != NULL; p = p->next);
 				p->next = safe_malloc(sizeof(t_trusted_mac));
 				p = p->next;
 				p->mac = safe_strdup(mac);
 				p->next = NULL;
+				}
 			}
-
 		}
 	}
 

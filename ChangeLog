@@ -1,12 +1,39 @@
 # $Id$
+2015-02-20
+	* Add possibility to use a port range in wifidog
+	(https://github.com/wifidog/wifidog-gateway/commit/d1c3b596dcae6eb1f4980687a3633482613ca231)
+2015-02-17
+	* Fix segfault when receiving invalid auth reply by Pawit Pornkitprasan 
+	(https://github.com/wifidog/wifidog-gateway/pull/51)
+2015-02-02	
+	* Fix "Avoid deadlocks when the LOG_LEVEL is set to DEBUG" commit
+	(https://github.com/wifidog/wifidog-gateway/commit/8eb688ac4799512658f76ae8e81437ea0af2d9ff)
+2015-01-26
+	* Fix typo: ping_thread  pong --> Pong by Wendal Chen 
+	(https://github.com/wifidog/wifidog-gateway/pull/46)
+2015-01-18	
+	* Add parse possiblemac to see if it is valid MAC address format by florida
+	(https://github.com/wifidog/wifidog-gateway/pull/42)
+	* Use fprintf instead of printf, fixes help when building with uclibc by Sannis
+	(https://github.com/wifidog/wifidog-gateway/pull/43)
+2015-01-14
+	* Rename h_addr to addr due to legacy define by anton-povarov
+	(https://github.com/wifidog/wifidog-gateway/commit/f1b9d226af3911ea2cc99ae4d7730f60be74fb5f)
+2014-12-24	
+	* Avoid deadlocks when the LOG_LEVEL is set to DEBUG by sayuan
+	(https://github.com/wifidog/wifidog-gateway/pull/41)
 2014-12-19
-        * fix annoying access denied when re-login by Zhao-gang (github wifidog #40)
+        * fix annoying access denied when re-login by Zhao-gang
+        (https://github.com/wifidog/wifidog-gateway/pull/40)
 2014-12-08
-        * Add IP to login script URL parameters by Sannis (github wifidog #36)
+        * Add IP to login script URL parameters by Sannis
+        (https://github.com/wifidog/wifidog-gateway/pull/36)
 2014-10-05
-        * iptables_fw_init: fix memory leak by Pawit Pornkitprasan (github wifidog #28)
+        * iptables_fw_init: fix memory leak by Pawit Pornkitprasan 
+        (https://github.com/wifidog/wifidog-gateway/pull/28)
 2014-08-31
-        * Fixed parsing process for AuthServer configurations by Kontinuation (github wifidog #24)
+        * Fixed parsing process for AuthServer configurations by Kontinuation 
+        (https://github.com/wifidog/wifidog-gateway/pull/24)
 2014-05-13
         * libhttpd crash on invalid HTTP headers (second part of the patch) by Benoit Grégoire
 2013-08-21
