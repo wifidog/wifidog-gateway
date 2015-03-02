@@ -143,9 +143,17 @@ iptables_compile(const char * table, const char *chain, const t_firewall_rule *r
 
 	switch (rule->target){
 	case TARGET_DROP:
+		if (table=="nat") {
+			free(mode);
+			return;
+		}
 		mode = safe_strdup("DROP");
 		break;
 	case TARGET_REJECT:
+		if (table=="nat") {
+			free(mode);
+			return;
+		}
 		mode = safe_strdup("REJECT");
 		break;
 	case TARGET_ACCEPT:
@@ -158,7 +166,7 @@ iptables_compile(const char * table, const char *chain, const t_firewall_rule *r
 		mode = safe_strdup("ULOG");
 		break;
 	}
-
+        
 	snprintf(command, sizeof(command),  "-t %s -A %s ",table, chain);
 	if (rule->mask != NULL) {
 		snprintf((command + strlen(command)), (sizeof(command) - 
@@ -199,8 +207,10 @@ iptables_load_ruleset(const char * table, const char *ruleset, const char *chain
 
 	for (rule = get_ruleset(ruleset); rule != NULL; rule = rule->next) {
 		cmd = iptables_compile(table, chain, rule);
-		debug(LOG_DEBUG, "Loading rule \"%s\" into table %s, chain %s", cmd, table, chain);
-		iptables_do_command(cmd);
+		if (cmd!=NULL) {
+			debug(LOG_DEBUG, "Loading rule \"%s\" into table %s, chain %s", cmd, table, chain);
+			iptables_do_command(cmd);
+		}
 		free(cmd);
 	}
 
