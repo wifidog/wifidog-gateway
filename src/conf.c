@@ -803,11 +803,11 @@ parse_boolean_value(char *line)
 
 /* Parse possiblemac to see if it is valid MAC address format */
 int check_mac_format(char *possiblemac) {
-        char hex2[3];
-        return
-        sscanf(possiblemac,
-                "%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]",
-                hex2,hex2,hex2,hex2,hex2,hex2) == 6;
+	char hex2[3];
+	return
+		sscanf(possiblemac,
+				"%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]",
+				hex2,hex2,hex2,hex2,hex2,hex2) == 6;
 }
 
 void parse_trusted_mac_list(const char *ptr) {
@@ -825,11 +825,10 @@ void parse_trusted_mac_list(const char *ptr) {
 
 	while ((possiblemac = strsep(&ptrcopy, ", "))) {
 		/* check for valid format */
-		
-                if (!check_mac_format(possiblemac)) {
-                        debug(LOG_ERR, "[%s] not a valid MAC address to trust. See option TrustedMACList in wifidog.conf for correct this mistake.", possiblemac);
-                        return;
-                } else {
+		if (!check_mac_format(possiblemac)) {
+			debug(LOG_ERR, "[%s] not a valid MAC address to trust. See option TrustedMACList in wifidog.conf for correct this mistake.", possiblemac);
+			return;
+		} else {
 			if (sscanf(possiblemac, " %17[A-Fa-f0-9:]", mac) == 1) {
 			/* Copy mac to the list */
 
