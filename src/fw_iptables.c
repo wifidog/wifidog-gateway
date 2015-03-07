@@ -140,6 +140,7 @@ iptables_compile(const char * table, const char *chain, const t_firewall_rule *r
 		*mode;
 
 	memset(command, 0, MAX_BUF);
+	mode = NULL;
 
 	switch (rule->target){
 	case TARGET_DROP:
