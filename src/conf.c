@@ -542,31 +542,31 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 		/* should be exactly "to" or "to-ipset" */
 		other_kw = leftover;
 		TO_NEXT_WORD(leftover, finished);
-        if (!finished) {
-            /* Get arg now and check validity in next section */
-            mask = leftover;
-            TO_NEXT_WORD(leftover, finished);
-        } 
+		if (!finished) {
+			/* Get arg now and check validity in next section */
+			mask = leftover;
+			TO_NEXT_WORD(leftover, finished);
+		} 
 		if (strncmp(other_kw, "to", 2) == 0 && !finished) {
-            /* Check if mask is valid */
-            all_nums = 1;
-            for (i = 0; *(mask + i) != '\0'; i++)
-                if (!isdigit((unsigned char)*(mask + i)) && (*(mask + i) != '.')
-                        && (*(mask + i) != '/'))
-                    all_nums = 0; /*< No longer only digits */
-            if (!all_nums) {
-                debug(LOG_ERR, "Invalid mask %s", mask);
-                return -3; /*< Fail */
-            }
-        }
-        else if (strncmp(other_kw, "to-ipset", 8) == 0 && !finished)  {
-            mask_is_ipset = 1;
-        } else {
-            debug(LOG_ERR, "Invalid or unexpected keyword %s, "
-                    "expecting \"to\" or \"to-ipset\"", other_kw);
-            return -4; /*< Fail */
-        }
-    }
+			/* Check if mask is valid */
+			all_nums = 1;
+			for (i = 0; *(mask + i) != '\0'; i++)
+				if (!isdigit((unsigned char)*(mask + i)) && (*(mask + i) != '.')
+						&& (*(mask + i) != '/'))
+					all_nums = 0; /*< No longer only digits */
+			if (!all_nums) {
+				debug(LOG_ERR, "Invalid mask %s", mask);
+				return -3; /*< Fail */
+			}
+		}
+		else if (strncmp(other_kw, "to-ipset", 8) == 0 && !finished)  {
+			mask_is_ipset = 1;
+		} else {
+			debug(LOG_ERR, "Invalid or unexpected keyword %s, "
+					"expecting \"to\" or \"to-ipset\"", other_kw);
+			return -4; /*< Fail */
+		}
+	}
 	/* Generate rule record */
 	tmp = safe_malloc(sizeof(t_firewall_rule));
 	memset((void *)tmp, 0, sizeof(t_firewall_rule));
