@@ -145,14 +145,14 @@ iptables_compile(const char * table, const char *chain, const t_firewall_rule *r
 	case TARGET_DROP:
 		if (strncmp(table, "nat", 3) == 0) {
 			free(mode);
-			return;
+			return NULL;
 		}
 		mode = safe_strdup("DROP");
 		break;
 	case TARGET_REJECT:
 		if (strncmp(table, "nat", 3) == 0) {
 			free(mode);
-			return;
+			return NULL;
 		}
 		mode = safe_strdup("REJECT");
 		break;
