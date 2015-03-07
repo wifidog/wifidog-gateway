@@ -481,6 +481,7 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 	char *protocol = NULL; /**< protocol to block, tcp/udp/icmp */
 	char *mask = NULL; /**< Netmask */
 	char *other_kw = NULL; /**< other key word */
+    int mask_is_ipset = 0; 
 	t_firewall_ruleset *tmpr;
 	t_firewall_ruleset *tmpr2;
 	t_firewall_rule *tmp;
@@ -538,14 +539,16 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 
 	/* Now, further stuff is optional */
 	if (!finished) {
-		/* should be exactly "to" */
+		/* should be exactly "to" or "to-ipset" */
 		other_kw = leftover;
 		TO_NEXT_WORD(leftover, finished);
-        
-		if (strncmp(other_kw, "to", 2) == 0 && !finished) {
-            /* Get port now */
+        if (!finished) {
+            /* Get arg now and check validity in next section */
             mask = leftover;
             TO_NEXT_WORD(leftover, finished);
+        } 
+		if (strncmp(other_kw, "to", 2) == 0 && !finished) {
+            /* Check if mask is valid */
             all_nums = 1;
             for (i = 0; *(mask + i) != '\0'; i++)
                 if (!isdigit((unsigned char)*(mask + i)) && (*(mask + i) != '.')
@@ -557,9 +560,7 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
             }
         }
         else if (strncmp(other_kw, "to-ipset", 8) == 0 && !finished)  {
-            /* Get ipset now */
-            mask = leftover;
-            TO_NEXT_WORD(leftover, finished);
+            mask_is_ipset = 1;
         } else {
             debug(LOG_ERR, "Invalid or unexpected keyword %s, "
                     "expecting \"to\" or \"to-ipset\"", other_kw);
