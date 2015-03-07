@@ -108,6 +108,7 @@ typedef struct _firewall_rule_t {
     char *protocol;		/**< @brief tcp, udp, etc ... */
     char *port;			/**< @brief Port to block/allow */
     char *mask;			/**< @brief Mask for the rule *destination* */
+    int mask_is_ipset; /**< @brief *destination* is ipset  */
     struct _firewall_rule_t *next;
 } t_firewall_rule;
 

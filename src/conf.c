@@ -481,7 +481,7 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 	char *protocol = NULL; /**< protocol to block, tcp/udp/icmp */
 	char *mask = NULL; /**< Netmask */
 	char *other_kw = NULL; /**< other key word */
-    int mask_is_ipset = 0; 
+	int mask_is_ipset = 0;
 	t_firewall_ruleset *tmpr;
 	t_firewall_ruleset *tmpr2;
 	t_firewall_rule *tmp;
@@ -571,6 +571,7 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 	tmp = safe_malloc(sizeof(t_firewall_rule));
 	memset((void *)tmp, 0, sizeof(t_firewall_rule));
 	tmp->target = target;
+	tmp->mask_is_ipset = mask_is_ipset;
 	if (protocol != NULL)
 		tmp->protocol = safe_strdup(protocol);
 	if (port != NULL)
