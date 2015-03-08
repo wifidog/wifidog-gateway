@@ -52,6 +52,8 @@
 #include "util.h"
 #include "centralserver.h"
 
+#include "simple_http.h"
+
 static void ping(void);
 
 extern time_t started_time;
@@ -168,61 +170,10 @@ ping(void)
 			VERSION,
 			auth_server->authserv_hostname);
 
-	debug(LOG_DEBUG, "HTTP Request to Server: [%s]", request);
-	
-	send(sockfd, request, strlen(request), 0);
-
-	debug(LOG_DEBUG, "Reading response");
-	
-	numbytes = totalbytes = 0;
-	done = 0;
-	do {
-		FD_ZERO(&readfds);
-		FD_SET(sockfd, &readfds);
-		timeout.tv_sec = 30; /* XXX magic... 30 second */
-		timeout.tv_usec = 0;
-		nfds = sockfd + 1;
-
-		nfds = select(nfds, &readfds, NULL, NULL, &timeout);
-
-		if (nfds > 0) {
-			/** We don't have to use FD_ISSET() because there
-			 *  was only one fd. */
-			numbytes = read(sockfd, request + totalbytes, MAX_BUF - (totalbytes + 1));
-			if (numbytes < 0) {
-				debug(LOG_ERR, "An error occurred while reading from auth server: %s", strerror(errno));
-				/* FIXME */
-				close(sockfd);
-				return;
-			}
-			else if (numbytes == 0) {
-				done = 1;
-			}
-			else {
-				totalbytes += numbytes;
-				debug(LOG_DEBUG, "Read %d bytes, total now %d", numbytes, totalbytes);
-			}
-		}
-		else if (nfds == 0) {
-			debug(LOG_ERR, "Timed out reading data via select() from auth server");
-			/* FIXME */
-			close(sockfd);
-			return;
-		}
-		else if (nfds < 0) {
-			debug(LOG_ERR, "Error reading data via select() from auth server: %s", strerror(errno));
-			/* FIXME */
-			close(sockfd);
-			return;
-		}
-	} while (!done);
-	close(sockfd);
-
-	debug(LOG_DEBUG, "Done reading reply, total %d bytes", totalbytes);
-
-	request[totalbytes] = '\0';
-
-	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", request);
+	int ret = http_get(sockfd, request);
+	if (ret < 0) {
+		debug(LOG_ERR, "There was a problem pinging the auth server!");
+	}
 	
 	if (strstr(request, "Pong") == 0) {
 		debug(LOG_WARNING, "Auth server did NOT say Pong!");

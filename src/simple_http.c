@@ -34,11 +34,10 @@
 #include "common.h"
 #include "debug.h"
 
-int http_get(const int sockfd, const char *request) {
+int http_get(const int sockfd, char *buf) {
 
 	ssize_t	numbytes;
 	size_t totalbytes;
-	char buf[MAX_BUF];
 	char *tmp;
 	char *safe_token;
 	int done, nfds;
