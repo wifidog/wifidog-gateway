@@ -140,7 +140,7 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 				done = 1;
 			}
 			else {
-				totalbytes += numbytes;
+				totalbytes += (size_t) numbytes;
 				debug(LOG_DEBUG, "Read %d bytes, total now %d", numbytes, totalbytes);
 			}
 		}

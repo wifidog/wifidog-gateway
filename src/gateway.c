@@ -201,11 +201,11 @@ void get_clients_from_parent(void) {
 							client->fd = atoi(value);
 						}
 						else if (strcmp(key, "counters_incoming") == 0) {
-							client->counters.incoming_history = atoll(value);
+							client->counters.incoming_history = (unsigned long long) atoll(value);
 							client->counters.incoming = client->counters.incoming_history;
 						}
 						else if (strcmp(key, "counters_outgoing") == 0) {
-							client->counters.outgoing_history = atoll(value);
+							client->counters.outgoing_history = (unsigned long long)atoll(value);
 							client->counters.outgoing = client->counters.outgoing_history;
 						}
 						else if (strcmp(key, "counters_last_updated") == 0) {
