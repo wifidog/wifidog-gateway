@@ -172,11 +172,7 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 			return(AUTH_ERROR);
 		}
 	}
-	else {
-		return(AUTH_ERROR);
-	}
 
-	/* XXX Never reached because of the above if()/else pair. */
 	return(AUTH_ERROR);
 }
 
