@@ -634,7 +634,8 @@ config_read(const char *filename)
 {
 	FILE *fd;
 	char line[MAX_BUF], *s, *p1, *p2;
-	int linenum = 0, opcode, value, len;
+	int linenum = 0, opcode, value;
+	size_t len;
 
 	debug(LOG_INFO, "Reading configuration file '%s'", filename);
 
