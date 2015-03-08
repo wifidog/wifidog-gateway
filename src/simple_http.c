@@ -38,8 +38,6 @@ int http_get(const int sockfd, char *buf) {
 
 	ssize_t	numbytes;
 	size_t totalbytes;
-	char *tmp;
-	char *safe_token;
 	int done, nfds;
 	fd_set			readfds;
 	struct timeval		timeout;
