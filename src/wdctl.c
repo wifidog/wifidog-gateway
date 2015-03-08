@@ -40,7 +40,7 @@
 
 #include "wdctl.h"
 
-s_config config;
+static s_config config;
 
 static void usage(void);
 static void init_config(void);
