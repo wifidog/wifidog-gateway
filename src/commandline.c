@@ -39,6 +39,9 @@
 /*
  * Holds an argv that could be passed to exec*() if we restart ourselves
  */
+/* Declare variable */
+extern char ** restartargv;
+/* Define variable */
 char ** restartargv = NULL;
 
 static void usage(void);
@@ -47,6 +50,7 @@ static void usage(void);
  * A flag to denote whether we were restarted via a parent wifidog, or started normally
  * 0 means normally, otherwise it will be populated by the PID of the parent
  */
+extern pid_t restart_orig_pid;
 pid_t restart_orig_pid = 0;
 
 /** @internal
