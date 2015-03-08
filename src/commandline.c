@@ -82,9 +82,9 @@ usage(void)
  * also populates restartargv
  */
 void parse_commandline(int argc, char **argv) {
-    int c;
-	 int skiponrestart;
-	 int i;
+	int c;
+	int skiponrestart;
+	int i;
 
     s_config *config = config_get_config();
 
