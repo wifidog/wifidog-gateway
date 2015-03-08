@@ -109,6 +109,7 @@ ping(void)
 	auth_server = get_auth_server();
 	
 	debug(LOG_DEBUG, "Entering ping()");
+	memset(request, 0, sizeof(request));
 	
 	/*
 	 * The ping thread does not really try to see if the auth server is actually

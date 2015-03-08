@@ -48,8 +48,6 @@ int http_get(const int sockfd, char *buf) {
 		return -1;
 	}
 
-	memset(buf, 0, sizeof(buf));
-
 	debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", buf);
 	send(sockfd, buf, strlen(buf), 0);
 
