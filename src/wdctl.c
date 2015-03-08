@@ -180,7 +180,7 @@ send_request(int sock, const char *request)
 					strerror(errno));
 			exit(1);
 		}
-		len += written;
+		len += (size_t) written;
 	}
 
 	return len;
@@ -192,13 +192,13 @@ wdctl_status(void)
 	int	sock;
 	char	buffer[4096];
 	char	request[16];
-	int	len;
+	ssize_t	len;
 
 	sock = connect_to_server(config.socket);
 		
 	strncpy(request, "status\r\n\r\n", 15);
 
-	len = send_request(sock, request);
+	send_request(sock, request);
 	
 	while ((len = read(sock, buffer, sizeof(buffer))) > 0) {
 		buffer[len] = '\0';
@@ -215,13 +215,13 @@ wdctl_stop(void)
 	int	sock;
 	char	buffer[4096];
 	char	request[16];
-	int	len;
+	ssize_t	len;
 
 	sock = connect_to_server(config.socket);
 		
 	strncpy(request, "stop\r\n\r\n", 15);
 
-	len = send_request(sock, request);
+	send_request(sock, request);
 	
 	while ((len = read(sock, buffer, sizeof(buffer))) > 0) {
 		buffer[len] = '\0';
@@ -239,7 +239,7 @@ wdctl_reset(void)
 	char	buffer[4096];
 	char	request[64];
 	size_t	len;
-	int	rlen;
+	ssize_t	rlen;
 
 	sock = connect_to_server(config.socket);
 		
@@ -247,13 +247,13 @@ wdctl_reset(void)
 	strncat(request, config.param, (64 - strlen(request)));
 	strncat(request, "\r\n\r\n", (64 - strlen(request)));
 
-	len = send_request(sock, request);
+	send_request(sock, request);
 	
 	len = 0;
 	memset(buffer, 0, sizeof(buffer));
 	while ((len < sizeof(buffer)) && ((rlen = read(sock, (buffer + len),
 				(sizeof(buffer) - len))) > 0)){
-		len += rlen;
+		len += (size_t) rlen;
 	}
 
 	if (strcmp(buffer, "Yes") == 0) {
@@ -275,13 +275,13 @@ wdctl_restart(void)
 	int	sock;
 	char	buffer[4096];
 	char	request[16];
-	int	len;
+	ssize_t	len;
 
 	sock = connect_to_server(config.socket);
 		
 	strncpy(request, "restart\r\n\r\n", 15);
 
-	len = send_request(sock, request);
+	send_request(sock, request);
 	
 	while ((len = read(sock, buffer, sizeof(buffer))) > 0) {
 		buffer[len] = '\0';

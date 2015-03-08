@@ -199,7 +199,7 @@ ping(void)
 				done = 1;
 			}
 			else {
-				totalbytes += numbytes;
+				totalbytes += (size_t) numbytes;
 				debug(LOG_DEBUG, "Read %d bytes, total now %d", numbytes, totalbytes);
 			}
 		}
