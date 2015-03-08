@@ -428,7 +428,7 @@ get_ext_iface(void)
 	 */
 	char * get_status_text() {
 		char buffer[STATUS_BUF_SIZ];
-		ssize_t len;
+		size_t len;
 		s_config *config;
 		t_auth_serv *auth_server;
 		t_client	*first;
