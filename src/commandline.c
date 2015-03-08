@@ -46,6 +46,8 @@ char ** restartargv = NULL;
 
 static void usage(void);
 
+void parse_commandline(int argc, char **argv);
+
 /*
  * A flag to denote whether we were restarted via a parent wifidog, or started normally
  * 0 means normally, otherwise it will be populated by the PID of the parent
