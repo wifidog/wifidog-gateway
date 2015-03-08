@@ -86,6 +86,7 @@ static time_t last_offline_time = 0;
 static time_t last_auth_online_time = 0;
 static time_t last_auth_offline_time = 0;
 
+extern long served_this_session;
 long served_this_session = 0;
 
 /** Fork a child and execute a shell command, the parent
