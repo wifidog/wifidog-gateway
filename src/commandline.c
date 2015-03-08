@@ -89,7 +89,7 @@ void parse_commandline(int argc, char **argv) {
     s_config *config = config_get_config();
 
 	//MAGIC 3: Our own -x, the pid, and NULL :
-	restartargv = safe_malloc((argc + 3) * sizeof(char*));
+	restartargv = safe_malloc((size_t) (argc + 3) * sizeof(char*));
 	i=0;
 	restartargv[i++] = safe_strdup(argv[0]);
 
