@@ -49,6 +49,8 @@
 #include "firewall.h"
 #include "../config.h"
 
+#include "simple_http.h"
+
 extern pthread_mutex_t	config_mutex;
 
 /** Initiates a transaction with the auth server, either to authenticate or to
@@ -80,10 +82,6 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 	authresponse->authcode = AUTH_ERROR;
 	
 	sockfd = connect_auth_server();
-	if (sockfd == -1) {
-		/* Could not connect to any auth server */
-		return (AUTH_ERROR);
-	}
 
 	/**
 	 * TODO: XXX change the PHP so we can harmonize stage as request_type
@@ -109,59 +107,14 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 		auth_server->authserv_hostname
 	);
 
-        free(safe_token);
+	free(safe_token);
 
-	debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", buf);
-	send(sockfd, buf, strlen(buf), 0);
+	int res = http_get(sockfd, buf);
+	if (res < 0) {
+		debug(LOG_ERR, "There was a problem talking to the auth server!");
+		return (AUTH_ERROR);
+	}
 
-	debug(LOG_DEBUG, "Reading response");
-	numbytes = totalbytes = 0;
-	done = 0;
-	do {
-		FD_ZERO(&readfds);
-		FD_SET(sockfd, &readfds);
-		timeout.tv_sec = 30; /* XXX magic... 30 second is as good a timeout as any */
-		timeout.tv_usec = 0;
-		nfds = sockfd + 1;
-
-		nfds = select(nfds, &readfds, NULL, NULL, &timeout);
-
-		if (nfds > 0) {
-			/** We don't have to use FD_ISSET() because there
-			 *  was only one fd. */
-			numbytes = read(sockfd, buf + totalbytes, MAX_BUF - (totalbytes + 1));
-			if (numbytes < 0) {
-				debug(LOG_ERR, "An error occurred while reading from auth server: %s", strerror(errno));
-				/* FIXME */
-				close(sockfd);
-				return (AUTH_ERROR);
-			}
-			else if (numbytes == 0) {
-				done = 1;
-			}
-			else {
-				totalbytes += numbytes;
-				debug(LOG_DEBUG, "Read %d bytes, total now %d", numbytes, totalbytes);
-			}
-		}
-		else if (nfds == 0) {
-			debug(LOG_ERR, "Timed out reading data via select() from auth server");
-			/* FIXME */
-			close(sockfd);
-			return (AUTH_ERROR);
-		}
-		else if (nfds < 0) {
-			debug(LOG_ERR, "Error reading data via select() from auth server: %s", strerror(errno));
-			/* FIXME */
-			close(sockfd);
-			return (AUTH_ERROR);
-		}
-	} while (!done);
-
-	close(sockfd);
-
-	buf[totalbytes] = '\0';
-	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", buf);
 	
 	if ((tmp = strstr(buf, "Auth: "))) {
 		if (sscanf(tmp, "Auth: %d", (int *)&authresponse->authcode) == 1) {
