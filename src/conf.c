@@ -545,8 +545,7 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 		if (!finished) {
 			/* Get arg now and check validity in next section */
 			mask = leftover;
-			TO_NEXT_WORD(leftover, finished);
-		} 
+		}
 		if (strncmp(other_kw, "to", 2) == 0 && !finished) {
 			/* Check if mask is valid */
 			all_nums = 1;
@@ -565,6 +564,11 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 			debug(LOG_ERR, "Invalid or unexpected keyword %s, "
 					"expecting \"to\" or \"to-ipset\"", other_kw);
 			return -4; /*< Fail */
+		}
+		TO_NEXT_WORD(leftover, finished);
+		if (!finished) {
+			debug(LOG_WARNING, "Ignoring trailining string after successfully parsing rule: %s",
+				leftover);
 		}
 	}
 	/* Generate rule record */
