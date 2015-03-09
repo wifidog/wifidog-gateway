@@ -34,6 +34,11 @@
 #include "common.h"
 #include "debug.h"
 
+#ifdef USE_CYASSL
+#include <cyassl/ssl.h>
+#include "conf.h"
+#endif
+
 int http_get(const int sockfd, char *buf) {
 
 	ssize_t	numbytes;
@@ -103,4 +108,122 @@ int http_get(const int sockfd, char *buf) {
 }
 
 
+#ifdef USE_CYASSL
+
+
+int https_get(const int sockfd, char *buf) {
+
+	ssize_t	numbytes;
+	size_t totalbytes;
+	int done, nfds;
+	fd_set			readfds;
+	struct timeval		timeout;
+
+	s_config *config;
+	config = config_get_config();
+
+	CyaSSL_Init();
+
+	CYASSL_CTX* ctx;
+	/* Create the CYASSL_CTX */
+	/* Allow SSLv3 up to TLSv1.2 */
+	if ( (ctx = CyaSSL_CTX_new(CyaSSLv23_client_method())) == NULL){
+        debug(LOG_ERR, "Could not create CYASSL context.");
+        return -1;
+	}
+
+	if (config->ssl_no_verify) {
+		CyaSSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, 0);
+		debug(LOG_INFO, "Disabling SSL certificate verification!");
+	} else {
+		/* Use trusted certs */
+		/* Note: CyaSSL requires that the certificates are named by their hash values */
+		if (CyaSSL_CTX_load_verify_locations(ctx, NULL, config->ssl_certs)
+			!= SSL_SUCCESS) {
+			debug(LOG_ERR, "Could not load SSL certificates.");
+			return -1;
+		}
+		debug(LOG_INFO, "Loading SSL certificates from %s", config->ssl_certs);
+	}
+
+	if (sockfd == -1) {
+		/* Could not connect to server */
+		debug(LOG_ERR, "Could not open socket to server!");
+		return -1;
+	}
+
+
+	/* Create CYASSL object */
+	CYASSL* ssl;
+	if( (ssl = CyaSSL_new(ctx)) == NULL) {
+        debug(LOG_ERR, "Could not create CYASSL context.");
+        return -1;
+	}
+	CyaSSL_set_fd(ssl, sockfd);
+
+
+	debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", buf);
+	if (CyaSSL_send(ssl, buf, strlen(buf), 0) != (int) strlen(buf)) {
+        debug(LOG_ERR, "CyaSSL_send failed!");
+		return -1;
+	}
+
+	debug(LOG_DEBUG, "Reading response");
+	numbytes = totalbytes = 0;
+	done = 0;
+	do {
+		FD_ZERO(&readfds);
+		FD_SET(sockfd, &readfds);
+		timeout.tv_sec = 30; /* XXX magic... 30 second is as good a timeout as any */
+		timeout.tv_usec = 0;
+		nfds = sockfd + 1;
+
+		nfds = select(nfds, &readfds, NULL, NULL, &timeout);
+
+		if (nfds > 0) {
+			/** We don't have to use FD_ISSET() because there
+			 *  was only one fd. */
+			numbytes = CyaSSL_read(ssl, buf + totalbytes, MAX_BUF - (totalbytes + 1));
+			if (numbytes < 0) {
+				debug(LOG_ERR, "An error occurred while reading from server: %s", strerror(errno));
+				/* FIXME */
+				close(sockfd);
+				return -1;
+			}
+			else if (numbytes == 0) {
+				done = 1;
+			}
+			else {
+				totalbytes += (size_t) numbytes;
+				debug(LOG_DEBUG, "Read %d bytes, total now %d", numbytes, totalbytes);
+			}
+		}
+		else if (nfds == 0) {
+			debug(LOG_ERR, "Timed out reading data via select() from auth server");
+			/* FIXME */
+			close(sockfd);
+			return -1;
+		}
+		else if (nfds < 0) {
+			debug(LOG_ERR, "Error reading data via select() from auth server: %s", strerror(errno));
+			/* FIXME */
+			close(sockfd);
+			return -1;
+		}
+	} while (!done);
+
+	close(sockfd);
+
+	buf[totalbytes] = '\0';
+	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", buf);
+
+    CyaSSL_free(ssl);
+	CyaSSL_CTX_free(ctx);
+	CyaSSL_Cleanup();
+
+	return totalbytes;
+}
+
+
+#endif /* USE_CYASSL */
 

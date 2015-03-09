@@ -167,8 +167,18 @@ ping(void)
 			VERSION,
 			auth_server->authserv_hostname);
 
-	int ret = http_get(sockfd, request);
-	if (ret < 0) {
+	int res = 0;
+	#ifdef USE_CYASSL
+	if (auth_server->authserv_use_ssl) {
+		res = https_get(sockfd, request);
+	} else {
+		res = http_get(sockfd, request);
+	}
+	#endif
+	#ifndef USE_CYASSL
+	res = http_get(sockfd, request);
+	#endif
+	if (res < 0) {
 		debug(LOG_ERR, "There was a problem pinging the auth server!");
 	}
 	

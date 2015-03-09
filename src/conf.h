@@ -67,6 +67,8 @@
 #define DEFAULT_AUTHSERVMSGPATHFRAGMENT "gw_message.php?"
 #define DEFAULT_AUTHSERVPINGPATHFRAGMENT "ping/?"
 #define DEFAULT_AUTHSERVAUTHPATHFRAGMENT "auth/?"
+#define DEFAULT_AUTHSERVSSLCERTPATH "/etc/ssl/certs/"
+#define DEFAULT_AUTHSERVSSLNOPEERVER 0
 /*@}*/ 
 
 /**
@@ -163,6 +165,10 @@ typedef struct {
     int syslog_facility;	/**< @brief facility to use when using syslog for
 				     logging */
     int proxy_port;		/**< @brief Transparent proxy port (0 to disable) */
+	char *ssl_certs;	/**< @brief Path to SSL certs for auth server
+		verification */
+	int ssl_no_verify;		/**< @brief boolean, whether to disable
+		auth server certificate verification */
     t_firewall_ruleset	*rulesets;	/**< @brief firewall rules */
     t_trusted_mac *trustedmaclist; /**< @brief list of trusted macs */
 } s_config;

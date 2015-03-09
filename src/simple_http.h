@@ -18,4 +18,8 @@
  *                                                                  *
  \********************************************************************/
 
-int http_get(const int, const char*);
+int http_get(const int, char*);
+
+#ifdef USE_CYASSL
+int https_get(const int, char*);
+#endif
