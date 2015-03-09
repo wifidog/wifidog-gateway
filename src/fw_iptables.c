@@ -172,7 +172,7 @@ iptables_compile(const char * table, const char *chain, const t_firewall_rule *r
 	if (rule->mask != NULL) {
 		if (rule->mask_is_ipset) {
 			snprintf((command + strlen(command)), (sizeof(command) -
-					strlen(command)), "-m set --match-set %s dst", rule->mask);
+					strlen(command)), "-m set --match-set %s dst ", rule->mask);
 		} else {
 			snprintf((command + strlen(command)), (sizeof(command) -
 					strlen(command)), "-d %s ", rule->mask);
