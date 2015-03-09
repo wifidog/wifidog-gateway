@@ -559,7 +559,6 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 				debug(LOG_ERR, "Invalid mask %s", mask);
 				return -3; /*< Fail */
 			}
-		}
 		} else {
 			debug(LOG_ERR, "Invalid or unexpected keyword %s, "
 					"expecting \"to\" or \"to-ipset\"", other_kw);
