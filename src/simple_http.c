@@ -31,6 +31,7 @@
 #include <string.h>
 #include <syslog.h>
 
+#include "../config.h"
 #include "common.h"
 #include "debug.h"
 
