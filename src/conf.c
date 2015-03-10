@@ -550,15 +550,6 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 		/* Get port now */
 		mask = leftover;
 		TO_NEXT_WORD(leftover, finished);
-		all_nums = 1;
-		for (i = 0; *(mask + i) != '\0'; i++)
-			if (!isdigit((unsigned char)*(mask + i)) && (*(mask + i) != '.')
-					&& (*(mask + i) != '/'))
-				all_nums = 0; /*< No longer only digits */
-		if (!all_nums) {
-			debug(LOG_ERR, "Invalid mask %s", mask);
-			return -3; /*< Fail */
-		}
 	}
 
 	/* Generate rule record */
