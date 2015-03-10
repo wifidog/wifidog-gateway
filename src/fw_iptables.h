@@ -68,6 +68,9 @@ int iptables_fw_destroy_mention( const char * table, const char * chain, const c
 /** @brief Define the access of a specific client */
 int iptables_fw_access(fw_access_t type, const char *ip, const char *mac, int tag);
 
+/** @brief Define the access of a host */
+int iptables_fw_access_host(fw_access_t type, const char *host);
+
 /** @brief All counters in the client list */
 int iptables_fw_counters_update(void);
 
