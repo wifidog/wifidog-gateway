@@ -26,8 +26,10 @@
   @author Copyright (C) 2007 David Bird <david@coova.com>
 
  */
-
+#if defined(__linux__)
+/* Note that libcs other than GLIBC also use this macro to enable vasprintf */
 #define _GNU_SOURCE
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -334,9 +336,9 @@ void send_http_page(request *r, const char *title, const char* message)
         close(fd);
         return;
     }
-
-    buffer=(char*)safe_malloc(stat_info.st_size+1);
-    written=read(fd, buffer, stat_info.st_size);
+	// Cast from long to unsigned int
+    buffer=(char*)safe_malloc((size_t) stat_info.st_size+1);
+    written=read(fd, buffer, (size_t) stat_info.st_size);
     if (written==-1) {
         debug(LOG_CRIT, "Failed to read HTML message file: %s", strerror(errno));
         free(buffer);

@@ -55,7 +55,7 @@ t_authcode auth_server_request(t_authresponse *authresponse,
 			unsigned long long int outgoing);
 
 /** @brief Tries really hard to connect to an auth server.  Returns a connected file descriptor or -1 on error */
-int connect_auth_server();
+int connect_auth_server(void);
 
 /** @brief Helper function called by connect_auth_server() to do the actual work including recursion - DO NOT CALL DIRECTLY */
 int _connect_auth_server(int level);

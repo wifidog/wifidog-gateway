@@ -68,17 +68,19 @@ static pthread_t tid_fw_counter = 0;
 static pthread_t tid_ping = 0; 
 
 /* The internal web server */
+extern httpd * webserver;
 httpd * webserver = NULL;
 
 /* from commandline.c */
 extern char ** restartargv;
 extern pid_t restart_orig_pid;
-t_client *firstclient;
+static t_client *firstclient;
 
 /* from client_list.c */
 extern pthread_mutex_t client_list_mutex;
 
 /* Time when wifidog started  */
+extern time_t started_time;
 time_t started_time = 0;
 
 /* Appends -x, the current PID, and NULL to restartargv
@@ -199,11 +201,11 @@ void get_clients_from_parent(void) {
 							client->fd = atoi(value);
 						}
 						else if (strcmp(key, "counters_incoming") == 0) {
-							client->counters.incoming_history = atoll(value);
+							client->counters.incoming_history = (unsigned long long) atoll(value);
 							client->counters.incoming = client->counters.incoming_history;
 						}
 						else if (strcmp(key, "counters_outgoing") == 0) {
-							client->counters.outgoing_history = atoll(value);
+							client->counters.outgoing_history = (unsigned long long)atoll(value);
 							client->counters.outgoing = client->counters.outgoing_history;
 						}
 						else if (strcmp(key, "counters_last_updated") == 0) {

@@ -86,6 +86,7 @@ static time_t last_offline_time = 0;
 static time_t last_auth_online_time = 0;
 static time_t last_auth_offline_time = 0;
 
+extern long served_this_session;
 long served_this_session = 0;
 
 /** Fork a child and execute a shell command, the parent
@@ -427,12 +428,12 @@ get_ext_iface(void)
 	 */
 	char * get_status_text() {
 		char buffer[STATUS_BUF_SIZ];
-		ssize_t len;
+		size_t len;
 		s_config *config;
 		t_auth_serv *auth_server;
 		t_client	*first;
 		int		count;
-		unsigned long int uptime = 0;
+		time_t uptime = 0;
 		unsigned int days = 0, hours = 0, minutes = 0, seconds = 0;
 		t_trusted_mac *p;
 
@@ -441,13 +442,13 @@ get_ext_iface(void)
 		len = strlen(buffer);
 
 		uptime = time(NULL) - started_time;
-		days    = uptime / (24 * 60 * 60);
+		days    = (unsigned int) uptime / (24 * 60 * 60);
 		uptime -= days * (24 * 60 * 60);
-		hours   = uptime / (60 * 60);
+		hours   = (unsigned int) uptime / (60 * 60);
 		uptime -= hours * (60 * 60);
-		minutes = uptime / 60;
+		minutes = (unsigned int) uptime / 60;
 		uptime -= minutes * 60;
-		seconds = uptime;
+		seconds = (unsigned int) uptime;
 
 		snprintf((buffer + len), (sizeof(buffer) - len), "Version: " VERSION "\n");
 		len = strlen(buffer);

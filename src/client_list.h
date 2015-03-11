@@ -44,7 +44,7 @@ typedef struct	_t_client {
 	char	*ip;			/**< @brief Client Ip address */
 	char	*mac;			/**< @brief Client Mac address */
 	char	*token;			/**< @brief Client token */
-	unsigned int fw_connection_state; /**< @brief Connection state in the
+	int fw_connection_state; /**< @brief Connection state in the
 						     firewall */
 	int	fd;			/**< @brief Client HTTP socket (valid only
 					     during login before one of the
