@@ -133,6 +133,28 @@ http_callback_404(httpd *webserver, request *r)
 				url);
 		}
 
+                debug(LOG_INFO, "Check host %s is in whitelist or not", r->request.host); // eg. www.example.com
+                t_firewall_rule *rule;
+                //eg. example.com is in whitelist
+                for (rule = get_ruleset("global"); rule != NULL; rule = rule->next) {
+                    // if request http://www.example.com/, it's not equal example.com. if request http://example.com, it will not go to here, it had been added into "iptables allow" when wifidog start.
+                    if (strstr(r->request.host, rule->mask)) {
+                        int host_length = strlen(r->request.host);
+                        int mask_length = strlen(rule->mask);
+                        char prefix[1024] = {0};
+                        // must be *.example.com, if not have ".", maybe Phishing. eg. phishingexample.com
+                        strncpy(prefix, r->request.host, host_length - mask_length - 1); // www
+                        strcat(prefix, "."); // www.
+                        strcat(prefix, rule->mask); // www.example.com
+                        if (strcasecmp(r->request.host, prefix) == 0) {
+                            debug(LOG_INFO, "allow subdomain, auto refresh request");
+                            fw_allow_host(r->request.host);
+                            http_send_redirect(r, tmp_url, "allow subdomain");
+                            return;
+                        }
+                    }
+                }
+
 		debug(LOG_INFO, "Captured %s requesting [%s] and re-directing them to login page", r->clientAddr, url);
 		http_send_redirect_to_auth(r, urlFragment, "Redirect to login page");
 		free(urlFragment);
