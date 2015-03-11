@@ -27,6 +27,7 @@
 #ifndef _FIREWALL_H_
 #define _FIREWALL_H_
 
+extern int icmp_fd;
 int icmp_fd;
 
 /** Used by fw_iptables.c */

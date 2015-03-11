@@ -93,8 +93,8 @@ thread_ping(void *arg)
 static void
 ping(void)
 {
-        ssize_t			numbytes;
-        size_t	        	totalbytes;
+	ssize_t		numbytes;
+	size_t		totalbytes;
 	int			sockfd, nfds, done;
 	char			request[MAX_BUF];
 	fd_set			readfds;
@@ -199,7 +199,7 @@ ping(void)
 				done = 1;
 			}
 			else {
-				totalbytes += numbytes;
+				totalbytes += (size_t) numbytes;
 				debug(LOG_DEBUG, "Read %d bytes, total now %d", numbytes, totalbytes);
 			}
 		}

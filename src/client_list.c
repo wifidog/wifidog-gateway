@@ -45,12 +45,13 @@
 #include "client_list.h"
 
 /** Global mutex to protect access to the client list */
+extern pthread_mutex_t client_list_mutex;
 pthread_mutex_t client_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /** @internal
  * Holds a pointer to the first element of the list 
  */ 
-t_client         *firstclient = NULL;
+static t_client         *firstclient = NULL;
 
 /** Get the first element of the list of connected clients
  */
