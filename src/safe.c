@@ -27,6 +27,9 @@
   @author Copyright (C) 2005 Mina Naguib <mina@ilesansfil.org>
  */
 
+/* Enable vasprintf */
+#define _GNU_SOURCE
+
 
 #include <stdarg.h>
 #include <stdio.h>

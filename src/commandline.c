@@ -39,14 +39,20 @@
 /*
  * Holds an argv that could be passed to exec*() if we restart ourselves
  */
+/* Declare variable */
+extern char ** restartargv;
+/* Define variable */
 char ** restartargv = NULL;
 
 static void usage(void);
+
+void parse_commandline(int argc, char **argv);
 
 /*
  * A flag to denote whether we were restarted via a parent wifidog, or started normally
  * 0 means normally, otherwise it will be populated by the PID of the parent
  */
+extern pid_t restart_orig_pid;
 pid_t restart_orig_pid = 0;
 
 /** @internal
@@ -76,14 +82,14 @@ usage(void)
  * also populates restartargv
  */
 void parse_commandline(int argc, char **argv) {
-    int c;
-	 int skiponrestart;
-	 int i;
+	int c;
+	int skiponrestart;
+	int i;
 
     s_config *config = config_get_config();
 
 	//MAGIC 3: Our own -x, the pid, and NULL :
-	restartargv = safe_malloc((argc + 3) * sizeof(char*));
+	restartargv = safe_malloc((size_t) (argc + 3) * sizeof(char*));
 	i=0;
 	restartargv[i++] = safe_strdup(argv[0]);
 
