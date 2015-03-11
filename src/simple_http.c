@@ -139,9 +139,9 @@ int https_get(const int sockfd, char *buf) {
 	} else {
 		/* Use trusted certs */
 		/* Note: CyaSSL requires that the certificates are named by their hash values */
-		if (CyaSSL_CTX_load_verify_locations(ctx, NULL, config->ssl_certs)
-			!= SSL_SUCCESS) {
-			debug(LOG_ERR, "Could not load SSL certificates.");
+		int err = CyaSSL_CTX_load_verify_locations(ctx, NULL, config->ssl_certs);
+		if (err != SSL_SUCCESS) {
+			debug(LOG_ERR, "Could not load SSL certificates %d", err);
 			return -1;
 		}
 		debug(LOG_INFO, "Loading SSL certificates from %s", config->ssl_certs);
