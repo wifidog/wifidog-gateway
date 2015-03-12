@@ -97,6 +97,19 @@ fw_allow(const char *ip, const char *mac, int fw_connection_state)
 }
 
 /**
+ * Allow a host through the firewall by adding a rule in the firewall
+ * @param host IP address, domain or hostname to allow
+ * @return Return code of the command
+ */
+int
+fw_allow_host(const char *host)
+{
+    debug(LOG_DEBUG, "Allowing %s", host);
+
+    return iptables_fw_access_host(FW_ACCESS_ALLOW, host);
+}
+
+/**
  * @brief Deny a client access through the firewall by removing the rule in the firewall that was fw_connection_stateging the user's traffic
  * @param ip IP address to deny
  * @param mac MAC address to deny

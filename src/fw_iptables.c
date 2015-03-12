@@ -547,6 +547,30 @@ iptables_fw_access(fw_access_t type, const char *ip, const char *mac, int tag)
 	return rc;
 }
 
+int
+iptables_fw_access_host(fw_access_t type, const char *host)
+{
+	int rc;
+
+	fw_quiet = 0;
+
+	switch(type) {
+		case FW_ACCESS_ALLOW:
+			iptables_do_command("-t nat -A " CHAIN_GLOBAL " -d %s -j ACCEPT", host);
+			rc = iptables_do_command("-t filter -A " CHAIN_GLOBAL " -d %s -j ACCEPT", host);
+			break;
+		case FW_ACCESS_DENY:
+			iptables_do_command("-t nat -D " CHAIN_GLOBAL " -d %s -j ACCEPT", host);
+			rc = iptables_do_command("-t filter -D " CHAIN_GLOBAL " -d %s -j ACCEPT", host);
+			break;
+		default:
+			rc = -1;
+			break;
+	}
+
+	return rc;
+}
+
 /** Update the counters of all the clients in the client list */
 	int
 iptables_fw_counters_update(void)
