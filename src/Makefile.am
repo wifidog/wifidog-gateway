@@ -8,7 +8,9 @@ bin_PROGRAMS = wifidog \
 AM_CPPFLAGS = \
 	-I${top_srcdir}/libhttpd/ \
 	-DSYSCONFDIR='"$(sysconfdir)"' \
-	-Wall
+	-Wall \
+	-Wextra \
+	-Wno-unused-parameter
 wifidog_LDADD = $(top_builddir)/libhttpd/libhttpd.la
 
 wifidog_SOURCES = commandline.c \
