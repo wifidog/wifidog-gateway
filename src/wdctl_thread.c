@@ -323,7 +323,6 @@ wdctl_restart(int afd)
 				written = write(fd, (tempstring + len), strlen(tempstring) - len);
 				if (written == -1) {
 					debug(LOG_ERR, "Failed to write client data to child: %s", strerror(errno));
-					free(tempstring);
 					break;
 				}
 				else {
