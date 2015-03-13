@@ -141,7 +141,9 @@ int https_get(const int sockfd, char *buf) {
 		/* Note: CyaSSL requires that the certificates are named by their hash values */
 		int err = CyaSSL_CTX_load_verify_locations(ctx, NULL, config->ssl_certs);
 		if (err != SSL_SUCCESS) {
-			debug(LOG_ERR, "Could not load SSL certificates %d", err);
+			debug(LOG_ERR, "Could not load SSL certificates (error %d)", err);
+			debug(LOG_ERR, "Make sure that SSLCertPath points to the correct path in the config file");
+			debug(LOG_ERR, "Or disable certificate loading with SSLNoPeerVerification.");
 			return -1;
 		}
 		debug(LOG_INFO, "Loading SSL certificates from %s", config->ssl_certs);
