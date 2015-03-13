@@ -38,6 +38,7 @@
 #ifdef USE_CYASSL
 #include <cyassl/ssl.h>
 #include "conf.h"
+#include <cyassl/ctaocrypt/types.h>
 #endif
 
 int http_get(const int sockfd, char *buf) {
@@ -119,6 +120,9 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 	int done, nfds;
 	fd_set			readfds;
 	struct timeval		timeout;
+	int sslerr;
+	char sslerrmsg[CYASSL_MAX_ERROR_SZ];
+	size_t buflen = strlen(buf);
 
 	s_config *config;
 	config = config_get_config();
@@ -159,7 +163,7 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 	/* Create CYASSL object */
 	CYASSL* ssl;
 	if( (ssl = CyaSSL_new(ctx)) == NULL) {
-		debug(LOG_ERR, "Could not create CYASSL context.");
+		debug(LOG_ERR, "Could not create CyaSSL context.");
 		return -1;
 	}
 	// Turn on domain name check
@@ -167,9 +171,17 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 	CyaSSL_set_fd(ssl, sockfd);
 
 
-	debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", buf);
-	if (CyaSSL_send(ssl, buf, strlen(buf), 0) != (int) strlen(buf)) {
-		debug(LOG_ERR, "CyaSSL_send failed!");
+	debug(LOG_DEBUG, "Sending HTTPS request to auth server: [%s]\n", buf);
+	numbytes = CyaSSL_send(ssl, buf, buflen, 0);
+	if (numbytes == 0) {
+		sslerr = CyaSSL_get_error(ssl, numbytes);
+		CyaSSL_ERR_error_string(sslerr, sslerrmsg);
+		debug(LOG_ERR, "CyaSSL_send failed: %s", sslerrmsg);
+		return -1;
+	}
+	else if (numbytes != (int) buflen) {
+		debug(LOG_ERR, "CyaSSL_send failed: only %d bytes out of %d bytes sent!",
+			numbytes, buflen);
 		return -1;
 	}
 
@@ -190,12 +202,20 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 			 *  was only one fd. */
 			numbytes = CyaSSL_read(ssl, buf + totalbytes, MAX_BUF - (totalbytes + 1));
 			if (numbytes < 0) {
-				debug(LOG_ERR, "An error occurred while reading from server: %s", strerror(errno));
+				sslerr = CyaSSL_get_error(ssl, numbytes);
+				CyaSSL_ERR_error_string(sslerr, sslerrmsg);
+				debug(LOG_ERR, "An error occurred while reading from server: %s", sslerrmsg);
 				/* FIXME */
 				close(sockfd);
 				return -1;
 			}
 			else if (numbytes == 0) {
+				/* CyaSSL_read returns 0 on a clean shutdown or if the peer closed the
+				connection. We don't handle this right now, but we do some logging
+				on the error message. */
+				sslerr = CyaSSL_get_error(ssl, numbytes);
+				CyaSSL_ERR_error_string(sslerr, sslerrmsg);
+				debug(LOG_DEBUG, "Finished reading from server. CyaSSL message: %s", sslerrmsg);
 				done = 1;
 			}
 			else {
