@@ -281,7 +281,7 @@ http_callback_auth(httpd *webserver, request *r)
 			    				    	
 			    fw_deny(client->ip, client->mac, client->fw_connection_state);
 			    client_list_delete(client);
-			    debug(LOG_DEBUG, "Got logout from %s", client->ip);
+			    debug(LOG_DEBUG, "Got logout from %s", ip);
 			    
 			    /* Advertise the logout if we have an auth server */
 			    if (config->auth_servers != NULL) {
@@ -292,7 +292,7 @@ http_callback_auth(httpd *webserver, request *r)
 					
 					/* Re-direct them to auth server */
 					debug(LOG_INFO, "Got manual logout from client ip %s, mac %s, token %s"
-					"- redirecting them to logout message", client->ip, client->mac, client->token);
+					"- redirecting them to logout message", ip, mac, token->value);
 					safe_asprintf(&urlFragment, "%smessage=%s",
 						auth_server->authserv_msg_script_path_fragment,
 						GATEWAY_MESSAGE_ACCOUNT_LOGGED_OUT
