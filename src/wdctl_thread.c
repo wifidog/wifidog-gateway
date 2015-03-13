@@ -65,6 +65,8 @@ static void wdctl_stop(int);
 static void wdctl_reset(int, const char *);
 static void wdctl_restart(int);
 
+static int wdctl_socket_server;
+
 /** Launches a thread that monitors the control socket for request
 @param arg Must contain a pointer to a string containing the Unix domain socket to open
 @todo This thread loops infinitely, need a watchdog to verify that it is still running?
@@ -148,11 +150,11 @@ static void *
 thread_wdctl_handler(void *arg)
 {
 	int	fd,
-		done,
-		i;
+		done;
 	char	request[MAX_BUF];
-	ssize_t	read_bytes,
-		len;
+	size_t	read_bytes,
+			i;
+	ssize_t	len;
 
 	debug(LOG_DEBUG, "Entering thread_wdctl_handler....");
 
@@ -169,9 +171,8 @@ thread_wdctl_handler(void *arg)
 	while (!done && read_bytes < (sizeof(request) - 1)) {
 		len = read(fd, request + read_bytes,
 				sizeof(request) - read_bytes);
-
 		/* Have we gotten a command yet? */
-		for (i = read_bytes; i < (read_bytes + len); i++) {
+		for (i = read_bytes; i < (read_bytes + (size_t) len); i++) {
 			if (request[i] == '\r' || request[i] == '\n') {
 				request[i] = '\0';
 				done = 1;
@@ -179,7 +180,7 @@ thread_wdctl_handler(void *arg)
 		}
 		
 		/* Increment position */
-		read_bytes += len;
+		read_bytes += (size_t) len;
 	}
 
 	if (strncmp(request, "status", 6) == 0) {
@@ -212,7 +213,7 @@ static void
 wdctl_status(int fd)
 {
 	char * status = NULL;
-	int len = 0;
+	size_t len = 0;
 
 	status = get_status_text();
 	len = strlen(status);
@@ -322,11 +323,10 @@ wdctl_restart(int afd)
 				written = write(fd, (tempstring + len), strlen(tempstring) - len);
 				if (written == -1) {
 					debug(LOG_ERR, "Failed to write client data to child: %s", strerror(errno));
-					free(tempstring);
 					break;
 				}
 				else {
-					len += written;
+					len += (socklen_t) written;
 				}
 			}
 			free(tempstring);

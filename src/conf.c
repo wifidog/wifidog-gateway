@@ -54,6 +54,7 @@ static s_config config;
 /**
  * Mutex for the configuration file, used by the auth_servers related
  * functions. */
+extern pthread_mutex_t config_mutex;
 pthread_mutex_t config_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /** @internal
@@ -557,15 +558,6 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 		/* Get port now */
 		mask = leftover;
 		TO_NEXT_WORD(leftover, finished);
-		all_nums = 1;
-		for (i = 0; *(mask + i) != '\0'; i++)
-			if (!isdigit((unsigned char)*(mask + i)) && (*(mask + i) != '.')
-					&& (*(mask + i) != '/'))
-				all_nums = 0; /*< No longer only digits */
-		if (!all_nums) {
-			debug(LOG_ERR, "Invalid mask %s", mask);
-			return -3; /*< Fail */
-		}
 	}
 
 	/* Generate rule record */
@@ -640,7 +632,8 @@ config_read(const char *filename)
 {
 	FILE *fd;
 	char line[MAX_BUF], *s, *p1, *p2;
-	int linenum = 0, opcode, value, len;
+	int linenum = 0, opcode, value;
+	size_t len;
 
 	debug(LOG_INFO, "Reading configuration file '%s'", filename);
 

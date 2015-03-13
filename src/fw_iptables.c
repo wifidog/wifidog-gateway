@@ -140,19 +140,20 @@ iptables_compile(const char * table, const char *chain, const t_firewall_rule *r
 		*mode;
 
 	memset(command, 0, MAX_BUF);
+	mode = NULL;
 
 	switch (rule->target){
 	case TARGET_DROP:
-		if (table=="nat") {
+		if (strncmp(table, "nat", 3) == 0) {
 			free(mode);
-			return;
+			return NULL;
 		}
 		mode = safe_strdup("DROP");
 		break;
 	case TARGET_REJECT:
-		if (table=="nat") {
+		if (strncmp(table, "nat", 3) == 0) {
 			free(mode);
-			return;
+			return NULL;
 		}
 		mode = safe_strdup("REJECT");
 		break;
@@ -532,6 +533,30 @@ iptables_fw_access(fw_access_t type, const char *ip, const char *mac, int tag)
 		case FW_ACCESS_DENY:
 			iptables_do_command("-t mangle -D " CHAIN_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark %d", ip, mac, tag);
 			rc = iptables_do_command("-t mangle -D " CHAIN_INCOMING " -d %s -j ACCEPT", ip);
+			break;
+		default:
+			rc = -1;
+			break;
+	}
+
+	return rc;
+}
+
+int
+iptables_fw_access_host(fw_access_t type, const char *host)
+{
+	int rc;
+
+	fw_quiet = 0;
+
+	switch(type) {
+		case FW_ACCESS_ALLOW:
+			iptables_do_command("-t nat -A " CHAIN_GLOBAL " -d %s -j ACCEPT", host);
+			rc = iptables_do_command("-t filter -A " CHAIN_GLOBAL " -d %s -j ACCEPT", host);
+			break;
+		case FW_ACCESS_DENY:
+			iptables_do_command("-t nat -D " CHAIN_GLOBAL " -d %s -j ACCEPT", host);
+			rc = iptables_do_command("-t filter -D " CHAIN_GLOBAL " -d %s -j ACCEPT", host);
 			break;
 		default:
 			rc = -1;
