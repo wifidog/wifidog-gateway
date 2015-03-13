@@ -133,6 +133,7 @@ http_callback_404(httpd *webserver, request *r)
 				r->clientAddr,
 				mac,
 				url);
+            free(mac);
 		}
 
                 debug(LOG_INFO, "Check host %s is in whitelist or not", r->request.host); // eg. www.example.com
