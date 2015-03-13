@@ -129,8 +129,8 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 	/* Create the CYASSL_CTX */
 	/* Allow SSLv3 up to TLSv1.2 */
 	if ( (ctx = CyaSSL_CTX_new(CyaSSLv23_client_method())) == NULL){
-        debug(LOG_ERR, "Could not create CYASSL context.");
-        return -1;
+		debug(LOG_ERR, "Could not create CYASSL context.");
+		return -1;
 	}
 
 	if (config->ssl_no_verify) {
@@ -159,8 +159,8 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 	/* Create CYASSL object */
 	CYASSL* ssl;
 	if( (ssl = CyaSSL_new(ctx)) == NULL) {
-        debug(LOG_ERR, "Could not create CYASSL context.");
-        return -1;
+		debug(LOG_ERR, "Could not create CYASSL context.");
+		return -1;
 	}
 	// Turn on domain name check
 	CyaSSL_check_domain_name(ssl, hostname);
@@ -169,7 +169,7 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 
 	debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", buf);
 	if (CyaSSL_send(ssl, buf, strlen(buf), 0) != (int) strlen(buf)) {
-        debug(LOG_ERR, "CyaSSL_send failed!");
+		debug(LOG_ERR, "CyaSSL_send failed!");
 		return -1;
 	}
 
@@ -222,7 +222,7 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 	buf[totalbytes] = '\0';
 	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", buf);
 
-    CyaSSL_free(ssl);
+	CyaSSL_free(ssl);
 	CyaSSL_CTX_free(ctx);
 	CyaSSL_Cleanup();
 
