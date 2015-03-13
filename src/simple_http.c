@@ -48,6 +48,7 @@ int http_get(const int sockfd, char *buf) {
 	int done, nfds;
 	fd_set			readfds;
 	struct timeval		timeout;
+	int buflen = strlen(buf);
 	
 	if (sockfd == -1) {
 		/* Could not connect to server */
@@ -56,7 +57,10 @@ int http_get(const int sockfd, char *buf) {
 	}
 
 	debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", buf);
-	send(sockfd, buf, strlen(buf), 0);
+	send(sockfd, buf, buflen, 0);
+
+	// Clear buffer and re-use for response
+	memset(buf, 0, buflen);
 
 	debug(LOG_DEBUG, "Reading response");
 	numbytes = totalbytes = 0;
@@ -188,6 +192,9 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 			numbytes, buflen);
 		return -1;
 	}
+
+	// Clear buffer and re-use for response
+	memset(buf, 0, buflen);
 
 	debug(LOG_DEBUG, "Reading response");
 	numbytes = totalbytes = 0;
