@@ -48,7 +48,7 @@ int http_get(const int sockfd, char *buf) {
 	int done, nfds;
 	fd_set			readfds;
 	struct timeval		timeout;
-	int buflen = strlen(buf);
+	size_t buflen = strlen(buf);
 	
 	if (sockfd == -1) {
 		/* Could not connect to server */
