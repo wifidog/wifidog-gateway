@@ -68,7 +68,8 @@
 #define DEFAULT_AUTHSERVPINGPATHFRAGMENT "ping/?"
 #define DEFAULT_AUTHSERVAUTHPATHFRAGMENT "auth/?"
 #define DEFAULT_AUTHSERVSSLCERTPATH "/etc/ssl/certs/"
-#define DEFAULT_AUTHSERVSSLNOPEERVER 0
+/** Note that DEFAULT_AUTHSERVSSLNOPEERVER must be 0 or 1, even if the config file syntax is yes or no */
+#define DEFAULT_AUTHSERVSSLNOPEERVER 0 /* 0 means: Enable peer verification */
 /*@}*/ 
 
 /**
