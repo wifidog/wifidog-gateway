@@ -124,7 +124,7 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 	int done, nfds;
 	fd_set			readfds;
 	struct timeval		timeout;
-	int sslerr;
+	unsigned long sslerr;
 	char sslerrmsg[CYASSL_MAX_ERROR_SZ];
 	size_t buflen = strlen(buf);
 
@@ -180,9 +180,9 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 
 
 	debug(LOG_DEBUG, "Sending HTTPS request to auth server: [%s]\n", buf);
-	numbytes = CyaSSL_send(ssl, buf, buflen, 0);
+	numbytes = CyaSSL_send(ssl, buf, (int) buflen, 0);
 	if (numbytes == 0) {
-		sslerr = CyaSSL_get_error(ssl, numbytes);
+		sslerr = (unsigned long) CyaSSL_get_error(ssl, numbytes);
 		CyaSSL_ERR_error_string(sslerr, sslerrmsg);
 		debug(LOG_ERR, "CyaSSL_send failed: %s", sslerrmsg);
 		return -1;
@@ -213,7 +213,7 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 			 *  was only one fd. */
 			numbytes = CyaSSL_read(ssl, buf + totalbytes, MAX_BUF - (totalbytes + 1));
 			if (numbytes < 0) {
-				sslerr = CyaSSL_get_error(ssl, numbytes);
+				sslerr = (unsigned long) CyaSSL_get_error(ssl, numbytes);
 				CyaSSL_ERR_error_string(sslerr, sslerrmsg);
 				debug(LOG_ERR, "An error occurred while reading from server: %s", sslerrmsg);
 				/* FIXME */
@@ -224,7 +224,7 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 				/* CyaSSL_read returns 0 on a clean shutdown or if the peer closed the
 				connection. We don't handle this right now, but we do some logging
 				on the error message. */
-				sslerr = CyaSSL_get_error(ssl, numbytes);
+				sslerr = (unsigned long) CyaSSL_get_error(ssl, numbytes);
 				CyaSSL_ERR_error_string(sslerr, sslerrmsg);
 				debug(LOG_DEBUG, "Finished reading from server. CyaSSL message: %s", sslerrmsg);
 				done = 1;
