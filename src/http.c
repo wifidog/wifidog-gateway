@@ -214,7 +214,7 @@ void http_send_redirect_to_auth(request *r, const char *urlFragment, const char 
 		protocol = "http";
 		port = auth_server->authserv_http_port;
 	}
-			    		
+	    		
 	char *url = NULL;
 	safe_asprintf(&url, "%s://%s:%d%s%s",
 		protocol,
@@ -278,11 +278,11 @@ http_callback_auth(httpd *webserver, request *r)
 			    char *ip = safe_strdup(client->ip);
 			    char *urlFragment = NULL;
 			    t_auth_serv	*auth_server = get_auth_server();
-			    				    	
+	    				    	
 			    fw_deny(client->ip, client->mac, client->fw_connection_state);
 			    client_list_delete(client);
 			    debug(LOG_DEBUG, "Got logout from %s", ip);
-			    
+	    
 			    /* Advertise the logout if we have an auth server */
 			    if (config->auth_servers != NULL) {
 					UNLOCK_CLIENT_LIST();
@@ -354,4 +354,3 @@ void send_http_page(request *r, const char *title, const char* message)
     httpdOutput(r, buffer);
     free(buffer);
 }
-
