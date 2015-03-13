@@ -166,8 +166,12 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 		debug(LOG_ERR, "Could not create CyaSSL context.");
 		return -1;
 	}
-	// Turn on domain name check
-	CyaSSL_check_domain_name(ssl, hostname);
+	if (! config->ssl_no_verify) {
+		// Turn on domain name check
+		// Loading of CA certificates and verification of remote host name
+		// go hand in hand - one is useless without the other.
+		CyaSSL_check_domain_name(ssl, hostname);
+	}
 	CyaSSL_set_fd(ssl, sockfd);
 
 
