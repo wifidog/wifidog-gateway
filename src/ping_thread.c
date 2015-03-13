@@ -170,7 +170,7 @@ ping(void)
 	int res = 0;
 	#ifdef USE_CYASSL
 	if (auth_server->authserv_use_ssl) {
-		res = https_get(sockfd, request);
+		res = https_get(sockfd, request, auth_server->authserv_hostname);
 	} else {
 		res = http_get(sockfd, request);
 	}

@@ -112,7 +112,7 @@ int http_get(const int sockfd, char *buf) {
 #ifdef USE_CYASSL
 
 
-int https_get(const int sockfd, char *buf) {
+int https_get(const int sockfd, char *buf, const char* hostname) {
 
 	ssize_t	numbytes;
 	size_t totalbytes;
@@ -162,6 +162,8 @@ int https_get(const int sockfd, char *buf) {
         debug(LOG_ERR, "Could not create CYASSL context.");
         return -1;
 	}
+	// Turn on domain name check
+	CyaSSL_check_domain_name(ssl, hostname);
 	CyaSSL_set_fd(ssl, sockfd);
 
 

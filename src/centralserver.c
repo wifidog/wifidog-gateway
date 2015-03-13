@@ -107,7 +107,7 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 	int res = 0;
 	#ifdef USE_CYASSL
 	if (auth_server->authserv_use_ssl) {
-		res = https_get(sockfd, buf);
+		res = https_get(sockfd, buf, auth_server->authserv_hostname);
 	} else {
 		res = http_get(sockfd, buf);
 	}
