@@ -53,12 +53,17 @@ typedef struct	_t_client {
 					     the client. */
 } t_client;
 
-/** @brief Get the first element of the list of connected clients
- */
+/** @brief Get a new client struct, not added to the list yet */
+t_client *client_get_new(void);
+
+/** @brief Get the first element of the list of connected clients */
 t_client *client_get_first_client(void);
 
 /** @brief Initializes the client list */
 void client_list_init(void);
+
+/** @brief Insert client at head of list */
+void client_list_insert_client(t_client *client);
 
 /** @brief Adds a new client to the connections list */
 t_client *client_list_append(const char *ip, const char *mac, const char *token);
