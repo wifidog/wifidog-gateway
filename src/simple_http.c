@@ -181,7 +181,7 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 
 	debug(LOG_DEBUG, "Sending HTTPS request to auth server: [%s]\n", buf);
 	numbytes = CyaSSL_send(ssl, buf, (int) buflen, 0);
-	if (numbytes == 0) {
+	if (numbytes <= 0) {
 		sslerr = (unsigned long) CyaSSL_get_error(ssl, numbytes);
 		CyaSSL_ERR_error_string(sslerr, sslerrmsg);
 		debug(LOG_ERR, "CyaSSL_send failed: %s", sslerrmsg);

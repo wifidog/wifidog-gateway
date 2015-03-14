@@ -298,7 +298,7 @@ int _connect_auth_server(int level) {
 		debug(LOG_DEBUG, "Level %d: Connecting to auth server %s:%d", level, hostname, auth_server->authserv_http_port);
 		port = htons(auth_server->authserv_http_port);
 		#endif
-		their_addr.sin_port = htons(port);
+		their_addr.sin_port = port;
 		their_addr.sin_family = AF_INET;
 		their_addr.sin_addr = *h_addr;
 		memset(&(their_addr.sin_zero), '\0', sizeof(their_addr.sin_zero));
@@ -314,7 +314,8 @@ int _connect_auth_server(int level) {
 			 * Failed to connect
 			 * Mark the server as bad and try the next one
 			 */
-			debug(LOG_DEBUG, "Level %d: Failed to connect to auth server %s:%d (%s). Marking it as bad and trying next if possible", level, hostname, port, strerror(errno));
+			debug(LOG_DEBUG, "Level %d: Failed to connect to auth server %s:%d (%s). Marking it as bad and trying next if possible",
+                    level, hostname, ntohs(port), strerror(errno));
 			close(sockfd);
 			mark_auth_server_bad(auth_server);
 			return _connect_auth_server(level); /* Yay recursion! */
@@ -323,7 +324,7 @@ int _connect_auth_server(int level) {
 			/*
 			 * We have successfully connected
 			 */
-			debug(LOG_DEBUG, "Level %d: Successfully connected to auth server %s:%d", level, hostname, port);
+			debug(LOG_DEBUG, "Level %d: Successfully connected to auth server %s:%d", level, hostname, ntohs(port));
 			return sockfd;
 		}
 	}
