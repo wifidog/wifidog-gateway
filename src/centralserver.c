@@ -62,7 +62,8 @@ extern pthread_mutex_t	config_mutex;
 @param outgoing Current counter of the client's total outgoing traffic, in bytes 
 */
 t_authcode
-auth_server_request(t_authresponse *authresponse, const char *request_type, const char *ip, const char *mac, const char *token, unsigned long long int incoming, unsigned long long int outgoing)
+auth_server_request(t_authresponse *authresponse, const char *request_type, const char *ip, const char *mac,
+        const char *token, unsigned long long int incoming, unsigned long long int outgoing)
 {
 	int sockfd;
 	ssize_t	numbytes;
@@ -309,7 +310,8 @@ int _connect_auth_server(int level) {
 			 * Update it
 			 */
 			debug(LOG_DEBUG, "Level %d: Updating last_ip IP of server [%s] to [%s]", level, hostname, ip);
-			if (auth_server->last_ip) free(auth_server->last_ip);
+			if (auth_server->last_ip)
+				free(auth_server->last_ip);
 			auth_server->last_ip = ip;
 
 			/* Update firewall rules */
