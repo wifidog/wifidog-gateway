@@ -183,16 +183,6 @@ thread_wdctl_handler(void *arg)
 		read_bytes += (size_t) len;
 	}
 
-	if (strncmp(request, "status", 6) == 0) {
-		wdctl_status(fd);
-	} else if (strncmp(request, "stop", 4) == 0) {
-		wdctl_stop(fd);
-	} else if (strncmp(request, "reset", 5) == 0) {
-		wdctl_reset(fd, (request + 6));
-	} else if (strncmp(request, "restart", 7) == 0) {
-		wdctl_restart(fd);
-	}
-
 	if (!done) {
 		debug(LOG_ERR, "Invalid wdctl request.");
 		shutdown(fd, 2);
@@ -201,6 +191,18 @@ thread_wdctl_handler(void *arg)
 	}
 
 	debug(LOG_DEBUG, "Request received: [%s]", request);
+
+	if (strncmp(request, "status", 6) == 0) {
+		wdctl_status(fd);
+	} else if (strncmp(request, "stop", 4) == 0) {
+		wdctl_stop(fd);
+	} else if (strncmp(request, "reset", 5) == 0) {
+		wdctl_reset(fd, (request + 6));
+	} else if (strncmp(request, "restart", 7) == 0) {
+		wdctl_restart(fd);
+	} else {
+        debug(LOG_ERR, "Request was not understood!");
+    }
 	
 	shutdown(fd, 2);
 	close(fd);
