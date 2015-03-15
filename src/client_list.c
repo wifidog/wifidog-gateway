@@ -53,6 +53,18 @@ pthread_mutex_t client_list_mutex = PTHREAD_MUTEX_INITIALIZER;
  */ 
 static t_client         *firstclient = NULL;
 
+/** Get a new client struct, not added to the list yet
+ * @return Pointer to newly created client object not on the list yet.
+ */
+t_client *
+client_get_new(void)
+{
+    t_client *client;
+    client = safe_malloc(sizeof(t_client));
+    memset(client, 0, sizeof(t_client));
+    return client;
+}
+
 /** Get the first element of the list of connected clients
  */
 t_client *
@@ -69,6 +81,20 @@ client_list_init(void)
 {
     firstclient = NULL;
 }
+
+/** Insert client at head of list. Lock should be held when calling this!
+ * @param Pointer to t_client object.
+ */
+void
+client_list_insert_client(t_client *client)
+{
+    t_client *prev_head;
+
+    prev_head = firstclient;
+    client->next = prev_head;
+    firstclient = client;
+}
+
 
 /** Based on the parameters it receives, this function creates a new entry
  * in the connections list. All the memory allocation is done here.
@@ -90,8 +116,7 @@ client_list_append(const char *ip, const char *mac, const char *token)
         curclient = curclient->next;
     }
 
-    curclient = safe_malloc(sizeof(t_client));
-    memset(curclient, 0, sizeof(t_client));
+    curclient = client_get_new();
 
     curclient->ip = safe_strdup(ip);
     curclient->mac = safe_strdup(mac);
