@@ -475,33 +475,7 @@ int httpdReadRequest(httpd *server, request *r)
 				inHeaders = 0;
 				break;
 			}
-#if 0
-            /**
-             * Philippe commenting this out, it crashed with a
-             * particular pattern sent from the browser
-             * and we don't need it
-			if (strncasecmp(buf,"Cookie: ",7) == 0)
-			{
-				char	*var,
-					*val,
-					*end;
 
-				var = strchr(buf,':');
-				while(var)
-				{
-					var++;
-					val = strchr(var, '=');
-					*val = 0;
-					val++;
-					end = strchr(val,';');
-					if(end)
-						*end = 0;
-					httpdAddVariable(r, var, val);
-					var = end;
-				}
-			}
-			*/
-#endif
 			if (strncasecmp(buf,"Authorization: ",15) == 0)
 			{
 				cp = strchr(buf,':');
@@ -535,18 +509,6 @@ int httpdReadRequest(httpd *server, request *r)
 					}
 				}
 			}
-#if 0
-			if (strncasecmp(buf,"Referer: ",9) == 0)
-			{
-				cp = strchr(buf,':') + 2;
-				if(cp)
-				{
-					strncpy(r->request.referer,cp,
-						HTTP_MAX_URL);
-					r->request.referer[HTTP_MAX_URL-1]=0;
-				}
-			}
-#endif
 			/* acv@acv.ca/wifidog: Added decoding of host: if
 			 * present. */
 			if (strncasecmp(buf,"Host: ",6) == 0)
@@ -561,58 +523,9 @@ int httpdReadRequest(httpd *server, request *r)
 				}
 			}
 			/* End modification */
-#if 0
-			if (strncasecmp(buf,"If-Modified-Since: ",19) == 0)
-			{
-				cp = strchr(buf,':') + 2;
-				if(cp)
-				{
-					strncpy(r->request.ifModified,cp,
-						HTTP_MAX_URL);
-					r->request.ifModified[HTTP_MAX_URL-1]=0;
-					cp = strchr(r->request.ifModified,
-						';');
-					if (cp)
-						*cp = 0;
-				}
-			}
-			if (strncasecmp(buf,"Content-Type: ",14) == 0)
-			{
-				cp = strchr(buf,':') + 2;
-				if(cp)
-				{
-					strncpy(r->request.contentType,cp,
-						HTTP_MAX_URL);
-					r->request.contentType[HTTP_MAX_URL-1]=0;
-				}
-			}
-			if (strncasecmp(buf,"Content-Length: ",16) == 0)
-			{
-				cp = strchr(buf,':') + 2;
-				if(cp)
-					r->request.contentLength=atoi(cp);
-			}
-#endif
 			continue;
 		}
 	}
-
-
-#if 0
-	/* XXX: For WifiDog, we only process the query string parameters
-	   but keep the GET variables in the request.query!
-	*/
-	/*
-	** Process and POST data
-	*/
-	if (r->request.contentLength > 0)
-	{
-		bzero(buf, HTTP_MAX_LEN);
-		_httpd_readBuf(r, buf, r->request.contentLength);
-		_httpd_storeData(r, buf);
-		
-	}
-#endif
 
 	/*
 	** Process any URL data
