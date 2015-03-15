@@ -43,6 +43,7 @@
 #include "http.h"
 #include "auth.h"
 #include "firewall.h"
+#include "config.h"
 
 #include "util.h"
 
@@ -97,6 +98,8 @@ typedef enum {
 	oTrustedMACList,
 	oHtmlMessageFile,
 	oProxyPort,
+	oSSLPeerVerification,
+	oSSLCertPath,
 } OpCodes;
 
 /** @internal
@@ -137,6 +140,8 @@ static const struct {
 	{ "trustedmaclist",		oTrustedMACList },
 	{ "htmlmessagefile",		oHtmlMessageFile },
 	{ "proxyport",			oProxyPort },
+	{ "sslpeerverification",		oSSLPeerVerification },
+	{ "sslcertpath",			oSSLCertPath },
 	{ NULL,				oBadOption },
 };
 
@@ -186,6 +191,8 @@ config_init(void)
 	config.rulesets = NULL;
 	config.trustedmaclist = NULL;
 	config.proxy_port = 0;
+	config.ssl_certs = safe_strdup(DEFAULT_AUTHSERVSSLCERTPATH);
+	config.ssl_verify = DEFAULT_AUTHSERVSSLPEERVER;
 }
 
 /**
@@ -776,7 +783,20 @@ config_read(const char *filename)
 				case oProxyPort:
 					sscanf(p1, "%d", &config.proxy_port);
 					break;
-
+				case oSSLCertPath:
+					config.ssl_certs = safe_strdup(p1);
+					#ifndef USE_CYASSL
+					debug(LOG_WARNING, "SSLCertPath is set but not SSL compiled in. Ignoring!");
+					#endif
+					break;
+				case oSSLPeerVerification:
+					config.ssl_verify = parse_boolean_value(p1);
+					if (config.ssl_verify < 0)
+						config.ssl_verify = 0;
+					#ifndef USE_CYASSL
+					debug(LOG_WARNING, "SSLPeerVerification is set but no SSL compiled in. Ignoring!");
+					#endif
+                    break;
 				}
 			}
 		}
