@@ -36,7 +36,8 @@
 #include "httpd.h"
 #include "httpd_priv.h"
 
-int _httpd_net_read(sock, buf, len)
+int
+_httpd_net_read(sock, buf, len)
 int sock;
 char *buf;
 int len;
@@ -66,7 +67,8 @@ int len;
 #endif
 }
 
-int _httpd_net_write(sock, buf, len)
+int
+_httpd_net_write(sock, buf, len)
 int sock;
 char *buf;
 int len;
@@ -78,7 +80,8 @@ int len;
 #endif
 }
 
-int _httpd_readChar(request * r, char *cp)
+int
+_httpd_readChar(request * r, char *cp)
 {
     if (r->readBufRemain == 0) {
         bzero(r->readBuf, HTTP_READ_BUF_LEN + 1);
@@ -93,7 +96,8 @@ int _httpd_readChar(request * r, char *cp)
     return (1);
 }
 
-int _httpd_readLine(request * r, char *destBuf, int len)
+int
+_httpd_readLine(request * r, char *destBuf, int len)
 {
     char curChar, *dst;
     int count;
@@ -120,7 +124,8 @@ int _httpd_readLine(request * r, char *destBuf, int len)
     return (1);
 }
 
-int _httpd_readBuf(request * r, char *destBuf, int len)
+int
+_httpd_readBuf(request * r, char *destBuf, int len)
 {
     char curChar, *dst;
     int count;
@@ -136,7 +141,8 @@ int _httpd_readBuf(request * r, char *destBuf, int len)
     return (1);
 }
 
-void _httpd_writeAccessLog(httpd * server, request * r)
+void
+_httpd_writeAccessLog(httpd * server, request * r)
 {
     char dateBuf[30];
     struct tm *timePtr;
@@ -154,7 +160,8 @@ void _httpd_writeAccessLog(httpd * server, request * r)
             httpdRequestPath(r), responseCode, r->response.responseLength);
 }
 
-void _httpd_writeErrorLog(httpd * server, request * r, char *level, char *message)
+void
+_httpd_writeErrorLog(httpd * server, request * r, char *level, char *message)
 {
     char dateBuf[30];
     struct tm *timePtr;
@@ -172,7 +179,8 @@ void _httpd_writeErrorLog(httpd * server, request * r, char *level, char *messag
     }
 }
 
-int _httpd_decode(bufcoded, bufplain, outbufsize)
+int
+_httpd_decode(bufcoded, bufplain, outbufsize)
 char *bufcoded;
 char *bufplain;
 int outbufsize;
@@ -247,13 +255,15 @@ int outbufsize;
     return (nbytesdecoded);
 }
 
-char _httpd_from_hex(c)
+char
+_httpd_from_hex(c)
 char c;
 {
     return c >= '0' && c <= '9' ? c - '0' : c >= 'A' && c <= 'F' ? c - 'A' + 10 : c - 'a' + 10; /* accept small letters just in case */
 }
 
-char *_httpd_unescape(str)
+char *
+_httpd_unescape(str)
 char *str;
 {
     char *p = str;
@@ -283,7 +293,8 @@ char *str;
     return str;
 }
 
-void _httpd_freeVariables(var)
+void
+_httpd_freeVariables(var)
 httpVar *var;
 {
     httpVar *curVar, *lastVar;
@@ -303,7 +314,8 @@ httpVar *var;
     return;
 }
 
-void _httpd_storeData(request * r, char *query)
+void
+_httpd_storeData(request * r, char *query)
 {
     char *cp, *cp2, *var, *val, *tmpVal;
 
@@ -359,7 +371,8 @@ void _httpd_storeData(request * r, char *query)
     free(var);
 }
 
-void _httpd_formatTimeString(char *ptr, int clock)
+void
+_httpd_formatTimeString(char *ptr, int clock)
 {
     struct tm *timePtr;
     time_t t;
@@ -369,7 +382,8 @@ void _httpd_formatTimeString(char *ptr, int clock)
     strftime(ptr, HTTP_TIME_STRING_LEN, "%a, %d %b %Y %T GMT", timePtr);
 }
 
-void _httpd_sendHeaders(request * r, int contentLength, int modTime)
+void
+_httpd_sendHeaders(request * r, int contentLength, int modTime)
 {
     char tmpBuf[80], timeBuf[HTTP_TIME_STRING_LEN];
 
@@ -405,7 +419,8 @@ void _httpd_sendHeaders(request * r, int contentLength, int modTime)
     _httpd_net_write(r->clientSock, "\n", 1);
 }
 
-httpDir *_httpd_findContentDir(server, dir, createFlag)
+httpDir *
+_httpd_findContentDir(server, dir, createFlag)
 httpd *server;
 char *dir;
 int createFlag;
@@ -441,7 +456,8 @@ int createFlag;
     return (curItem);
 }
 
-httpContent *_httpd_findContentEntry(request * r, httpDir * dir, char *entryName)
+httpContent *
+_httpd_findContentEntry(request * r, httpDir * dir, char *entryName)
 {
     httpContent *curEntry;
 
@@ -460,7 +476,8 @@ httpContent *_httpd_findContentEntry(request * r, httpDir * dir, char *entryName
     return (curEntry);
 }
 
-void _httpd_send304(httpd * server, request * r)
+void
+_httpd_send304(httpd * server, request * r)
 {
     if (server->errorFunction304) {
         (server->errorFunction304) (server, r, 304);
@@ -470,7 +487,8 @@ void _httpd_send304(httpd * server, request * r)
     }
 }
 
-void _httpd_send403(httpd * server, request * r)
+void
+_httpd_send403(httpd * server, request * r)
 {
     if (server->errorFunction403) {
         (server->errorFunction403) (server, r, 403);
@@ -483,7 +501,8 @@ void _httpd_send403(httpd * server, request * r)
     }
 }
 
-void _httpd_send404(httpd * server, request * r)
+void
+_httpd_send404(httpd * server, request * r)
 {
     char msg[HTTP_MAX_URL];
 
@@ -507,7 +526,8 @@ void _httpd_send404(httpd * server, request * r)
     }
 }
 
-void _httpd_catFile(request * r, const char *path)
+void
+_httpd_catFile(request * r, const char *path)
 {
     int fd, len;
     char buf[HTTP_MAX_LEN];
@@ -524,7 +544,8 @@ void _httpd_catFile(request * r, const char *path)
     close(fd);
 }
 
-void _httpd_sendStatic(httpd * server, request * r, char *data)
+void
+_httpd_sendStatic(httpd * server, request * r, char *data)
 {
     if (_httpd_checkLastModified(r, server->startTime) == 0) {
         _httpd_send304(server, r);
@@ -533,7 +554,8 @@ void _httpd_sendStatic(httpd * server, request * r, char *data)
     httpdOutput(r, data);
 }
 
-void _httpd_sendFile(httpd * server, request * r, char *path)
+void
+_httpd_sendFile(httpd * server, request * r, char *path)
 {
     char *suffix;
     struct stat sbuf;
@@ -563,7 +585,8 @@ void _httpd_sendFile(httpd * server, request * r, char *path)
     }
 }
 
-int _httpd_sendDirectoryEntry(httpd * server, request * r, httpContent * entry, char *entryName)
+int
+_httpd_sendDirectoryEntry(httpd * server, request * r, httpContent * entry, char *entryName)
 {
     char path[HTTP_MAX_URL];
 
@@ -572,13 +595,15 @@ int _httpd_sendDirectoryEntry(httpd * server, request * r, httpContent * entry, 
     return (0);
 }
 
-void _httpd_sendText(request * r, char *msg)
+void
+_httpd_sendText(request * r, char *msg)
 {
     r->response.responseLength += strlen(msg);
     _httpd_net_write(r->clientSock, msg, strlen(msg));
 }
 
-int _httpd_checkLastModified(request * r, int modTime)
+int
+_httpd_checkLastModified(request * r, int modTime)
 {
     char timeBuf[HTTP_TIME_STRING_LEN];
 
@@ -609,7 +634,8 @@ static unsigned char isAcceptable[96] =
 
 static char *hex = "0123456789ABCDEF";
 
-char *_httpd_escape(str)
+char *
+_httpd_escape(str)
 const char *str;
 {
     unsigned char mask = URL_XPALPHAS;
@@ -639,7 +665,8 @@ const char *str;
     return result;
 }
 
-void _httpd_sanitiseUrl(url)
+void
+_httpd_sanitiseUrl(url)
 char *url;
 {
     char *from, *to, *last;

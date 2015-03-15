@@ -77,4 +77,7 @@ extern "C" {
     httpContent *_httpd_findContentEntry __ANSI_PROTO((request *, httpDir *, char *));
     httpDir *_httpd_findContentDir __ANSI_PROTO((httpd *, char *, int));
 
+#ifdef __cplusplus
+}
+#endif
 #endif                          /* LIB_HTTPD_PRIV_H */

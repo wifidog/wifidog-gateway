@@ -40,7 +40,8 @@
 ** PRIVATE ROUTINES
 **************************************************************************/
 
-static int scanCidr(val, result, length)
+static int
+scanCidr(val, result, length)
 char *val;
 u_int *result, *length;
 {
@@ -81,7 +82,8 @@ u_int *result, *length;
     return (0);
 }
 
-static int _isInCidrBlock(httpd * server, request * r, int addr1, int len1, int addr2, int len2)
+static int
+_isInCidrBlock(httpd * server, request * r, int addr1, int len1, int addr2, int len2)
 {
     int count, mask;
 
@@ -112,7 +114,8 @@ static int _isInCidrBlock(httpd * server, request * r, int addr1, int len1, int 
 ** PUBLIC ROUTINES
 **************************************************************************/
 
-httpAcl *httpdAddAcl(server, acl, cidr, action)
+httpAcl *
+httpdAddAcl(server, acl, cidr, action)
 httpd *server;
 httpAcl *acl;
 char *cidr;
@@ -158,7 +161,8 @@ int action;
     return (acl);
 }
 
-int httpdCheckAcl(httpd * server, request * r, httpAcl * acl)
+int
+httpdCheckAcl(httpd * server, request * r, httpAcl * acl)
 {
     httpAcl *cur;
     int addr, len, res, action;
@@ -181,7 +185,8 @@ int httpdCheckAcl(httpd * server, request * r, httpAcl * acl)
     return (action);
 }
 
-void httpdSetDefaultAcl(server, acl)
+void
+httpdSetDefaultAcl(server, acl)
 httpd *server;
 httpAcl *acl;
 {

@@ -48,7 +48,8 @@
 #include <varargs.h>
 #endif
 
-char *httpdUrlEncode(str)
+char *
+httpdUrlEncode(str)
 const char *str;
 {
     char *new, *cp;
@@ -66,7 +67,8 @@ const char *str;
     return (new);
 }
 
-char *httpdRequestMethodName(request * r)
+char *
+httpdRequestMethodName(request * r)
 {
     switch (r->request.method) {
     case HTTP_GET:
@@ -78,7 +80,8 @@ char *httpdRequestMethodName(request * r)
     }
 }
 
-httpVar *httpdGetVariableByName(request * r, const char *name)
+httpVar *
+httpdGetVariableByName(request * r, const char *name)
 {
     httpVar *curVar;
 
@@ -91,7 +94,8 @@ httpVar *httpdGetVariableByName(request * r, const char *name)
     return (NULL);
 }
 
-httpVar *httpdGetVariableByPrefix(request * r, const char *prefix)
+httpVar *
+httpdGetVariableByPrefix(request * r, const char *prefix)
 {
     httpVar *curVar;
 
@@ -106,7 +110,8 @@ httpVar *httpdGetVariableByPrefix(request * r, const char *prefix)
     return (NULL);
 }
 
-int httpdSetVariableValue(request * r, const char *name, const char *value)
+int
+httpdSetVariableValue(request * r, const char *name, const char *value)
 {
     httpVar *var;
 
@@ -121,7 +126,8 @@ int httpdSetVariableValue(request * r, const char *name, const char *value)
     }
 }
 
-httpVar *httpdGetVariableByPrefixedName(request * r, const char *prefix, const char *name)
+httpVar *
+httpdGetVariableByPrefixedName(request * r, const char *prefix, const char *name)
 {
     httpVar *curVar;
     int prefixLen;
@@ -139,7 +145,8 @@ httpVar *httpdGetVariableByPrefixedName(request * r, const char *prefix, const c
     return (NULL);
 }
 
-httpVar *httpdGetNextVariableByPrefix(curVar, prefix)
+httpVar *
+httpdGetNextVariableByPrefix(curVar, prefix)
 httpVar *curVar;
 const char *prefix;
 {
@@ -153,7 +160,8 @@ const char *prefix;
     return (NULL);
 }
 
-int httpdAddVariable(request * r, const char *name, const char *value)
+int
+httpdAddVariable(request * r, const char *name, const char *value)
 {
     httpVar *curVar, *lastVar, *newVar;
 
@@ -185,7 +193,8 @@ int httpdAddVariable(request * r, const char *name, const char *value)
     return (0);
 }
 
-httpd *httpdCreate(host, port)
+httpd *
+httpdCreate(host, port)
 char *host;
 int port;
 {
@@ -276,7 +285,8 @@ int port;
     return (new);
 }
 
-void httpdDestroy(server)
+void
+httpdDestroy(server)
 httpd *server;
 {
     if (server == NULL)
@@ -286,7 +296,8 @@ httpd *server;
     free(server);
 }
 
-request *httpdGetConnection(server, timeout)
+request *
+httpdGetConnection(server, timeout)
 httpd *server;
 struct timeval *timeout;
 {
@@ -348,7 +359,8 @@ struct timeval *timeout;
     return (r);
 }
 
-int httpdReadRequest(httpd * server, request * r)
+int
+httpdReadRequest(httpd * server, request * r)
 {
     char buf[HTTP_MAX_LEN];
     int count, inHeaders;
@@ -474,7 +486,8 @@ int httpdReadRequest(httpd * server, request * r)
     return (0);
 }
 
-void httpdEndRequest(request * r)
+void
+httpdEndRequest(request * r)
 {
     _httpd_freeVariables(r->variables);
     shutdown(r->clientSock, 2);
@@ -482,12 +495,14 @@ void httpdEndRequest(request * r)
     free(r);
 }
 
-void httpdFreeVariables(request * r)
+void
+httpdFreeVariables(request * r)
 {
     _httpd_freeVariables(r->variables);
 }
 
-void httpdDumpVariables(request * r)
+void
+httpdDumpVariables(request * r)
 {
     httpVar *curVar, *curVal;
 
@@ -503,7 +518,8 @@ void httpdDumpVariables(request * r)
     }
 }
 
-void httpdSetFileBase(server, path)
+void
+httpdSetFileBase(server, path)
 httpd *server;
 const char *path;
 {
@@ -511,7 +527,8 @@ const char *path;
     server->fileBasePath[HTTP_MAX_URL - 1] = 0;
 }
 
-int httpdAddFileContent(server, dir, name, indexFlag, preload, path)
+int
+httpdAddFileContent(server, dir, name, indexFlag, preload, path)
 httpd *server;
 char *dir, *name;
 int (*preload) ();
@@ -543,7 +560,8 @@ char *path;
     return (0);
 }
 
-int httpdAddWildcardContent(server, dir, preload, path)
+int
+httpdAddWildcardContent(server, dir, preload, path)
 httpd *server;
 char *dir;
 int (*preload) ();
@@ -574,7 +592,8 @@ char *path;
     return (0);
 }
 
-int httpdAddCContent(server, dir, name, indexFlag, preload, function)
+int
+httpdAddCContent(server, dir, name, indexFlag, preload, function)
 httpd *server;
 char *dir;
 char *name;
@@ -599,7 +618,8 @@ void (*function) ();
     return (0);
 }
 
-int httpdAddCWildcardContent(server, dir, preload, function)
+int
+httpdAddCWildcardContent(server, dir, preload, function)
 httpd *server;
 char *dir;
 int (*preload) ();
@@ -623,7 +643,8 @@ void (*function) ();
     return (0);
 }
 
-int httpdAddStaticContent(server, dir, name, indexFlag, preload, data)
+int
+httpdAddStaticContent(server, dir, name, indexFlag, preload, data)
 httpd *server;
 char *dir;
 char *name;
@@ -648,23 +669,27 @@ char *data;
     return (0);
 }
 
-void httpdSendHeaders(request * r)
+void
+httpdSendHeaders(request * r)
 {
     _httpd_sendHeaders(r, 0, 0);
 }
 
-void httpdSetResponse(request * r, const char *msg)
+void
+httpdSetResponse(request * r, const char *msg)
 {
     strncpy(r->response.response, msg, HTTP_MAX_URL);
     r->response.response[HTTP_MAX_URL - 1] = 0;
 }
 
-void httpdSetContentType(request * r, const char *type)
+void
+httpdSetContentType(request * r, const char *type)
 {
     strcpy(r->response.contentType, type);
 }
 
-void httpdAddHeader(request * r, const char *msg)
+void
+httpdAddHeader(request * r, const char *msg)
 {
     int size;
     size = HTTP_MAX_HEADERS - 2 - strlen(r->response.headers);
@@ -675,7 +700,8 @@ void httpdAddHeader(request * r, const char *msg)
     }
 }
 
-void httpdSetCookie(request * r, const char *name, const char *value)
+void
+httpdSetCookie(request * r, const char *name, const char *value)
 {
     char buf[HTTP_MAX_URL];
 
@@ -683,7 +709,8 @@ void httpdSetCookie(request * r, const char *name, const char *value)
     httpdAddHeader(r, buf);
 }
 
-void httpdOutput(request * r, const char *msg)
+void
+httpdOutput(request * r, const char *msg)
 {
     const char *src;
     char buf[HTTP_MAX_LEN], varName[80], *dest;
@@ -732,10 +759,12 @@ void httpdOutput(request * r, const char *msg)
 }
 
 #ifdef HAVE_STDARG_H
-void httpdPrintf(request * r, const char *fmt, ...)
+void
+httpdPrintf(request * r, const char *fmt, ...)
 {
 #else
-void httpdPrintf(va_alist)
+void
+httpdPrintf(va_alist)
 va_dcl
 {
     request *r;;
@@ -758,7 +787,8 @@ va_dcl
     _httpd_net_write(r->clientSock, buf, strlen(buf));
 }
 
-void httpdProcessRequest(httpd * server, request * r)
+void
+httpdProcessRequest(httpd * server, request * r)
 {
     char dirName[HTTP_MAX_URL], entryName[HTTP_MAX_URL], *cp;
     httpDir *dir;
@@ -819,21 +849,24 @@ void httpdProcessRequest(httpd * server, request * r)
     _httpd_writeAccessLog(server, r);
 }
 
-void httpdSetAccessLog(server, fp)
+void
+httpdSetAccessLog(server, fp)
 httpd *server;
 FILE *fp;
 {
     server->accessLog = fp;
 }
 
-void httpdSetErrorLog(server, fp)
+void
+httpdSetErrorLog(server, fp)
 httpd *server;
 FILE *fp;
 {
     server->errorLog = fp;
 }
 
-int httpdAuthenticate(request * r, const char *realm)
+int
+httpdAuthenticate(request * r, const char *realm)
 {
     char buffer[255];
 
@@ -847,7 +880,8 @@ int httpdAuthenticate(request * r, const char *realm)
     return (1);
 }
 
-int httpdSetErrorFunction(httpd * server, int error, void (*function) ())
+int
+httpdSetErrorFunction(httpd * server, int error, void (*function) ())
 {
     char errBuf[80];
 
@@ -870,7 +904,8 @@ int httpdSetErrorFunction(httpd * server, int error, void (*function) ())
     return (0);
 }
 
-void httpdSendFile(httpd * server, request * r, const char *path)
+void
+httpdSendFile(httpd * server, request * r, const char *path)
 {
     char *suffix;
     struct stat sbuf;
@@ -901,7 +936,8 @@ void httpdSendFile(httpd * server, request * r, const char *path)
     }
 }
 
-void httpdForceAuthenticate(request * r, const char *realm)
+void
+httpdForceAuthenticate(request * r, const char *realm)
 {
     char buffer[255];
 
