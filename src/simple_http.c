@@ -229,11 +229,8 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 			}
 			else if (numbytes == 0) {
 				/* CyaSSL_read returns 0 on a clean shutdown or if the peer closed the
-				connection. We don't handle this right now, but we do some logging
-				on the error message. */
-				sslerr = (unsigned long) CyaSSL_get_error(ssl, numbytes);
-				CyaSSL_ERR_error_string(sslerr, sslerrmsg);
-				debug(LOG_DEBUG, "Finished reading from server. CyaSSL message: %s", sslerrmsg);
+				connection. We can't distinguish between these cases right now. */
+				debug(LOG_DEBUG, "Finished reading from server.");
 				done = 1;
 			}
 			else {
