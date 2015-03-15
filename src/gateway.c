@@ -404,6 +404,7 @@ main_loop(void)
 	httpdAddCContent(webserver, "/wifidog", "about", 0, NULL, http_callback_about);
 	httpdAddCContent(webserver, "/wifidog", "status", 0, NULL, http_callback_status);
 	httpdAddCContent(webserver, "/wifidog", "auth", 0, NULL, http_callback_auth);
+	httpdAddCContent(webserver, "/wifidog", "disconnect", 0, NULL, http_callback_disconnect);
 
 	httpdAddC404Content(webserver, http_callback_404);
 

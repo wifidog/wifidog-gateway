@@ -399,10 +399,7 @@ wdctl_reset(int fd, const char *arg)
 	debug(LOG_DEBUG, "Got node %x.", node);
 	
 	/* deny.... */
-	/* TODO: maybe just deleting the connection is not best... But this
-	 * is a manual command, I don't anticipate it'll be that useful. */
-	fw_deny(node->ip, node->mac, node->fw_connection_state);
-	client_list_delete(node);
+	logout_client(node);
 
 	UNLOCK_CLIENT_LIST();
 

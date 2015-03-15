@@ -225,7 +225,7 @@ client_list_find_by_token(const char *token)
  * @param client Points to the client to be freed
  */
 void
-_client_list_free_node(t_client * client)
+client_free_node(t_client * client)
 {
 
     if (client->mac != NULL)
@@ -250,6 +250,18 @@ _client_list_free_node(t_client * client)
 void
 client_list_delete(t_client * client)
 {
+    client_list_remove(client);
+    client_free_node(client);
+}
+
+/**
+ * @brief Removes a client from the connections list
+ *
+ * @param client Points to the client to be deleted
+ */
+void
+client_list_remove(t_client * client)
+{
     t_client         *ptr;
 
     ptr = firstclient;
@@ -258,7 +270,6 @@ client_list_delete(t_client * client)
         debug(LOG_ERR, "Node list empty!");
     } else if (ptr == client) {
         firstclient = ptr->next;
-        _client_list_free_node(client);
     } else {
         /* Loop forward until we reach our point in the list. */
         while (ptr->next != NULL && ptr->next != client) {
@@ -267,10 +278,8 @@ client_list_delete(t_client * client)
         /* If we reach the end before finding out element, complain. */
         if (ptr->next == NULL) {
             debug(LOG_ERR, "Node to delete could not be found.");
-        /* Free element. */
         } else {
             ptr->next = client->next;
-            _client_list_free_node(client);
         }
     }
 }
