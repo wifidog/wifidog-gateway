@@ -634,6 +634,8 @@ void _httpd_sendFile(httpd *server, request *r, char *path)
 			strcpy(r->response.contentType,"image/xbm");
 		if (strcasecmp(suffix,".png") == 0) 
 			strcpy(r->response.contentType,"image/png");
+		if (strcasecmp(suffix,".css") == 0) 
+			strcpy(r->response.contentType,"text/css");
 	}
 	if (stat(path, &sbuf) < 0)
 	{
