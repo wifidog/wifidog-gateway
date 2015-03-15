@@ -150,8 +150,8 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 		int err = CyaSSL_CTX_load_verify_locations(ctx, NULL, config->ssl_certs);
 		if (err != SSL_SUCCESS) {
 			debug(LOG_ERR, "Could not load SSL certificates (error %d)", err);
-			if (err == COMPRESS_E) {
-				debug(LOG_ERR, "Error is COMPRESS_E - try compiling cyassl/wolfssl with --enable-ecc");
+			if (err == ASN_UNKNOWN_OID_E) {
+				debug(LOG_ERR, "Error is ASN_UNKNOWN_OID_E - try compiling cyassl/wolfssl with --enable-ecc");
 			} else {
 				debug(LOG_ERR, "Make sure that SSLCertPath points to the correct path in the config file");
 				debug(LOG_ERR, "Or disable certificate loading with 'SSLPeerVerification No'.");
