@@ -59,6 +59,9 @@ extern	pthread_mutex_t	config_mutex;
 
 /* From commandline.c: */
 extern char ** restartargv;
+
+
+static int write_to_socket(int, char *, size_t);
 static void *thread_wdctl_handler(void *);
 static void wdctl_status(int);
 static void wdctl_stop(int);
@@ -183,16 +186,6 @@ thread_wdctl_handler(void *arg)
 		read_bytes += (size_t) len;
 	}
 
-	if (strncmp(request, "status", 6) == 0) {
-		wdctl_status(fd);
-	} else if (strncmp(request, "stop", 4) == 0) {
-		wdctl_stop(fd);
-	} else if (strncmp(request, "reset", 5) == 0) {
-		wdctl_reset(fd, (request + 6));
-	} else if (strncmp(request, "restart", 7) == 0) {
-		wdctl_restart(fd);
-	}
-
 	if (!done) {
 		debug(LOG_ERR, "Invalid wdctl request.");
 		shutdown(fd, 2);
@@ -201,12 +194,44 @@ thread_wdctl_handler(void *arg)
 	}
 
 	debug(LOG_DEBUG, "Request received: [%s]", request);
+
+	if (strncmp(request, "status", 6) == 0) {
+		wdctl_status(fd);
+	} else if (strncmp(request, "stop", 4) == 0) {
+		wdctl_stop(fd);
+	} else if (strncmp(request, "reset", 5) == 0) {
+		wdctl_reset(fd, (request + 6));
+	} else if (strncmp(request, "restart", 7) == 0) {
+		wdctl_restart(fd);
+	} else {
+        debug(LOG_ERR, "Request was not understood!");
+    }
 	
 	shutdown(fd, 2);
 	close(fd);
 	debug(LOG_DEBUG, "Exiting thread_wdctl_handler....");
 
 	return NULL;
+}
+
+static int
+write_to_socket(int fd, char *text, size_t len)
+{
+    ssize_t retval;
+    size_t written;
+
+    written = 0;
+    while (written < len) {
+        retval = write(fd, (text + written), len - written);
+        if (retval == -1) {
+            debug(LOG_CRIT, "Failed to write client data to child: %s", strerror(errno));
+            return 0;
+        }
+        else {
+            written += retval;
+        }
+    }
+    return 1;
 }
 
 static void
@@ -218,8 +243,7 @@ wdctl_status(int fd)
 	status = get_status_text();
 	len = strlen(status);
 
-	if(write(fd, status, len) == -1)
-		debug(LOG_CRIT, "Write error: %s", strerror(errno));
+	write_to_socket(fd, status, len); /* XXX Not handling error because we'd just print the same log line. */
 
 	free(status);
 }
@@ -245,7 +269,6 @@ wdctl_restart(int afd)
 	t_client * client = NULL;
 	char * tempstring = NULL;
 	pid_t pid;
-	ssize_t written;
 	socklen_t len;
 
 	conf = config_get_config();
@@ -318,17 +341,7 @@ wdctl_restart(int afd)
 			/* Send this client */
 			safe_asprintf(&tempstring, "CLIENT|ip=%s|mac=%s|token=%s|fw_connection_state=%u|fd=%d|counters_incoming=%llu|counters_outgoing=%llu|counters_last_updated=%lu\n", client->ip, client->mac, client->token, client->fw_connection_state, client->fd, client->counters.incoming, client->counters.outgoing, client->counters.last_updated);
 			debug(LOG_DEBUG, "Sending to child client data: %s", tempstring);
-			len = 0;
-			while (len != strlen(tempstring)) {
-				written = write(fd, (tempstring + len), strlen(tempstring) - len);
-				if (written == -1) {
-					debug(LOG_ERR, "Failed to write client data to child: %s", strerror(errno));
-					break;
-				}
-				else {
-					len += (socklen_t) written;
-				}
-			}
+            write_to_socket(fd, tempstring, strlen(tempstring)); /* XXX Despicably not handling error. */
 			free(tempstring);
 			client = client->next;
 		}
@@ -378,8 +391,7 @@ wdctl_reset(int fd, const char *arg)
 	else {
 		debug(LOG_DEBUG, "Client not found.");
 		UNLOCK_CLIENT_LIST();
-		if(write(fd, "No", 2) == -1)
-			debug(LOG_CRIT, "Unable to write No: %s", strerror(errno));
+		write_to_socket(fd, "No", 2); /* Error handling in fucntion sufficient. */
 
 		return;
 	}
@@ -394,8 +406,7 @@ wdctl_reset(int fd, const char *arg)
 
 	UNLOCK_CLIENT_LIST();
 
-	if(write(fd, "Yes", 3) == -1)
-		debug(LOG_CRIT, "Unable to write Yes: %s", strerror(errno));
+	write_to_socket(fd, "Yes", 3);
 
 	debug(LOG_DEBUG, "Exiting wdctl_reset...");
 }
