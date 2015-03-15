@@ -38,7 +38,10 @@
 #ifdef USE_CYASSL
 #include <cyassl/ssl.h>
 #include "conf.h"
+/* For CYASSL_MAX_ERROR_SZ */
 #include <cyassl/ctaocrypt/types.h>
+/* For COMPRESS_E */
+#include <cyassl/ctaocrypt/error-crypt.h>
 #endif
 
 int http_get(const int sockfd, char *buf) {
@@ -150,8 +153,12 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 		int err = CyaSSL_CTX_load_verify_locations(ctx, NULL, config->ssl_certs);
 		if (err != SSL_SUCCESS) {
 			debug(LOG_ERR, "Could not load SSL certificates (error %d)", err);
-			debug(LOG_ERR, "Make sure that SSLCertPath points to the correct path in the config file");
-			debug(LOG_ERR, "Or disable certificate loading with SSLNoPeerVerification.");
+			if (err == COMPRESS_E) {
+				debug(LOG_ERR, "Error is COMPRESS_E - try compiling cyassl/wolfssl with --enable-ecc");
+			} else {
+				debug(LOG_ERR, "Make sure that SSLCertPath points to the correct path in the config file");
+				debug(LOG_ERR, "Or disable certificate loading with SSLNoPeerVerification.");
+			}
 			return -1;
 		}
 		debug(LOG_INFO, "Loading SSL certificates from %s", config->ssl_certs);
