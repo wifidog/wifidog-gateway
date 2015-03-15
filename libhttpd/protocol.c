@@ -291,10 +291,9 @@ char * _httpd_unescape(str)
 {
     char * p = str;
     char * q = str;
-    static char blank[] = "";
 
     if (!str)
-        return(blank);
+        return("");
     while(*p) {
         if (*p == '%') {
             p++;
