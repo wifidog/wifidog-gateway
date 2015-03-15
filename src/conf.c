@@ -98,7 +98,7 @@ typedef enum {
 	oTrustedMACList,
 	oHtmlMessageFile,
 	oProxyPort,
-	oSSLNoPeerVerification,
+	oSSLPeerVerification,
 	oSSLCertPath,
 } OpCodes;
 
@@ -140,7 +140,7 @@ static const struct {
 	{ "trustedmaclist",		oTrustedMACList },
 	{ "htmlmessagefile",		oHtmlMessageFile },
 	{ "proxyport",			oProxyPort },
-	{ "sslnopeerverification",		oSSLNoPeerVerification },
+	{ "sslpeerverification",		oSSLPeerVerification },
 	{ "sslcertpath",			oSSLCertPath },
 	{ NULL,				oBadOption },
 };
@@ -192,7 +192,7 @@ config_init(void)
 	config.trustedmaclist = NULL;
 	config.proxy_port = 0;
 	config.ssl_certs = safe_strdup(DEFAULT_AUTHSERVSSLCERTPATH);
-	config.ssl_no_verify = DEFAULT_AUTHSERVSSLNOPEERVER;
+	config.ssl_verify = DEFAULT_AUTHSERVSSLPEERVER;
 }
 
 /**
@@ -789,12 +789,12 @@ config_read(const char *filename)
 					debug(LOG_WARNING, "SSLCertPath is set but not SSL compiled in. Ignoring!");
 					#endif
 					break;
-				case oSSLNoPeerVerification:
-					config.ssl_no_verify = parse_boolean_value(p1);
-					if (config.ssl_no_verify < 0)
-						config.ssl_no_verify = 0;
+				case oSSLPeerVerification:
+					config.ssl_verify = parse_boolean_value(p1);
+					if (config.ssl_verify < 0)
+						config.ssl_verify = 0;
 					#ifndef USE_CYASSL
-					debug(LOG_WARNING, "SSLNoPeerVerification is set but no SSL compiled in. Ignoring!");
+					debug(LOG_WARNING, "SSLPeerVerification is set but no SSL compiled in. Ignoring!");
 					#endif
                     break;
 				}

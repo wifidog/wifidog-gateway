@@ -144,10 +144,7 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 		return -1;
 	}
 
-	if (config->ssl_no_verify) {
-		CyaSSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, 0);
-		debug(LOG_INFO, "Disabling SSL certificate verification!");
-	} else {
+	if (config->ssl_verify) {
 		/* Use trusted certs */
 		/* Note: CyaSSL requires that the certificates are named by their hash values */
 		int err = CyaSSL_CTX_load_verify_locations(ctx, NULL, config->ssl_certs);
@@ -157,11 +154,14 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 				debug(LOG_ERR, "Error is COMPRESS_E - try compiling cyassl/wolfssl with --enable-ecc");
 			} else {
 				debug(LOG_ERR, "Make sure that SSLCertPath points to the correct path in the config file");
-				debug(LOG_ERR, "Or disable certificate loading with SSLNoPeerVerification.");
+				debug(LOG_ERR, "Or disable certificate loading with 'SSLPeerVerification No'.");
 			}
 			return -1;
 		}
 		debug(LOG_INFO, "Loading SSL certificates from %s", config->ssl_certs);
+	} else {
+		CyaSSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, 0);
+		debug(LOG_INFO, "Disabling SSL certificate verification!");
 	}
 
 	if (sockfd == -1) {
@@ -177,7 +177,7 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 		debug(LOG_ERR, "Could not create CyaSSL context.");
 		return -1;
 	}
-	if (! config->ssl_no_verify) {
+	if (config->ssl_verify) {
 		// Turn on domain name check
 		// Loading of CA certificates and verification of remote host name
 		// go hand in hand - one is useless without the other.
