@@ -194,18 +194,21 @@ int httpdCheckAcl(httpd *server, request *r, httpAcl *acl)
 
 
 	action = HTTP_ACL_DENY;
-	scanCidr(r->clientAddr, &addr, &len);
-	cur = acl;
-	while(cur)
-	{
-		res = _isInCidrBlock(server, r, cur->addr, cur->len, addr, len);
-		if (res == 1)
-		{
-			action = cur->action;
-			break;
-		}
-		cur = cur->next;
-	}
+	res = scanCidr(r->clientAddr, &addr, &len);  /* Returns -1 on conversion failure. */
+    if (res == 0)
+    {
+        cur = acl;
+        while(cur)
+        {
+            res = _isInCidrBlock(server, r, cur->addr, cur->len, addr, len);
+            if (res == 1)
+            {
+                action = cur->action;
+                break;
+            }
+            cur = cur->next;
+        }
+    }
 	if (action == HTTP_ACL_DENY)
 	{
 		_httpd_send403(r);
