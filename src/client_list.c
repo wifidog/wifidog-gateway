@@ -225,10 +225,9 @@ client_free_node(t_client * client)
 void
 client_list_delete(t_client * client)
 {
-	client_list_remove(client);
-	client_free_node(client);
+    client_list_remove(client);
+    client_free_node(client);
 }
-
 
 /**
  * @brief Removes a client from the connections list
@@ -252,9 +251,10 @@ client_list_remove(t_client * client)
             ptr = ptr->next;
         }
         /* If we reach the end before finding out element, complain. */
-        if (ptr->next == NULL)
+        if (ptr->next == NULL) {
             debug(LOG_ERR, "Node to delete could not be found.");
-        else
+        } else {
             ptr->next = client->next;
+        }
     }
 }
