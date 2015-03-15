@@ -256,7 +256,7 @@ httpd *httpdCreate(host, port)
 	}
 
 	/* The WinSock DLL is acceptable. Proceed. */
- 	}
+	}
 #endif
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -851,7 +851,7 @@ void httpdAddHeader(request *r, const char *msg)
 	int size;
 	size = HTTP_MAX_HEADERS - 2 - strlen(r->response.headers);
 	if(size > 0)
-	{	
+	{
 		strncat(r->response.headers,msg,size);
 		if (r->response.headers[strlen(r->response.headers) - 1] != '\n')
 			strcat(r->response.headers,"\n");
