@@ -176,7 +176,7 @@ int _connect_auth_server(int level) {
 	int sockfd;
 
     /* If there are no auth servers, error out, from scan-build warning. */
-    if (!config->auth_servers) {
+    if (NULL == config->auth_servers) {
         return(-1);
     }
 
