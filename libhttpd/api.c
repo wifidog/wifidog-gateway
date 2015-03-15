@@ -1059,7 +1059,7 @@ void httpdSetErrorLog(server, fp)
 	server->errorLog = fp;
 }
 
-void httpdAuthenticate(request *r, const char *realm)
+int httpdAuthenticate(request *r, const char *realm)
 {
 	char	buffer[255];
 
@@ -1070,7 +1070,9 @@ void httpdAuthenticate(request *r, const char *realm)
 			"WWW-Authenticate: Basic realm=\"%s\"\n", realm);
 		httpdAddHeader(r, buffer);
 		httpdOutput(r,"\n");
+        return(0);
 	}
+    return(1);
 }
 
 

@@ -205,6 +205,7 @@ int httpdSetVariableValue __ANSI_PROTO((request*, const char*, const char*));
 request *httpdGetConnection __ANSI_PROTO((httpd*, struct timeval*));
 int httpdReadRequest __ANSI_PROTO((httpd*, request*));
 int httpdCheckAcl __ANSI_PROTO((httpd*, request *, httpAcl*));
+int httpdAuthenticate __ANSI_PROTO((request*, const char*));
 int httpdAddC404Content __ANSI_PROTO((httpd*,void(*)()));
 
 char *httpdRequestMethodName __ANSI_PROTO((request*));
@@ -237,7 +238,6 @@ httpVar *httpdGetNextVariableByPrefix __ANSI_PROTO((httpVar*, const char*));
 
 httpAcl *httpdAddAcl __ANSI_PROTO((httpd*, httpAcl*, char*, int));
 
-void httpdAuthenticate __ANSI_PROTO((request*, const char*));
 void httpdForceAuthenticate __ANSI_PROTO((request*, const char*));
 
 /***********************************************************************
