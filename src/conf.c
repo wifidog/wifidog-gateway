@@ -489,6 +489,7 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 	char *protocol = NULL; /**< protocol to block, tcp/udp/icmp */
 	char *mask = NULL; /**< Netmask */
 	char *other_kw = NULL; /**< other key word */
+	int mask_is_ipset = 0;
 	t_firewall_ruleset *tmpr;
 	t_firewall_ruleset *tmpr2;
 	t_firewall_rule *tmp;
@@ -531,6 +532,11 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 
 	/* Get the optional port or port range */
 	if (strncmp(leftover, "port", 4) == 0) {
+                if(protocol == NULL ||
+                	!(strncmp(protocol, "tcp", 3) == 0 || strncmp(protocol, "udp", 3) == 0)) {
+			debug(LOG_ERR, "ERROR: wifidog config file, section FirewallRuleset %s. Port without tcp or udp protocol.", ruleset);
+			return -3; /*< Fail */
+		}
 		TO_NEXT_WORD(leftover, finished);
 		/* Get port now */
 		port = leftover;
@@ -539,31 +545,49 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 			if (!isdigit((unsigned char)*(port + i)) && ((unsigned char)*(port + i) != ':'))
 				all_nums = 0; /*< No longer only digits */
 		if (!all_nums) {
-			debug(LOG_ERR, "Invalid port %s", port);
+			debug(LOG_ERR, "ERROR: wifidog config file, section FirewallRuleset %s. Invalid port %s", ruleset, port);
 			return -3; /*< Fail */
 		}
 	}
 
 	/* Now, further stuff is optional */
 	if (!finished) {
-		/* should be exactly "to" */
+		/* should be exactly "to" or "to-ipset" */
 		other_kw = leftover;
 		TO_NEXT_WORD(leftover, finished);
-		if (strcmp(other_kw, "to") || finished) {
+		if (!finished) {
+			/* Get arg now and check validity in next section */
+			mask = leftover;
+		}
+		if (strncmp(other_kw, "to-ipset", 8) == 0 && !finished)  {
+			mask_is_ipset = 1;
+		} else if (strncmp(other_kw, "to", 2) == 0 && !finished) {
+			/* Check if mask is valid */
+			all_nums = 1;
+			for (i = 0; *(mask + i) != '\0'; i++)
+				if (!isdigit((unsigned char)*(mask + i)) && (*(mask + i) != '.')
+						&& (*(mask + i) != '/'))
+					all_nums = 0; /*< No longer only digits */
+			if (!all_nums) {
+				debug(LOG_ERR, "Invalid mask %s", mask);
+				return -3; /*< Fail */
+			}
+		} else {
 			debug(LOG_ERR, "Invalid or unexpected keyword %s, "
-					"expecting \"to\"", other_kw);
+					"expecting \"to\" or \"to-ipset\"", other_kw);
 			return -4; /*< Fail */
 		}
-
-		/* Get port now */
-		mask = leftover;
 		TO_NEXT_WORD(leftover, finished);
+		if (!finished) {
+			debug(LOG_WARNING, "Ignoring trailining string after successfully parsing rule: %s",
+				leftover);
+		}
 	}
-
 	/* Generate rule record */
 	tmp = safe_malloc(sizeof(t_firewall_rule));
 	memset((void *)tmp, 0, sizeof(t_firewall_rule));
 	tmp->target = target;
+	tmp->mask_is_ipset = mask_is_ipset;
 	if (protocol != NULL)
 		tmp->protocol = safe_strdup(protocol);
 	if (port != NULL)
@@ -574,7 +598,7 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 		tmp->mask = safe_strdup(mask);
 
 	debug(LOG_DEBUG, "Adding Firewall Rule %s %s port %s to %s", token, tmp->protocol, tmp->port, tmp->mask);
-	
+
 	/* Append the rule record */
 	if (config.rulesets == NULL) {
 		config.rulesets = safe_malloc(sizeof(t_firewall_ruleset));
@@ -606,7 +630,7 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 			tmp2 = tmp2->next;
 		tmp2->next = tmp;
 	}
-	
+
 	return 1;
 }
 
@@ -810,11 +834,11 @@ parse_boolean_value(char *line)
 
 /* Parse possiblemac to see if it is valid MAC address format */
 int check_mac_format(char *possiblemac) {
-        char hex2[3];
-        return
-        sscanf(possiblemac,
-                "%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]",
-                hex2,hex2,hex2,hex2,hex2,hex2) == 6;
+	char hex2[3];
+	return
+		sscanf(possiblemac,
+				"%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]:%2[A-Fa-f0-9]",
+				hex2,hex2,hex2,hex2,hex2,hex2) == 6;
 }
 
 void parse_trusted_mac_list(const char *ptr) {
@@ -832,11 +856,10 @@ void parse_trusted_mac_list(const char *ptr) {
 
 	while ((possiblemac = strsep(&ptrcopy, ", "))) {
 		/* check for valid format */
-		
-                if (!check_mac_format(possiblemac)) {
-                        debug(LOG_ERR, "[%s] not a valid MAC address to trust. See option TrustedMACList in wifidog.conf for correct this mistake.", possiblemac);
-                        return;
-                } else {
+		if (!check_mac_format(possiblemac)) {
+			debug(LOG_ERR, "[%s] not a valid MAC address to trust. See option TrustedMACList in wifidog.conf for correct this mistake.", possiblemac);
+			return;
+		} else {
 			if (sscanf(possiblemac, " %17[A-Fa-f0-9:]", mac) == 1) {
 			/* Copy mac to the list */
 
