@@ -525,19 +525,34 @@ httpContent *_httpd_findContentEntry(request *r, httpDir *dir, char *entryName)
 
 void _httpd_send304(httpd *server, request *r)
 {
-	httpdSetResponse(r, "304 Not Modified\n");
-	_httpd_sendHeaders(r,0,0);
+    if (server->errorFunction304)
+    {
+        (server->errorFunction304)(server, r, 304);
+    }
+    else
+    {
+        httpdSetResponse(r, "304 Not Modified\n");
+	    _httpd_sendHeaders(r, 0, 0);
+    }
 }
 
 
-void _httpd_send403(request *r)
+void _httpd_send403(httpd *server, request *r)
 {
-	httpdSetResponse(r, "403 Permission Denied\n");
-	_httpd_sendHeaders(r,0,0);
-	_httpd_sendText(r,
-		"<HTML><HEAD><TITLE>403 Permission Denied</TITLE></HEAD>\n");
-	_httpd_sendText(r,
-		"<BODY><H1>Access to the request URL was denied!</H1>\n");
+    if (server->errorFunction403)
+    {
+        (server->errorFunction403)(server, r, 403);
+    }
+    else
+    {
+        httpdSetResponse(r, "403 Permission Denied\n");
+        _httpd_sendHeaders(r, 0, 0);
+        _httpd_sendText(r,
+            "<HTML><HEAD><TITLE>403 Permission Denied</TITLE></HEAD>\n");
+        _httpd_sendText(r,
+            "<BODY><H1>Access to the request URL was denied!</H1>\n");
+
+    }
 }
 
 
@@ -549,13 +564,14 @@ void _httpd_send404(httpd *server, request *r)
 		"File does not exist: %s\n", r->request.path);
 	_httpd_writeErrorLog(server, r, LEVEL_ERROR, msg);
 
-	if (server->handle404 && server->handle404->function) {
+	if (server->errorFunction404) {
 		/*
 		 * There's a custom C 404 handler defined with httpdAddC404Content
 		 */
-		(server->handle404->function)(server, r);
+		(server->errorFunction404)(server, r, 404);
 	}
-	else {
+	else 
+    {
 		/*
 		 * Send stock 404
 		 */

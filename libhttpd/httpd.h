@@ -161,10 +161,6 @@ typedef struct ip_acl_s{
         struct  ip_acl_s *next;
 } httpAcl;
 
-typedef struct _httpd_404 {
-	void	(*function)();
-} http404;
-
 typedef struct {
 	int	port,
 		serverSock,
@@ -174,9 +170,11 @@ typedef struct {
 		*host;
 	httpDir	*content;
 	httpAcl	*defaultAcl;
-	http404  *handle404;
-	FILE	*accessLog,
+    FILE	*accessLog,
 		*errorLog;
+    void    (*errorFunction304)(),
+            (*errorFunction403)(),
+            (*errorFunction404)();
 } httpd;
 
 typedef struct {
@@ -207,7 +205,7 @@ int httpdReadRequest __ANSI_PROTO((httpd*, request*));
 int httpdCheckAcl __ANSI_PROTO((httpd*, request *, httpAcl*));
 int httpdAuthenticate __ANSI_PROTO((request*, const char*));
 void httpdForceAuthenticate __ANSI_PROTO((request*, const char*));
-int httpdAddC404Content __ANSI_PROTO((httpd*,void(*)()));
+int httpdSetErrorFunction __ANSI_PROTO((httpd *, int, void(*)()));
 
 char *httpdRequestMethodName __ANSI_PROTO((request*));
 char *httpdUrlEncode __ANSI_PROTO((const char *));

@@ -208,7 +208,7 @@ int httpdCheckAcl(httpd *server, request *r, httpAcl *acl)
 	}
 	if (action == HTTP_ACL_DENY)
 	{
-		_httpd_send403(r);
+		_httpd_send403(server, r);
 		_httpd_writeErrorLog(server, r, LEVEL_ERROR,
     			"Access denied by ACL");
 	}

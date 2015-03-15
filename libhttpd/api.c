@@ -755,24 +755,6 @@ int httpdAddWildcardContent(server, dir, preload, path)
 }
 
 
-
-
-int httpdAddC404Content(server, function)
-	httpd	*server;
-	void	(*function)();
-{
-	if (!server->handle404) {
-		server->handle404 = (http404*)malloc(sizeof(http404));
-	}
-
-	if (!server->handle404) {
-		return(-1);
-	}
-
-	server->handle404->function = function;
-	return(0);
-}
-
 int httpdAddCContent(server, dir, name, indexFlag, preload, function)
 	httpd	*server;
 	char	*dir;
@@ -1073,6 +1055,33 @@ int httpdAuthenticate(request *r, const char *realm)
         return(0);
 	}
     return(1);
+}
+
+
+int httpdSetErrorFunction(httpd *server, int error, void (*function)())
+{
+	char	errBuf[80];
+
+	switch(error)
+	{
+		case 304:
+			server->errorFunction304 = function;
+			break;
+		case 403:
+			server->errorFunction403 = function;
+			break;
+		case 404:
+			server->errorFunction404 = function;
+			break;
+		default:
+			snprintf(errBuf, 80,
+				"Invalid error code (%d) for custom callback",
+				error);
+			_httpd_writeErrorLog(server, NULL, LEVEL_ERROR, errBuf);
+			return(-1);
+			break;
+	}
+	return(0);
 }
 
 

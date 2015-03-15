@@ -63,7 +63,7 @@ extern pthread_mutex_t	client_list_mutex;
 
 /** The 404 handler is also responsible for redirecting to the auth server */
 void
-http_callback_404(httpd *webserver, request *r)
+http_callback_404(httpd *webserver, request *r, int error_code)
 {
 	char tmp_url[MAX_BUF],
 			*url,

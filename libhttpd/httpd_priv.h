@@ -54,7 +54,7 @@ char _httpd_from_hex  __ANSI_PROTO((char));
 
 
 void _httpd_catFile __ANSI_PROTO((request*, const char*));
-void _httpd_send403 __ANSI_PROTO((request*));
+void _httpd_send403 __ANSI_PROTO((httpd*, request*));
 void _httpd_send404 __ANSI_PROTO((httpd*, request*));
 void _httpd_send304 __ANSI_PROTO((httpd*, request*));
 void _httpd_sendText __ANSI_PROTO((request*, char*));
