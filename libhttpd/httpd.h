@@ -222,6 +222,7 @@ void httpdOutput __ANSI_PROTO((request*, const char*));
 void httpdPrintf __ANSI_PROTO((request*, const char*, ...));
 void httpdProcessRequest __ANSI_PROTO((httpd*, request *));
 void httpdSendHeaders __ANSI_PROTO((request*));
+void httpdSendFile __ANSI_PROTO((httpd *, request *, const char *));
 void httpdSetFileBase __ANSI_PROTO((httpd*, const char*));
 void httpdSetCookie __ANSI_PROTO((request*, const char*, const char*));
 

@@ -523,7 +523,7 @@ httpContent *_httpd_findContentEntry(request *r, httpDir *dir, char *entryName)
 }
 
 
-void _httpd_send304(request *r)
+void _httpd_send304(httpd *server, request *r)
 {
 	httpdSetResponse(r, "304 Not Modified\n");
 	_httpd_sendHeaders(r,0,0);
@@ -570,7 +570,7 @@ void _httpd_send404(httpd *server, request *r)
 }
 
 
-void _httpd_catFile(request *r, char *path)
+void _httpd_catFile(request *r, const char *path)
 {
 	int	fd,
 		len;
@@ -594,7 +594,7 @@ void _httpd_sendStatic(httpd *server, request *r, char *data)
 {
 	if (_httpd_checkLastModified(r, server->startTime) == 0)
 	{
-		_httpd_send304(r);
+		_httpd_send304(server, r);
 	}
 	_httpd_sendHeaders(r, server->startTime, strlen(data));
 	httpdOutput(r, data);
@@ -626,7 +626,7 @@ void _httpd_sendFile(httpd *server, request *r, char *path)
 	}
 	if (_httpd_checkLastModified(r, sbuf.st_mtime) == 0)
 	{
-		_httpd_send304(r);
+		_httpd_send304(server, r);
 	}
 	else
 	{

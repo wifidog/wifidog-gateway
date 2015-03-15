@@ -1031,7 +1031,7 @@ void httpdProcessRequest(httpd *server, request *r)
 			break;
 
 		case HTTP_FILE:
-			_httpd_sendFile(server, r, entry->path);
+            httpdSendFile(server, r, entry->path);
 			break;
 
 		case HTTP_WILDCARD:
@@ -1070,6 +1070,43 @@ void httpdAuthenticate(request *r, const char *realm)
 			"WWW-Authenticate: Basic realm=\"%s\"\n", realm);
 		httpdAddHeader(r, buffer);
 		httpdOutput(r,"\n");
+	}
+}
+
+
+void httpdSendFile(httpd *server, request *r, const char *path)
+{
+	char	*suffix;
+	struct 	stat sbuf;
+
+	suffix = rindex(path, '.');
+	if (suffix != NULL)
+	{
+		if (strcasecmp(suffix,".gif") == 0) 
+			strcpy(r->response.contentType,"image/gif");
+		if (strcasecmp(suffix,".jpg") == 0) 
+			strcpy(r->response.contentType,"image/jpeg");
+		if (strcasecmp(suffix,".xbm") == 0) 
+			strcpy(r->response.contentType,"image/xbm");
+		if (strcasecmp(suffix,".png") == 0) 
+			strcpy(r->response.contentType,"image/png");
+		if (strcasecmp(suffix,".css") == 0) 
+			strcpy(r->response.contentType,"text/css");
+	}
+	if (stat(path, &sbuf) < 0)
+	{
+		_httpd_send404(server, r);
+		return;
+	}
+	if (_httpd_checkLastModified(r, sbuf.st_mtime) == 0)
+	{
+		_httpd_send304(server, r);
+	}
+	else
+	{
+		_httpd_sendHeaders(r, sbuf.st_size, sbuf.st_mtime);
+
+        _httpd_catFile(r, path);
 	}
 }
 
