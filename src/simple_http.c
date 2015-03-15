@@ -230,7 +230,6 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 			else if (numbytes == 0) {
 				/* CyaSSL_read returns 0 on a clean shutdown or if the peer closed the
 				connection. We can't distinguish between these cases right now. */
-				debug(LOG_DEBUG, "Finished reading from server.");
 				done = 1;
 			}
 			else {
