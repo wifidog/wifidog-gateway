@@ -121,6 +121,25 @@ httpVar *httpdGetVariableByPrefix(request *r, const char *prefix)
 }
 
 
+int httpdSetVariableValue(request *r, const char *name, const char *value)
+{
+   httpVar *var;
+
+   var = httpdGetVariableByName(r, name);
+   if (var)
+   {
+       if (var->value)
+           free(var->value);
+       var->value = strdup(value);
+       return(0);
+   }
+   else
+   {
+       return(httpdAddVariable(r, name, value));
+   }
+}
+
+
 httpVar *httpdGetVariableByPrefixedName(request *r, const char *prefix, const char *name)
 {
 	httpVar	*curVar;
