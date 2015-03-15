@@ -297,8 +297,8 @@ get_ext_iface(void)
 	pthread_cond_t		cond = PTHREAD_COND_INITIALIZER;
 	pthread_mutex_t		cond_mutex = PTHREAD_MUTEX_INITIALIZER;
 	struct	timespec	timeout;
-	device = (char *)malloc(16);
-	gw = (char *)malloc(16);
+	device = (char *)safe_malloc(16); /* XXX Why 16? */
+	gw = (char *)safe_malloc(16);
 	debug(LOG_DEBUG, "get_ext_iface(): Autodectecting the external interface from routing table");
 	while(keep_detecting) {
 		input = fopen("/proc/net/route", "r");
@@ -318,7 +318,7 @@ get_ext_iface(void)
 		/* Mutex must be locked for pthread_cond_timedwait... */
 		pthread_mutex_lock(&cond_mutex);	
 		/* Thread safe "sleep" */
-		pthread_cond_timedwait(&cond, &cond_mutex, &timeout);
+		pthread_cond_timedwait(&cond, &cond_mutex, &timeout); /* XXX need to possibly add this thread to termination_handler */
 		/* No longer needs to be locked */
 		pthread_mutex_unlock(&cond_mutex);
 		//for (i=1; i<=NUM_EXT_INTERFACE_DETECT_RETRY; i++) {
@@ -328,12 +328,12 @@ get_ext_iface(void)
 		i++;
 	}
 	debug(LOG_ERR, "get_ext_iface(): Failed to detect the external interface after %d tries, aborting", i);
-	exit(1);
+	exit(1); /* XXX Should this be termination handler? */
 	free(device);
 	free(gw);
 #endif
 	return NULL;
-	}
+}
 
 	void mark_online() {
 		int before;
@@ -341,7 +341,7 @@ get_ext_iface(void)
 
 		before = is_online();
 		time(&last_online_time);
-		after = is_online();
+		after = is_online(); /* XXX is_online() looks at last_online_time... */
 
 		if (before != after) {
 			debug(LOG_INFO, "ONLINE status became %s", (after ? "ON" : "OFF"));
@@ -427,7 +427,7 @@ get_ext_iface(void)
 	 * @return A string containing human-readable status text. MUST BE free()d by caller
 	 */
 	char * get_status_text() {
-		char buffer[STATUS_BUF_SIZ];
+		char buffer[STATUS_BUF_SIZ]; /* XXX This needs rewriting since at ~112 clients, buffer max size is reached. */
 		size_t len;
 		s_config *config;
 		t_auth_serv *auth_server;

@@ -135,24 +135,24 @@ char           *
 arp_get(const char *req_ip)
 {
     FILE           *proc;
-	 char ip[16];
-	 char mac[18];
-	 char * reply = NULL;
+	char ip[16];
+	char mac[18];
+	char * reply;
 
     if (!(proc = fopen("/proc/net/arp", "r"))) {
         return NULL;
     }
 
     /* Skip first line */
-	 while (!feof(proc) && fgetc(proc) != '\n');
+	while (!feof(proc) && fgetc(proc) != '\n');
 
-	 /* Find ip, copy mac in reply */
-	 reply = NULL;
+	/* Find ip, copy mac in reply */
+	reply = NULL;
     while (!feof(proc) && (fscanf(proc, " %15[0-9.] %*s %*s %17[A-Fa-f0-9:] %*s %*s", ip, mac) == 2)) {
-		  if (strcmp(ip, req_ip) == 0) {
-				reply = safe_strdup(mac);
-				break;
-		  }
+		if (strcmp(ip, req_ip) == 0) {
+			reply = safe_strdup(mac);
+			break;
+		}
     }
 
     fclose(proc);
@@ -166,8 +166,8 @@ int
 fw_init(void)
 {
     int flags, oneopt = 1, zeroopt = 0;
-	 int result = 0;
-	 t_client * client = NULL;
+	int result = 0;
+	t_client * client = NULL;
 
     debug(LOG_INFO, "Creating ICMP socket");
     if ((icmp_fd = socket (AF_INET, SOCK_RAW, IPPROTO_ICMP)) == -1 ||
@@ -182,18 +182,18 @@ fw_init(void)
     debug(LOG_INFO, "Initializing Firewall");
     result = iptables_fw_init();
 
-	 if (restart_orig_pid) {
-		 debug(LOG_INFO, "Restoring firewall rules for clients inherited from parent");
-		 LOCK_CLIENT_LIST();
-		 client = client_get_first_client();
-		 while (client) {
-			 fw_allow(client->ip, client->mac, client->fw_connection_state);
-			 client = client->next;
-		 }
-		 UNLOCK_CLIENT_LIST();
-	 }
+	if (restart_orig_pid) {
+		debug(LOG_INFO, "Restoring firewall rules for clients inherited from parent");
+		LOCK_CLIENT_LIST();
+		client = client_get_first_client();
+		while (client) {
+		    fw_allow(client->ip, client->mac, client->fw_connection_state);
+			client = client->next;
+		}
+		UNLOCK_CLIENT_LIST();
+	}
 
-	 return result;
+	return result;
 }
 
 /** Remove all auth server firewall whitelist rules
@@ -249,6 +249,11 @@ fw_sync_with_authserver(void)
 
     LOCK_CLIENT_LIST();
 
+    /* XXX Ideally, from a thread safety PoV, this function should build a list of client pointers,
+     * iterate over the list and have an explicit "client still valid" check while list is locked.
+     * That way clients can disappear during the cycle with no risk of trashing the heap or getting
+     * a SIGSEGV.
+     */
     for (p1 = p2 = client_get_first_client(); NULL != p1; p1 = p2) {
         p2 = p1->next;
 
@@ -282,15 +287,7 @@ fw_sync_with_authserver(void)
                 /* Timing out user */
                 debug(LOG_INFO, "%s - Inactive for more than %ld seconds, removing client and denying in firewall",
                         p1->ip, config->checkinterval * config->clienttimeout);
-                fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
-                client_list_delete(p1);
-
-                /* Advertise the logout if we have an auth server */
-                if (config->auth_servers != NULL) {
-					UNLOCK_CLIENT_LIST();
-					auth_server_request(&authresponse, REQUEST_TYPE_LOGOUT, ip, mac, token, 0, 0);
-					LOCK_CLIENT_LIST();
-                }
+                logout_client(p1);
             } else {
                 /*
                  * This handles any change in
@@ -319,10 +316,10 @@ fw_sync_with_authserver(void)
                             if (p1->fw_connection_state != FW_MARK_KNOWN) {
                                 debug(LOG_INFO, "%s - Access has changed to allowed, refreshing firewall and clearing counters", p1->ip);
                                 //WHY did we deny, then allow!?!? benoitg 2007-06-21
-                                //fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
+                                //fw_deny(p1->ip, p1->mac, p1->fw_connection_state); /* XXX this was possibly to avoid dupes. */
 
                                 if (p1->fw_connection_state != FW_MARK_PROBATION) {
-     p1->counters.incoming = p1->counters.outgoing = 0;
+                                    p1->counters.incoming = p1->counters.outgoing = 0;
                                 }
                                 else {
                                 	//We don't want to clear counters if the user was in validation, it probably already transmitted data..
@@ -342,9 +339,9 @@ fw_sync_with_authserver(void)
                             debug(LOG_INFO, "%s - User in validation period", p1->ip);
                             break;
 
-                              case AUTH_ERROR:
-                                    debug(LOG_WARNING, "Error communicating with auth server - leaving %s as-is for now", p1->ip);
-                                    break;
+                        case AUTH_ERROR:
+                            debug(LOG_WARNING, "Error communicating with auth server - leaving %s as-is for now", p1->ip);
+                            break;
 
                         default:
                             debug(LOG_ERR, "I do not know about authentication code %d", authresponse.authcode);
@@ -359,6 +356,39 @@ fw_sync_with_authserver(void)
         free(mac);
     }
     UNLOCK_CLIENT_LIST();
+}
+
+/**
+ * @brief Logout a client and report to auth server.
+ *
+ * This function assumes it is being called with the client lock held! This
+ * function remove the client from the client list and free its memory, so
+ * client is no langer valid when this method returns.
+ *
+ * @param client Points to the client to be logged out
+ */
+void
+logout_client(t_client *client)
+{
+    t_authresponse  authresponse;
+    const s_config *config = config_get_config();
+    fw_deny(client->ip, client->mac, client->fw_connection_state);
+    client_list_remove(client);
+
+    /* Advertise the logout if we have an auth server */
+    if (config->auth_servers != NULL) {
+        UNLOCK_CLIENT_LIST();
+        auth_server_request(&authresponse, REQUEST_TYPE_LOGOUT,
+            client->ip, client->mac, client->token,
+            client->counters.incoming,
+            client->counters.outgoing);
+
+        if (authresponse.authcode==AUTH_ERROR)
+            debug(LOG_WARNING, "Auth server error when reporting logout");
+        LOCK_CLIENT_LIST();
+    }
+
+    client_free_node(client);
 }
 
 void

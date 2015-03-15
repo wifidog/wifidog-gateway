@@ -49,6 +49,8 @@
 #include "firewall.h"
 #include "../config.h"
 
+#include "simple_http.h"
+
 extern pthread_mutex_t	config_mutex;
 
 /** Initiates a transaction with the auth server, either to authenticate or to
@@ -62,17 +64,13 @@ extern pthread_mutex_t	config_mutex;
 @param outgoing Current counter of the client's total outgoing traffic, in bytes 
 */
 t_authcode
-auth_server_request(t_authresponse *authresponse, const char *request_type, const char *ip, const char *mac, const char *token, unsigned long long int incoming, unsigned long long int outgoing)
+auth_server_request(t_authresponse *authresponse, const char *request_type, const char *ip, const char *mac,
+        const char *token, unsigned long long int incoming, unsigned long long int outgoing)
 {
 	int sockfd;
-	ssize_t	numbytes;
-	size_t totalbytes;
 	char buf[MAX_BUF];
 	char *tmp;
-        char *safe_token;
-	int done, nfds;
-	fd_set			readfds;
-	struct timeval		timeout;
+	char *safe_token;
 	t_auth_serv	*auth_server = NULL;
 	auth_server = get_auth_server();
 	
@@ -80,17 +78,13 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 	authresponse->authcode = AUTH_ERROR;
 	
 	sockfd = connect_auth_server();
-	if (sockfd == -1) {
-		/* Could not connect to any auth server */
-		return (AUTH_ERROR);
-	}
 
 	/**
 	 * TODO: XXX change the PHP so we can harmonize stage as request_type
 	 * everywhere.
 	 */
 	memset(buf, 0, sizeof(buf));
-        safe_token=httpdUrlEncode(token);
+	safe_token=httpdUrlEncode(token);
 	snprintf(buf, (sizeof(buf) - 1),
 		"GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&gw_id=%s HTTP/1.0\r\n"
 		"User-Agent: WiFiDog %s\r\n"
@@ -104,64 +98,29 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 		safe_token,
 		incoming,
 		outgoing,
-                config_get_config()->gw_id,
+		config_get_config()->gw_id,
 		VERSION,
 		auth_server->authserv_hostname
 	);
 
-        free(safe_token);
+	free(safe_token);
 
-	debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", buf);
-	send(sockfd, buf, strlen(buf), 0);
+	int res = 0;
+	#ifdef USE_CYASSL
+	if (auth_server->authserv_use_ssl) {
+		res = https_get(sockfd, buf, auth_server->authserv_hostname);
+	} else {
+		res = http_get(sockfd, buf);
+	}
+	#endif
+	#ifndef USE_CYASSL
+	res = http_get(sockfd, buf);
+	#endif
+	if (res < 0) {
+		debug(LOG_ERR, "There was a problem talking to the auth server!");
+		return (AUTH_ERROR);
+	}
 
-	debug(LOG_DEBUG, "Reading response");
-	numbytes = totalbytes = 0;
-	done = 0;
-	do {
-		FD_ZERO(&readfds);
-		FD_SET(sockfd, &readfds);
-		timeout.tv_sec = 30; /* XXX magic... 30 second is as good a timeout as any */
-		timeout.tv_usec = 0;
-		nfds = sockfd + 1;
-
-		nfds = select(nfds, &readfds, NULL, NULL, &timeout);
-
-		if (nfds > 0) {
-			/** We don't have to use FD_ISSET() because there
-			 *  was only one fd. */
-			numbytes = read(sockfd, buf + totalbytes, MAX_BUF - (totalbytes + 1));
-			if (numbytes < 0) {
-				debug(LOG_ERR, "An error occurred while reading from auth server: %s", strerror(errno));
-				/* FIXME */
-				close(sockfd);
-				return (AUTH_ERROR);
-			}
-			else if (numbytes == 0) {
-				done = 1;
-			}
-			else {
-				totalbytes += (size_t) numbytes;
-				debug(LOG_DEBUG, "Read %d bytes, total now %d", numbytes, totalbytes);
-			}
-		}
-		else if (nfds == 0) {
-			debug(LOG_ERR, "Timed out reading data via select() from auth server");
-			/* FIXME */
-			close(sockfd);
-			return (AUTH_ERROR);
-		}
-		else if (nfds < 0) {
-			debug(LOG_ERR, "Error reading data via select() from auth server: %s", strerror(errno));
-			/* FIXME */
-			close(sockfd);
-			return (AUTH_ERROR);
-		}
-	} while (!done);
-
-	close(sockfd);
-
-	buf[totalbytes] = '\0';
-	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", buf);
 	
 	if ((tmp = strstr(buf, "Auth: "))) {
 		if (sscanf(tmp, "Auth: %d", (int *)&authresponse->authcode) == 1) {
@@ -309,7 +268,8 @@ int _connect_auth_server(int level) {
 			 * Update it
 			 */
 			debug(LOG_DEBUG, "Level %d: Updating last_ip IP of server [%s] to [%s]", level, hostname, ip);
-			if (auth_server->last_ip) free(auth_server->last_ip);
+			if (auth_server->last_ip)
+				free(auth_server->last_ip);
 			auth_server->last_ip = ip;
 
 			/* Update firewall rules */
@@ -326,9 +286,22 @@ int _connect_auth_server(int level) {
 		/*
 		 * Connect to it
 		 */
+		int port = 0;
+		#ifdef USE_CYASSL
+		if (auth_server->authserv_use_ssl) {
+			debug(LOG_DEBUG, "Level %d: Connecting to SSL auth server %s:%d", level, hostname, auth_server->authserv_ssl_port);
+			port = htons(auth_server->authserv_ssl_port);
+		} else {
+			debug(LOG_DEBUG, "Level %d: Connecting to auth server %s:%d", level, hostname, auth_server->authserv_http_port);
+			port = htons(auth_server->authserv_http_port);
+		}
+		#endif
+		#ifndef USE_CYASSL
 		debug(LOG_DEBUG, "Level %d: Connecting to auth server %s:%d", level, hostname, auth_server->authserv_http_port);
+		port = htons(auth_server->authserv_http_port);
+		#endif
+		their_addr.sin_port = port;
 		their_addr.sin_family = AF_INET;
-		their_addr.sin_port = htons(auth_server->authserv_http_port);
 		their_addr.sin_addr = *h_addr;
 		memset(&(their_addr.sin_zero), '\0', sizeof(their_addr.sin_zero));
 		free (h_addr);
@@ -343,7 +316,8 @@ int _connect_auth_server(int level) {
 			 * Failed to connect
 			 * Mark the server as bad and try the next one
 			 */
-			debug(LOG_DEBUG, "Level %d: Failed to connect to auth server %s:%d (%s). Marking it as bad and trying next if possible", level, hostname, auth_server->authserv_http_port, strerror(errno));
+			debug(LOG_DEBUG, "Level %d: Failed to connect to auth server %s:%d (%s). Marking it as bad and trying next if possible",
+                    level, hostname, ntohs(port), strerror(errno));
 			close(sockfd);
 			mark_auth_server_bad(auth_server);
 			return _connect_auth_server(level); /* Yay recursion! */
@@ -352,7 +326,7 @@ int _connect_auth_server(int level) {
 			/*
 			 * We have successfully connected
 			 */
-			debug(LOG_DEBUG, "Level %d: Successfully connected to auth server %s:%d", level, hostname, auth_server->authserv_http_port);
+			debug(LOG_DEBUG, "Level %d: Successfully connected to auth server %s:%d", level, hostname, ntohs(port));
 			return sockfd;
 		}
 	}
