@@ -158,7 +158,7 @@ get_iface_ip(const char *ifname)
 	u_int32_t ip;
 
 	/* Create a socket */
-	if ((sockd = socket (AF_INET, SOCK_PACKET, htons(0x8086))) < 0) {
+	if ((sockd = socket (AF_INET, SOCK_RAW, htons(0x8086))) < 0) {
 		debug(LOG_ERR, "socket(): %s", strerror(errno));
 		return NULL;
 	}
@@ -188,7 +188,7 @@ get_iface_mac(const char *ifname)
 
 	strcpy(ifr.ifr_name, ifname);
 
-	s = socket(PF_INET, SOCK_DGRAM, 0);
+	s = socket(AF_INET, SOCK_DGRAM, 0);
 	if (-1 == s) {
 		debug(LOG_ERR, "get_iface_mac socket: %s", strerror(errno));
 		return NULL;
