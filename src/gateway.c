@@ -512,7 +512,7 @@ main_loop(void)
 
 #ifdef USE_LIBCAP
 void drop_privileges(const char *user, const char *group) {
-	cap_value_t cap_values[] = { CAP_NET_ADMIN};
+	cap_value_t cap_values[] = { CAP_NET_ADMIN, CAP_NET_RAW };
 	cap_t caps;
 
 	// TODO: what happens on reload?
