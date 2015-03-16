@@ -42,6 +42,7 @@
 #define CHAIN_UNKNOWN   "WiFiDog_$ID$_Unknown"
 #define CHAIN_LOCKED    "WiFiDog_$ID$_Locked"
 #define CHAIN_TRUSTED    "WiFiDog_$ID$_Trusted"
+#define CHAIN_AUTH_IS_DOWN "WiFiDog_$ID$_AuthIsDown"
 /*@}*/ 
 
 /** Used by iptables_fw_access to select if the client should be granted of denied access */
@@ -70,6 +71,12 @@ int iptables_fw_access(fw_access_t type, const char *ip, const char *mac, int ta
 
 /** @brief Define the access of a host */
 int iptables_fw_access_host(fw_access_t type, const char *host);
+
+/** @brief Set a mark when auth server is not reachable */
+int iptables_fw_auth_unreachable(int tag);
+
+/** @brief Remove mark when auth server is reachable again */
+int iptables_fw_auth_reachable(void);
 
 /** @brief All counters in the client list */
 int iptables_fw_counters_update(void);

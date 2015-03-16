@@ -51,6 +51,7 @@
 #include "ping_thread.h"
 #include "util.h"
 #include "centralserver.h"
+#include "firewall.h"
 
 #include "simple_http.h"
 
@@ -103,6 +104,7 @@ ping(void)
 	float             sys_load    = 0;
 	t_auth_serv	*auth_server = NULL;
 	auth_server = get_auth_server();
+    static int authdown = 0;
 	
 	debug(LOG_DEBUG, "Entering ping()");
 	memset(request, 0, sizeof(request));
@@ -117,6 +119,10 @@ ping(void)
 		/*
 		 * No auth servers for me to talk to
 		 */
+		if (!authdown) {
+			fw_set_authdown();
+			authdown = 1;
+		}
 		return;
 	}
 
@@ -184,10 +190,17 @@ ping(void)
 	
 	if (strstr(request, "Pong") == 0) {
 		debug(LOG_WARNING, "Auth server did NOT say Pong!");
-		/* FIXME */
+  		if (!authdown) {
+			fw_set_authdown();
+			authdown = 1;
+		}
 	}
 	else {
 		debug(LOG_DEBUG, "Auth Server Says: Pong");
+  		if (authdown) {
+			fw_set_authup();
+			authdown = 0;
+		}
 	}
 
 	return;	
