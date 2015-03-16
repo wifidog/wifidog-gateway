@@ -454,10 +454,16 @@ int httpdReadRequest(httpd *server, request *r)
 				/*
 				** End of headers.  Continue if there's
 				** data to read
+                ** XXX We actually don't parse contentLength so, hmm, we're done!
+                ** If we did, well, the code is all useless anyway. Nothing ever
+                ** checked inHeaders after. Unless the second break ought to have been
+                ** a continue. #if 0'ing it out.
 				*/
+#if 0
 				if (r->request.contentLength == 0)
 					break;
 				inHeaders = 0;
+#endif 
 				break;
 			}
 #if 0

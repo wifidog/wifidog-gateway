@@ -175,6 +175,11 @@ int _connect_auth_server(int level) {
 	struct sockaddr_in their_addr;
 	int sockfd;
 
+    /* If there are no auth servers, error out, from scan-build warning. */
+    if (NULL == config->auth_servers) {
+        return(-1);
+    }
+
 	/* XXX level starts out at 0 and gets incremented by every iterations. */
 	level++;
 
