@@ -526,18 +526,21 @@ void drop_privileges(const char *user, const char *group) {
 	prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0);
 	cap_free(caps);
 
-	struct passwd *pwd = getpwnam(user); /* don't free, see getpwnam() for details */
-	if (pwd) {
-		uid_t uid = pwd->pw_uid;
-		setuid(uid);
-	}
 	struct group *grp =  getgrnam(group);
 	if (grp) {
 		gid_t gid = grp->gr_gid;
 		setgid(gid);
 	}
+	struct passwd *pwd = getpwnam(user); /* don't free, see getpwnam() for details */
+	if (pwd) {
+		uid_t uid = pwd->pw_uid;
+		setuid(uid);
+	}
 
 	caps = cap_get_proc();
+	/* Re-gain privileges */
+	cap_set_flag(caps, CAP_EFFECTIVE, 2, cap_values, CAP_SET);
+	/* Child processes get the same privileges */
 	cap_set_flag(caps, CAP_INHERITABLE, 2, cap_values, CAP_SET);
 	cap_set_proc(caps);
 	cap_free(caps);
