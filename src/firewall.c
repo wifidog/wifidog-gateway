@@ -50,18 +50,10 @@
 #include <netdb.h>
 #include <sys/time.h>
 
-#ifdef __linux__
 #include <net/ethernet.h>
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
 #include <netpacket/packet.h>
-#endif
-
-#if defined(__NetBSD__)
-#include <netinet/in_systm.h>
-#include <netinet/ip.h>
-#include <netinet/ip_icmp.h>
-#endif
 
 #include "httpd.h"
 #include "safe.h"
@@ -395,12 +387,10 @@ void
 icmp_ping(const char *host)
 {
 	struct sockaddr_in saddr;
-#if defined(__linux__) || defined(__NetBSD__)
 	struct {
 		struct ip ip;
 		struct icmp icmp;
 	} packet;
-#endif
 	unsigned int i, j;
 	int opt = 2000;
 	unsigned short id = rand16();
@@ -408,11 +398,10 @@ icmp_ping(const char *host)
 	memset(&saddr, 0, sizeof(saddr));
 	saddr.sin_family = AF_INET;
 	inet_aton(host, &saddr.sin_addr);
-#if defined(HAVE_SOCKADDR_SA_LEN) || defined(__NetBSD__)
+#if defined(HAVE_SOCKADDR_SA_LEN)
 	saddr.sin_len = sizeof(struct sockaddr_in);
 #endif
 
-#if defined(__linux__) || defined(__NetBSD__)
 	memset(&packet.icmp, 0, sizeof(packet.icmp));
 	packet.icmp.icmp_type = ICMP_ECHO;
 	packet.icmp.icmp_id = id;
@@ -435,7 +424,6 @@ icmp_ping(const char *host)
 	opt = 1;
 	if (setsockopt(icmp_fd, SOL_SOCKET, SO_RCVBUF, &opt, sizeof(opt)) == -1)
 		debug(LOG_ERR, "setsockopt(): %s", strerror(errno));
-#endif
 
 	return;
 }

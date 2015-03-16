@@ -42,18 +42,8 @@
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
 
-#if defined(__NetBSD__)
-#include <sys/socket.h>
-#include <ifaddrs.h>
-#include <net/if.h>
-#include <net/if_dl.h>
-#include <util.h>
-#endif
-
-#ifdef __linux__
 #include <netinet/in.h>
 #include <net/if.h>
-#endif
 
 #include <string.h>
 #include <pthread.h>
@@ -161,7 +151,6 @@ wd_gethostbyname(const char *name)
 	char *
 get_iface_ip(const char *ifname)
 {
-#if defined(__linux__)
 	struct ifreq if_data;
 	struct in_addr in;
 	char *ip_str;
@@ -188,38 +177,11 @@ get_iface_ip(const char *ifname)
 	ip_str = inet_ntoa(in);
 	close(sockd);
 	return safe_strdup(ip_str);
-#elif defined(__NetBSD__)
-	struct ifaddrs *ifa, *ifap;
-	char *str = NULL;
-
-	if (getifaddrs(&ifap) == -1) {
-		debug(LOG_ERR, "getifaddrs(): %s", strerror(errno));
-		return NULL;
-	}
-	/* XXX arbitrarily pick the first IPv4 address */
-	for (ifa = ifap; ifa != NULL; ifa = ifa->ifa_next) {
-		if (strcmp(ifa->ifa_name, ifname) == 0 &&
-				ifa->ifa_addr->sa_family == AF_INET)
-			break;
-	}
-	if (ifa == NULL) {
-		debug(LOG_ERR, "%s: no IPv4 address assigned");
-		goto out;
-	}
-	str = safe_strdup(inet_ntoa(
-				((struct sockaddr_in *)ifa->ifa_addr)->sin_addr));
-out:
-	freeifaddrs(ifap);
-	return str;
-#else
-	return safe_strdup("0.0.0.0");
-#endif
 }
 
 	char *
 get_iface_mac(const char *ifname)
 {
-#if defined(__linux__)
 	int r, s;
 	struct ifreq ifr;
 	char *hwaddr, mac[13];
@@ -251,45 +213,11 @@ get_iface_mac(const char *ifname)
 		);
 
 	return safe_strdup(mac);
-#elif defined(__NetBSD__)
-	struct ifaddrs *ifa, *ifap;
-	const char *hwaddr;
-	char mac[13], *str = NULL;
-	struct sockaddr_dl *sdl;
-
-	if (getifaddrs(&ifap) == -1) {
-		debug(LOG_ERR, "getifaddrs(): %s", strerror(errno));
-		return NULL;
-	}
-	for (ifa = ifap; ifa != NULL; ifa = ifa->ifa_next) {
-		if (strcmp(ifa->ifa_name, ifname) == 0 &&
-				ifa->ifa_addr->sa_family == AF_LINK)
-			break;
-	}
-	if (ifa == NULL) {
-		debug(LOG_ERR, "%s: no link-layer address assigned");
-		goto out;
-	}
-	sdl = (struct sockaddr_dl *)ifa->ifa_addr;
-	hwaddr = LLADDR(sdl);
-	snprintf(mac, sizeof(mac), "%02X%02X%02X%02X%02X%02X",
-			hwaddr[0] & 0xFF, hwaddr[1] & 0xFF,
-			hwaddr[2] & 0xFF, hwaddr[3] & 0xFF,
-			hwaddr[4] & 0xFF, hwaddr[5] & 0xFF);
-
-	str = safe_strdup(mac);
-out:
-	freeifaddrs(ifap);
-	return str;
-#else
-	return NULL;
-#endif
 }
 
 	char *
 get_ext_iface(void)
 {
-#ifdef __linux__
 	FILE *input;
 	char *device, *gw;
 	int i = 1;
@@ -331,7 +259,6 @@ get_ext_iface(void)
 	exit(1); /* XXX Should this be termination handler? */
 	free(device);
 	free(gw);
-#endif
 	return NULL;
 }
 

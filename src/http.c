@@ -26,10 +26,8 @@
   @author Copyright (C) 2007 David Bird <david@coova.com>
 
  */
-#if defined(__linux__)
 /* Note that libcs other than GLIBC also use this macro to enable vasprintf */
 #define _GNU_SOURCE
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
