@@ -173,13 +173,14 @@ void get_clients_from_parent(void) {
 
 				if (strcmp(command, "CLIENT") == 0) {
 					/* This line has info about a client in the client list */
-					if (!client) {
+					if (NULL == client) {
 						/* Create a new client struct */
 						client = client_get_new();
                     }
 				}
 
-				if (key && value) {
+                /* XXX client check to shut up clang... */
+				if (key && value && client) {
 					if (strcmp(command, "CLIENT") == 0) {
 						/* Assign the key into the appropriate slot in the connection structure */
 						if (strcmp(key, "ip") == 0) {

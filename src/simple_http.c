@@ -66,7 +66,7 @@ int http_get(const int sockfd, char *buf) {
 	memset(buf, 0, buflen);
 
 	debug(LOG_DEBUG, "Reading response");
-	numbytes = totalbytes = 0;
+	totalbytes = 0;
 	done = 0;
 	do {
 		FD_ZERO(&readfds);

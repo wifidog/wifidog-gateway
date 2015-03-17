@@ -164,25 +164,35 @@ int action;
 int
 httpdCheckAcl(httpd * server, request * r, httpAcl * acl)
 {
-    httpAcl *cur;
-    int addr, len, res, action;
+	httpAcl	*cur;
+	int	addr, len,
+		res,
+		action;
 
-    action = HTTP_ACL_DENY;
-    scanCidr(r->clientAddr, &addr, &len);
-    cur = acl;
-    while (cur) {
-        res = _isInCidrBlock(server, r, cur->addr, cur->len, addr, len);
-        if (res == 1) {
-            action = cur->action;
-            break;
+
+	action = HTTP_ACL_DENY;
+	res = scanCidr(r->clientAddr, &addr, &len);  /* Returns -1 on conversion failure. */
+    if (res == 0)
+    {
+        cur = acl;
+        while(cur)
+        {
+            res = _isInCidrBlock(server, r, cur->addr, cur->len, addr, len);
+            if (res == 1)
+            {
+                action = cur->action;
+                break;
+            }
+            cur = cur->next;
         }
-        cur = cur->next;
     }
-    if (action == HTTP_ACL_DENY) {
-        _httpd_send403(server, r);
-        _httpd_writeErrorLog(server, r, LEVEL_ERROR, "Access denied by ACL");
-    }
-    return (action);
+	if (action == HTTP_ACL_DENY)
+	{
+		_httpd_send403(server, r);
+		_httpd_writeErrorLog(server, r, LEVEL_ERROR,
+    			"Access denied by ACL");
+	}
+	return(action);
 }
 
 void
