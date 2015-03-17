@@ -256,7 +256,7 @@ httpd *httpdCreate(host, port)
 	}
 
 	/* The WinSock DLL is acceptable. Proceed. */
- 	}
+	}
 #endif
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -454,10 +454,16 @@ int httpdReadRequest(httpd *server, request *r)
 				/*
 				** End of headers.  Continue if there's
 				** data to read
+                ** XXX We actually don't parse contentLength so, hmm, we're done!
+                ** If we did, well, the code is all useless anyway. Nothing ever
+                ** checked inHeaders after. Unless the second break ought to have been
+                ** a continue. #if 0'ing it out.
 				*/
+#if 0
 				if (r->request.contentLength == 0)
 					break;
 				inHeaders = 0;
+#endif 
 				break;
 			}
 #if 0
@@ -851,7 +857,7 @@ void httpdAddHeader(request *r, const char *msg)
 	int size;
 	size = HTTP_MAX_HEADERS - 2 - strlen(r->response.headers);
 	if(size > 0)
-	{	
+	{
 		strncat(r->response.headers,msg,size);
 		if (r->response.headers[strlen(r->response.headers) - 1] != '\n')
 			strcat(r->response.headers,"\n");

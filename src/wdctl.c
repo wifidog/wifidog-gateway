@@ -244,8 +244,8 @@ wdctl_reset(void)
 	sock = connect_to_server(config.socket);
 		
 	strncpy(request, "reset ", 64);
-	strncat(request, config.param, (64 - strlen(request)));
-	strncat(request, "\r\n\r\n", (64 - strlen(request)));
+	strncat(request, config.param, (64 - strlen(request) - 1));
+	strncat(request, "\r\n\r\n", (64 - strlen(request) - 1));
 
 	send_request(sock, request);
 	

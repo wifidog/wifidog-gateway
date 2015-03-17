@@ -26,10 +26,8 @@
   @author Copyright (C) 2007 David Bird <david@coova.com>
 
  */
-#if defined(__linux__)
 /* Note that libcs other than GLIBC also use this macro to enable vasprintf */
 #define _GNU_SOURCE
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -119,20 +117,21 @@ http_callback_404(httpd *webserver, request *r)
 			safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&ip=%s&url=%s",
 				auth_server->authserv_login_script_path_fragment,
 				config->gw_address,
-				config->gw_port, 
+				config->gw_port,
 				config->gw_id,
 				r->clientAddr,
 				url);
-		} else {			
+		} else {
 			debug(LOG_INFO, "Got client MAC address for ip %s: %s", r->clientAddr, mac);
 			safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&ip=%s&mac=%s&url=%s",
 				auth_server->authserv_login_script_path_fragment,
 				config->gw_address,
-				config->gw_port, 
+				config->gw_port,
 				config->gw_id,
 				r->clientAddr,
 				mac,
 				url);
+            free(mac);
 		}
 
                 debug(LOG_INFO, "Check host %s is in whitelist or not", r->request.host); // eg. www.example.com
@@ -176,7 +175,7 @@ http_callback_about(httpd *webserver, request *r)
 	send_http_page(r, "About WiFiDog", "This is WiFiDog version <strong>" VERSION "</strong>");
 }
 
-void 
+void
 http_callback_status(httpd *webserver, request *r)
 {
 	const s_config *config = config_get_config();
@@ -214,7 +213,7 @@ void http_send_redirect_to_auth(request *r, const char *urlFragment, const char 
 		protocol = "http";
 		port = auth_server->authserv_http_port;
 	}
-			    		
+
 	char *url = NULL;
 	safe_asprintf(&url, "%s://%s:%d%s%s",
 		protocol,
@@ -224,7 +223,7 @@ void http_send_redirect_to_auth(request *r, const char *urlFragment, const char 
 		urlFragment
 	);
 	http_send_redirect(r, url, text);
-	free(url);	
+	free(url);
 }
 
 /** @brief Sends a redirect to the web browser 
@@ -266,7 +265,7 @@ http_callback_auth(httpd *webserver, request *r)
 			/* We have their MAC address */
 
 			LOCK_CLIENT_LIST();
-			
+
 			if ((client = client_list_find(r->clientAddr, mac)) == NULL) {
 				debug(LOG_DEBUG, "New client for %s", r->clientAddr);
 				client_list_append(r->clientAddr, mac, token->value);
@@ -278,19 +277,19 @@ http_callback_auth(httpd *webserver, request *r)
 			    char *ip = safe_strdup(client->ip);
 			    char *urlFragment = NULL;
 			    t_auth_serv	*auth_server = get_auth_server();
-			    				    	
+
 			    fw_deny(client->ip, client->mac, client->fw_connection_state);
 			    client_list_delete(client);
 			    debug(LOG_DEBUG, "Got logout from %s", ip);
-			    
+
 			    /* Advertise the logout if we have an auth server */
 			    if (config->auth_servers != NULL) {
 					UNLOCK_CLIENT_LIST();
 					auth_server_request(&authresponse, REQUEST_TYPE_LOGOUT, ip, mac, token->value, 
 									    incoming, outgoing);
 					LOCK_CLIENT_LIST();
-					
-					/* Re-direct them to auth server */
+
+                    /* Re-direct them to auth server */
 					debug(LOG_INFO, "Got manual logout from client ip %s, mac %s, token %s"
 					"- redirecting them to logout message", ip, mac, token->value);
 					safe_asprintf(&urlFragment, "%smessage=%s",
@@ -315,6 +314,48 @@ http_callback_auth(httpd *webserver, request *r)
 		/* They did not supply variable "token" */
 		send_http_page(r, "WiFiDog error", "Invalid token");
 	}
+}
+
+void
+http_callback_disconnect(httpd *webserver, request *r)
+{
+	const s_config	*config = config_get_config();
+	/* XXX How do you change the status code for the response?? */
+	httpVar	*token	= httpdGetVariableByName(r, "token");
+	httpVar	*mac	= httpdGetVariableByName(r, "mac");
+
+	if (config->httpdusername &&
+			(strcmp(config->httpdusername, r->request.authUser) ||
+			 strcmp(config->httpdpassword, r->request.authPassword))) {
+		debug(LOG_INFO, "Disconnect requested, forcing authentication");
+		httpdForceAuthenticate(r, config->httpdrealm);
+		return;
+	}
+
+	if (token && mac) {
+		t_client *client;
+
+		LOCK_CLIENT_LIST();
+		client = client_list_find_by_mac(mac->value);
+
+		if (!client || strcmp(client->token, token->value)) {
+			UNLOCK_CLIENT_LIST();
+			debug(LOG_INFO, "Disconnect %s with incorrect token %s", mac->value, token->value);
+			httpdOutput(r, "Invalid token for MAC");
+			return;
+		}
+
+		/* TODO: get current firewall counters */
+                logout_client(client);
+		UNLOCK_CLIENT_LIST();
+
+	} else {
+		debug(LOG_INFO, "Disconnect called without both token and MAC given");
+		httpdOutput(r, "Both the token and MAC need to be specified");
+		return;
+	}
+
+	return;
 }
 
 void send_http_page(request *r, const char *title, const char* message)
@@ -354,4 +395,3 @@ void send_http_page(request *r, const char *title, const char* message)
     httpdOutput(r, buffer);
     free(buffer);
 }
-

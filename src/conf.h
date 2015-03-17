@@ -67,6 +67,9 @@
 #define DEFAULT_AUTHSERVMSGPATHFRAGMENT "gw_message.php?"
 #define DEFAULT_AUTHSERVPINGPATHFRAGMENT "ping/?"
 #define DEFAULT_AUTHSERVAUTHPATHFRAGMENT "auth/?"
+#define DEFAULT_AUTHSERVSSLCERTPATH "/etc/ssl/certs/"
+/** Note that DEFAULT_AUTHSERVSSLNOPEERVER must be 0 or 1, even if the config file syntax is yes or no */
+#define DEFAULT_AUTHSERVSSLPEERVER 1 /* 0 means: Enable peer verification */
 /*@}*/ 
 
 /**
@@ -108,6 +111,7 @@ typedef struct _firewall_rule_t {
     char *protocol;		/**< @brief tcp, udp, etc ... */
     char *port;			/**< @brief Port to block/allow */
     char *mask;			/**< @brief Mask for the rule *destination* */
+    int mask_is_ipset; /**< @brief *destination* is ipset  */
     struct _firewall_rule_t *next;
 } t_firewall_rule;
 
@@ -163,6 +167,10 @@ typedef struct {
     int syslog_facility;	/**< @brief facility to use when using syslog for
 				     logging */
     int proxy_port;		/**< @brief Transparent proxy port (0 to disable) */
+	char *ssl_certs;	/**< @brief Path to SSL certs for auth server
+		verification */
+	int ssl_verify;		/**< @brief boolean, whether to enable
+		auth server certificate verification */
     t_firewall_ruleset	*rulesets;	/**< @brief firewall rules */
     t_trusted_mac *trustedmaclist; /**< @brief list of trusted macs */
 } s_config;
