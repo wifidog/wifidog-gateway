@@ -1,0 +1,35 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006 OpenWrt.org
+# Updated from post https://dev.openwrt.org/ticket/14761
+
+USE_PROCD=1
+
+START=99
+EXTRA_COMMANDS="status"
+EXTRA_HELP="        status Print the status of the service"
+
+WIFIDOG_CONF=/etc/wifidog.conf
+
+
+start_service() {
+        procd_open_instance
+        procd_set_param command /usr/bin/wifidog-init start
+        procd_set_param respawn # respawn automatically if something died, be careful if you have an alternative process supervisor
+        procd_set_param file $WIFIDOG_CONF
+        procd_close_instance
+}
+
+stop_service() {
+        /usr/bin/wifidog-init stop
+}
+
+status() {
+	/usr/bin/wifidog-init status
+}
+
+service_triggers() {
+        ### Trigger, reload service on network change
+        procd_add_reload_interface_trigger "$(grep 'GatewayInterface' $WIFIDOG_CONF | grep -v ^# | awk '{print $2}')"
+        procd_add_reload_trigger "$WIFIDOG_CONF"
+}
+
