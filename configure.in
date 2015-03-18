@@ -18,13 +18,11 @@ AC_PROG_CXX
 
 AC_SUBST(BUILDROOT)
 
-# keep 20130917 for opkg update, it means nothing now. we use x.y.z tag for release.
-# new version will be 20130917-x.y.z
-# docs: Semantic Versioning http://semver.org/
+# we use Semantic Versioning x.y.z tag for release, docs: http://semver.org/
 WIFIDOG_MAJOR_VERSION=1
 WIFIDOG_MINOR_VERSION=2
 WIFIDOG_MICRO_VERSION=0
-WIFIDOG_VERSION=20130917
+WIFIDOG_VERSION=$WIFIDOG_MAJOR_VERSION.$WIFIDOG_MINOR_VERSION.$WIFIDOG_MICRO_VERSION
 
 AC_SUBST(WIFIDOG_MAJOR_VERSION)
 AC_SUBST(WIFIDOG_MINOR_VERSION)
