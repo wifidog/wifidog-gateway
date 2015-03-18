@@ -606,14 +606,22 @@ iptables_fw_access_host(fw_access_t type, const char *host)
 	int
 iptables_fw_auth_unreachable(int tag)
 {
-	return iptables_do_command("-t mangle -A " CHAIN_AUTH_IS_DOWN " -j MARK --set-mark 0x%u", tag);
+    int got_authdown_ruleset = NULL == get_ruleset(FWRULESET_AUTH_IS_DOWN) ? 0 : 1;
+    if (got_authdown_ruleset)
+        return iptables_do_command("-t mangle -A " CHAIN_AUTH_IS_DOWN " -j MARK --set-mark 0x%u", tag);
+    else
+        return 1;
 }
 
 /** Remove mark when auth server is reachable again */
 	int
 iptables_fw_auth_reachable(void)
 {
-	return iptables_do_command("-t mangle -F " CHAIN_AUTH_IS_DOWN);
+    int got_authdown_ruleset = NULL == get_ruleset(FWRULESET_AUTH_IS_DOWN) ? 0 : 1;
+    if (got_authdown_ruleset)
+        return iptables_do_command("-t mangle -F " CHAIN_AUTH_IS_DOWN);
+    else
+        return 1;
 }
 
 /** Update the counters of all the clients in the client list */
