@@ -258,7 +258,7 @@ iptables_fw_init(void)
 	t_trusted_mac *p;
 	int proxy_port;
 	fw_quiet = 0;
-    int got_authdown_ruleset = NULL == get_ruleset("auth-is-down") ? 0 : 1;
+    int got_authdown_ruleset = NULL == get_ruleset(FWRULESET_AUTH_IS_DOWN) ? 0 : 1;
 
 	LOCK_CONFIG();
 	config = config_get_config();
@@ -377,25 +377,25 @@ iptables_fw_init(void)
 	iptables_fw_set_authservers();
 
 	iptables_do_command("-t filter -A " CHAIN_TO_INTERNET " -m mark --mark 0x%u -j " CHAIN_LOCKED, FW_MARK_LOCKED);
-	iptables_load_ruleset("filter", "locked-users", CHAIN_LOCKED);
+	iptables_load_ruleset("filter", FWRULESET_LOCKED_USERS, CHAIN_LOCKED);
 
 	iptables_do_command("-t filter -A " CHAIN_TO_INTERNET " -j " CHAIN_GLOBAL);
-	iptables_load_ruleset("filter", "global", CHAIN_GLOBAL);
-	iptables_load_ruleset("nat", "global", CHAIN_GLOBAL);
+	iptables_load_ruleset("filter", FWRULESET_GLOBAL, CHAIN_GLOBAL);
+	iptables_load_ruleset("nat", FWRULESET_GLOBAL, CHAIN_GLOBAL);
 
 	iptables_do_command("-t filter -A " CHAIN_TO_INTERNET " -m mark --mark 0x%u -j " CHAIN_VALIDATE, FW_MARK_PROBATION);
-	iptables_load_ruleset("filter", "validating-users", CHAIN_VALIDATE);
+	iptables_load_ruleset("filter", FWRULESET_VALIDATING_USERS, CHAIN_VALIDATE);
 
 	iptables_do_command("-t filter -A " CHAIN_TO_INTERNET " -m mark --mark 0x%u -j " CHAIN_KNOWN, FW_MARK_KNOWN);
-	iptables_load_ruleset("filter", "known-users", CHAIN_KNOWN);
+	iptables_load_ruleset("filter", FWRULESET_KNOWN_USERS, CHAIN_KNOWN);
 
     if (got_authdown_ruleset) {
         iptables_do_command("-t filter -A " CHAIN_TO_INTERNET " -m mark --mark 0x%u -j " CHAIN_AUTH_IS_DOWN, FW_MARK_AUTH_IS_DOWN);
-        iptables_load_ruleset("filter", "auth-is-down", CHAIN_AUTH_IS_DOWN);
+        iptables_load_ruleset("filter", FWRULESET_AUTH_IS_DOWN, CHAIN_AUTH_IS_DOWN);
     }
 
 	iptables_do_command("-t filter -A " CHAIN_TO_INTERNET " -j " CHAIN_UNKNOWN);
-	iptables_load_ruleset("filter", "unknown-users", CHAIN_UNKNOWN);
+	iptables_load_ruleset("filter", FWRULESET_UNKNOWN_USERS, CHAIN_UNKNOWN);
 	iptables_do_command("-t filter -A " CHAIN_UNKNOWN " -j REJECT --reject-with icmp-port-unreachable");
 
 	UNLOCK_CONFIG();
@@ -411,7 +411,7 @@ iptables_fw_init(void)
 	int
 iptables_fw_destroy(void)
 {
-    int got_authdown_ruleset = NULL == get_ruleset("auth-is-down") ? 0 : 1;
+    int got_authdown_ruleset = NULL == get_ruleset(FWRULESET_AUTH_IS_DOWN) ? 0 : 1;
 	fw_quiet = 1;
 
 	debug(LOG_DEBUG, "Destroying our iptables entries");
