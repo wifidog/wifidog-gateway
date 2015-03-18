@@ -574,7 +574,7 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 			}
 		} else {
 			debug(LOG_ERR, "Invalid or unexpected keyword %s, "
-					"expecting \"to\" or \"to-ipset\"", other_kw);
+					"expecting \"port\", \"to\" or \"to-ipset\"", other_kw);
 			return -4; /*< Fail */
 		}
 		TO_NEXT_WORD(leftover, finished);
