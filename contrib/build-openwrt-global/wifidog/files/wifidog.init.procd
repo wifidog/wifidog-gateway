@@ -4,7 +4,7 @@
 
 USE_PROCD=1
 
-START=99
+START=65
 EXTRA_COMMANDS="status"
 EXTRA_HELP="        status Print the status of the service"
 
@@ -13,18 +13,18 @@ WIFIDOG_CONF=/etc/wifidog.conf
 
 start_service() {
         procd_open_instance
-        procd_set_param command /usr/bin/wifidog-init start
+        procd_set_param command /usr/bin/wifidog -f
         procd_set_param respawn # respawn automatically if something died, be careful if you have an alternative process supervisor
         procd_set_param file $WIFIDOG_CONF
         procd_close_instance
 }
 
 stop_service() {
-        /usr/bin/wifidog-init stop
+        /usr/bin/wdctl stop
 }
 
 status() {
-	/usr/bin/wifidog-init status
+	/usr/bin/wdctl status
 }
 
 service_triggers() {
