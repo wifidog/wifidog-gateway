@@ -1,4 +1,9 @@
 # $Id$
+WiFiDog 1.2.0:
+	* Add possibility to use domain whitelist in conf, and auto pass subdomains.
+        * Use Semantic Versioning, yymmdd version number is out of use.
+        * Use tag for release, don't using master for release.
+
 WiFiDog 1.1.5:
 	* First supported version on OpenWRT kamikaze
 
