@@ -1,31 +1,32 @@
 # $Id$
 WiFiDog 1.2.0:
-    * Note: this changelog includes snapshots like 20090925, e.g. everything
-      since 1.1.5
-    * Note: Ticket numbers refer to issues and pull requests
-      on https://github.com/wifidog/wifidog-gateway
+	* Note: this changelog includes snapshots like 20090925, e.g. everything
+		since 1.1.5
+	* Note: Ticket numbers refer to issues and pull requests
+		on https://github.com/wifidog/wifidog-gateway
 	* Add domain whitelist in conf, and auto pass subdomains (#66)
-    * Add port range in firewall rules (#53)
-    * Add references to ipsets in firewall rules (#62)
-    * Add SSL support when talking to the auth server (#63)
-    * Add disconnect command (#82)
-    * Add -Wall -Wextra to CFLAGS (#69, #73)
-    * Add IP to login script URL parameters (#36)
-    * Add logging support to firewall (#4)
-    * Add check for valid MAC address (#42)
-    * Add support for transparent proxy
-	* Use semantic versioning instead of YYMMDD version scheme
-      See http://semver.org/ (#101)
+	* Add port range in firewall rules (#53)
+	* Add references to ipsets in firewall rules (#62)
+	* Add SSL support when talking to the auth server (#63)
+	* Add disconnect command (#82)
+	* Add -Wall -Wextra to CFLAGS (#69, #73)
+	* Add IP to login script URL parameters (#36)
+	* Add logging support to firewall (#4)
+	* Add check for valid MAC address (#42)
+	* Add support for transparent proxy
+	* Use semantic versioning instead of YYMMDD version scheme.
+		See http://semver.org/ (#101)
 	* Use tag for release, don't use master for release (#59)
-    * Fix incorrect usage of REJECT and DROP in NAT table (#58)
-    * Fix compiler warnings warnings (#64, #69, #73)
-    * Fix general code quality issues (#71, 74, #75, #86)
-  	* Fix typo in ping_thread (pong -> PONG) (#46)
-    * Fix redirect by using HTTP 302 instead of 307 (#11, #14)  
+	* Fix incorrect usage of REJECT and DROP in NAT table (#58)
+	* Fix compiler warnings warnings (#64, #69, #73)
+	* Fix general code quality issues (#71, 74, #75, #86)
+	* Fix typo in ping_thread (pong -> PONG) (#46)
+	* Fix redirect by using HTTP 302 instead of 307 (#11, #14)  
 	* Upgrade libhttpd to 1.4 (#91)
-    * Remove incomplete and broken BSD support (#93)
-    * Various other fixes and minor improvements, see
-      https://github.com/wifidog/wifidog-gateway/compare/1.1.5...1.2.0
+	* Fix inconsistent indent, now uses spaces everywhere (#91)
+	* Remove incomplete and broken BSD support (#93)
+	* Various other fixes and minor improvements, see
+		https://github.com/wifidog/wifidog-gateway/compare/1.1.5...1.2.0
 
 WiFiDog 1.1.5:
 	* First supported version on OpenWRT kamikaze
