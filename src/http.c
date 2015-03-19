@@ -134,25 +134,37 @@ http_callback_404(httpd *webserver, request *r, int error_code)
             free(mac);
 		}
 
-                debug(LOG_INFO, "Check host %s is in whitelist or not", r->request.host); // eg. www.example.com
+                // if host is not in whitelist, maybe not in conf or domain'IP changed, it will go to here.
+                debug(LOG_INFO, "Check host %s is in whitelist or not", r->request.host); // e.g. www.example.com
                 t_firewall_rule *rule;
-                //eg. example.com is in whitelist
+                //e.g. example.com is in whitelist
+                // if request http://www.example.com/, it's not equal example.com.
                 for (rule = get_ruleset("global"); rule != NULL; rule = rule->next) {
-                    // if request http://www.example.com/, it's not equal example.com. if request http://example.com, it will not go to here, it had been added into "iptables allow" when wifidog start.
-                    if (strstr(r->request.host, rule->mask)) {
-                        int host_length = strlen(r->request.host);
-                        int mask_length = strlen(rule->mask);
+                    debug(LOG_INFO, "rule mask %s", rule->mask);
+                    if (strstr(r->request.host, rule->mask) == NULL) {
+                        debug(LOG_INFO, "host %s is not in %s, contiue", r->request.host, rule->mask);
+                        continue;
+                    }
+                    int host_length = strlen(r->request.host);
+                    int mask_length = strlen(rule->mask);
+                    if (host_length != mask_length) {
                         char prefix[1024] = {0};
-                        // must be *.example.com, if not have ".", maybe Phishing. eg. phishingexample.com
-                        strncpy(prefix, r->request.host, host_length - mask_length - 1); // www
+                        // must be *.example.com, if not have ".", maybe Phishing. e.g. phishingexample.com
+                        strncpy(prefix, r->request.host, host_length - mask_length - 1); // e.g. www
                         strcat(prefix, "."); // www.
                         strcat(prefix, rule->mask); // www.example.com
                         if (strcasecmp(r->request.host, prefix) == 0) {
-                            debug(LOG_INFO, "allow subdomain, auto refresh request");
+                            debug(LOG_INFO, "allow subdomain");
                             fw_allow_host(r->request.host);
                             http_send_redirect(r, tmp_url, "allow subdomain");
                             return;
                         }
+                    } else {
+                        // e.g. "example.com" is in conf, so it had been parse to IP and added into "iptables allow" when wifidog start. but then its' A record(IP) changed, it will go to here.
+                        debug(LOG_INFO, "allow domain again, because IP changed");
+                        fw_allow_host(r->request.host);
+                        http_send_redirect(r, tmp_url, "allow domain");
+                        return;
                     }
                 }
 

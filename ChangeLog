@@ -1,4 +1,7 @@
 # $Id$
+2015-03-18
+	* Add possibility to use domain whitelist in conf, and auto pass subdomains.
+	(https://github.com/wifidog/wifidog-gateway/issues/14)
 2015-02-20
 	* Add possibility to use a port range in wifidog
 	(https://github.com/wifidog/wifidog-gateway/commit/d1c3b596dcae6eb1f4980687a3633482613ca231)
