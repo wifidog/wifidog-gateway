@@ -531,12 +531,7 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 	}
 
 	/* Get the optional port or port range */
-	if (strncmp(leftover, "port", 4) == 0) {
-                if(protocol == NULL ||
-                	!(strncmp(protocol, "tcp", 3) == 0 || strncmp(protocol, "udp", 3) == 0)) {
-			debug(LOG_ERR, "ERROR: wifidog config file, section FirewallRuleset %s. Port without tcp or udp protocol.", ruleset);
-			return -3; /*< Fail */
-		}
+	if (strncmp(leftover, "port", 4) == 0) { 
 		TO_NEXT_WORD(leftover, finished);
 		/* Get port now */
 		port = leftover;
@@ -545,7 +540,8 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 			if (!isdigit((unsigned char)*(port + i)) && ((unsigned char)*(port + i) != ':'))
 				all_nums = 0; /*< No longer only digits */
 		if (!all_nums) {
-			debug(LOG_ERR, "ERROR: wifidog config file, section FirewallRuleset %s. Invalid port %s", ruleset, port);
+            debug(LOG_ERR, "ERROR: wifidog config file, section FirewallRuleset %s. "
+                    "Invalid port %s", ruleset, port);
 			return -3; /*< Fail */
 		}
 	}
