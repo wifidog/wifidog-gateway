@@ -71,15 +71,15 @@ WiFiDog 1.1.3beta6:
 	  wifidog wil now retry for up to two minutes.
 
 WiFiDog 1.1.3beta4:
-	-Changed ordering in the filter.FORWARD chain
-	-Added TCPMSS rule
-	-Fixed rules bieng left over on shutdown
-	-Fixed wdctl reset problem
+	* Changed ordering in the filter.FORWARD chain
+	* Added TCPMSS rule
+	* Fixed rules bieng left over on shutdown
+	* Fixed wdctl reset problem
 
 WiFiDog 1.1.3beta2:
-	-Fix bug #65 (Whitelisted servers would still splash on port 80
-	-Fix incorrect default value for Path in the AuthServer configuration
-	-Add more info to wdctl status
+	* Fix bug #65 (Whitelisted servers would still splash on port 80
+	* Fix incorrect default value for Path in the AuthServer configuration
+	* Add more info to wdctl status
 
 WiFiDog 1.1.3beta1:
 	* Added patch by wireless London to use the GW interface's mac address as the node_id
