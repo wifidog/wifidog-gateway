@@ -1,4 +1,6 @@
 # $Id$
+2015-03-19
+	* See NEWS file from now on
 2015-03-18
 	* Add possibility to use domain whitelist in conf, and auto pass subdomains.
 	(https://github.com/wifidog/wifidog-gateway/issues/14)
