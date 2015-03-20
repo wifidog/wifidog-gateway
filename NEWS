@@ -25,7 +25,7 @@ WiFiDog 1.2.0:
 	* Fix inconsistent indent, now uses spaces everywhere (#91)
 	* Upgrade libhttpd to 1.4 (#91)
 	* Remove incomplete and broken BSD support (#93)
-	* Update doc/README.developers.txt (#111)
+	* Update doc/README.developers.txt (#113)
 	* Various other fixes and minor improvements, see
 		https://github.com/wifidog/wifidog-gateway/compare/1.1.5...1.2.0
 
