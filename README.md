@@ -26,6 +26,14 @@ with Version 2 being a draft which has not been implemented so far.
 A detailed description of the login process involving user,
 client and server is available as a [flow diagram][flowdia].
 
+## Install ##
+
+See the [faq][FAQ].
+
+## Contributing ##
+
+See [devdoc][README.developers.txt].
+
 
 ## License ##
 The project's software is released under the GPL license and is copyrighted
@@ -35,4 +43,5 @@ by its respective owners. See COPYING for details.
 [github]: https://github.com/wifidog/
 [protov1]: http://dev.wifidog.org/wiki/doc/developer/WiFiDogProtocol_V1
 [flowdia]: http://dev.wifidog.org/wiki/doc/developer/FlowDiagram
-
+[devdoc]: src/README.developers.txt
+[faq]: src/FAQ
