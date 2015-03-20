@@ -48,7 +48,6 @@
 #include "auth.h"
 #include "firewall.h"
 #include "http.h"
-#include "httpd.h"
 #include "client_list.h"
 #include "common.h"
 #include "centralserver.h"
