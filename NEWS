@@ -22,9 +22,10 @@ WiFiDog 1.2.0:
 	* Fix general code quality issues (#71, 74, #75, #86)
 	* Fix typo in ping_thread (pong -> PONG) (#46)
 	* Fix redirect by using HTTP 302 instead of 307 (#11, #14)  
-	* Upgrade libhttpd to 1.4 (#91)
 	* Fix inconsistent indent, now uses spaces everywhere (#91)
+	* Upgrade libhttpd to 1.4 (#91)
 	* Remove incomplete and broken BSD support (#93)
+	* Update doc/README.developers.txt (#111)
 	* Various other fixes and minor improvements, see
 		https://github.com/wifidog/wifidog-gateway/compare/1.1.5...1.2.0
 
