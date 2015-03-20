@@ -1,7 +1,3 @@
-#
-# $Id$
-#
-
 The WiFi Guard Dog project is a complete and embeddable captive portal
 solution for wireless community groups or individuals who wish to open a
 free HotSpot while still preventing abuse of their Internet connection.
