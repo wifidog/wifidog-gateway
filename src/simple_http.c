@@ -293,8 +293,6 @@ https_get(const int sockfd, char *buf, const char* hostname) {
 	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", buf);
 
 	CyaSSL_free(ssl);
-	CyaSSL_CTX_free(ctx);
-	CyaSSL_Cleanup();
 
 	return totalbytes;
 }
