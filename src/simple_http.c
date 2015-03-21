@@ -44,6 +44,11 @@
 #include <cyassl/ctaocrypt/error-crypt.h>
 #endif
 
+#ifdef USE_CYASSL
+static CYASSL_CTX *get_cyassl_ctx(void);
+#endif
+
+
 int
 http_get(const int sockfd, char *buf) {
 
@@ -120,8 +125,8 @@ http_get(const int sockfd, char *buf) {
 
 #ifdef USE_CYASSL
 
-CYASSL_CTX *cyassl_ctx = NULL;
-pthread_mutex_t cyassl_ctx_mutex = PTHREAD_MUTEX_INITIALIZER;
+static CYASSL_CTX *cyassl_ctx = NULL;
+static pthread_mutex_t cyassl_ctx_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #define LOCK_CYASSL_CTX() do { \
 	debug(LOG_DEBUG, "Locking CyaSSL Context"); \
@@ -136,7 +141,7 @@ pthread_mutex_t cyassl_ctx_mutex = PTHREAD_MUTEX_INITIALIZER;
 } while (0)
 
 
-CYASSL_CTX *
+static CYASSL_CTX *
 get_cyassl_ctx(void)
 {
     CYASSL_CTX *ret;
