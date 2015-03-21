@@ -9,7 +9,7 @@ doc_DATA = \
   COPYING \
   INSTALL \
   NEWS \
-  README \
+  README.md \
   ChangeLog
   
 EXTRA_DIST = \
