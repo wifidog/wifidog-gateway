@@ -144,6 +144,7 @@ static pthread_mutex_t cyassl_ctx_mutex = PTHREAD_MUTEX_INITIALIZER;
 static CYASSL_CTX *
 get_cyassl_ctx(void)
 {
+    int err;
     CYASSL_CTX *ret;
 	s_config *config = config_get_config();
 
@@ -152,16 +153,26 @@ get_cyassl_ctx(void)
     if (NULL == cyassl_ctx) {
         CyaSSL_Init();
         /* Create the CYASSL_CTX */
-        /* Allow SSLv3 up to TLSv1.2 */
-        if ( (cyassl_ctx = CyaSSL_CTX_new(CyaSSLv23_client_method())) == NULL){
+        /* Allow TLSv1.0 up to TLSv1.2 */
+        if ( (cyassl_ctx = CyaSSL_CTX_new(CyaTLSv1_client_method())) == NULL){
             debug(LOG_ERR, "Could not create CYASSL context.");
             return NULL;
+        }
+
+        if (config->ssl_cipher_list) {
+            debug(LOG_INFO, "Setting SSL cipher list to [%s]", config->ssl_cipher_list);
+            err = CyaSSL_CTX_set_cipher_list(cyassl_ctx, config->ssl_cipher_list);
+            if (SSL_SUCCESS != err) {
+                debug(LOG_ERR, "Could not load SSL cipher list (error %d)", err);
+                return NULL;
+            }
         }
 
         if (config->ssl_verify) {
             /* Use trusted certs */
             /* Note: CyaSSL requires that the certificates are named by their hash values */
-            int err = CyaSSL_CTX_load_verify_locations(cyassl_ctx, NULL, config->ssl_certs);
+            debug(LOG_INFO, "Loading SSL certificates from %s", config->ssl_certs);
+            err = CyaSSL_CTX_load_verify_locations(cyassl_ctx, NULL, config->ssl_certs);
             if (err != SSL_SUCCESS) {
                 debug(LOG_ERR, "Could not load SSL certificates (error %d)", err);
                 if (err == ASN_UNKNOWN_OID_E) {
@@ -170,9 +181,8 @@ get_cyassl_ctx(void)
                     debug(LOG_ERR, "Make sure that SSLCertPath points to the correct path in the config file");
                     debug(LOG_ERR, "Or disable certificate loading with 'SSLPeerVerification No'.");
                 }
-                return NULL;;
+                return NULL;
             }
-            debug(LOG_INFO, "Loading SSL certificates from %s", config->ssl_certs);
         } else {
             CyaSSL_CTX_set_verify(cyassl_ctx, SSL_VERIFY_NONE, 0);
             debug(LOG_INFO, "Disabling SSL certificate verification!");
