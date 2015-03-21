@@ -1,5 +1,4 @@
-/* vim: tabstop=4 softtabstop=4 shiftwidth=4 expandtab */
-/*
+/* vim: tabstop=4 softtabstop=4 shiftwidth=4 expandtab
 ** Copyright (c) 2002  Hughes Technologies Pty Ltd.  All rights
 ** reserved.
 **
@@ -428,9 +427,6 @@ httpdReadRequest(httpd * server, request * r)
                  ** End of headers.  Continue if there's
                  ** data to read
                  */
-                if (r->request.contentLength == 0)
-                    break;
-                inHeaders = 0;
                 break;
             }
 
