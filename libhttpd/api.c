@@ -1,3 +1,4 @@
+/* vim: tabstop=4 softtabstop=4 shiftwidth=4 expandtab */
 /*
 ** Copyright (c) 2002  Hughes Technologies Pty Ltd.  All rights
 ** reserved.
@@ -799,7 +800,7 @@ httpdProcessRequest(httpd * server, request * r)
     dirName[HTTP_MAX_URL - 1] = 0;
     cp = strrchr(dirName, '/');
     if (cp == NULL) {
-        printf("Invalid request path '%s'\n", dirName);
+        /* printf("Invalid request path '%s'\n", dirName); */
         return;
     }
     strncpy(entryName, cp + 1, HTTP_MAX_URL);
