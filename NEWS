@@ -8,6 +8,7 @@ WiFiDog 1.2.1:
 	  static analysis
 	* Refactor SSL initialization
 	* Fix a truncation issue around 112 clients in the status page. (#47)
+	* Prevent duplicate TrustedMAC entries (#145)
 
 WiFiDog 1.2.0:
 	* Note: this changelog includes snapshots like 20090925, e.g. everything
