@@ -1,22 +1,7 @@
-# Use newer, container based infrastructure
-# Does not allow use of apt-get, but enables
-# caching support
-sudo: false
 language: c
 compiler:
   - gcc
-  - clang
 install:
   - ./autogen.sh
 script:
-  - ./.travis_configure_wrapper.sh && make
-env:
-  global:
-    - CFLAGS="-Werror"
-  matrix: 
-    - BUILD_TYPE=normal
-    - CYASSL="3.3.2" BUILD_TYPE=cyassl
-cache:
-  directories:
-    - dependencies-src
-    - dependencies-installed
+  - ./configure && make
