@@ -1,3 +1,4 @@
+/* vim: set et ts=4 sts=4 sw=4 : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -53,6 +54,18 @@ void * safe_malloc (size_t size) {
 		exit(1);
 	}
 	return (retval);
+}
+
+void *
+safe_realloc(void *ptr, size_t newsize)
+{
+    void *retval = NULL;
+    retval = realloc(ptr, newsize);
+    if (NULL == retval) {
+        debug(LOG_CRIT, "Failed to realloc buffer to %d bytes of memory: %s. Bailing out", newsize, strerror(errno));
+        exit(1);
+    }
+    return retval;
 }
 
 char * safe_strdup(const char *s) {

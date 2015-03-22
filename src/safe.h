@@ -33,19 +33,22 @@
 
 /** @brief Safe version of malloc
  */
-void * safe_malloc (size_t size);
+void *safe_malloc(size_t);
+
+/** @brief Safe version of realloc */
+void *realloc(void *, size_t);
 
 /* @brief Safe version of strdup
  */
-char * safe_strdup(const char *s);
+char * safe_strdup(const char *);
 
 /* @brief Safe version of asprintf
  */
-int safe_asprintf(char **strp, const char *fmt, ...);
+int safe_asprintf(char **, const char *, ...);
 
 /* @brief Safe version of vasprintf
  */
-int safe_vasprintf(char **strp, const char *fmt, va_list ap);
+int safe_vasprintf(char **, const char *, va_list);
 
 /* @brief Safe version of fork
  */
