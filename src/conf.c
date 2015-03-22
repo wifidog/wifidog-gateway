@@ -871,6 +871,8 @@ parse_trusted_mac_list(const char *ptr)
                         p = p->next;
                         p->mac = safe_strdup(mac);
                         p->next = NULL;
+                    } else {
+                        debug(LOG_ERR, "MAC address [%s] already on trusted list. See option TrustedMACList in wifidog.conf file ", mac);
                     }
                 }
             }
