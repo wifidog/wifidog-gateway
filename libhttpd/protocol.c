@@ -256,7 +256,8 @@ int outbufsize;
 }
 
 char
-_httpd_from_hex(char c)
+_httpd_from_hex(c)
+char c;
 {
     return c >= '0' && c <= '9' ? c - '0' : c >= 'A' && c <= 'F' ? c - 'A' + 10 : c - 'a' + 10; /* accept small letters just in case */
 }
