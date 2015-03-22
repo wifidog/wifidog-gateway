@@ -1,4 +1,14 @@
 # $Id$
+
+WiFiDog 1.2.1:
+	* Fix build (#127, #128)
+	* Integrate with Travis CI
+	* Integrate with Coverity Scan
+	* Fix several memory leaks and other potential problems uncovered by
+	  static analysis
+	* Refactor SSL initialization
+
+
 WiFiDog 1.2.0:
 	* Note: this changelog includes snapshots like 20090925, e.g. everything
 		since 1.1.5
