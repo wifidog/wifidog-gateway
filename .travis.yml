@@ -1,4 +1,5 @@
 language: c
 compiler:
   - gcc
-
+install:
+  - ./autogen.sh
