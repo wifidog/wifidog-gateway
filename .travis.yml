@@ -11,8 +11,11 @@ install:
 script:
   - ./.travis_configure_wrapper.sh && make
 env:
-  - BUILD_TYPE=normal
-  - CYASSL="3.3.2" BUILD_TYPE=cyassl
+  global:
+    - CFLAGS="-Werror"
+  matrix: 
+    - BUILD_TYPE=normal
+    - CYASSL="3.3.2" BUILD_TYPE=cyassl
 cache:
   directories:
     - dependencies-src
