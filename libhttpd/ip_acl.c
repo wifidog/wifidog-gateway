@@ -122,7 +122,8 @@ char *cidr;
 int action;
 {
     httpAcl *cur;
-    int addr, len;
+    unsigned int addr;
+    unsigned int len;
 
     /*
      ** Check the ACL info is reasonable
@@ -165,7 +166,9 @@ int
 httpdCheckAcl(httpd * server, request * r, httpAcl * acl)
 {
     httpAcl *cur;
-    int addr, len, res, action;
+    unsigned int addr;
+    unsigned int len;
+    int res, action;
 
     action = HTTP_ACL_DENY;
     res = scanCidr(r->clientAddr, &addr, &len); /* Returns -1 on conversion failure. */

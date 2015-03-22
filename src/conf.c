@@ -875,11 +875,14 @@ void parse_trusted_mac_list(const char *ptr) {
 					config.trustedmaclist->next = NULL;
 				} else {
 				/* Advance to the last entry */
-				for (p = config.trustedmaclist; p->next != NULL; p = p->next);
-                    p->next = safe_malloc(sizeof(t_trusted_mac));
-                    p = p->next;
-                    p->mac = safe_strdup(mac);
-                    p->next = NULL;
+				p = config.trustedmaclist;
+				while (p->next != NULL) {
+					p = p->next;
+				}
+				p->next = safe_malloc(sizeof(t_trusted_mac));
+				p = p->next;
+				p->mac = safe_strdup(mac);
+				p->next = NULL;
 				}
 			}
 		}
