@@ -1,5 +1,12 @@
 # vim: set noet sw=4 ts=4 :
+
 WiFiDog 1.2.1:
+	* Fix build (#127, #128)
+	* Integrate with Travis CI
+	* Integrate with Coverity Scan
+	* Fix several memory leaks and other potential problems uncovered by
+	  static analysis
+	* Refactor SSL initialization
 	* Fix a truncation issue around 112 clients in the status page. (#47)
 
 WiFiDog 1.2.0:
