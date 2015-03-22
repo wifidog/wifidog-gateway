@@ -3,3 +3,5 @@ compiler:
   - gcc
 install:
   - ./autogen.sh
+script:
+  - ./configure && make
