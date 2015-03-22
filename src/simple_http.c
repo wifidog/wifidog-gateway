@@ -156,6 +156,7 @@ get_cyassl_ctx(void)
         /* Allow TLSv1.0 up to TLSv1.2 */
         if ( (cyassl_ctx = CyaSSL_CTX_new(CyaTLSv1_client_method())) == NULL){
             debug(LOG_ERR, "Could not create CYASSL context.");
+            UNLOCK_CYASSL_CTX();
             return NULL;
         }
 
@@ -164,6 +165,7 @@ get_cyassl_ctx(void)
             err = CyaSSL_CTX_set_cipher_list(cyassl_ctx, config->ssl_cipher_list);
             if (SSL_SUCCESS != err) {
                 debug(LOG_ERR, "Could not load SSL cipher list (error %d)", err);
+                UNLOCK_CYASSL_CTX();
                 return NULL;
             }
         }
@@ -181,6 +183,7 @@ get_cyassl_ctx(void)
                     debug(LOG_ERR, "Make sure that SSLCertPath points to the correct path in the config file");
                     debug(LOG_ERR, "Or disable certificate loading with 'SSLPeerVerification No'.");
                 }
+                UNLOCK_CYASSL_CTX();
                 return NULL;
             }
         } else {
