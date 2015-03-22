@@ -1,3 +1,4 @@
+/* vim: set et ts=4 sts=4 sw=4 : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -36,7 +37,7 @@
 void *safe_malloc(size_t);
 
 /** @brief Safe version of realloc */
-void *realloc(void *, size_t);
+void *safe_realloc(void *, size_t);
 
 /* @brief Safe version of strdup
  */
