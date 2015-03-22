@@ -298,6 +298,9 @@ parse_auth_server(FILE *file, const char *filename, int *linenum)
 			
 			switch (opcode) {
 				case oAuthServHostname:
+                    /* Coverity rightfully pointed out we could have duplicates here. */
+                    if (NULL != host)
+                        free(host);
 					host = safe_strdup(p2);
 					break;
 				case oAuthServPath:
