@@ -1,22 +1,30 @@
-# Use newer, container based infrastructure
-# Does not allow use of apt-get, but enables
-# caching support
 sudo: false
 language: c
 compiler:
-  - gcc
-  - clang
+- gcc
+- clang
 install:
-  - ./autogen.sh
+- ./autogen.sh
 script:
-  - ./.travis_configure_wrapper.sh && make
+- ./.travis_configure_wrapper.sh && make
 env:
   global:
-    - CFLAGS="-Werror"
-  matrix: 
-    - BUILD_TYPE=normal
-    - CYASSL="3.3.2" BUILD_TYPE=cyassl
+  - CFLAGS="-Werror"
+  - secure: fiVVKcMM8Cz8WAj6PB6eD/b+Y77klXOe9jbpehf6QwjFwf6paEHoMsrZ0aFXogm2Uej47GlTdRb3UkBqonbK4ANbu0ewsWCW0RGClZz5ghaSnfwdxEhuXsrFIax7DvJCStk2V84Keb+tSVemx4opxqZAlZ/Nen28S91KSDoJeRA=
+  matrix:
+  - BUILD_TYPE=normal
+  - CYASSL="3.3.2" BUILD_TYPE=cyassl
 cache:
   directories:
-    - dependencies-src
-    - dependencies-installed
+  - dependencies-src
+  - dependencies-installed
+addons:
+  coverity_scan:
+    project:
+      name: wifidog/wifidog-gateway
+      version: 1.2.0
+      description: WifiDog Captive Portal Gateway
+    notification_email: acv@miniguru.ca
+    build_command_prepend: ./autogen.sh && ./configure
+    build_command: make
+    branch_pattern: coverity_scan
