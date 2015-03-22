@@ -301,6 +301,9 @@ parse_auth_server(FILE *file, const char *filename, int *linenum)
 			
 			switch (opcode) {
 				case oAuthServHostname:
+                    /* Coverity rightfully pointed out we could have duplicates here. */
+                    if (NULL != host)
+                        free(host);
 					host = safe_strdup(p2);
 					break;
 				case oAuthServPath:
@@ -351,8 +354,15 @@ parse_auth_server(FILE *file, const char *filename, int *linenum)
 	}
 
 	/* only proceed if we have an host and a path */
-	if (host == NULL)
+	if (host == NULL) {
+        free(path);
+        free(authscriptpathfragment);
+        free(pingscriptpathfragment);
+        free(msgscriptpathfragment);
+        free(portalscriptpathfragment);
+        free(loginscriptpathfragment);
 		return;
+    }
 	
 	debug(LOG_DEBUG, "Adding %s:%d (SSL: %d) %s to the auth server list",
 			host, http_port, ssl_port, path);
@@ -850,6 +860,8 @@ void parse_trusted_mac_list(const char *ptr) {
 		/* check for valid format */
 		if (!check_mac_format(possiblemac)) {
 			debug(LOG_ERR, "[%s] not a valid MAC address to trust. See option TrustedMACList in wifidog.conf for correct this mistake.", possiblemac);
+            free(ptrcopy);
+            free(mac);
 			return;
 		} else {
 			if (sscanf(possiblemac, " %17[A-Fa-f0-9:]", mac) == 1) {
