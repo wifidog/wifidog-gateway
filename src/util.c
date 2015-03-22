@@ -169,6 +169,7 @@ get_iface_ip(const char *ifname)
 	/* Get the IP address */
 	if (ioctl (sockd, SIOCGIFADDR, &if_data) < 0) {
 		debug(LOG_ERR, "ioctl(): SIOCGIFADDR %s", strerror(errno));
+        close(sockd);
 		return NULL;
 	}
 	memcpy ((void *) &ip, (void *) &if_data.ifr_addr.sa_data + 2, 4);
@@ -230,11 +231,16 @@ get_ext_iface(void)
 	debug(LOG_DEBUG, "get_ext_iface(): Autodectecting the external interface from routing table");
 	while(keep_detecting) {
 		input = fopen("/proc/net/route", "r");
+        if (NULL == input) {
+            debug(LOG_ERR, "Could not open /proc/net/route (%s).", strerror(errno));
+            return NULL;
+        }
 		while (!feof(input)) {
 			/* XXX scanf(3) is unsafe, risks overrun */
 			if ((fscanf(input, "%s %s %*s %*s %*s %*s %*s %*s %*s %*s %*s\n", device, gw) == 2) && strcmp(gw, "00000000") == 0) {
 				free(gw);
 				debug(LOG_INFO, "get_ext_iface(): Detected %s as the default interface after try %d", device, i);
+                fclose(input);
 				return device;
 			}
 		}
