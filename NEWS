@@ -7,7 +7,7 @@ WiFiDog 1.2.1:
 	* Fix several memory leaks and other potential problems uncovered by
 	  static analysis
 	* Refactor SSL initialization
-
+    * Prevent duplicate TrustedMAC entries
 
 WiFiDog 1.2.0:
 	* Note: this changelog includes snapshots like 20090925, e.g. everything
