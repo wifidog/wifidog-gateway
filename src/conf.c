@@ -874,15 +874,28 @@ void parse_trusted_mac_list(const char *ptr) {
 					config.trustedmaclist->mac = safe_strdup(mac);
 					config.trustedmaclist->next = NULL;
 				} else {
-				/* Advance to the last entry */
-				p = config.trustedmaclist;
-				while (p->next != NULL) {
-					p = p->next;
-				}
-				p->next = safe_malloc(sizeof(t_trusted_mac));
-				p = p->next;
-				p->mac = safe_strdup(mac);
-				p->next = NULL;
+                    int skipmac;
+                    /* Advance to the last entry */
+                    p = config.trustedmaclist;
+                    skipmac = 0;
+                    /* Check before loop to handle case were mac is a duplicate
+                     * of the first and only item in the list so far.
+                     */
+                    if (0 == strcmp(p->mac, mac)) {
+                        skipmac = 1;
+                    }
+                    while (p->next != NULL) {
+                        if (0 == strcmp(p->mac, mac)) {
+                            skipmac = 1;
+                        }
+                        p = p->next;
+                    }
+                    if (!skipmac) {
+                        p->next = safe_malloc(sizeof(t_trusted_mac));
+                        p = p->next;
+                        p->mac = safe_strdup(mac);
+                        p->next = NULL;
+                    }
 				}
 			}
 		}
