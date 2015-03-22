@@ -348,8 +348,21 @@ parse_auth_server(FILE *file, const char *filename, int *linenum)
 	}
 
 	/* only proceed if we have an host and a path */
-	if (host == NULL)
+	if (host == NULL) {
+        if (NULL != path)
+            free(path);
+        if (NULL != authscriptpathfragment)
+            free(authscriptpathfragment);
+        if (NULL != pingscriptpathfragment)
+            free(pingscriptpathfragment);
+        if (NULL != msgscriptpathfragment)
+            free(msgscriptpathfragment);
+        if (NULL != portalscriptpathfragment)
+            free(portalscriptpathfragment);
+        if (NULL != loginscriptpathfragment)
+            free(loginscriptpathfragment);
 		return;
+    }
 	
 	debug(LOG_DEBUG, "Adding %s:%d (SSL: %d) %s to the auth server list",
 			host, http_port, ssl_port, path);
