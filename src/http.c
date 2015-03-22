@@ -156,6 +156,8 @@ http_callback_404(httpd *webserver, request *r, int error_code)
                             debug(LOG_INFO, "allow subdomain");
                             fw_allow_host(r->request.host);
                             http_send_redirect(r, tmp_url, "allow subdomain");
+                            free(url);
+                            free(urlFragment);
                             return;
                         }
                     } else {
@@ -163,6 +165,8 @@ http_callback_404(httpd *webserver, request *r, int error_code)
                         debug(LOG_INFO, "allow domain again, because IP changed");
                         fw_allow_host(r->request.host);
                         http_send_redirect(r, tmp_url, "allow domain");
+                        free(url);
+                        free(urlFragment);
                         return;
                     }
                 }
