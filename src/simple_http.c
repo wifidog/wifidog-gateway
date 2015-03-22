@@ -44,7 +44,13 @@
 #include <cyassl/ctaocrypt/error-crypt.h>
 #endif
 
-int http_get(const int sockfd, char *buf) {
+#ifdef USE_CYASSL
+static CYASSL_CTX *get_cyassl_ctx(void);
+#endif
+
+
+int
+http_get(const int sockfd, char *buf) {
 
 	ssize_t	numbytes;
 	size_t totalbytes;
@@ -119,8 +125,78 @@ int http_get(const int sockfd, char *buf) {
 
 #ifdef USE_CYASSL
 
+static CYASSL_CTX *cyassl_ctx = NULL;
+static pthread_mutex_t cyassl_ctx_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-int https_get(const int sockfd, char *buf, const char* hostname) {
+#define LOCK_CYASSL_CTX() do { \
+	debug(LOG_DEBUG, "Locking CyaSSL Context"); \
+	pthread_mutex_lock(&cyassl_ctx_mutex); \
+	debug(LOG_DEBUG, "CyaSSL Context locked"); \
+} while (0)
+
+#define UNLOCK_CYASSL_CTX() do { \
+	debug(LOG_DEBUG, "Unlocking CyaSSL Context"); \
+	pthread_mutex_unlock(&cyassl_ctx_mutex); \
+	debug(LOG_DEBUG, "CyaSSL Context unlocked"); \
+} while (0)
+
+
+static CYASSL_CTX *
+get_cyassl_ctx(void)
+{
+    int err;
+    CYASSL_CTX *ret;
+	s_config *config = config_get_config();
+
+    LOCK_CYASSL_CTX();
+    
+    if (NULL == cyassl_ctx) {
+        CyaSSL_Init();
+        /* Create the CYASSL_CTX */
+        /* Allow TLSv1.0 up to TLSv1.2 */
+        if ( (cyassl_ctx = CyaSSL_CTX_new(CyaTLSv1_client_method())) == NULL){
+            debug(LOG_ERR, "Could not create CYASSL context.");
+            return NULL;
+        }
+
+        if (config->ssl_cipher_list) {
+            debug(LOG_INFO, "Setting SSL cipher list to [%s]", config->ssl_cipher_list);
+            err = CyaSSL_CTX_set_cipher_list(cyassl_ctx, config->ssl_cipher_list);
+            if (SSL_SUCCESS != err) {
+                debug(LOG_ERR, "Could not load SSL cipher list (error %d)", err);
+                return NULL;
+            }
+        }
+
+        if (config->ssl_verify) {
+            /* Use trusted certs */
+            /* Note: CyaSSL requires that the certificates are named by their hash values */
+            debug(LOG_INFO, "Loading SSL certificates from %s", config->ssl_certs);
+            err = CyaSSL_CTX_load_verify_locations(cyassl_ctx, NULL, config->ssl_certs);
+            if (err != SSL_SUCCESS) {
+                debug(LOG_ERR, "Could not load SSL certificates (error %d)", err);
+                if (err == ASN_UNKNOWN_OID_E) {
+                    debug(LOG_ERR, "Error is ASN_UNKNOWN_OID_E - try compiling cyassl/wolfssl with --enable-ecc");
+                } else {
+                    debug(LOG_ERR, "Make sure that SSLCertPath points to the correct path in the config file");
+                    debug(LOG_ERR, "Or disable certificate loading with 'SSLPeerVerification No'.");
+                }
+                return NULL;
+            }
+        } else {
+            CyaSSL_CTX_set_verify(cyassl_ctx, SSL_VERIFY_NONE, 0);
+            debug(LOG_INFO, "Disabling SSL certificate verification!");
+        }
+    }
+    
+    ret = cyassl_ctx;
+    UNLOCK_CYASSL_CTX();
+    return ret;
+}
+
+
+int
+https_get(const int sockfd, char *buf, const char* hostname) {
 
 	ssize_t	numbytes;
 	size_t totalbytes;
@@ -134,42 +210,17 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 	s_config *config;
 	config = config_get_config();
 
-	CyaSSL_Init();
-
-	CYASSL_CTX* ctx;
-	/* Create the CYASSL_CTX */
-	/* Allow SSLv3 up to TLSv1.2 */
-	if ( (ctx = CyaSSL_CTX_new(CyaSSLv23_client_method())) == NULL){
-		debug(LOG_ERR, "Could not create CYASSL context.");
-		return -1;
-	}
-
-	if (config->ssl_verify) {
-		/* Use trusted certs */
-		/* Note: CyaSSL requires that the certificates are named by their hash values */
-		int err = CyaSSL_CTX_load_verify_locations(ctx, NULL, config->ssl_certs);
-		if (err != SSL_SUCCESS) {
-			debug(LOG_ERR, "Could not load SSL certificates (error %d)", err);
-			if (err == ASN_UNKNOWN_OID_E) {
-				debug(LOG_ERR, "Error is ASN_UNKNOWN_OID_E - try compiling cyassl/wolfssl with --enable-ecc");
-			} else {
-				debug(LOG_ERR, "Make sure that SSLCertPath points to the correct path in the config file");
-				debug(LOG_ERR, "Or disable certificate loading with 'SSLPeerVerification No'.");
-			}
-			return -1;
-		}
-		debug(LOG_INFO, "Loading SSL certificates from %s", config->ssl_certs);
-	} else {
-		CyaSSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, 0);
-		debug(LOG_INFO, "Disabling SSL certificate verification!");
-	}
+	CYASSL_CTX* ctx = get_cyassl_ctx();
+    if (NULL == ctx) {
+        debug(LOG_ERR, "Could not get CyaSSL Context!");
+        return -1;
+    }
 
 	if (sockfd == -1) {
 		/* Could not connect to server */
 		debug(LOG_ERR, "Could not open socket to server!");
 		return -1;
 	}
-
 
 	/* Create CYASSL object */
 	CYASSL* ssl;
@@ -204,7 +255,7 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 	memset(buf, 0, buflen);
 
 	debug(LOG_DEBUG, "Reading response");
-	numbytes = totalbytes = 0;
+	totalbytes = 0;
 	done = 0;
 	do {
 		FD_ZERO(&readfds);
@@ -257,8 +308,6 @@ int https_get(const int sockfd, char *buf, const char* hostname) {
 	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", buf);
 
 	CyaSSL_free(ssl);
-	CyaSSL_CTX_free(ctx);
-	CyaSSL_Cleanup();
 
 	return totalbytes;
 }

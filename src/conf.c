@@ -100,6 +100,7 @@ typedef enum {
 	oProxyPort,
 	oSSLPeerVerification,
 	oSSLCertPath,
+    oSSLAllowedCipherList,
 } OpCodes;
 
 /** @internal
@@ -142,6 +143,7 @@ static const struct {
 	{ "proxyport",			oProxyPort },
 	{ "sslpeerverification",		oSSLPeerVerification },
 	{ "sslcertpath",			oSSLCertPath },
+    { "sslallowedcipherlist",   oSSLAllowedCipherList },
 	{ NULL,				oBadOption },
 };
 
@@ -193,6 +195,7 @@ config_init(void)
 	config.proxy_port = 0;
 	config.ssl_certs = safe_strdup(DEFAULT_AUTHSERVSSLCERTPATH);
 	config.ssl_verify = DEFAULT_AUTHSERVSSLPEERVER;
+    config.ssl_cipher_list = NULL;
 }
 
 /**
@@ -738,13 +741,6 @@ config_read(const char *filename)
 				case oHTTPDPassword:
 					config.httpdpassword = safe_strdup(p1);
 					break;
-				case oBadOption:
-					debug(LOG_ERR, "Bad option on line %d "
-							"in %s.", linenum,
-							filename);
-					debug(LOG_ERR, "Exiting...");
-					exit(-1);
-					break;
 				case oCheckInterval:
 					sscanf(p1, "%d", &config.checkinterval);
 					break;
@@ -778,6 +774,21 @@ config_read(const char *filename)
 					debug(LOG_WARNING, "SSLPeerVerification is set but no SSL compiled in. Ignoring!");
 					#endif
                     break;
+                case oSSLAllowedCipherList:
+                    config.ssl_cipher_list = safe_strdup(p1);
+                    #ifndef USE_CYASSL
+                    debug(LOG_WARNING, "SSLAllowedCipherList is set but no SSL compiled in. Ignoring!");
+                    #endif
+                    break;
+				case oBadOption:
+                    /* FALL THROUGH */
+                default:
+					debug(LOG_ERR, "Bad option on line %d "
+							"in %s.", linenum,
+							filename);
+					debug(LOG_ERR, "Exiting...");
+					exit(-1);
+					break;
 				}
 			}
 		}
