@@ -56,6 +56,7 @@
 #include "util.h"
 #include "conf.h"
 #include "debug.h"
+#include "pstring.h"
 
 #include "../config.h"
 
@@ -370,8 +371,7 @@ is_auth_online()
 char *
 get_status_text()
 {
-    char buffer[STATUS_BUF_SIZ];        /* XXX This needs rewriting since at ~112 clients, buffer max size is reached. */
-    size_t len;
+    pstr_t *pstr = pstr_new();
     s_config *config;
     t_auth_serv *auth_server;
     t_client *first;
@@ -380,9 +380,7 @@ get_status_text()
     unsigned int days = 0, hours = 0, minutes = 0, seconds = 0;
     t_trusted_mac *p;
 
-    len = 0;
-    snprintf(buffer, (sizeof(buffer) - len), "WiFiDog status\n\n");
-    len = strlen(buffer);
+    pstr_cat(pstr, "WiFiDog status\n\n");
 
     uptime = time(NULL) - started_time;
     days = (unsigned int)uptime / (24 * 60 * 60);
@@ -393,30 +391,19 @@ get_status_text()
     uptime -= minutes * 60;
     seconds = (unsigned int)uptime;
 
-    snprintf((buffer + len), (sizeof(buffer) - len), "Version: " VERSION "\n");
-    len = strlen(buffer);
+    pstr_cat(pstr, "Version: " VERSION "\n");
+    pstr_append_sprintf(pstr, "Uptime: %ud %uh %um %us\n", days, hours, minutes, seconds);
+    pstr_cat(pstr, "Has been restarted: ");
 
-    snprintf((buffer + len), (sizeof(buffer) - len), "Uptime: %ud %uh %um %us\n", days, hours, minutes, seconds);
-    len = strlen(buffer);
-
-    snprintf((buffer + len), (sizeof(buffer) - len), "Has been restarted: ");
-    len = strlen(buffer);
     if (restart_orig_pid) {
-        snprintf((buffer + len), (sizeof(buffer) - len), "yes (from PID %d)\n", restart_orig_pid);
-        len = strlen(buffer);
+        pstr_append_sprintf(pstr, "yes (from PID %d)\n", restart_orig_pid);
     } else {
-        snprintf((buffer + len), (sizeof(buffer) - len), "no\n");
-        len = strlen(buffer);
+        pstr_cat(pstr, "no\n");
     }
 
-    snprintf((buffer + len), (sizeof(buffer) - len), "Internet Connectivity: %s\n", (is_online()? "yes" : "no"));
-    len = strlen(buffer);
-
-    snprintf((buffer + len), (sizeof(buffer) - len), "Auth server reachable: %s\n", (is_auth_online()? "yes" : "no"));
-    len = strlen(buffer);
-
-    snprintf((buffer + len), (sizeof(buffer) - len), "Clients served this session: %lu\n\n", served_this_session);
-    len = strlen(buffer);
+    pstr_append_sprintf(pstr, "Internet Connectivity: %s\n", (is_online()? "yes" : "no"));
+    pstr_append_sprintf(pstr, "Auth server reachable: %s\n", (is_auth_online()? "yes" : "no"));
+    pstr_append_sprintf(pstr, "Clients served this session: %lu\n\n", served_this_session);
 
     LOCK_CLIENT_LIST();
 
@@ -432,25 +419,16 @@ get_status_text()
         }
     }
 
-    snprintf((buffer + len), (sizeof(buffer) - len), "%d clients " "connected.\n", count);
-    len = strlen(buffer);
+    pstr_append_sprintf(pstr, "%d clients " "connected.\n", count);
 
     first = client_get_first_client();
 
     count = 0;
     while (first != NULL) {
-        snprintf((buffer + len), (sizeof(buffer) - len), "\nClient %d\n", count);
-        len = strlen(buffer);
-
-        snprintf((buffer + len), (sizeof(buffer) - len), "  IP: %s MAC: %s\n", first->ip, first->mac);
-        len = strlen(buffer);
-
-        snprintf((buffer + len), (sizeof(buffer) - len), "  Token: %s\n", first->token);
-        len = strlen(buffer);
-
-        snprintf((buffer + len), (sizeof(buffer) - len), "  Downloaded: %llu\n  Uploaded: %llu\n",
-                 first->counters.incoming, first->counters.outgoing);
-        len = strlen(buffer);
+        pstr_append_sprintf(pstr, "\nClient %d\n", count);
+        pstr_append_sprintf(pstr, "  IP: %s MAC: %s\n", first->ip, first->mac);
+        pstr_append_sprintf(pstr, "  Token: %s\n", first->token);
+        pstr_append_sprintf(pstr, "  Downloaded: %llu\n  Uploaded: %llu\n", first->counters.incoming, first->counters.outgoing);
 
         count++;
         first = first->next;
@@ -461,27 +439,22 @@ get_status_text()
     config = config_get_config();
 
     if (config->trustedmaclist != NULL) {
-        snprintf((buffer + len), (sizeof(buffer) - len), "\nTrusted MAC addresses:\n");
-        len = strlen(buffer);
+        pstr_cat(pstr, "\nTrusted MAC addresses:\n");
 
         for (p = config->trustedmaclist; p != NULL; p = p->next) {
-            snprintf((buffer + len), (sizeof(buffer) - len), "  %s\n", p->mac);
-            len = strlen(buffer);
+            pstr_append_sprintf(pstr, "  %s\n", p->mac);
         }
     }
 
-    snprintf((buffer + len), (sizeof(buffer) - len), "\nAuthentication servers:\n");
-    len = strlen(buffer);
+    pstr_cat(pstr, "\nAuthentication servers:\n");
 
     LOCK_CONFIG();
 
     for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
-        snprintf((buffer + len), (sizeof(buffer) - len), "  Host: %s (%s)\n", auth_server->authserv_hostname,
-                 auth_server->last_ip);
-        len = strlen(buffer);
+        pstr_append_sprintf(pstr, "  Host: %s (%s)\n", auth_server->authserv_hostname, auth_server->last_ip);
     }
 
     UNLOCK_CONFIG();
 
-    return safe_strdup(buffer);
+    return pstr_to_string(pstr);
 }

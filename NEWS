@@ -1,4 +1,4 @@
-# $Id$
+# vim: set noet sw=4 ts=4 :
 
 WiFiDog 1.2.1:
 	* Fix build (#127, #128)
@@ -7,7 +7,8 @@ WiFiDog 1.2.1:
 	* Fix several memory leaks and other potential problems uncovered by
 	  static analysis
 	* Refactor SSL initialization
-    * Prevent duplicate TrustedMAC entries (#145)
+	* Fix a truncation issue around 112 clients in the status page. (#47)
+	* Prevent duplicate TrustedMAC entries (#145)
 
 WiFiDog 1.2.0:
 	* Note: this changelog includes snapshots like 20090925, e.g. everything
@@ -108,18 +109,18 @@ WiFiDog 1.1.2:
 	* Fixed minor issue with wdctl
 	* Changed the iptables rules priority to allow existing NAT rules to work
 	* read()s from central server in auth_server_request() are
-          now timed-out (via select).  This is hopefully a bugfix to the
-          thread-freezing problem.
+	  now timed-out (via select).  This is hopefully a bugfix to the
+	  thread-freezing problem.
 	* Bugfix non-RFC compliant HTTP requests using \n instead of \r\n as line
-          terminations as per email from ludocornut@users.sourceforge.net
+	  terminations as per email from ludocornut@users.sourceforge.net
 	* Firewall: make the default ruleset for validating users = allow all
-          (except sending SMTP)
+	  (except sending SMTP)
 
 Fixed issue with FAQ
 
 WiFiDog 1.1.1:
 	* An auth server on port 80 will now work
-    	* Added an FAQ
+	* Added an FAQ
 
 WiFiDog 1.1.0:
 	* Changes:

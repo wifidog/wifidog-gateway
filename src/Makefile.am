@@ -28,7 +28,8 @@ wifidog_SOURCES = commandline.c \
 	ping_thread.c \
 	safe.c \
 	httpd_thread.c \
-	simple_http.c
+	simple_http.c \
+	pstring.c
 
 noinst_HEADERS = commandline.h \
 	common.h \
@@ -47,6 +48,7 @@ noinst_HEADERS = commandline.h \
 	ping_thread.h \
 	safe.h \
 	httpd_thread.h \
-	simple_http.h
+	simple_http.h \
+	pstring.h
 
 wdctl_SOURCES = wdctl.c

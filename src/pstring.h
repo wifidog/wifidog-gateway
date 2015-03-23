@@ -19,42 +19,31 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Id$ */
-/** @file safe.h
-	  @brief Safe versions of stdlib/string functions that error out and exit if memory allocation fails
-	  @author Copyright (C) 2005 Mina Naguib <mina@ilesansfil.org>
+/** @file pstring.h
+	@brief Simple pascal string like strings
+	@author Copyright (C) 2015 Alexandre Carmel-Veilleux <acv@miniguru.ca>
 */
 
-#ifndef _SAFE_H_
-#define _SAFE_H_
+#ifndef _PSTRING_H_
+#define _PSTRING_H_
 
+#include <stddef.h>
 #include <stdarg.h> /* For va_list */
-#include <sys/types.h> /* For fork */
-#include <unistd.h> /* For fork */
 
-/** @brief Safe version of malloc
+/**
+ * Structure to represent a pascal-like string.
  */
-void *safe_malloc(size_t);
+struct pstr {
+    char *buf;   /**< @brief Buffer used to hold string. Pointer subject to change. */
+    size_t len;  /**< @brief Current length of the string. */
+    size_t size; /**< @brief Current maximum size of the buffer. */
+};
 
-/** @brief Safe version of realloc */
-void *safe_realloc(void *, size_t);
+typedef struct pstr pstr_t;  /**< @brief pstr_t is a type for a struct pstr. */
 
-/* @brief Safe version of strdup
- */
-char * safe_strdup(const char *);
+pstr_t *pstr_new(void);  /**< @brief Create a new pstr */
+char * pstr_to_string(pstr_t *);  /**< @brief Convert pstr to a char *, freeing pstr. */
+void pstr_cat(pstr_t *, const char *);  /**< @brief Appends a string to a pstr_t */
+int pstr_append_sprintf(pstr_t *, const char *, ...);  /**< @brief Appends formatted string to a pstr_t. */
 
-/* @brief Safe version of asprintf
- */
-int safe_asprintf(char **, const char *, ...);
-
-/* @brief Safe version of vasprintf
- */
-int safe_vasprintf(char **, const char *, va_list);
-
-/* @brief Safe version of fork
- */
-
-pid_t safe_fork(void);
-
-#endif /* _SAFE_H_ */
-
+#endif /* defined(_PSTRING_H_) */
