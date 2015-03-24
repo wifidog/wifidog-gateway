@@ -60,13 +60,12 @@ _debug(const char *filename, int line, int level, const char *format, ...)
             va_end(vlist);
             fputc('\n', stderr);
         } else if (!config->daemon) {
-            fprintf(stdout, "[%d][%.24s][%u](%s:%d) ", level, ctime_r(&ts, buf), getpid(),
+            fprintf(stderr, "[%d][%.24s][%u](%s:%d) ", level, ctime_r(&ts, buf), getpid(),
 			    filename, line);
             va_start(vlist, format);
-            vfprintf(stdout, format, vlist);
+            vfprintf(stderr, format, vlist);
             va_end(vlist);
-            fputc('\n', stdout);
-            fflush(stdout);
+            fputc('\n', stderr);
         }
 
         if (config->log_syslog) {
