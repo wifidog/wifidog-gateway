@@ -359,7 +359,6 @@ parse_auth_server(FILE * file, const char *filename, int *linenum)
     new = safe_malloc(sizeof(t_auth_serv));
 
     /* Fill in struct */
-    memset(new, 0, sizeof(t_auth_serv));        /*< Fill all with NULL */
     new->authserv_hostname = host;
     new->authserv_use_ssl = ssl_available;
     new->authserv_path = path;
@@ -556,7 +555,6 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
     }
     /* Generate rule record */
     tmp = safe_malloc(sizeof(t_firewall_rule));
-    memset((void *)tmp, 0, sizeof(t_firewall_rule));
     tmp->target = target;
     tmp->mask_is_ipset = mask_is_ipset;
     if (protocol != NULL)
@@ -573,7 +571,6 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
     /* Append the rule record */
     if (config.rulesets == NULL) {
         config.rulesets = safe_malloc(sizeof(t_firewall_ruleset));
-        memset(config.rulesets, 0, sizeof(t_firewall_ruleset));
         config.rulesets->name = safe_strdup(ruleset);
         tmpr = config.rulesets;
     } else {
@@ -585,7 +582,6 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
         if (tmpr == NULL) {
             /* Rule did not exist */
             tmpr = safe_malloc(sizeof(t_firewall_ruleset));
-            memset(tmpr, 0, sizeof(t_firewall_ruleset));
             tmpr->name = safe_strdup(ruleset);
             tmpr2->next = tmpr;
         }
