@@ -46,13 +46,15 @@
 /* From gateway.c */
 extern httpd * webserver;
 
-void * safe_malloc (size_t size) {
+void *
+safe_malloc (size_t size) {
 	void * retval = NULL;
 	retval = malloc(size);
 	if (!retval) {
 		debug(LOG_CRIT, "Failed to malloc %d bytes of memory: %s.  Bailing out", size, strerror(errno));
 		exit(1);
 	}
+    memset(retval, 0, size);
 	return (retval);
 }
 
