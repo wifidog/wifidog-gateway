@@ -28,9 +28,9 @@
 #ifndef _SAFE_H_
 #define _SAFE_H_
 
-#include <stdarg.h> /* For va_list */
-#include <sys/types.h> /* For fork */
-#include <unistd.h> /* For fork */
+#include <stdarg.h>             /* For va_list */
+#include <sys/types.h>          /* For fork */
+#include <unistd.h>             /* For fork */
 
 /** @brief Safe version of malloc
  */
@@ -41,7 +41,7 @@ void *safe_realloc(void *, size_t);
 
 /* @brief Safe version of strdup
  */
-char * safe_strdup(const char *);
+char *safe_strdup(const char *);
 
 /* @brief Safe version of asprintf
  */
@@ -56,5 +56,4 @@ int safe_vasprintf(char **, const char *, va_list);
 
 pid_t safe_fork(void);
 
-#endif /* _SAFE_H_ */
-
+#endif                          /* _SAFE_H_ */
