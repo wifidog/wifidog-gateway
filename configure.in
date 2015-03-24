@@ -88,7 +88,7 @@ BB_ENABLE_DOXYGEN
 # Enable cyassl?
 AC_DEFUN([BB_CYASSL],
 [
-AC_ARG_ENABLE(cyassl, [  --enable-cyassl        enable documentation generation with doxygen (no)], [enable_cyassl=yes], [enable_cyassl=no])
+AC_ARG_ENABLE(cyassl, [  --enable-cyassl        enable TLS support for auth server communication (no)], [], [enable_cyassl=no])
 if test "x$enable_cyassl" = xyes; then
         AC_CHECK_HEADERS(cyassl/ssl.h)
         AC_SEARCH_LIBS([CyaSSLv23_client_method], [cyassl wolfssl], [], [
