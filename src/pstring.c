@@ -47,6 +47,7 @@ pstr_new(void)
     new->len = 0;
     new->size = MAX_BUF;
     new->buf = (char *)safe_malloc(MAX_BUF);
+    memset(new->buf, 0, MAX_BUF);
 
     return new;
 }
