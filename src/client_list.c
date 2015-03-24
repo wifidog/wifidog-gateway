@@ -61,7 +61,6 @@ client_get_new(void)
 {
     t_client *client;
     client = safe_malloc(sizeof(t_client));
-    memset(client, 0, sizeof(t_client));
     return client;
 }
 
