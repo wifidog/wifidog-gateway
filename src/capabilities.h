@@ -19,10 +19,11 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Id$ */
 /** @file capabilities.h
     @author Copyright (C) 2015 Michael Haas <haas@computerlinguist.org>
 */
+
+#ifdef USE_LIBCAP
 
 #ifndef _CAPABILITIES_H_
 #define _CAPABILITIES_H_
@@ -33,3 +34,5 @@ drop_privileges(const char*, const char*);
 void
 regain_privileges();
 #endif                          /* _CAPABILITIES_H_ */
+
+#endif /* USE_LIBCAP */
