@@ -165,7 +165,8 @@ get_iface_ip(const char *ifname)
     }
 
     /* Get IP of internal interface */
-    strcpy(if_data.ifr_name, ifname);
+    strncpy(if_data.ifr_name, ifname, 15);
+    if_data.ifr_name[15] = '\0';
 
     /* Get the IP address */
     if (ioctl(sockd, SIOCGIFADDR, &if_data) < 0) {
@@ -188,7 +189,8 @@ get_iface_mac(const char *ifname)
     struct ifreq ifr;
     char *hwaddr, mac[13];
 
-    strcpy(ifr.ifr_name, ifname);
+    strncpy(ifr.ifr_name, ifname, 15);
+    ifr.ifr_name[15] = '\0';
 
     s = socket(AF_INET, SOCK_DGRAM, 0);
     if (-1 == s) {
@@ -229,14 +231,16 @@ get_ext_iface(void)
         input = fopen("/proc/net/route", "r");
         if (NULL == input) {
             debug(LOG_ERR, "Could not open /proc/net/route (%s).", strerror(errno));
+            free(gw);
+            free(device);
             return NULL;
         }
         while (!feof(input)) {
             /* XXX scanf(3) is unsafe, risks overrun */
-            if ((fscanf(input, "%s %s %*s %*s %*s %*s %*s %*s %*s %*s %*s\n", device, gw) == 2)
+            if ((fscanf(input, "%15s %15s %*s %*s %*s %*s %*s %*s %*s %*s %*s\n", device, gw) == 2)
                 && strcmp(gw, "00000000") == 0) {
                 free(gw);
-                debug(LOG_INFO, "get_ext_iface(): Detected %s as the default interface after try %d", device, i);
+                debug(LOG_INFO, "get_ext_iface(): Detected %s as the default interface after trying %d", device, i);
                 fclose(input);
                 return device;
             }
