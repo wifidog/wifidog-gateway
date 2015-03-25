@@ -1,3 +1,4 @@
+/* vim: set sw=4 ts=4 sts=4 et : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -18,7 +19,6 @@
  *                                                                  *
  \********************************************************************/
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -34,6 +34,7 @@
 #include "../config.h"
 #include "common.h"
 #include "debug.h"
+#include "pstring.h"
 
 #ifdef USE_CYASSL
 #include <cyassl/ssl.h>
@@ -48,80 +49,79 @@
 static CYASSL_CTX *get_cyassl_ctx(void);
 #endif
 
+/**
+ * Perform an HTTP request, caller frees both request and response,
+ * NULL returned on error.
+ * @param sockfd Socket to use, already connected
+ * @param req Request to send, fully formatted.
+ * @return char Response as a string
+ */
+char *
+http_get(const int sockfd, const char *req)
+{
+    ssize_t numbytes;
+    int done, nfds;
+    fd_set readfds;
+    struct timeval timeout;
+    size_t reqlen = strlen(req);
+    char readbuf[MAX_BUF];
+    char *retval;
+    pstr_t *response = pstr_new();
 
-int
-http_get(const int sockfd, char *buf) {
+    if (sockfd == -1) {
+        /* Could not connect to server */
+        debug(LOG_ERR, "Could not open socket to server!");
+        goto error;
+    }
 
-	ssize_t	numbytes;
-	size_t totalbytes;
-	int done, nfds;
-	fd_set			readfds;
-	struct timeval		timeout;
-	size_t buflen = strlen(buf);
-	
-	if (sockfd == -1) {
-		/* Could not connect to server */
-		debug(LOG_ERR, "Could not open socket to server!");
-		return -1;
-	}
+    debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", req);
+    send(sockfd, req, reqlen, 0);
 
-	debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", buf);
-	send(sockfd, buf, buflen, 0);
+    debug(LOG_DEBUG, "Reading response");
+    done = 0;
+    do {
+        FD_ZERO(&readfds);
+        FD_SET(sockfd, &readfds);
+        timeout.tv_sec = 30;    /* XXX magic... 30 second is as good a timeout as any */
+        timeout.tv_usec = 0;
+        nfds = sockfd + 1;
 
-	// Clear buffer and re-use for response
-	memset(buf, 0, buflen);
+        nfds = select(nfds, &readfds, NULL, NULL, &timeout);
 
-	debug(LOG_DEBUG, "Reading response");
-	totalbytes = 0;
-	done = 0;
-	do {
-		FD_ZERO(&readfds);
-		FD_SET(sockfd, &readfds);
-		timeout.tv_sec = 30; /* XXX magic... 30 second is as good a timeout as any */
-		timeout.tv_usec = 0;
-		nfds = sockfd + 1;
-
-		nfds = select(nfds, &readfds, NULL, NULL, &timeout);
-
-		if (nfds > 0) {
-			/** We don't have to use FD_ISSET() because there
+        if (nfds > 0) {
+                        /** We don't have to use FD_ISSET() because there
 			 *  was only one fd. */
-			numbytes = read(sockfd, buf + totalbytes, MAX_BUF - (totalbytes + 1));
-			if (numbytes < 0) {
-				debug(LOG_ERR, "An error occurred while reading from server: %s", strerror(errno));
-				/* FIXME */
-				close(sockfd);
-				return -1;
-			}
-			else if (numbytes == 0) {
-				done = 1;
-			}
-			else {
-				totalbytes += (size_t) numbytes;
-				debug(LOG_DEBUG, "Read %d bytes, total now %d", numbytes, totalbytes);
-			}
-		}
-		else if (nfds == 0) {
-			debug(LOG_ERR, "Timed out reading data via select() from auth server");
-			/* FIXME */
-			close(sockfd);
-			return -1;
-		}
-		else if (nfds < 0) {
-			debug(LOG_ERR, "Error reading data via select() from auth server: %s", strerror(errno));
-			/* FIXME */
-			close(sockfd);
-			return -1;
-		}
-	} while (!done);
+            memset(readbuf, 0, MAX_BUF);
+            numbytes = read(sockfd, readbuf, MAX_BUF - 1);
+            if (numbytes < 0) {
+                debug(LOG_ERR, "An error occurred while reading from server: %s", strerror(errno));
+                goto error;
+            } else if (numbytes == 0) {
+                done = 1;
+            } else {
+                pstr_cat(response, readbuf);
+                debug(LOG_DEBUG, "Read %d bytes", numbytes);
+            }
+        } else if (nfds == 0) {
+            debug(LOG_ERR, "Timed out reading data via select() from auth server");
+            goto error;
+        } else if (nfds < 0) {
+            debug(LOG_ERR, "Error reading data via select() from auth server: %s", strerror(errno));
+            goto error;
+        }
+    } while (!done);
 
-	close(sockfd);
+    close(sockfd);
+    retval = pstr_to_string(response);
+    debug(LOG_DEBUG, "HTTP Response from Server: [%s]", retval);
+    return retval;
 
-	buf[totalbytes] = '\0';
-	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", buf);
-	return totalbytes;
+ error:
+    close(sockfd);
+    retval = pstr_to_string(response);
+    free(retval);
+    return NULL;
 }
-
 
 #ifdef USE_CYASSL
 
@@ -140,21 +140,20 @@ static pthread_mutex_t cyassl_ctx_mutex = PTHREAD_MUTEX_INITIALIZER;
 	debug(LOG_DEBUG, "CyaSSL Context unlocked"); \
 } while (0)
 
-
 static CYASSL_CTX *
 get_cyassl_ctx(void)
 {
     int err;
     CYASSL_CTX *ret;
-	s_config *config = config_get_config();
+    s_config *config = config_get_config();
 
     LOCK_CYASSL_CTX();
-    
+
     if (NULL == cyassl_ctx) {
         CyaSSL_Init();
         /* Create the CYASSL_CTX */
         /* Allow TLSv1.0 up to TLSv1.2 */
-        if ( (cyassl_ctx = CyaSSL_CTX_new(CyaTLSv1_client_method())) == NULL){
+        if ((cyassl_ctx = CyaSSL_CTX_new(CyaTLSv1_client_method())) == NULL) {
             debug(LOG_ERR, "Could not create CYASSL context.");
             UNLOCK_CYASSL_CTX();
             return NULL;
@@ -191,130 +190,130 @@ get_cyassl_ctx(void)
             debug(LOG_INFO, "Disabling SSL certificate verification!");
         }
     }
-    
+
     ret = cyassl_ctx;
     UNLOCK_CYASSL_CTX();
     return ret;
 }
 
+/**
+ * Perform an HTTPS request, caller frees both request and response,
+ * NULL returned on error.
+ * @param sockfd Socket to use, already connected
+ * @param req Request to send, fully formatted.
+ * @param hostname Hostname to use in https request. Caller frees.
+ * @return char Response as a string
+ */
+char *
+https_get(const int sockfd, const char *req, const char *hostname)
+{
+    ssize_t numbytes;
+    int done, nfds;
+    fd_set readfds;
+    struct timeval timeout;
+    unsigned long sslerr;
+    char sslerrmsg[CYASSL_MAX_ERROR_SZ];
+    size_t reqlen = strlen(req);
+    char readbuf[MAX_BUF];
+    char *retval;
+    pstr_t *response = pstr_new();
+    CYASSL *ssl = NULL;
+    CYASSL_CTX *ctx = NULL;
 
-int
-https_get(const int sockfd, char *buf, const char* hostname) {
+    s_config *config;
+    config = config_get_config();
 
-	ssize_t	numbytes;
-	size_t totalbytes;
-	int done, nfds;
-	fd_set			readfds;
-	struct timeval		timeout;
-	unsigned long sslerr;
-	char sslerrmsg[CYASSL_MAX_ERROR_SZ];
-	size_t buflen = strlen(buf);
-
-	s_config *config;
-	config = config_get_config();
-
-	CYASSL_CTX* ctx = get_cyassl_ctx();
+    ctx = get_cyassl_ctx();
     if (NULL == ctx) {
         debug(LOG_ERR, "Could not get CyaSSL Context!");
-        return -1;
+        goto error;
     }
 
-	if (sockfd == -1) {
-		/* Could not connect to server */
-		debug(LOG_ERR, "Could not open socket to server!");
-		return -1;
-	}
+    if (sockfd == -1) {
+        /* Could not connect to server */
+        debug(LOG_ERR, "Could not open socket to server!");
+        goto error;
+    }
 
-	/* Create CYASSL object */
-	CYASSL* ssl;
-	if( (ssl = CyaSSL_new(ctx)) == NULL) {
-		debug(LOG_ERR, "Could not create CyaSSL context.");
-		return -1;
-	}
-	if (config->ssl_verify) {
-		// Turn on domain name check
-		// Loading of CA certificates and verification of remote host name
-		// go hand in hand - one is useless without the other.
-		CyaSSL_check_domain_name(ssl, hostname);
-	}
-	CyaSSL_set_fd(ssl, sockfd);
+    /* Create CYASSL object */
+    if ((ssl = CyaSSL_new(ctx)) == NULL) {
+        debug(LOG_ERR, "Could not create CyaSSL context.");
+        goto error;
+    }
+    if (config->ssl_verify) {
+        // Turn on domain name check
+        // Loading of CA certificates and verification of remote host name
+        // go hand in hand - one is useless without the other.
+        CyaSSL_check_domain_name(ssl, hostname);
+    }
+    CyaSSL_set_fd(ssl, sockfd);
 
+    debug(LOG_DEBUG, "Sending HTTPS request to auth server: [%s]\n", req);
+    numbytes = CyaSSL_send(ssl, req, (int)reqlen, 0);
+    if (numbytes <= 0) {
+        sslerr = (unsigned long)CyaSSL_get_error(ssl, numbytes);
+        CyaSSL_ERR_error_string(sslerr, sslerrmsg);
+        debug(LOG_ERR, "CyaSSL_send failed: %s", sslerrmsg);
+        goto error;
+    } else if ((size_t) numbytes != reqlen) {
+        debug(LOG_ERR, "CyaSSL_send failed: only %d bytes out of %d bytes sent!", numbytes, reqlen);
+        goto error;
+    }
 
-	debug(LOG_DEBUG, "Sending HTTPS request to auth server: [%s]\n", buf);
-	numbytes = CyaSSL_send(ssl, buf, (int) buflen, 0);
-	if (numbytes <= 0) {
-		sslerr = (unsigned long) CyaSSL_get_error(ssl, numbytes);
-		CyaSSL_ERR_error_string(sslerr, sslerrmsg);
-		debug(LOG_ERR, "CyaSSL_send failed: %s", sslerrmsg);
-		return -1;
-	}
-	else if (numbytes != (int) buflen) {
-		debug(LOG_ERR, "CyaSSL_send failed: only %d bytes out of %d bytes sent!",
-			numbytes, buflen);
-		return -1;
-	}
+    debug(LOG_DEBUG, "Reading response");
+    done = 0;
+    do {
+        FD_ZERO(&readfds);
+        FD_SET(sockfd, &readfds);
+        timeout.tv_sec = 30;    /* XXX magic... 30 second is as good a timeout as any */
+        timeout.tv_usec = 0;
+        nfds = sockfd + 1;
 
-	// Clear buffer and re-use for response
-	memset(buf, 0, buflen);
+        nfds = select(nfds, &readfds, NULL, NULL, &timeout);
 
-	debug(LOG_DEBUG, "Reading response");
-	totalbytes = 0;
-	done = 0;
-	do {
-		FD_ZERO(&readfds);
-		FD_SET(sockfd, &readfds);
-		timeout.tv_sec = 30; /* XXX magic... 30 second is as good a timeout as any */
-		timeout.tv_usec = 0;
-		nfds = sockfd + 1;
-
-		nfds = select(nfds, &readfds, NULL, NULL, &timeout);
-
-		if (nfds > 0) {
-			/** We don't have to use FD_ISSET() because there
+        if (nfds > 0) {
+                        /** We don't have to use FD_ISSET() because there
 			 *  was only one fd. */
-			numbytes = CyaSSL_read(ssl, buf + totalbytes, MAX_BUF - (totalbytes + 1));
-			if (numbytes < 0) {
-				sslerr = (unsigned long) CyaSSL_get_error(ssl, numbytes);
-				CyaSSL_ERR_error_string(sslerr, sslerrmsg);
-				debug(LOG_ERR, "An error occurred while reading from server: %s", sslerrmsg);
-				/* FIXME */
-				close(sockfd);
-				return -1;
-			}
-			else if (numbytes == 0) {
-				/* CyaSSL_read returns 0 on a clean shutdown or if the peer closed the
-				connection. We can't distinguish between these cases right now. */
-				done = 1;
-			}
-			else {
-				totalbytes += (size_t) numbytes;
-				debug(LOG_DEBUG, "Read %d bytes, total now %d", numbytes, totalbytes);
-			}
-		}
-		else if (nfds == 0) {
-			debug(LOG_ERR, "Timed out reading data via select() from auth server");
-			/* FIXME */
-			close(sockfd);
-			return -1;
-		}
-		else if (nfds < 0) {
-			debug(LOG_ERR, "Error reading data via select() from auth server: %s", strerror(errno));
-			/* FIXME */
-			close(sockfd);
-			return -1;
-		}
-	} while (!done);
+            memset(readbuf, 0, MAX_BUF);
+            numbytes = CyaSSL_read(ssl, readbuf, MAX_BUF - 1);
+            if (numbytes < 0) {
+                sslerr = (unsigned long)CyaSSL_get_error(ssl, numbytes);
+                CyaSSL_ERR_error_string(sslerr, sslerrmsg);
+                debug(LOG_ERR, "An error occurred while reading from server: %s", sslerrmsg);
+                goto error;
+            } else if (numbytes == 0) {
+                /* CyaSSL_read returns 0 on a clean shutdown or if the peer closed the
+                   connection. We can't distinguish between these cases right now. */
+                done = 1;
+            } else {
+                pstr_cat(response, readbuf);
+                debug(LOG_DEBUG, "Read %d bytes", numbytes);
+            }
+        } else if (nfds == 0) {
+            debug(LOG_ERR, "Timed out reading data via select() from auth server");
+            goto error;
+        } else if (nfds < 0) {
+            debug(LOG_ERR, "Error reading data via select() from auth server: %s", strerror(errno));
+            goto error;
+        }
+    } while (!done);
 
-	close(sockfd);
+    close(sockfd);
 
-	buf[totalbytes] = '\0';
-	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", buf);
+    CyaSSL_free(ssl);
 
-	CyaSSL_free(ssl);
+    retval = pstr_to_string(response);
+    debug(LOG_DEBUG, "HTTPS Response from Server: [%s]", retval);
+    return retval;
 
-	return totalbytes;
+ error:
+    if (ssl) {
+        CyaSSL_free(ssl);
+    }
+    close(sockfd);
+    retval = pstr_to_string(response);
+    free(retval);
+    return NULL;
 }
 
-
-#endif /* USE_CYASSL */
-
+#endif                          /* USE_CYASSL */

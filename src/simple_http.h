@@ -1,3 +1,4 @@
+/* vim: set sw=4 ts=4 sts=4 et : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -18,8 +19,13 @@
  *                                                                  *
  \********************************************************************/
 
-int http_get(const int, char*);
+#ifndef _SIMPLE_HTTP_H_
+#define _SIMPLE_HTTP_H_
+
+char *http_get(const int, const char *);
 
 #ifdef USE_CYASSL
-int https_get(const int, char*, const char*);
-#endif
+char *https_get(const int, const char *, const char *);
+#endif                          /* defined(USE_CYASSL) */
+
+#endif                          /* defined(_SIMPLE_HTTP_H_) */
