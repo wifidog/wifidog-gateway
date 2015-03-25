@@ -1,3 +1,4 @@
+/* vim: set sw=4 ts=4 sts=4 et : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -34,6 +35,7 @@
 #include "../config.h"
 #include "common.h"
 #include "debug.h"
+#include "pstring.h"
 
 #ifdef USE_CYASSL
 #include <cyassl/ssl.h>
@@ -48,31 +50,35 @@
 static CYASSL_CTX *get_cyassl_ctx(void);
 #endif
 
-
-int
-http_get(const int sockfd, char *buf) {
-
+/**
+ * Perform an HTTP request, caller frees both request and response,
+ * NULL returned on error.
+ * @param sockfd Socket to use, already connected
+ * @param req Request to send, fully formatted.
+ * @return char Response as a string
+ */
+char *
+http_get(const int sockfd, const char *req)
+{
 	ssize_t	numbytes;
-	size_t totalbytes;
 	int done, nfds;
 	fd_set			readfds;
 	struct timeval		timeout;
-	size_t buflen = strlen(buf);
+	size_t reqlen = strlen(req);
+    char readbuf[MAX_BUF];
+    char *retval;
+    pstr_t *response = pstr_new();
 	
 	if (sockfd == -1) {
 		/* Could not connect to server */
 		debug(LOG_ERR, "Could not open socket to server!");
-		return -1;
+		goto error;
 	}
 
-	debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", buf);
-	send(sockfd, buf, buflen, 0);
-
-	// Clear buffer and re-use for response
-	memset(buf, 0, buflen);
+	debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", req);
+	send(sockfd, req, reqlen, 0);
 
 	debug(LOG_DEBUG, "Reading response");
-	totalbytes = 0;
 	done = 0;
 	do {
 		FD_ZERO(&readfds);
@@ -86,40 +92,40 @@ http_get(const int sockfd, char *buf) {
 		if (nfds > 0) {
 			/** We don't have to use FD_ISSET() because there
 			 *  was only one fd. */
-			numbytes = read(sockfd, buf + totalbytes, MAX_BUF - (totalbytes + 1));
+            memset(readbuf, 0, MAX_BUF);
+			numbytes = read(sockfd, readbuf, MAX_BUF - 1);
 			if (numbytes < 0) {
 				debug(LOG_ERR, "An error occurred while reading from server: %s", strerror(errno));
-				/* FIXME */
-				close(sockfd);
-				return -1;
+				goto error;
 			}
 			else if (numbytes == 0) {
 				done = 1;
 			}
 			else {
-				totalbytes += (size_t) numbytes;
-				debug(LOG_DEBUG, "Read %d bytes, total now %d", numbytes, totalbytes);
+                pstr_cat(response, readbuf);
+				debug(LOG_DEBUG, "Read %d bytes", numbytes);
 			}
 		}
 		else if (nfds == 0) {
 			debug(LOG_ERR, "Timed out reading data via select() from auth server");
-			/* FIXME */
-			close(sockfd);
-			return -1;
+            goto error;
 		}
 		else if (nfds < 0) {
 			debug(LOG_ERR, "Error reading data via select() from auth server: %s", strerror(errno));
-			/* FIXME */
-			close(sockfd);
-			return -1;
+            goto error;
 		}
 	} while (!done);
 
 	close(sockfd);
+    retval = pstr_to_string(response);
+	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", retval);
+	return retval;
 
-	buf[totalbytes] = '\0';
-	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", buf);
-	return totalbytes;
+error:
+    close(sockfd);
+    retval = pstr_to_string(response);
+    free(retval);
+    return NULL;
 }
 
 
@@ -198,38 +204,49 @@ get_cyassl_ctx(void)
 }
 
 
-int
-https_get(const int sockfd, char *buf, const char* hostname) {
-
+/**
+ * Perform an HTTPS request, caller frees both request and response,
+ * NULL returned on error.
+ * @param sockfd Socket to use, already connected
+ * @param req Request to send, fully formatted.
+ * @param hostname Hostname to use in https request. Caller frees.
+ * @return char Response as a string
+ */
+char *
+https_get(const int sockfd, const char *req, const char* hostname)
+{
 	ssize_t	numbytes;
-	size_t totalbytes;
 	int done, nfds;
 	fd_set			readfds;
 	struct timeval		timeout;
 	unsigned long sslerr;
 	char sslerrmsg[CYASSL_MAX_ERROR_SZ];
-	size_t buflen = strlen(buf);
+	size_t reqlen = strlen(req);
+    char readbuf[MAX_BUF];
+    char *retval;
+    pstr_t *response = pstr_new();
+	CYASSL *ssl = NULL;
+    CYASSL_CTX *ctx = NULL;
 
 	s_config *config;
 	config = config_get_config();
 
-	CYASSL_CTX* ctx = get_cyassl_ctx();
+	ctx = get_cyassl_ctx();
     if (NULL == ctx) {
         debug(LOG_ERR, "Could not get CyaSSL Context!");
-        return -1;
+        goto error;
     }
 
 	if (sockfd == -1) {
 		/* Could not connect to server */
 		debug(LOG_ERR, "Could not open socket to server!");
-		return -1;
+		goto error;
 	}
 
 	/* Create CYASSL object */
-	CYASSL* ssl;
 	if( (ssl = CyaSSL_new(ctx)) == NULL) {
 		debug(LOG_ERR, "Could not create CyaSSL context.");
-		return -1;
+        goto error;
 	}
 	if (config->ssl_verify) {
 		// Turn on domain name check
@@ -240,25 +257,21 @@ https_get(const int sockfd, char *buf, const char* hostname) {
 	CyaSSL_set_fd(ssl, sockfd);
 
 
-	debug(LOG_DEBUG, "Sending HTTPS request to auth server: [%s]\n", buf);
-	numbytes = CyaSSL_send(ssl, buf, (int) buflen, 0);
+	debug(LOG_DEBUG, "Sending HTTPS request to auth server: [%s]\n", req);
+	numbytes = CyaSSL_send(ssl, req, (int) reqlen, 0);
 	if (numbytes <= 0) {
 		sslerr = (unsigned long) CyaSSL_get_error(ssl, numbytes);
 		CyaSSL_ERR_error_string(sslerr, sslerrmsg);
 		debug(LOG_ERR, "CyaSSL_send failed: %s", sslerrmsg);
-		return -1;
+        goto error;
 	}
-	else if (numbytes != (int) buflen) {
+	else if ((size_t)numbytes != reqlen) {
 		debug(LOG_ERR, "CyaSSL_send failed: only %d bytes out of %d bytes sent!",
-			numbytes, buflen);
-		return -1;
+			numbytes, reqlen);
+        goto error;
 	}
-
-	// Clear buffer and re-use for response
-	memset(buf, 0, buflen);
 
 	debug(LOG_DEBUG, "Reading response");
-	totalbytes = 0;
 	done = 0;
 	do {
 		FD_ZERO(&readfds);
@@ -272,14 +285,13 @@ https_get(const int sockfd, char *buf, const char* hostname) {
 		if (nfds > 0) {
 			/** We don't have to use FD_ISSET() because there
 			 *  was only one fd. */
-			numbytes = CyaSSL_read(ssl, buf + totalbytes, MAX_BUF - (totalbytes + 1));
+            memset(readbuf, 0, MAX_BUF);
+			numbytes = CyaSSL_read(ssl, readbuf, MAX_BUF - 1);
 			if (numbytes < 0) {
 				sslerr = (unsigned long) CyaSSL_get_error(ssl, numbytes);
 				CyaSSL_ERR_error_string(sslerr, sslerrmsg);
 				debug(LOG_ERR, "An error occurred while reading from server: %s", sslerrmsg);
-				/* FIXME */
-				close(sockfd);
-				return -1;
+                goto error;
 			}
 			else if (numbytes == 0) {
 				/* CyaSSL_read returns 0 on a clean shutdown or if the peer closed the
@@ -287,32 +299,36 @@ https_get(const int sockfd, char *buf, const char* hostname) {
 				done = 1;
 			}
 			else {
-				totalbytes += (size_t) numbytes;
-				debug(LOG_DEBUG, "Read %d bytes, total now %d", numbytes, totalbytes);
+                pstr_cat(response, readbuf);
+				debug(LOG_DEBUG, "Read %d bytes", numbytes);
 			}
 		}
 		else if (nfds == 0) {
 			debug(LOG_ERR, "Timed out reading data via select() from auth server");
-			/* FIXME */
-			close(sockfd);
-			return -1;
+            goto error;
 		}
 		else if (nfds < 0) {
 			debug(LOG_ERR, "Error reading data via select() from auth server: %s", strerror(errno));
-			/* FIXME */
-			close(sockfd);
-			return -1;
+            goto error;
 		}
 	} while (!done);
 
 	close(sockfd);
 
-	buf[totalbytes] = '\0';
-	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", buf);
-
 	CyaSSL_free(ssl);
 
-	return totalbytes;
+    retval = pstr_to_string(response);
+	debug(LOG_DEBUG, "HTTPS Response from Server: [%s]", retval);
+	return retval;
+
+error:
+    if (ssl) {
+        CyaSSL_free(ssl);
+    }
+    close(sockfd);
+    retval = pstr_to_string(response);
+    free(retval);
+    return NULL;
 }
 
 

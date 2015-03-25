@@ -173,7 +173,7 @@ ping(void)
 			VERSION,
 			auth_server->authserv_hostname);
 
-	int res = 0;
+	char *res;
 	#ifdef USE_CYASSL
 	if (auth_server->authserv_use_ssl) {
 		res = https_get(sockfd, request, auth_server->authserv_hostname);
@@ -184,24 +184,26 @@ ping(void)
 	#ifndef USE_CYASSL
 	res = http_get(sockfd, request);
 	#endif
-	if (res < 0) {
+	if (NULL == res) {
 		debug(LOG_ERR, "There was a problem pinging the auth server!");
-	}
-	
-	if (strstr(request, "Pong") == 0) {
+  		if (!authdown) {
+			fw_set_authdown();
+			authdown = 1;
+		}
+	} else if (strstr(res, "Pong") == 0) {
 		debug(LOG_WARNING, "Auth server did NOT say Pong!");
   		if (!authdown) {
 			fw_set_authdown();
 			authdown = 1;
 		}
-	}
-	else {
+        free(res);
+	} else {
 		debug(LOG_DEBUG, "Auth Server Says: Pong");
   		if (authdown) {
 			fw_set_authup();
 			authdown = 0;
 		}
+        free(res);
 	}
-
 	return;	
 }

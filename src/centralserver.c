@@ -105,7 +105,7 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 
 	free(safe_token);
 
-	int res = 0;
+	char *res;
 	#ifdef USE_CYASSL
 	if (auth_server->authserv_use_ssl) {
 		res = https_get(sockfd, buf, auth_server->authserv_hostname);
@@ -116,22 +116,23 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 	#ifndef USE_CYASSL
 	res = http_get(sockfd, buf);
 	#endif
-	if (res < 0) {
+	if (NULL == res) {
 		debug(LOG_ERR, "There was a problem talking to the auth server!");
 		return (AUTH_ERROR);
 	}
-
 	
-	if ((tmp = strstr(buf, "Auth: "))) {
+	if ((tmp = strstr(res, "Auth: "))) {
 		if (sscanf(tmp, "Auth: %d", (int *)&authresponse->authcode) == 1) {
 			debug(LOG_INFO, "Auth server returned authentication code %d", authresponse->authcode);
+            free(res);
 			return(authresponse->authcode);
 		} else {
 			debug(LOG_WARNING, "Auth server did not return expected authentication code");
+            free(res);
 			return(AUTH_ERROR);
 		}
 	}
-
+    free(res);
 	return(AUTH_ERROR);
 }
 
