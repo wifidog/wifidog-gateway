@@ -153,6 +153,10 @@ connect_to_server(const char *sock_name)
 	
 	/* Connect to socket */
 	sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (sock < 0) {
+        fprintf(stderr, "wdctl: could not get socket (Error: %s)\n", strerror(errno));
+        exit(1);
+    }
 	memset(&sa_un, 0, sizeof(sa_un));
 	sa_un.sun_family = AF_UNIX;
 	strncpy(sa_un.sun_path, sock_name, (sizeof(sa_un.sun_path) - 1));
