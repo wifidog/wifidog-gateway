@@ -329,8 +329,11 @@ parse_auth_server(FILE * file, const char *filename, int *linenum)
                 break;
             case oAuthServSSLAvailable:
                 ssl_available = parse_boolean_value(p2);
-                if (ssl_available < 0)
-                    ssl_available = 0;
+                if (ssl_available < 0) {
+                    debug(LOG_WARNING, "Bad syntax for Parameter: SSLAvailable on line %d " "in %s."
+                        "The syntax is yes or no." , *linenum, filename);
+                    exit(-1);
+                }
                 break;
             case oBadOption:
             default:
