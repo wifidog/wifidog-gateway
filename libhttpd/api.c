@@ -686,7 +686,8 @@ httpdSetResponse(request * r, const char *msg)
 void
 httpdSetContentType(request * r, const char *type)
 {
-    strcpy(r->response.contentType, type);
+    strncpy(r->response.contentType, type, HTTP_MAX_URL - 1);
+    r->response.contentType[HTTP_MAX_URL - 1] = 0;
 }
 
 void
