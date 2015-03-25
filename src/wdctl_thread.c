@@ -249,6 +249,7 @@ wdctl_status(int fd)
 }
 
 /** A bit of an hack, self kills.... */
+/* coverity[+kill] */
 static void
 wdctl_stop(int fd)
 {
