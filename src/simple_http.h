@@ -26,6 +26,6 @@ char *http_get(const int, const char *);
 
 #ifdef USE_CYASSL
 char *https_get(const int, const char *, const char *);
-#endif /* defined(USE_CYASSL) */
+#endif                          /* defined(USE_CYASSL) */
 
-#endif /* defined(_SIMPLE_HTTP_H_) */
+#endif                          /* defined(_SIMPLE_HTTP_H_) */
