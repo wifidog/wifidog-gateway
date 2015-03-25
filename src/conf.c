@@ -170,7 +170,7 @@ void
 config_init(void)
 {
     debug(LOG_DEBUG, "Setting default config parameters");
-    strncpy(config.configfile, DEFAULT_CONFIGFILE, sizeof(config.configfile));
+    config.configfile = safe_strdup(DEFAULT_CONFIGFILE);
     config.htmlmsgfile = safe_strdup(DEFAULT_HTMLMSGFILE);
     config.debuglevel = DEFAULT_DEBUGLEVEL;
     config.httpdmaxconn = DEFAULT_HTTPDMAXCONN;

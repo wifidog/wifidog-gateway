@@ -106,7 +106,7 @@ void parse_commandline(int argc, char **argv) {
 
 			case 'c':
 				if (optarg) {
-					strncpy(config->configfile, optarg, sizeof(config->configfile));
+					config->configfile = safe_strdup(optarg);
 				}
 				break;
 
