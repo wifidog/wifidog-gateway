@@ -123,12 +123,21 @@ void get_clients_from_parent(void) {
 
 	/* Connect to socket */
 	sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    /* XXX An attempt to quieten coverity warning about the subsequent connect call:
+     * Coverity says: "sock is apssed to parameter that cannot be negative"
+     * Although connect expects a signed int, coverity probably tells us that it shouldn't
+     * be negative */
+    if (sock < 0) {
+        debug(LOG_ERR, "Could not open socket (%s) - client list not downloaded", strerror(errno));
+        return;
+    }
 	memset(&sa_un, 0, sizeof(sa_un));
 	sa_un.sun_family = AF_UNIX;
 	strncpy(sa_un.sun_path, config->internal_sock, (sizeof(sa_un.sun_path) - 1));
 
 	if (connect(sock, (struct sockaddr *)&sa_un, strlen(sa_un.sun_path) + sizeof(sa_un.sun_family))) {
 		debug(LOG_ERR, "Failed to connect to parent (%s) - client list not downloaded", strerror(errno));
+        close(sock);
 		return;
 	}
 
