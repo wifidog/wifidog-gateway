@@ -23,6 +23,8 @@
     @author Copyright (C) 2015 Michael Haas <haas@computerlinguist.org>
 */
 
+#include "../config.h"
+
 #ifdef USE_LIBCAP
 
 #ifndef _CAPABILITIES_H_
