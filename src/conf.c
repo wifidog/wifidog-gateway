@@ -746,8 +746,11 @@ config_read(const char *filename)
                     break;
                 case oSSLPeerVerification:
                     config.ssl_verify = parse_boolean_value(p1);
-                    if (config.ssl_verify < 0)
+                    if (config.ssl_verify < 0) {
+                        debug(LOG_ERR, "Bad syntaxe for Parameter: SSLPeerVerification on line %d " "in %s."
+                            "The syntax is yes or no" , linenum, filename);
                         config.ssl_verify = 0;
+                    }
 #ifndef USE_CYASSL
                     debug(LOG_WARNING, "SSLPeerVerification is set but no SSL compiled in. Ignoring!");
 #endif
