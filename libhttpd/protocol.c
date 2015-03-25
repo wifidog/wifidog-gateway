@@ -321,11 +321,11 @@ _httpd_storeData(request * r, char *query)
     if (!query)
         return;
 
-    var = (char *)malloc(strlen(query));
+    var = (char *)malloc(strlen(query) + 1);
 
     cp = query;
     cp2 = var;
-    bzero(var, strlen(query));
+    bzero(var, strlen(query) + 1);
     val = NULL;
     while (*cp) {
         if (*cp == '=') {

@@ -264,7 +264,11 @@ int port;
     }
 #	ifdef SO_REUSEADDR
     opt = 1;
-    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(int));
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(int)) < 0) {
+        close(sock);
+        free(new);
+        return NULL;
+    }
 #	endif
     new->serverSock = sock;
     bzero(&addr, sizeof(addr));
@@ -318,8 +322,8 @@ struct timeval *timeout;
             return (NULL);
         }
         if (timeout != 0 && result == 0) {
-            return (NULL);
             server->lastError = 0;
+            return (NULL);
         }
         if (result > 0) {
             break;
@@ -675,7 +679,7 @@ httpdSendHeaders(request * r)
 void
 httpdSetResponse(request * r, const char *msg)
 {
-    strncpy(r->response.response, msg, HTTP_MAX_URL);
+    strncpy(r->response.response, msg, HTTP_MAX_URL - 1);
     r->response.response[HTTP_MAX_URL - 1] = 0;
 }
 
@@ -716,6 +720,7 @@ httpdOutput(request * r, const char *msg)
     src = msg;
     dest = buf;
     count = 0;
+    memset(buf, 0, HTTP_MAX_LEN);
     while (*src && count < HTTP_MAX_LEN) {
         if (*src == '$') {
             const char *tmp;
@@ -732,18 +737,17 @@ httpdOutput(request * r, const char *msg)
             }
             *cp = 0;
             curVar = httpdGetVariableByName(r, varName);
-            if (curVar) {
+            if (curVar && ((count + strlen(curVar->value)) < HTTP_MAX_LEN)) {
                 strcpy(dest, curVar->value);
                 dest = dest + strlen(dest);
                 count += strlen(dest);
+                src = src + strlen(varName) + 1;
+                continue;
             } else {
-                *dest++ = '$';
-                strcpy(dest, varName);
-                dest += strlen(varName);
-                count += 1 + strlen(varName);
+                *dest++ = *src++;
+                count++;
+                continue;
             }
-            src = src + strlen(varName) + 1;
-            continue;
         }
         *dest++ = *src++;
         count++;
@@ -780,6 +784,7 @@ va_dcl
     if (r->response.headersSent == 0)
         httpdSendHeaders(r);
     vsnprintf(buf, HTTP_MAX_LEN, fmt, args);
+    va_end(args); /* Works with both stdargs.h and varargs.h */
     r->response.responseLength += strlen(buf);
     _httpd_net_write(r->clientSock, buf, strlen(buf));
 }
