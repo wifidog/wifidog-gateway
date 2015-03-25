@@ -9,7 +9,11 @@ WiFiDog 1.2.1:
 	* Refactor SSL initialization
 	* Fix a truncation issue around 112 clients in the status page. (#47)
 	* Prevent duplicate TrustedMAC entries (#145)
-	* Open the firewall if no auth servers can be reached (optional, #90)
+	* Enhance safe_malloc to always zero memory (#155)
+	* Fix segfault related pstr_t's buffer (#149)
+	* Add open the firewall if no auth servers can be reached (optional, #90)
+	* Various other fixes and minor improvements, see
+		https://github.com/wifidog/wifidog-gateway/compare/1.2.0...1.2.1
 
 WiFiDog 1.2.0:
 	* Note: this changelog includes snapshots like 20090925, e.g. everything
