@@ -29,7 +29,9 @@ wifidog_SOURCES = commandline.c \
 	safe.c \
 	httpd_thread.c \
 	simple_http.c \
-	pstring.c
+	pstring.c \
+	capabilities.c
+# TODO: capabilities.c is always compiled, protect with ifdef?
 
 noinst_HEADERS = commandline.h \
 	common.h \
@@ -49,6 +51,7 @@ noinst_HEADERS = commandline.h \
 	safe.h \
 	httpd_thread.h \
 	simple_http.h \
-	pstring.h
+	pstring.h \
+	capabilities.h
 
 wdctl_SOURCES = wdctl.c

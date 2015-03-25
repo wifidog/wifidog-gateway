@@ -62,6 +62,11 @@
 #include "util.h"
 #include "config.h"
 
+
+#ifdef USE_LIBCAP
+#include "capabilities.h"
+#endif /* USE LIBCAP */
+
 /** XXX Ugly hack 
  * We need to remember the thread IDs of threads that simulate wait with pthread_cond_timedwait
  * so we can explicitly kill them in the termination handler
@@ -491,54 +496,6 @@ main_loop(void)
     /* never reached */
 }
 
-#ifdef USE_LIBCAP
-#include <sys/capability.h>
-#include <sys/prctl.h>
-#include <unistd.h>
-/* For getpwnam */
-#include <pwd.h>
-/* For getgrnam */
-#include <grp.h>
-#endif
-
-#ifdef USE_LIBCAP
-void
-drop_privileges(const char *user, const char *group)
-{
-    cap_value_t cap_values[] = { CAP_NET_ADMIN, CAP_NET_RAW };
-    cap_t caps;
-
-// TODO: what happens on reload?
-    caps = cap_get_proc();
-/* Hopefully clear all caps but cap_values */
-    cap_set_flag(caps, CAP_PERMITTED, 2, cap_values, CAP_SET);
-    cap_set_proc(caps);
-/* About to switch uid. This is necessary because the process can
-still read everyting owned by root - IIRC.
-However, we need to have our capabilities survive setuid */
-    prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0);
-    cap_free(caps);
-
-    struct group *grp = getgrnam(group);
-    if (grp) {
-        gid_t gid = grp->gr_gid;
-        setgid(gid);
-    }
-    struct passwd *pwd = getpwnam(user);        /* don't free, see getpwnam() for details */
-    if (pwd) {
-        uid_t uid = pwd->pw_uid;
-        setuid(uid);
-    }
-
-    caps = cap_get_proc();
-/* Re-gain privileges */
-    cap_set_flag(caps, CAP_EFFECTIVE, 2, cap_values, CAP_SET);
-/* Child processes get the same privileges */
-    cap_set_flag(caps, CAP_INHERITABLE, 2, cap_values, CAP_SET);
-    cap_set_proc(caps);
-    cap_free(caps);
-}
-#endif                          /* USE_LIBCAP */
 
 /** Reads the configuration file and then starts the main loop */
 int
@@ -551,7 +508,7 @@ main(int argc, char **argv)
     parse_commandline(argc, argv);
 #ifdef USE_LIBCAP
     drop_privileges("nobody", "nogroup");
-#endif                          /* USE LIBCAP */
+#endif /* USE LIBCAP */
 
     /* Initialize the config */
     config_read(config->configfile);
