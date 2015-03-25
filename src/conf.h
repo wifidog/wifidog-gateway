@@ -147,7 +147,7 @@ typedef struct _trusted_mac_t {
  * Configuration structure
  */
 typedef struct {
-    char configfile[255];       /**< @brief name of the config file */
+    char *configfile;       /**< @brief name of the config file */
     char *htmlmsgfile;          /**< @brief name of the HTML file used for messages */
     char *wdctl_sock;           /**< @brief wdctl path to socket */
     char *internal_sock;                /**< @brief internal path to socket */

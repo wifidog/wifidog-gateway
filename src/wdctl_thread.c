@@ -54,12 +54,11 @@
 #include "safe.h"
 
 /* Defined in clientlist.c */
-extern	pthread_mutex_t	client_list_mutex;
-extern	pthread_mutex_t	config_mutex;
+extern pthread_mutex_t client_list_mutex;
+extern pthread_mutex_t config_mutex;
 
 /* From commandline.c: */
-extern char ** restartargv;
-
+extern char **restartargv;
 
 static int write_to_socket(int, char *, size_t);
 static void *thread_wdctl_handler(void *);
@@ -73,145 +72,140 @@ static int wdctl_socket_server;
 /** Launches a thread that monitors the control socket for request
 @param arg Must contain a pointer to a string containing the Unix domain socket to open
 @todo This thread loops infinitely, need a watchdog to verify that it is still running?
-*/  
+*/
 void
 thread_wdctl(void *arg)
 {
-	int	*fd;
-	char	*sock_name;
-	struct 	sockaddr_un	sa_un;
-	int result;
-	pthread_t	tid;
-	socklen_t len;
+    int *fd;
+    char *sock_name;
+    struct sockaddr_un sa_un;
+    int result;
+    pthread_t tid;
+    socklen_t len;
 
-	debug(LOG_DEBUG, "Starting wdctl.");
+    debug(LOG_DEBUG, "Starting wdctl.");
 
-	memset(&sa_un, 0, sizeof(sa_un));
-	sock_name = (char *)arg;
-	debug(LOG_DEBUG, "Socket name: %s", sock_name);
+    memset(&sa_un, 0, sizeof(sa_un));
+    sock_name = (char *)arg;
+    debug(LOG_DEBUG, "Socket name: %s", sock_name);
 
-	if (strlen(sock_name) > (sizeof(sa_un.sun_path) - 1)) {
-		/* TODO: Die handler with logging.... */
-		debug(LOG_ERR, "WDCTL socket name too long");
-		exit(1);
-	}
-	
+    if (strlen(sock_name) > (sizeof(sa_un.sun_path) - 1)) {
+        /* TODO: Die handler with logging.... */
+        debug(LOG_ERR, "WDCTL socket name too long");
+        exit(1);
+    }
 
-	debug(LOG_DEBUG, "Creating socket");
-	wdctl_socket_server = socket(PF_UNIX, SOCK_STREAM, 0);
+    debug(LOG_DEBUG, "Creating socket");
+    wdctl_socket_server = socket(PF_UNIX, SOCK_STREAM, 0);
 
-	debug(LOG_DEBUG, "Got server socket %d", wdctl_socket_server);
+    if (wdctl_socket_server < 0) {
+        debug(LOG_DEBUG, "Could not get server socket: %s", strerror(errno));
+        pthread_exit(NULL);
+    }
+    debug(LOG_DEBUG, "Got server socket %d", wdctl_socket_server);
 
-	/* If it exists, delete... Not the cleanest way to deal. */
-	unlink(sock_name);
+    /* If it exists, delete... Not the cleanest way to deal. */
+    unlink(sock_name);
 
-	debug(LOG_DEBUG, "Filling sockaddr_un");
-	strcpy(sa_un.sun_path, sock_name); /* XXX No size check because we
-					    * check a few lines before. */
-	sa_un.sun_family = AF_UNIX;
-	
-	debug(LOG_DEBUG, "Binding socket (%s) (%d)", sa_un.sun_path,
-			strlen(sock_name));
-	
-	/* Which to use, AF_UNIX, PF_UNIX, AF_LOCAL, PF_LOCAL? */
-	if (bind(wdctl_socket_server, (struct sockaddr *)&sa_un, strlen(sock_name) 
-				+ sizeof(sa_un.sun_family))) {
-		debug(LOG_ERR, "Could not bind control socket: %s",
-				strerror(errno));
-		pthread_exit(NULL);
-	}
+    debug(LOG_DEBUG, "Filling sockaddr_un");
+    strcpy(sa_un.sun_path, sock_name);  /* XXX No size check because we
+                                         * check a few lines before. */
+    sa_un.sun_family = AF_UNIX;
 
-	if (listen(wdctl_socket_server, 5)) {
-		debug(LOG_ERR, "Could not listen on control socket: %s",
-				strerror(errno));
-		pthread_exit(NULL);
-	}
+    debug(LOG_DEBUG, "Binding socket (%s) (%d)", sa_un.sun_path, strlen(sock_name));
 
-	while (1) {
-		len = sizeof(sa_un);
-		memset(&sa_un, 0, len);
-		fd = (int *) safe_malloc(sizeof(int));
-		if ((*fd = accept(wdctl_socket_server, (struct sockaddr *)&sa_un, &len)) == -1){
-			debug(LOG_ERR, "Accept failed on control socket: %s",
-					strerror(errno));
-			free(fd);
-		} else {
-			debug(LOG_DEBUG, "Accepted connection on wdctl socket %d (%s)", fd, sa_un.sun_path);
-			result = pthread_create(&tid, NULL, &thread_wdctl_handler, (void *)fd);
-			if (result != 0) {
-				debug(LOG_ERR, "FATAL: Failed to create a new thread (wdctl handler) - exiting");
-				free(fd);
-				termination_handler(0);
-			}
-			pthread_detach(tid);
-		}
-	}
+    /* Which to use, AF_UNIX, PF_UNIX, AF_LOCAL, PF_LOCAL? */
+    if (bind(wdctl_socket_server, (struct sockaddr *)&sa_un, strlen(sock_name)
+             + sizeof(sa_un.sun_family))) {
+        debug(LOG_ERR, "Could not bind control socket: %s", strerror(errno));
+        pthread_exit(NULL);
+    }
+
+    if (listen(wdctl_socket_server, 5)) {
+        debug(LOG_ERR, "Could not listen on control socket: %s", strerror(errno));
+        pthread_exit(NULL);
+    }
+
+    while (1) {
+        len = sizeof(sa_un);
+        memset(&sa_un, 0, len);
+        fd = (int *)safe_malloc(sizeof(int));
+        if ((*fd = accept(wdctl_socket_server, (struct sockaddr *)&sa_un, &len)) == -1) {
+            debug(LOG_ERR, "Accept failed on control socket: %s", strerror(errno));
+            free(fd);
+        } else {
+            debug(LOG_DEBUG, "Accepted connection on wdctl socket %d (%s)", fd, sa_un.sun_path);
+            result = pthread_create(&tid, NULL, &thread_wdctl_handler, (void *)fd);
+            if (result != 0) {
+                debug(LOG_ERR, "FATAL: Failed to create a new thread (wdctl handler) - exiting");
+                free(fd);
+                termination_handler(0);
+            }
+            pthread_detach(tid);
+        }
+    }
 }
-
 
 static void *
 thread_wdctl_handler(void *arg)
 {
-	int	fd,
-		done;
-	char	request[MAX_BUF];
-	size_t	read_bytes,
-			i;
-	ssize_t	len;
+    int fd, done;
+    char request[MAX_BUF];
+    size_t read_bytes, i;
+    ssize_t len;
 
-	debug(LOG_DEBUG, "Entering thread_wdctl_handler....");
+    debug(LOG_DEBUG, "Entering thread_wdctl_handler....");
 
-	fd = *((int *) arg);
-	free(arg);
-	debug(LOG_DEBUG, "Read bytes and stuff from %d", fd);
+    fd = *((int *)arg);
+    free(arg);
+    debug(LOG_DEBUG, "Read bytes and stuff from %d", fd);
 
-	/* Init variables */
-	read_bytes = 0;
-	done = 0;
-	memset(request, 0, sizeof(request));
-	
-	/* Read.... */
-	while (!done && read_bytes < (sizeof(request) - 1)) {
-		len = read(fd, request + read_bytes,
-				sizeof(request) - read_bytes);
-		/* Have we gotten a command yet? */
-		for (i = read_bytes; i < (read_bytes + (size_t) len); i++) {
-			if (request[i] == '\r' || request[i] == '\n') {
-				request[i] = '\0';
-				done = 1;
-			}
-		}
-		
-		/* Increment position */
-		read_bytes += (size_t) len;
-	}
+    /* Init variables */
+    read_bytes = 0;
+    done = 0;
+    memset(request, 0, sizeof(request));
 
-	if (!done) {
-		debug(LOG_ERR, "Invalid wdctl request.");
-		shutdown(fd, 2);
-		close(fd);
-		pthread_exit(NULL);
-	}
+    /* Read.... */
+    while (!done && read_bytes < (sizeof(request) - 1)) {
+        len = read(fd, request + read_bytes, sizeof(request) - read_bytes);
+        /* Have we gotten a command yet? */
+        for (i = read_bytes; i < (read_bytes + (size_t) len); i++) {
+            if (request[i] == '\r' || request[i] == '\n') {
+                request[i] = '\0';
+                done = 1;
+            }
+        }
 
-	debug(LOG_DEBUG, "Request received: [%s]", request);
+        /* Increment position */
+        read_bytes += (size_t) len;
+    }
 
-	if (strncmp(request, "status", 6) == 0) {
-		wdctl_status(fd);
-	} else if (strncmp(request, "stop", 4) == 0) {
-		wdctl_stop(fd);
-	} else if (strncmp(request, "reset", 5) == 0) {
-		wdctl_reset(fd, (request + 6));
-	} else if (strncmp(request, "restart", 7) == 0) {
-		wdctl_restart(fd);
-	} else {
+    if (!done) {
+        debug(LOG_ERR, "Invalid wdctl request.");
+        shutdown(fd, 2);
+        close(fd);
+        pthread_exit(NULL);
+    }
+
+    debug(LOG_DEBUG, "Request received: [%s]", request);
+
+    if (strncmp(request, "status", 6) == 0) {
+        wdctl_status(fd);
+    } else if (strncmp(request, "stop", 4) == 0) {
+        wdctl_stop(fd);
+    } else if (strncmp(request, "reset", 5) == 0) {
+        wdctl_reset(fd, (request + 6));
+    } else if (strncmp(request, "restart", 7) == 0) {
+        wdctl_restart(fd);
+    } else {
         debug(LOG_ERR, "Request was not understood!");
     }
-	
-	shutdown(fd, 2);
-	close(fd);
-	debug(LOG_DEBUG, "Exiting thread_wdctl_handler....");
 
-	return NULL;
+    shutdown(fd, 2);
+    close(fd);
+    debug(LOG_DEBUG, "Exiting thread_wdctl_handler....");
+
+    return NULL;
 }
 
 static int
@@ -226,8 +220,7 @@ write_to_socket(int fd, char *text, size_t len)
         if (retval == -1) {
             debug(LOG_CRIT, "Failed to write client data to child: %s", strerror(errno));
             return 0;
-        }
-        else {
+        } else {
             written += retval;
         }
     }
@@ -237,15 +230,15 @@ write_to_socket(int fd, char *text, size_t len)
 static void
 wdctl_status(int fd)
 {
-	char * status = NULL;
-	size_t len = 0;
+    char *status = NULL;
+    size_t len = 0;
 
-	status = get_status_text();
-	len = strlen(status);
+    status = get_status_text();
+    len = strlen(status);
 
-	write_to_socket(fd, status, len); /* XXX Not handling error because we'd just print the same log line. */
+    write_to_socket(fd, status, len);   /* XXX Not handling error because we'd just print the same log line. */
 
-	free(status);
+    free(status);
 }
 
 /** A bit of an hack, self kills.... */
@@ -253,158 +246,165 @@ wdctl_status(int fd)
 static void
 wdctl_stop(int fd)
 {
-	pid_t	pid;
+    pid_t pid;
 
-	pid = getpid();
-	kill(pid, SIGINT);
+    pid = getpid();
+    kill(pid, SIGINT);
 }
 
 static void
 wdctl_restart(int afd)
 {
-	int	sock,
-		fd;
-	char	*sock_name;
-	struct 	sockaddr_un	sa_un;
-	s_config * conf = NULL;
-	t_client * client = NULL;
-	char * tempstring = NULL;
-	pid_t pid;
-	socklen_t len;
+    int sock, fd;
+    char *sock_name;
+    struct sockaddr_un sa_un;
+    s_config *conf = NULL;
+    t_client *client = NULL;
+    char *tempstring = NULL;
+    pid_t pid;
+    socklen_t len;
 
-	conf = config_get_config();
+    conf = config_get_config();
 
-	debug(LOG_NOTICE, "Will restart myself");
+    debug(LOG_NOTICE, "Will restart myself");
 
-	/*
-	 * First, prepare the internal socket
-	 */
-	memset(&sa_un, 0, sizeof(sa_un));
-	sock_name = conf->internal_sock;
-	debug(LOG_DEBUG, "Socket name: %s", sock_name);
+    /*
+     * First, prepare the internal socket
+     */
+    memset(&sa_un, 0, sizeof(sa_un));
+    sock_name = conf->internal_sock;
+    debug(LOG_DEBUG, "Socket name: %s", sock_name);
 
-	if (strlen(sock_name) > (sizeof(sa_un.sun_path) - 1)) {
-		/* TODO: Die handler with logging.... */
-		debug(LOG_ERR, "INTERNAL socket name too long");
-		return;
-	}
+    if (strlen(sock_name) > (sizeof(sa_un.sun_path) - 1)) {
+        /* TODO: Die handler with logging.... */
+        debug(LOG_ERR, "INTERNAL socket name too long");
+        return;
+    }
 
-	debug(LOG_DEBUG, "Creating socket");
-	sock = socket(PF_UNIX, SOCK_STREAM, 0);
+    debug(LOG_DEBUG, "Creating socket");
+    sock = socket(PF_UNIX, SOCK_STREAM, 0);
 
-	debug(LOG_DEBUG, "Got internal socket %d", sock);
+    if (sock < 0) {
+        debug(LOG_DEBUG, "Could not get server socket: %s", strerror(errno));
+        pthread_exit(NULL);
+    }
+    debug(LOG_DEBUG, "Got internal socket %d", sock);
 
-	/* If it exists, delete... Not the cleanest way to deal. */
-	unlink(sock_name);
+    /* If it exists, delete... Not the cleanest way to deal. */
+    unlink(sock_name);
 
-	debug(LOG_DEBUG, "Filling sockaddr_un");
-	strcpy(sa_un.sun_path, sock_name); /* XXX No size check because we check a few lines before. */
-	sa_un.sun_family = AF_UNIX;
-	
-	debug(LOG_DEBUG, "Binding socket (%s) (%d)", sa_un.sun_path, strlen(sock_name));
-	
-	/* Which to use, AF_UNIX, PF_UNIX, AF_LOCAL, PF_LOCAL? */
-	if (bind(sock, (struct sockaddr *)&sa_un, strlen(sock_name) + sizeof(sa_un.sun_family))) {
-		debug(LOG_ERR, "Could not bind internal socket: %s", strerror(errno));
-		return;
-	}
+    debug(LOG_DEBUG, "Filling sockaddr_un");
+    strcpy(sa_un.sun_path, sock_name);  /* XXX No size check because we check a few lines before. */
+    sa_un.sun_family = AF_UNIX;
 
-	if (listen(sock, 5)) {
-		debug(LOG_ERR, "Could not listen on internal socket: %s", strerror(errno));
-		return;
-	}
-	
-	/*
-	 * The internal socket is ready, fork and exec ourselves
-	 */
-	debug(LOG_DEBUG, "Forking in preparation for exec()...");
-	pid = safe_fork();
-	if (pid > 0) {
-		/* Parent */
+    debug(LOG_DEBUG, "Binding socket (%s) (%d)", sa_un.sun_path, strlen(sock_name));
 
-		/* Wait for the child to connect to our socket :*/
-		debug(LOG_DEBUG, "Waiting for child to connect on internal socket");
-		len = sizeof(sa_un);
-		if ((fd = accept(sock, (struct sockaddr *)&sa_un, &len)) == -1){
-			debug(LOG_ERR, "Accept failed on internal socket: %s", strerror(errno));
-			close(sock);
-			return;
-		}
+    /* Which to use, AF_UNIX, PF_UNIX, AF_LOCAL, PF_LOCAL? */
+    if (bind(sock, (struct sockaddr *)&sa_un, strlen(sock_name) + sizeof(sa_un.sun_family))) {
+        debug(LOG_ERR, "Could not bind internal socket: %s", strerror(errno));
+        close(sock);
+        return;
+    }
 
-		close(sock);
+    if (listen(sock, 5)) {
+        debug(LOG_ERR, "Could not listen on internal socket: %s", strerror(errno));
+        close(sock);
+        return;
+    }
 
-		debug(LOG_DEBUG, "Received connection from child.  Sending them all existing clients");
+    /*
+     * The internal socket is ready, fork and exec ourselves
+     */
+    debug(LOG_DEBUG, "Forking in preparation for exec()...");
+    pid = safe_fork();
+    if (pid > 0) {
+        /* Parent */
 
-		/* The child is connected. Send them over the socket the existing clients */
-		LOCK_CLIENT_LIST();
-		client = client_get_first_client();
-		while (client) {
-			/* Send this client */
-			safe_asprintf(&tempstring, "CLIENT|ip=%s|mac=%s|token=%s|fw_connection_state=%u|fd=%d|counters_incoming=%llu|counters_outgoing=%llu|counters_last_updated=%lu\n", client->ip, client->mac, client->token, client->fw_connection_state, client->fd, client->counters.incoming, client->counters.outgoing, client->counters.last_updated);
-			debug(LOG_DEBUG, "Sending to child client data: %s", tempstring);
-            write_to_socket(fd, tempstring, strlen(tempstring)); /* XXX Despicably not handling error. */
-			free(tempstring);
-			client = client->next;
-		}
-		UNLOCK_CLIENT_LIST();
+        /* Wait for the child to connect to our socket : */
+        debug(LOG_DEBUG, "Waiting for child to connect on internal socket");
+        len = sizeof(sa_un);
+        if ((fd = accept(sock, (struct sockaddr *)&sa_un, &len)) == -1) {
+            debug(LOG_ERR, "Accept failed on internal socket: %s", strerror(errno));
+            close(sock);
+            return;
+        }
 
-		close(fd);
+        close(sock);
 
-		debug(LOG_INFO, "Sent all existing clients to child.  Committing suicide!");
+        debug(LOG_DEBUG, "Received connection from child.  Sending them all existing clients");
 
-		shutdown(afd, 2);
-		close(afd);
+        /* The child is connected. Send them over the socket the existing clients */
+        LOCK_CLIENT_LIST();
+        client = client_get_first_client();
+        while (client) {
+            /* Send this client */
+            safe_asprintf(&tempstring,
+                          "CLIENT|ip=%s|mac=%s|token=%s|fw_connection_state=%u|fd=%d|counters_incoming=%llu|counters_outgoing=%llu|counters_last_updated=%lu\n",
+                          client->ip, client->mac, client->token, client->fw_connection_state, client->fd,
+                          client->counters.incoming, client->counters.outgoing, client->counters.last_updated);
+            debug(LOG_DEBUG, "Sending to child client data: %s", tempstring);
+            write_to_socket(fd, tempstring, strlen(tempstring));        /* XXX Despicably not handling error. */
+            free(tempstring);
+            client = client->next;
+        }
+        UNLOCK_CLIENT_LIST();
 
-		/* Our job in life is done. Commit suicide! */
-		wdctl_stop(afd);
-	}
-	else {
-		/* Child */
-		close(wdctl_socket_server);
-		close(icmp_fd);
-		close(sock);
-		shutdown(afd, 2);
-		close(afd);
-		debug(LOG_NOTICE, "Re-executing myself (%s)", restartargv[0]);
-		setsid();
-		execvp(restartargv[0], restartargv);
-		/* If we've reached here the exec() failed - die quickly and silently */
-		debug(LOG_ERR, "I failed to re-execute myself: %s", strerror(errno));
-		debug(LOG_ERR, "Exiting without cleanup");
-		exit(1);
-	}
+        close(fd);
+
+        debug(LOG_INFO, "Sent all existing clients to child.  Committing suicide!");
+
+        shutdown(afd, 2);
+        close(afd);
+
+        /* Our job in life is done. Commit suicide! */
+        wdctl_stop(afd);
+    } else {
+        /* Child */
+        close(wdctl_socket_server);
+        close(icmp_fd);
+        close(sock);
+        shutdown(afd, 2);
+        close(afd);
+        debug(LOG_NOTICE, "Re-executing myself (%s)", restartargv[0]);
+        setsid();
+        execvp(restartargv[0], restartargv);
+        /* If we've reached here the exec() failed - die quickly and silently */
+        debug(LOG_ERR, "I failed to re-execute myself: %s", strerror(errno));
+        debug(LOG_ERR, "Exiting without cleanup");
+        exit(1);
+    }
 
 }
 
 static void
 wdctl_reset(int fd, const char *arg)
 {
-	t_client	*node;
+    t_client *node;
 
-	debug(LOG_DEBUG, "Entering wdctl_reset...");
-	
-	LOCK_CLIENT_LIST();
-	debug(LOG_DEBUG, "Argument: %s (@%x)", arg, arg);
-	
-	/* We get the node or return... */
-	if ((node = client_list_find_by_ip(arg)) != NULL);
-	else if ((node = client_list_find_by_mac(arg)) != NULL);
-	else {
-		debug(LOG_DEBUG, "Client not found.");
-		UNLOCK_CLIENT_LIST();
-		write_to_socket(fd, "No", 2); /* Error handling in fucntion sufficient. */
+    debug(LOG_DEBUG, "Entering wdctl_reset...");
 
-		return;
-	}
+    LOCK_CLIENT_LIST();
+    debug(LOG_DEBUG, "Argument: %s (@%x)", arg, arg);
 
-	debug(LOG_DEBUG, "Got node %x.", node);
-	
-	/* deny.... */
-	logout_client(node);
+    /* We get the node or return... */
+    if ((node = client_list_find_by_ip(arg)) != NULL) ;
+    else if ((node = client_list_find_by_mac(arg)) != NULL) ;
+    else {
+        debug(LOG_DEBUG, "Client not found.");
+        UNLOCK_CLIENT_LIST();
+        write_to_socket(fd, "No", 2);   /* Error handling in fucntion sufficient. */
 
-	UNLOCK_CLIENT_LIST();
+        return;
+    }
 
-	write_to_socket(fd, "Yes", 3);
+    debug(LOG_DEBUG, "Got node %x.", node);
 
-	debug(LOG_DEBUG, "Exiting wdctl_reset...");
+    /* deny.... */
+    logout_client(node);
+
+    UNLOCK_CLIENT_LIST();
+
+    write_to_socket(fd, "Yes", 3);
+
+    debug(LOG_DEBUG, "Exiting wdctl_reset...");
 }

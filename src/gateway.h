@@ -1,3 +1,4 @@
+/* vim: set et sw=4 ts=4 sts=4 : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -26,8 +27,8 @@
 
 #ifndef _GATEWAY_H_
 #define _GATEWAY_H_
- 
+
 /** @brief exits cleanly and clear the firewall rules. */
 void termination_handler(int s);
 
-#endif /* _GATEWAY_H_ */
+#endif                          /* _GATEWAY_H_ */
