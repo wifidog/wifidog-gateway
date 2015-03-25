@@ -100,6 +100,10 @@ thread_wdctl(void *arg)
 	debug(LOG_DEBUG, "Creating socket");
 	wdctl_socket_server = socket(PF_UNIX, SOCK_STREAM, 0);
 
+    if (wdctl_socket_server < 0) {
+        debug(LOG_DEBUG, "Could not get server socket: %s", strerror(errno));
+        pthread_exit(NULL);
+    }
 	debug(LOG_DEBUG, "Got server socket %d", wdctl_socket_server);
 
 	/* If it exists, delete... Not the cleanest way to deal. */
@@ -292,6 +296,10 @@ wdctl_restart(int afd)
 	debug(LOG_DEBUG, "Creating socket");
 	sock = socket(PF_UNIX, SOCK_STREAM, 0);
 
+    if (sock < 0) {
+        debug(LOG_DEBUG, "Could not get server socket: %s", strerror(errno));
+        pthread_exit(NULL);
+    }
 	debug(LOG_DEBUG, "Got internal socket %d", sock);
 
 	/* If it exists, delete... Not the cleanest way to deal. */
