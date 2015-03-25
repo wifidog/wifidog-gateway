@@ -256,8 +256,7 @@ int outbufsize;
 }
 
 char
-_httpd_from_hex(c)
-char c;
+_httpd_from_hex(char c)
 {
     return c >= '0' && c <= '9' ? c - '0' : c >= 'A' && c <= 'F' ? c - 'A' + 10 : c - 'a' + 10; /* accept small letters just in case */
 }
@@ -322,11 +321,11 @@ _httpd_storeData(request * r, char *query)
     if (!query)
         return;
 
-    var = (char *)malloc(strlen(query));
+    var = (char *)malloc(strlen(query) + 1);
 
     cp = query;
     cp2 = var;
-    bzero(var, strlen(query));
+    bzero(var, strlen(query) + 1);
     val = NULL;
     while (*cp) {
         if (*cp == '=') {

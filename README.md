@@ -1,6 +1,7 @@
 # WifiDog #
 
 [![Build Status](https://travis-ci.org/wifidog/wifidog-gateway.svg?branch=master)](https://travis-ci.org/wifidog/wifidog-gateway)
+[![Coverity Scan Build Status](https://scan.coverity.com/projects/4595/badge.svg)](https://scan.coverity.com/projects/4595)
 
 The WiFi Guard Dog project is a complete and embeddable captive portal
 solution for wireless community groups or individuals who wish to open a

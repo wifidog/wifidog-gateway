@@ -1,3 +1,4 @@
+/* vim: set et ts=4 sts=4 sw=4 : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -27,30 +28,32 @@
 #ifndef _SAFE_H_
 #define _SAFE_H_
 
-#include <stdarg.h> /* For va_list */
-#include <sys/types.h> /* For fork */
-#include <unistd.h> /* For fork */
+#include <stdarg.h>             /* For va_list */
+#include <sys/types.h>          /* For fork */
+#include <unistd.h>             /* For fork */
 
 /** @brief Safe version of malloc
  */
-void * safe_malloc (size_t size);
+void *safe_malloc(size_t);
+
+/** @brief Safe version of realloc */
+void *safe_realloc(void *, size_t);
 
 /* @brief Safe version of strdup
  */
-char * safe_strdup(const char *s);
+char *safe_strdup(const char *);
 
 /* @brief Safe version of asprintf
  */
-int safe_asprintf(char **strp, const char *fmt, ...);
+int safe_asprintf(char **, const char *, ...);
 
 /* @brief Safe version of vasprintf
  */
-int safe_vasprintf(char **strp, const char *fmt, va_list ap);
+int safe_vasprintf(char **, const char *, va_list);
 
 /* @brief Safe version of fork
  */
 
 pid_t safe_fork(void);
 
-#endif /* _SAFE_H_ */
-
+#endif                          /* _SAFE_H_ */

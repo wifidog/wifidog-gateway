@@ -1,4 +1,4 @@
-/* vim: set sw=4 ts=4 sts=4 et : */
+/* vim: set et ts=4 sts=4 sw=4 : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -17,15 +17,33 @@
  * 59 Temple Place - Suite 330        Fax:    +1-617-542-2652       *
  * Boston, MA  02111-1307,  USA       gnu@gnu.org                   *
  *                                                                  *
- \********************************************************************/
+\********************************************************************/
 
-#ifndef _SIMPLE_HTTP_H_
-#define _SIMPLE_HTTP_H_
+/** @file pstring.h
+	@brief Simple pascal string like strings
+	@author Copyright (C) 2015 Alexandre Carmel-Veilleux <acv@miniguru.ca>
+*/
 
-char *http_get(const int, const char *);
+#ifndef _PSTRING_H_
+#define _PSTRING_H_
 
-#ifdef USE_CYASSL
-char *https_get(const int, const char *, const char *);
-#endif                          /* defined(USE_CYASSL) */
+#include <stddef.h>
+#include <stdarg.h> /* For va_list */
 
-#endif                          /* defined(_SIMPLE_HTTP_H_) */
+/**
+ * Structure to represent a pascal-like string.
+ */
+struct pstr {
+    char *buf;   /**< @brief Buffer used to hold string. Pointer subject to change. */
+    size_t len;  /**< @brief Current length of the string. */
+    size_t size; /**< @brief Current maximum size of the buffer. */
+};
+
+typedef struct pstr pstr_t;  /**< @brief pstr_t is a type for a struct pstr. */
+
+pstr_t *pstr_new(void);  /**< @brief Create a new pstr */
+char * pstr_to_string(pstr_t *);  /**< @brief Convert pstr to a char *, freeing pstr. */
+void pstr_cat(pstr_t *, const char *);  /**< @brief Appends a string to a pstr_t */
+int pstr_append_sprintf(pstr_t *, const char *, ...);  /**< @brief Appends formatted string to a pstr_t. */
+
+#endif /* defined(_PSTRING_H_) */

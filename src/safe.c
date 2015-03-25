@@ -1,3 +1,4 @@
+/* vim: set et ts=4 sts=4 sw=4 : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -30,7 +31,6 @@
 /* Enable vasprintf */
 #define _GNU_SOURCE
 
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,71 +43,92 @@
 #include <syslog.h>
 
 /* From gateway.c */
-extern httpd * webserver;
+extern httpd *webserver;
 
-void * safe_malloc (size_t size) {
-	void * retval = NULL;
-	retval = malloc(size);
-	if (!retval) {
-		debug(LOG_CRIT, "Failed to malloc %d bytes of memory: %s.  Bailing out", size, strerror(errno));
-		exit(1);
-	}
-	return (retval);
+void *
+safe_malloc(size_t size)
+{
+    void *retval = NULL;
+    retval = malloc(size);
+    if (!retval) {
+        debug(LOG_CRIT, "Failed to malloc %d bytes of memory: %s.  Bailing out", size, strerror(errno));
+        exit(1);
+    }
+    memset(retval, 0, size);
+    return (retval);
 }
 
-char * safe_strdup(const char *s) {
-	char * retval = NULL;
-	if (!s) {
-		debug(LOG_CRIT, "safe_strdup called with NULL which would have crashed strdup. Bailing out");
-		exit(1);
-	}
-	retval = strdup(s);
-	if (!retval) {
-		debug(LOG_CRIT, "Failed to duplicate a string: %s.  Bailing out", strerror(errno));
-		exit(1);
-	}
-	return (retval);
+void *
+safe_realloc(void *ptr, size_t newsize)
+{
+    void *retval = NULL;
+    retval = realloc(ptr, newsize);
+    if (NULL == retval) {
+        debug(LOG_CRIT, "Failed to realloc buffer to %d bytes of memory: %s. Bailing out", newsize, strerror(errno));
+        exit(1);
+    }
+    return retval;
 }
 
-int safe_asprintf(char **strp, const char *fmt, ...) {
-	va_list ap;
-	int retval;
-
-	va_start(ap, fmt);
-	retval = safe_vasprintf(strp, fmt, ap);
-	va_end(ap);
-
-	return (retval);
+char *
+safe_strdup(const char *s)
+{
+    char *retval = NULL;
+    if (!s) {
+        debug(LOG_CRIT, "safe_strdup called with NULL which would have crashed strdup. Bailing out");
+        exit(1);
+    }
+    retval = strdup(s);
+    if (!retval) {
+        debug(LOG_CRIT, "Failed to duplicate a string: %s.  Bailing out", strerror(errno));
+        exit(1);
+    }
+    return (retval);
 }
 
-int safe_vasprintf(char **strp, const char *fmt, va_list ap) {
-	int retval;
+int
+safe_asprintf(char **strp, const char *fmt, ...)
+{
+    va_list ap;
+    int retval;
 
-	retval = vasprintf(strp, fmt, ap);
+    va_start(ap, fmt);
+    retval = safe_vasprintf(strp, fmt, ap);
+    va_end(ap);
 
-	if (retval == -1) {
-		debug(LOG_CRIT, "Failed to vasprintf: %s.  Bailing out", strerror(errno));
-		exit (1);
-	}
-	return (retval);
+    return (retval);
 }
 
-pid_t safe_fork(void) {
-	pid_t result;
-	result = fork();
+int
+safe_vasprintf(char **strp, const char *fmt, va_list ap)
+{
+    int retval;
 
-	if (result == -1) {
-		debug(LOG_CRIT, "Failed to fork: %s.  Bailing out", strerror(errno));
-		exit (1);
-	}
-	else if (result == 0) {
-		/* I'm the child - do some cleanup */
-		if (webserver) {
-			close(webserver->serverSock);
-			webserver = NULL;
-		}
-	}
+    retval = vasprintf(strp, fmt, ap);
 
-	return result;
+    if (retval == -1) {
+        debug(LOG_CRIT, "Failed to vasprintf: %s.  Bailing out", strerror(errno));
+        exit(1);
+    }
+    return (retval);
 }
 
+pid_t
+safe_fork(void)
+{
+    pid_t result;
+    result = fork();
+
+    if (result == -1) {
+        debug(LOG_CRIT, "Failed to fork: %s.  Bailing out", strerror(errno));
+        exit(1);
+    } else if (result == 0) {
+        /* I'm the child - do some cleanup */
+        if (webserver) {
+            close(webserver->serverSock);
+            webserver = NULL;
+        }
+    }
+
+    return result;
+}
