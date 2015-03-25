@@ -1,4 +1,7 @@
 
+
+#include "../config.h"
+
 #ifdef USE_LIBCAP
 
 #include <syslog.h>
@@ -11,9 +14,11 @@
 #include <grp.h>
 
 #include "debug.h"
+
 void
 drop_privileges(const char *user, const char *group)
 {
+    int ret = 0;
     debug(LOG_DEBUG, "Entered drop_privileges");
     /* The capabilities we want.
      * CAP_NET_RAW is used for our socket handling.
@@ -28,7 +33,10 @@ drop_privileges(const char *user, const char *group)
     debug(LOG_DEBUG, "Current capabilities: %s", cap_to_text(caps, NULL));
     /* Hopefully clear all caps but cap_values */
     cap_set_flag(caps, CAP_PERMITTED, 2, cap_values, CAP_SET);
-    cap_set_proc(caps);
+    ret = cap_set_proc(caps);
+    if (ret == -1) {
+        debug(LOG_ERR, "Could not set capabilities!");
+    }
     caps = cap_get_proc();
     debug(LOG_DEBUG, "Dropped caps, now: %s", cap_to_text(caps, NULL));
     /* About to switch uid. This is necessary because the process can
@@ -62,9 +70,12 @@ drop_privileges(const char *user, const char *group)
     /* Child processes get the same privileges. In particular,
      * iptables */
     cap_set_flag(caps, CAP_INHERITABLE, 2, cap_values, CAP_SET);
-    cap_set_proc(caps);
-    debug(LOG_DEBUG, "Regained: %s", cap_to_text(caps, NULL));
+    ret = cap_set_proc(caps);
+    if (ret == -1) {
+        debug(LOG_ERR, "Could not set capabilities!");
+    }
     caps = cap_get_proc();
+    debug(LOG_DEBUG, "Regained: %s", cap_to_text(caps, NULL));
     cap_free(caps);
 }
 
