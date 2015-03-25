@@ -306,11 +306,13 @@ wdctl_restart(int afd)
 	/* Which to use, AF_UNIX, PF_UNIX, AF_LOCAL, PF_LOCAL? */
 	if (bind(sock, (struct sockaddr *)&sa_un, strlen(sock_name) + sizeof(sa_un.sun_family))) {
 		debug(LOG_ERR, "Could not bind internal socket: %s", strerror(errno));
+        close(sock);
 		return;
 	}
 
 	if (listen(sock, 5)) {
 		debug(LOG_ERR, "Could not listen on internal socket: %s", strerror(errno));
+        close(sock);
 		return;
 	}
 	
