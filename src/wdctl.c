@@ -200,7 +200,8 @@ wdctl_status(void)
 
     send_request(sock, request);
 
-    while ((len = read(sock, buffer, sizeof(buffer))) > 0) {
+    // -1: need some space for \0!
+    while ((len = read(sock, buffer, sizeof(buffer) - 1)) > 0) {
         buffer[len] = '\0';
         fprintf(stdout, "%s", buffer);
     }
@@ -223,7 +224,7 @@ wdctl_stop(void)
 
     send_request(sock, request);
 
-    while ((len = read(sock, buffer, sizeof(buffer))) > 0) {
+    while ((len = read(sock, buffer, sizeof(buffer) - 1)) > 0) {
         buffer[len] = '\0';
         fprintf(stdout, "%s", buffer);
     }
@@ -281,7 +282,7 @@ wdctl_restart(void)
 
     send_request(sock, request);
 
-    while ((len = read(sock, buffer, sizeof(buffer))) > 0) {
+    while ((len = read(sock, buffer, sizeof(buffer) - 1)) > 0) {
         buffer[len] = '\0';
         fprintf(stdout, "%s", buffer);
     }
