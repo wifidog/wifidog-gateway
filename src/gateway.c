@@ -75,7 +75,6 @@ httpd * webserver = NULL;
 /* from commandline.c */
 extern char ** restartargv;
 extern pid_t restart_orig_pid;
-static t_client *firstclient;
 
 /* from client_list.c */
 extern pthread_mutex_t client_list_mutex;
@@ -118,7 +117,6 @@ void get_clients_from_parent(void) {
 	char *key = NULL;
 	char *value = NULL;
 	t_client * client = NULL;
-	t_client * lastclient = NULL;
 
 	config = config_get_config();
 	
@@ -176,14 +174,14 @@ void get_clients_from_parent(void) {
 
 				if (strcmp(command, "CLIENT") == 0) {
 					/* This line has info about a client in the client list */
-					if (!client) {
+					if (NULL == client) {
 						/* Create a new client struct */
-						client = safe_malloc(sizeof(t_client));
-						memset(client, 0, sizeof(t_client));
-					}
+						client = client_get_new();
+                    }
 				}
 
-				if (key && value) {
+                /* XXX client check to shut up clang... */
+				if (key && value && client) {
 					if (strcmp(command, "CLIENT") == 0) {
 						/* Assign the key into the appropriate slot in the connection structure */
 						if (strcmp(key, "ip") == 0) {
@@ -221,15 +219,7 @@ void get_clients_from_parent(void) {
 
 			/* End of parsing this command */
 			if (client) {
-				/* Add this client to the client list */
-				if (!firstclient) {
-					firstclient = client;
-					lastclient = firstclient;
-				}
-				else {
-					lastclient->next = client;
-					lastclient = client;
-				}
+                client_list_insert_client(client);
 			}
 
 			/* Clean up */
@@ -267,7 +257,9 @@ sigchld_handler(int s)
 }
 
 /** Exits cleanly after cleaning up the firewall.  
- *  Use this function anytime you need to exit after firewall initialization */
+ *  Use this function anytime you need to exit after firewall initialization.
+ *  @param s Integer that is really a boolean, true means voluntary exit, 0 means error.
+ */
 void
 termination_handler(int s)
 {
@@ -414,8 +406,9 @@ main_loop(void)
 	httpdAddCContent(webserver, "/wifidog", "about", 0, NULL, http_callback_about);
 	httpdAddCContent(webserver, "/wifidog", "status", 0, NULL, http_callback_status);
 	httpdAddCContent(webserver, "/wifidog", "auth", 0, NULL, http_callback_auth);
+	httpdAddCContent(webserver, "/wifidog", "disconnect", 0, NULL, http_callback_disconnect);
 
-	httpdAddC404Content(webserver, http_callback_404);
+	httpdSetErrorFunction(webserver, 404, http_callback_404);
 
 	/* Reset the firewall (if WiFiDog crashed) */
 	fw_destroy();

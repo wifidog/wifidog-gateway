@@ -42,18 +42,8 @@
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
 
-#if defined(__NetBSD__)
-#include <sys/socket.h>
-#include <ifaddrs.h>
-#include <net/if.h>
-#include <net/if_dl.h>
-#include <util.h>
-#endif
-
-#ifdef __linux__
 #include <netinet/in.h>
 #include <net/if.h>
-#endif
 
 #include <string.h>
 #include <pthread.h>
@@ -161,7 +151,6 @@ wd_gethostbyname(const char *name)
 	char *
 get_iface_ip(const char *ifname)
 {
-#if defined(__linux__)
 	struct ifreq if_data;
 	struct in_addr in;
 	char *ip_str;
@@ -188,38 +177,11 @@ get_iface_ip(const char *ifname)
 	ip_str = inet_ntoa(in);
 	close(sockd);
 	return safe_strdup(ip_str);
-#elif defined(__NetBSD__)
-	struct ifaddrs *ifa, *ifap;
-	char *str = NULL;
-
-	if (getifaddrs(&ifap) == -1) {
-		debug(LOG_ERR, "getifaddrs(): %s", strerror(errno));
-		return NULL;
-	}
-	/* XXX arbitrarily pick the first IPv4 address */
-	for (ifa = ifap; ifa != NULL; ifa = ifa->ifa_next) {
-		if (strcmp(ifa->ifa_name, ifname) == 0 &&
-				ifa->ifa_addr->sa_family == AF_INET)
-			break;
-	}
-	if (ifa == NULL) {
-		debug(LOG_ERR, "%s: no IPv4 address assigned");
-		goto out;
-	}
-	str = safe_strdup(inet_ntoa(
-				((struct sockaddr_in *)ifa->ifa_addr)->sin_addr));
-out:
-	freeifaddrs(ifap);
-	return str;
-#else
-	return safe_strdup("0.0.0.0");
-#endif
 }
 
 	char *
 get_iface_mac(const char *ifname)
 {
-#if defined(__linux__)
 	int r, s;
 	struct ifreq ifr;
 	char *hwaddr, mac[13];
@@ -251,45 +213,11 @@ get_iface_mac(const char *ifname)
 		);
 
 	return safe_strdup(mac);
-#elif defined(__NetBSD__)
-	struct ifaddrs *ifa, *ifap;
-	const char *hwaddr;
-	char mac[13], *str = NULL;
-	struct sockaddr_dl *sdl;
-
-	if (getifaddrs(&ifap) == -1) {
-		debug(LOG_ERR, "getifaddrs(): %s", strerror(errno));
-		return NULL;
-	}
-	for (ifa = ifap; ifa != NULL; ifa = ifa->ifa_next) {
-		if (strcmp(ifa->ifa_name, ifname) == 0 &&
-				ifa->ifa_addr->sa_family == AF_LINK)
-			break;
-	}
-	if (ifa == NULL) {
-		debug(LOG_ERR, "%s: no link-layer address assigned");
-		goto out;
-	}
-	sdl = (struct sockaddr_dl *)ifa->ifa_addr;
-	hwaddr = LLADDR(sdl);
-	snprintf(mac, sizeof(mac), "%02X%02X%02X%02X%02X%02X",
-			hwaddr[0] & 0xFF, hwaddr[1] & 0xFF,
-			hwaddr[2] & 0xFF, hwaddr[3] & 0xFF,
-			hwaddr[4] & 0xFF, hwaddr[5] & 0xFF);
-
-	str = safe_strdup(mac);
-out:
-	freeifaddrs(ifap);
-	return str;
-#else
-	return NULL;
-#endif
 }
 
 	char *
 get_ext_iface(void)
 {
-#ifdef __linux__
 	FILE *input;
 	char *device, *gw;
 	int i = 1;
@@ -297,8 +225,8 @@ get_ext_iface(void)
 	pthread_cond_t		cond = PTHREAD_COND_INITIALIZER;
 	pthread_mutex_t		cond_mutex = PTHREAD_MUTEX_INITIALIZER;
 	struct	timespec	timeout;
-	device = (char *)malloc(16);
-	gw = (char *)malloc(16);
+	device = (char *)safe_malloc(16); /* XXX Why 16? */
+	gw = (char *)safe_malloc(16);
 	debug(LOG_DEBUG, "get_ext_iface(): Autodectecting the external interface from routing table");
 	while(keep_detecting) {
 		input = fopen("/proc/net/route", "r");
@@ -318,7 +246,7 @@ get_ext_iface(void)
 		/* Mutex must be locked for pthread_cond_timedwait... */
 		pthread_mutex_lock(&cond_mutex);	
 		/* Thread safe "sleep" */
-		pthread_cond_timedwait(&cond, &cond_mutex, &timeout);
+		pthread_cond_timedwait(&cond, &cond_mutex, &timeout); /* XXX need to possibly add this thread to termination_handler */
 		/* No longer needs to be locked */
 		pthread_mutex_unlock(&cond_mutex);
 		//for (i=1; i<=NUM_EXT_INTERFACE_DETECT_RETRY; i++) {
@@ -328,12 +256,11 @@ get_ext_iface(void)
 		i++;
 	}
 	debug(LOG_ERR, "get_ext_iface(): Failed to detect the external interface after %d tries, aborting", i);
-	exit(1);
+	exit(1); /* XXX Should this be termination handler? */
 	free(device);
 	free(gw);
-#endif
 	return NULL;
-	}
+}
 
 	void mark_online() {
 		int before;
@@ -341,7 +268,7 @@ get_ext_iface(void)
 
 		before = is_online();
 		time(&last_online_time);
-		after = is_online();
+		after = is_online(); /* XXX is_online() looks at last_online_time... */
 
 		if (before != after) {
 			debug(LOG_INFO, "ONLINE status became %s", (after ? "ON" : "OFF"));
@@ -427,7 +354,7 @@ get_ext_iface(void)
 	 * @return A string containing human-readable status text. MUST BE free()d by caller
 	 */
 	char * get_status_text() {
-		char buffer[STATUS_BUF_SIZ];
+		char buffer[STATUS_BUF_SIZ]; /* XXX This needs rewriting since at ~112 clients, buffer max size is reached. */
 		size_t len;
 		s_config *config;
 		t_auth_serv *auth_server;

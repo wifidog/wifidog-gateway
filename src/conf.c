@@ -43,6 +43,7 @@
 #include "http.h"
 #include "auth.h"
 #include "firewall.h"
+#include "config.h"
 
 #include "util.h"
 
@@ -97,6 +98,9 @@ typedef enum {
 	oTrustedMACList,
 	oHtmlMessageFile,
 	oProxyPort,
+	oSSLPeerVerification,
+	oSSLCertPath,
+    oSSLAllowedCipherList,
 } OpCodes;
 
 /** @internal
@@ -137,6 +141,9 @@ static const struct {
 	{ "trustedmaclist",		oTrustedMACList },
 	{ "htmlmessagefile",		oHtmlMessageFile },
 	{ "proxyport",			oProxyPort },
+	{ "sslpeerverification",		oSSLPeerVerification },
+	{ "sslcertpath",			oSSLCertPath },
+    { "sslallowedcipherlist",   oSSLAllowedCipherList },
 	{ NULL,				oBadOption },
 };
 
@@ -186,6 +193,9 @@ config_init(void)
 	config.rulesets = NULL;
 	config.trustedmaclist = NULL;
 	config.proxy_port = 0;
+	config.ssl_certs = safe_strdup(DEFAULT_AUTHSERVSSLCERTPATH);
+	config.ssl_verify = DEFAULT_AUTHSERVSSLPEERVER;
+    config.ssl_cipher_list = NULL;
 }
 
 /**
@@ -291,6 +301,9 @@ parse_auth_server(FILE *file, const char *filename, int *linenum)
 			
 			switch (opcode) {
 				case oAuthServHostname:
+                    /* Coverity rightfully pointed out we could have duplicates here. */
+                    if (NULL != host)
+                        free(host);
 					host = safe_strdup(p2);
 					break;
 				case oAuthServPath:
@@ -341,8 +354,15 @@ parse_auth_server(FILE *file, const char *filename, int *linenum)
 	}
 
 	/* only proceed if we have an host and a path */
-	if (host == NULL)
+	if (host == NULL) {
+        free(path);
+        free(authscriptpathfragment);
+        free(pingscriptpathfragment);
+        free(msgscriptpathfragment);
+        free(portalscriptpathfragment);
+        free(loginscriptpathfragment);
 		return;
+    }
 	
 	debug(LOG_DEBUG, "Adding %s:%d (SSL: %d) %s to the auth server list",
 			host, http_port, ssl_port, path);
@@ -524,12 +544,7 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 	}
 
 	/* Get the optional port or port range */
-	if (strncmp(leftover, "port", 4) == 0) {
-                if(protocol == NULL ||
-                	!(strncmp(protocol, "tcp", 3) == 0 || strncmp(protocol, "udp", 3) == 0)) {
-			debug(LOG_ERR, "ERROR: wifidog config file, section FirewallRuleset %s. Port without tcp or udp protocol.", ruleset);
-			return -3; /*< Fail */
-		}
+	if (strncmp(leftover, "port", 4) == 0) { 
 		TO_NEXT_WORD(leftover, finished);
 		/* Get port now */
 		port = leftover;
@@ -538,7 +553,8 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 			if (!isdigit((unsigned char)*(port + i)) && ((unsigned char)*(port + i) != ':'))
 				all_nums = 0; /*< No longer only digits */
 		if (!all_nums) {
-			debug(LOG_ERR, "ERROR: wifidog config file, section FirewallRuleset %s. Invalid port %s", ruleset, port);
+            debug(LOG_ERR, "ERROR: wifidog config file, section FirewallRuleset %s. "
+                    "Invalid port %s", ruleset, port);
 			return -3; /*< Fail */
 		}
 	}
@@ -554,21 +570,6 @@ _parse_firewall_rule(const char *ruleset, char *leftover)
 		}
 		if (strncmp(other_kw, "to-ipset", 8) == 0 && !finished)  {
 			mask_is_ipset = 1;
-		} else if (strncmp(other_kw, "to", 2) == 0 && !finished) {
-			/* Check if mask is valid */
-			all_nums = 1;
-			for (i = 0; *(mask + i) != '\0'; i++)
-				if (!isdigit((unsigned char)*(mask + i)) && (*(mask + i) != '.')
-						&& (*(mask + i) != '/'))
-					all_nums = 0; /*< No longer only digits */
-			if (!all_nums) {
-				debug(LOG_ERR, "Invalid mask %s", mask);
-				return -3; /*< Fail */
-			}
-		} else {
-			debug(LOG_ERR, "Invalid or unexpected keyword %s, "
-					"expecting \"to\" or \"to-ipset\"", other_kw);
-			return -4; /*< Fail */
 		}
 		TO_NEXT_WORD(leftover, finished);
 		if (!finished) {
@@ -750,13 +751,6 @@ config_read(const char *filename)
 				case oHTTPDPassword:
 					config.httpdpassword = safe_strdup(p1);
 					break;
-				case oBadOption:
-					debug(LOG_ERR, "Bad option on line %d "
-							"in %s.", linenum,
-							filename);
-					debug(LOG_ERR, "Exiting...");
-					exit(-1);
-					break;
 				case oCheckInterval:
 					sscanf(p1, "%d", &config.checkinterval);
 					break;
@@ -776,7 +770,35 @@ config_read(const char *filename)
 				case oProxyPort:
 					sscanf(p1, "%d", &config.proxy_port);
 					break;
-
+				case oSSLCertPath:
+					config.ssl_certs = safe_strdup(p1);
+					#ifndef USE_CYASSL
+					debug(LOG_WARNING, "SSLCertPath is set but not SSL compiled in. Ignoring!");
+					#endif
+					break;
+				case oSSLPeerVerification:
+					config.ssl_verify = parse_boolean_value(p1);
+					if (config.ssl_verify < 0)
+						config.ssl_verify = 0;
+					#ifndef USE_CYASSL
+					debug(LOG_WARNING, "SSLPeerVerification is set but no SSL compiled in. Ignoring!");
+					#endif
+                    break;
+                case oSSLAllowedCipherList:
+                    config.ssl_cipher_list = safe_strdup(p1);
+                    #ifndef USE_CYASSL
+                    debug(LOG_WARNING, "SSLAllowedCipherList is set but no SSL compiled in. Ignoring!");
+                    #endif
+                    break;
+				case oBadOption:
+                    /* FALL THROUGH */
+                default:
+					debug(LOG_ERR, "Bad option on line %d "
+							"in %s.", linenum,
+							filename);
+					debug(LOG_ERR, "Exiting...");
+					exit(-1);
+					break;
 				}
 			}
 		}
@@ -838,6 +860,8 @@ void parse_trusted_mac_list(const char *ptr) {
 		/* check for valid format */
 		if (!check_mac_format(possiblemac)) {
 			debug(LOG_ERR, "[%s] not a valid MAC address to trust. See option TrustedMACList in wifidog.conf for correct this mistake.", possiblemac);
+            free(ptrcopy);
+            free(mac);
 			return;
 		} else {
 			if (sscanf(possiblemac, " %17[A-Fa-f0-9:]", mac) == 1) {
@@ -852,10 +876,10 @@ void parse_trusted_mac_list(const char *ptr) {
 				} else {
 				/* Advance to the last entry */
 				for (p = config.trustedmaclist; p->next != NULL; p = p->next);
-				p->next = safe_malloc(sizeof(t_trusted_mac));
-				p = p->next;
-				p->mac = safe_strdup(mac);
-				p->next = NULL;
+                    p->next = safe_malloc(sizeof(t_trusted_mac));
+                    p = p->next;
+                    p->mac = safe_strdup(mac);
+                    p->next = NULL;
 				}
 			}
 		}

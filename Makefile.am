@@ -1,5 +1,7 @@
 # $Id$
 
+AUTOMAKE_OPTIONS = foreign
+
 SUBDIRS = libhttpd src . doc 
 
 docdir = ${prefix}/share/doc/wifidog-@VERSION@
@@ -7,9 +9,8 @@ docdir = ${prefix}/share/doc/wifidog-@VERSION@
 doc_DATA = \
   AUTHORS \
   COPYING \
-  INSTALL \
   NEWS \
-  README \
+  README.md \
   ChangeLog
   
 EXTRA_DIST = \

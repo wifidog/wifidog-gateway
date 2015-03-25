@@ -67,6 +67,9 @@
 #define DEFAULT_AUTHSERVMSGPATHFRAGMENT "gw_message.php?"
 #define DEFAULT_AUTHSERVPINGPATHFRAGMENT "ping/?"
 #define DEFAULT_AUTHSERVAUTHPATHFRAGMENT "auth/?"
+#define DEFAULT_AUTHSERVSSLCERTPATH "/etc/ssl/certs/"
+/** Note that DEFAULT_AUTHSERVSSLNOPEERVER must be 0 or 1, even if the config file syntax is yes or no */
+#define DEFAULT_AUTHSERVSSLPEERVER 1 /* 0 means: Enable peer verification */
 /*@}*/ 
 
 /**
@@ -164,6 +167,11 @@ typedef struct {
     int syslog_facility;	/**< @brief facility to use when using syslog for
 				     logging */
     int proxy_port;		/**< @brief Transparent proxy port (0 to disable) */
+	char *ssl_certs;	/**< @brief Path to SSL certs for auth server
+		verification */
+	int ssl_verify;		/**< @brief boolean, whether to enable
+		auth server certificate verification */
+    char *ssl_cipher_list;  /**< @brief List of SSL ciphers allowed. Optional. */
     t_firewall_ruleset	*rulesets;	/**< @brief firewall rules */
     t_trusted_mac *trustedmaclist; /**< @brief list of trusted macs */
 } s_config;

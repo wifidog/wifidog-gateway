@@ -1,0 +1,317 @@
+/********************************************************************\
+ * This program is free software; you can redistribute it and/or    *
+ * modify it under the terms of the GNU General Public License as   *
+ * published by the Free Software Foundation; either version 2 of   *
+ * the License, or (at your option) any later version.              *
+ *                                                                  *
+ * This program is distributed in the hope that it will be useful,  *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+ * GNU General Public License for more details.                     *
+ *                                                                  *
+ * You should have received a copy of the GNU General Public License*
+ * along with this program; if not, contact:                        *
+ *                                                                  *
+ * Free Software Foundation           Voice:  +1-617-542-5942       *
+ * 59 Temple Place - Suite 330        Fax:    +1-617-542-2652       *
+ * Boston, MA  02111-1307,  USA       gnu@gnu.org                   *
+ *                                                                  *
+ \********************************************************************/
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <errno.h>
+#include <unistd.h>
+#include <string.h>
+#include <syslog.h>
+
+#include "../config.h"
+#include "common.h"
+#include "debug.h"
+
+#ifdef USE_CYASSL
+#include <cyassl/ssl.h>
+#include "conf.h"
+/* For CYASSL_MAX_ERROR_SZ */
+#include <cyassl/ctaocrypt/types.h>
+/* For COMPRESS_E */
+#include <cyassl/ctaocrypt/error-crypt.h>
+#endif
+
+#ifdef USE_CYASSL
+static CYASSL_CTX *get_cyassl_ctx(void);
+#endif
+
+
+int
+http_get(const int sockfd, char *buf) {
+
+	ssize_t	numbytes;
+	size_t totalbytes;
+	int done, nfds;
+	fd_set			readfds;
+	struct timeval		timeout;
+	size_t buflen = strlen(buf);
+	
+	if (sockfd == -1) {
+		/* Could not connect to server */
+		debug(LOG_ERR, "Could not open socket to server!");
+		return -1;
+	}
+
+	debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", buf);
+	send(sockfd, buf, buflen, 0);
+
+	// Clear buffer and re-use for response
+	memset(buf, 0, buflen);
+
+	debug(LOG_DEBUG, "Reading response");
+	totalbytes = 0;
+	done = 0;
+	do {
+		FD_ZERO(&readfds);
+		FD_SET(sockfd, &readfds);
+		timeout.tv_sec = 30; /* XXX magic... 30 second is as good a timeout as any */
+		timeout.tv_usec = 0;
+		nfds = sockfd + 1;
+
+		nfds = select(nfds, &readfds, NULL, NULL, &timeout);
+
+		if (nfds > 0) {
+			/** We don't have to use FD_ISSET() because there
+			 *  was only one fd. */
+			numbytes = read(sockfd, buf + totalbytes, MAX_BUF - (totalbytes + 1));
+			if (numbytes < 0) {
+				debug(LOG_ERR, "An error occurred while reading from server: %s", strerror(errno));
+				/* FIXME */
+				close(sockfd);
+				return -1;
+			}
+			else if (numbytes == 0) {
+				done = 1;
+			}
+			else {
+				totalbytes += (size_t) numbytes;
+				debug(LOG_DEBUG, "Read %d bytes, total now %d", numbytes, totalbytes);
+			}
+		}
+		else if (nfds == 0) {
+			debug(LOG_ERR, "Timed out reading data via select() from auth server");
+			/* FIXME */
+			close(sockfd);
+			return -1;
+		}
+		else if (nfds < 0) {
+			debug(LOG_ERR, "Error reading data via select() from auth server: %s", strerror(errno));
+			/* FIXME */
+			close(sockfd);
+			return -1;
+		}
+	} while (!done);
+
+	close(sockfd);
+
+	buf[totalbytes] = '\0';
+	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", buf);
+	return totalbytes;
+}
+
+
+#ifdef USE_CYASSL
+
+static CYASSL_CTX *cyassl_ctx = NULL;
+static pthread_mutex_t cyassl_ctx_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+#define LOCK_CYASSL_CTX() do { \
+	debug(LOG_DEBUG, "Locking CyaSSL Context"); \
+	pthread_mutex_lock(&cyassl_ctx_mutex); \
+	debug(LOG_DEBUG, "CyaSSL Context locked"); \
+} while (0)
+
+#define UNLOCK_CYASSL_CTX() do { \
+	debug(LOG_DEBUG, "Unlocking CyaSSL Context"); \
+	pthread_mutex_unlock(&cyassl_ctx_mutex); \
+	debug(LOG_DEBUG, "CyaSSL Context unlocked"); \
+} while (0)
+
+
+static CYASSL_CTX *
+get_cyassl_ctx(void)
+{
+    int err;
+    CYASSL_CTX *ret;
+	s_config *config = config_get_config();
+
+    LOCK_CYASSL_CTX();
+    
+    if (NULL == cyassl_ctx) {
+        CyaSSL_Init();
+        /* Create the CYASSL_CTX */
+        /* Allow TLSv1.0 up to TLSv1.2 */
+        if ( (cyassl_ctx = CyaSSL_CTX_new(CyaTLSv1_client_method())) == NULL){
+            debug(LOG_ERR, "Could not create CYASSL context.");
+            return NULL;
+        }
+
+        if (config->ssl_cipher_list) {
+            debug(LOG_INFO, "Setting SSL cipher list to [%s]", config->ssl_cipher_list);
+            err = CyaSSL_CTX_set_cipher_list(cyassl_ctx, config->ssl_cipher_list);
+            if (SSL_SUCCESS != err) {
+                debug(LOG_ERR, "Could not load SSL cipher list (error %d)", err);
+                return NULL;
+            }
+        }
+
+        if (config->ssl_verify) {
+            /* Use trusted certs */
+            /* Note: CyaSSL requires that the certificates are named by their hash values */
+            debug(LOG_INFO, "Loading SSL certificates from %s", config->ssl_certs);
+            err = CyaSSL_CTX_load_verify_locations(cyassl_ctx, NULL, config->ssl_certs);
+            if (err != SSL_SUCCESS) {
+                debug(LOG_ERR, "Could not load SSL certificates (error %d)", err);
+                if (err == ASN_UNKNOWN_OID_E) {
+                    debug(LOG_ERR, "Error is ASN_UNKNOWN_OID_E - try compiling cyassl/wolfssl with --enable-ecc");
+                } else {
+                    debug(LOG_ERR, "Make sure that SSLCertPath points to the correct path in the config file");
+                    debug(LOG_ERR, "Or disable certificate loading with 'SSLPeerVerification No'.");
+                }
+                return NULL;
+            }
+        } else {
+            CyaSSL_CTX_set_verify(cyassl_ctx, SSL_VERIFY_NONE, 0);
+            debug(LOG_INFO, "Disabling SSL certificate verification!");
+        }
+    }
+    
+    ret = cyassl_ctx;
+    UNLOCK_CYASSL_CTX();
+    return ret;
+}
+
+
+int
+https_get(const int sockfd, char *buf, const char* hostname) {
+
+	ssize_t	numbytes;
+	size_t totalbytes;
+	int done, nfds;
+	fd_set			readfds;
+	struct timeval		timeout;
+	unsigned long sslerr;
+	char sslerrmsg[CYASSL_MAX_ERROR_SZ];
+	size_t buflen = strlen(buf);
+
+	s_config *config;
+	config = config_get_config();
+
+	CYASSL_CTX* ctx = get_cyassl_ctx();
+    if (NULL == ctx) {
+        debug(LOG_ERR, "Could not get CyaSSL Context!");
+        return -1;
+    }
+
+	if (sockfd == -1) {
+		/* Could not connect to server */
+		debug(LOG_ERR, "Could not open socket to server!");
+		return -1;
+	}
+
+	/* Create CYASSL object */
+	CYASSL* ssl;
+	if( (ssl = CyaSSL_new(ctx)) == NULL) {
+		debug(LOG_ERR, "Could not create CyaSSL context.");
+		return -1;
+	}
+	if (config->ssl_verify) {
+		// Turn on domain name check
+		// Loading of CA certificates and verification of remote host name
+		// go hand in hand - one is useless without the other.
+		CyaSSL_check_domain_name(ssl, hostname);
+	}
+	CyaSSL_set_fd(ssl, sockfd);
+
+
+	debug(LOG_DEBUG, "Sending HTTPS request to auth server: [%s]\n", buf);
+	numbytes = CyaSSL_send(ssl, buf, (int) buflen, 0);
+	if (numbytes <= 0) {
+		sslerr = (unsigned long) CyaSSL_get_error(ssl, numbytes);
+		CyaSSL_ERR_error_string(sslerr, sslerrmsg);
+		debug(LOG_ERR, "CyaSSL_send failed: %s", sslerrmsg);
+		return -1;
+	}
+	else if (numbytes != (int) buflen) {
+		debug(LOG_ERR, "CyaSSL_send failed: only %d bytes out of %d bytes sent!",
+			numbytes, buflen);
+		return -1;
+	}
+
+	// Clear buffer and re-use for response
+	memset(buf, 0, buflen);
+
+	debug(LOG_DEBUG, "Reading response");
+	totalbytes = 0;
+	done = 0;
+	do {
+		FD_ZERO(&readfds);
+		FD_SET(sockfd, &readfds);
+		timeout.tv_sec = 30; /* XXX magic... 30 second is as good a timeout as any */
+		timeout.tv_usec = 0;
+		nfds = sockfd + 1;
+
+		nfds = select(nfds, &readfds, NULL, NULL, &timeout);
+
+		if (nfds > 0) {
+			/** We don't have to use FD_ISSET() because there
+			 *  was only one fd. */
+			numbytes = CyaSSL_read(ssl, buf + totalbytes, MAX_BUF - (totalbytes + 1));
+			if (numbytes < 0) {
+				sslerr = (unsigned long) CyaSSL_get_error(ssl, numbytes);
+				CyaSSL_ERR_error_string(sslerr, sslerrmsg);
+				debug(LOG_ERR, "An error occurred while reading from server: %s", sslerrmsg);
+				/* FIXME */
+				close(sockfd);
+				return -1;
+			}
+			else if (numbytes == 0) {
+				/* CyaSSL_read returns 0 on a clean shutdown or if the peer closed the
+				connection. We can't distinguish between these cases right now. */
+				done = 1;
+			}
+			else {
+				totalbytes += (size_t) numbytes;
+				debug(LOG_DEBUG, "Read %d bytes, total now %d", numbytes, totalbytes);
+			}
+		}
+		else if (nfds == 0) {
+			debug(LOG_ERR, "Timed out reading data via select() from auth server");
+			/* FIXME */
+			close(sockfd);
+			return -1;
+		}
+		else if (nfds < 0) {
+			debug(LOG_ERR, "Error reading data via select() from auth server: %s", strerror(errno));
+			/* FIXME */
+			close(sockfd);
+			return -1;
+		}
+	} while (!done);
+
+	close(sockfd);
+
+	buf[totalbytes] = '\0';
+	debug(LOG_DEBUG, "HTTP Response from Server: [%s]", buf);
+
+	CyaSSL_free(ssl);
+
+	return totalbytes;
+}
+
+
+#endif /* USE_CYASSL */
+
