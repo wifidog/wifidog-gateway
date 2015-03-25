@@ -109,6 +109,7 @@ parse_commandline(int argc, char **argv)
 
         case 'c':
             if (optarg) {
+                free(config->configfile);
                 config->configfile = safe_strdup(optarg);
             }
             break;
