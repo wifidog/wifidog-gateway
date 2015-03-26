@@ -8,8 +8,10 @@ echo "Make sure to configure GatewayInterface in wifidog_mock.conf"
 ./mock_auth.py &
 
 # trace-children is necessary because of the libtool wrapper -.-
-sudo valgrind --leak-check=full --trace-children=yes --trace-children-skip=/bin/sh \
-    --log-file=valgrind.log ../../src/wifidog -d 7 -f -c wifidog-mock.conf 2> wifidog.log &
+#sudo valgrind --leak-check=full --trace-children=yes --trace-children-skip=/bin/sh \
+#    --log-file=valgrind.log ../../src/wifidog -d 7 -f -c wifidog-mock.conf 2> wifidog.log &
+
+../../src/wifidog -d 7 -f -c wifidog-mock.conf 2> wifidog.log &
 
 IF=`grep GatewayInterface wifidog-mock.conf | cut -f 2 -d ' '`
 
