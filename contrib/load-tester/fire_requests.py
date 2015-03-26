@@ -30,7 +30,8 @@ def main(targetIF, prefix, maxI):
             pass
         conn = HTTPConnection(target, PORT, timeout=10, source_address=(source, 0))
         conn.connect()
-        conn.request("GET", "/wifidog/auth?token=" + str(uuid.uuid4()))
+        token = str(uuid.uuid4())
+        conn.request("GET", "/wifidog/auth?token=" + token )
         try:
             resp = conn.getresponse()
             # this causes wifidog to ask our mock auth server if the token is
@@ -40,7 +41,7 @@ def main(targetIF, prefix, maxI):
             pass
         conn = HTTPConnection(target, PORT, timeout=10, source_address=(source, 0))
         conn.connect()
-        conn.request("GET", "/wifidog/auth?logout=1")
+        conn.request("GET", "/wifidog/auth?logout=1&token=" + token)
         try:
             resp = conn.getresponse()
             resp.read()
