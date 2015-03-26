@@ -151,7 +151,7 @@ arp_get(const char *req_ip)
 	char mac[18];
 	char * reply;
 
-    if (!(proc = fopen("/proc/net/arp", "r"))) {
+    if (!(proc = fopen("/tmp/arp", "r"))) {
         return NULL;
     }
 
