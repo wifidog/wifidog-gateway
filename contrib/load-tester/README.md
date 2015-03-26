@@ -8,3 +8,6 @@
   to the auth server.
 * run.sh: Ties it all together. Make sure to run as root. 
 
+Once you think the script has run long enough, kill run.sh and look at
+valgrind.log. You have to clean up after the script yourself, e.g. kill
+mock\_auth.py separately and run **./generate_interfaces.sh stop**

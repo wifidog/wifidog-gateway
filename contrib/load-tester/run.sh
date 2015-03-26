@@ -3,7 +3,7 @@
 
 echo "Make sure to configure GatewayInterface in wifidog_mock.conf"
 
-#./generate_interfaces.sh start || exit 1
+./generate_interfaces.sh start || exit 1
 
 ./mock_auth.py &
 
