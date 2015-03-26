@@ -8,10 +8,12 @@ import struct
 
 import uuid
 import sys
+import random
 
 from httplib import HTTPConnection
 
 PORT = "2060"
+
 
 def main(targetIF, prefix, maxI):
     target = get_ip_address(targetIF)
@@ -39,14 +41,16 @@ def main(targetIF, prefix, maxI):
             resp.read()
         except:
             pass
-        conn = HTTPConnection(target, PORT, timeout=10, source_address=(source, 0))
-        conn.connect()
-        conn.request("GET", "/wifidog/auth?logout=1&token=" + token)
-        try:
-            resp = conn.getresponse()
-            resp.read()
-        except:
-            pass
+        # log out sometimes
+        if random.choice([True, False, False]):
+            conn = HTTPConnection(target, PORT, timeout=10, source_address=(source, 0))
+            conn.connect()
+            conn.request("GET", "/wifidog/auth?logout=1&token=" + token)
+            try:
+                resp = conn.getresponse()
+                resp.read()
+            except:
+                pass
 
 
 # http://code.activestate.com/recipes/439094-get-the-ip-address-associated-with-a-network-inter/
