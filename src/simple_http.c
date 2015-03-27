@@ -99,6 +99,7 @@ http_get(const int sockfd, const char *req)
             } else if (numbytes == 0) {
                 done = 1;
             } else {
+                readbuf[numbytes] = '\0';
                 pstr_cat(response, readbuf);
                 debug(LOG_DEBUG, "Read %d bytes", numbytes);
             }
@@ -117,7 +118,9 @@ http_get(const int sockfd, const char *req)
     return retval;
 
  error:
-    close(sockfd);
+    if (sockfs >= 0) {
+        close(sockfd);
+    }
     retval = pstr_to_string(response);
     free(retval);
     return NULL;
@@ -286,6 +289,7 @@ https_get(const int sockfd, const char *req, const char *hostname)
                    connection. We can't distinguish between these cases right now. */
                 done = 1;
             } else {
+                readbuf[numbytes] = '\0';
                 pstr_cat(response, readbuf);
                 debug(LOG_DEBUG, "Read %d bytes", numbytes);
             }
@@ -310,7 +314,9 @@ https_get(const int sockfd, const char *req, const char *hostname)
     if (ssl) {
         CyaSSL_free(ssl);
     }
-    close(sockfd);
+    if (sockfd >= 0) {
+        close(sockfd);
+    }
     retval = pstr_to_string(response);
     free(retval);
     return NULL;
