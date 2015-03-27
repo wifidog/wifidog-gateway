@@ -112,7 +112,10 @@ void get_clients_from_parent(void) {
 	debug(LOG_INFO, "Connecting to parent to download clients");
 
 	/* Connect to socket */
-	sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (-1 == (sock = socket(AF_UNIX, SOCK_STREAM, 0))) {
+        debug(LOG_ERR, "Failed to create socket (%s)", strerror(errno));
+        return;
+    }
 	memset(&sa_un, 0, sizeof(sa_un));
 	sa_un.sun_family = AF_UNIX;
 	strncpy(sa_un.sun_path, config->internal_sock, (sizeof(sa_un.sun_path) - 1));
