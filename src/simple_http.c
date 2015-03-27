@@ -75,7 +75,14 @@ http_get(const int sockfd, const char *req)
     }
 
     debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", req);
-    send(sockfd, req, reqlen, 0);
+    numbytes = send(sockfd, req, reqlen, 0);
+    if (numbytes <= 0) {
+        debug(LOG_ERR, "send failed: %s", strerror(errno));
+        goto error;
+    } else if ((size_t) numbytes != reqlen) {
+        debug(LOG_ERR, "send failed: only %d bytes out of %d bytes sent!", numbytes, reqlen);
+        goto error;
+    }
 
     debug(LOG_DEBUG, "Reading response");
     done = 0;
