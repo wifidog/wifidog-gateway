@@ -118,7 +118,7 @@ http_get(const int sockfd, const char *req)
     return retval;
 
  error:
-    if (sockfs >= 0) {
+    if (sockfd >= 0) {
         close(sockfd);
     }
     retval = pstr_to_string(response);

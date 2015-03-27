@@ -48,11 +48,6 @@
 #include "client_list.h"
 #include "util.h"
 
-/* Defined in clientlist.c */
-extern	pthread_mutex_t	client_list_mutex;
-
-/* Defined in util.c */
-extern long served_this_session;
 
 /** Launches a thread that periodically checks if any of the connections has timed out
 @param arg Must contain a pointer to a string containing the IP adress of the client to check to check

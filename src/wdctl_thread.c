@@ -50,15 +50,9 @@
 #include "firewall.h"
 #include "client_list.h"
 #include "wdctl_thread.h"
+#include "commandline.h"
 #include "gateway.h"
 #include "safe.h"
-
-/* Defined in clientlist.c */
-extern	pthread_mutex_t	client_list_mutex;
-extern	pthread_mutex_t	config_mutex;
-
-/* From commandline.c: */
-extern char ** restartargv;
 
 
 static int write_to_socket(int, char *, size_t);

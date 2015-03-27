@@ -84,6 +84,11 @@
 /*@}*/
 
 /**
+ * Mutex for the configuration file, used by the auth_servers related
+ * functions. */
+extern pthread_mutex_t config_mutex;
+
+/**
  * Information about the authentication server
  */
 typedef struct _auth_serv_t {
@@ -147,7 +152,7 @@ typedef struct _trusted_mac_t {
  * Configuration structure
  */
 typedef struct {
-    char configfile[255];       /**< @brief name of the config file */
+    char *configfile;       /**< @brief name of the config file */
     char *htmlmsgfile;          /**< @brief name of the HTML file used for messages */
     char *wdctl_sock;           /**< @brief wdctl path to socket */
     char *internal_sock;                /**< @brief internal path to socket */

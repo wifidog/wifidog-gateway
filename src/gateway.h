@@ -26,7 +26,14 @@
 
 #ifndef _GATEWAY_H_
 #define _GATEWAY_H_
- 
+
+#include "httpd.h"
+
+extern time_t started_time;
+
+/* The internal web server */
+extern httpd *webserver;
+
 /** @brief exits cleanly and clear the firewall rules. */
 void termination_handler(int s);
 
