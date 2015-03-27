@@ -122,6 +122,7 @@ void get_clients_from_parent(void) {
 
 	if (connect(sock, (struct sockaddr *)&sa_un, strlen(sa_un.sun_path) + sizeof(sa_un.sun_family))) {
 		debug(LOG_ERR, "Failed to connect to parent (%s) - client list not downloaded", strerror(errno));
+        close(sock);
 		return;
 	}
 
