@@ -92,7 +92,10 @@ thread_wdctl(void *arg)
 	
 
 	debug(LOG_DEBUG, "Creating socket");
-	wdctl_socket_server = socket(PF_UNIX, SOCK_STREAM, 0);
+    if (-1 == (wdctl_socket_server = socket(PF_UNIX, SOCK_STREAM, 0))) {
+        debug(LOG_ERR, "Could not created wdctl socket (%s)", strerror(errno));
+        exit(1);
+    }
 
 	debug(LOG_DEBUG, "Got server socket %d", wdctl_socket_server);
 
@@ -283,7 +286,10 @@ wdctl_restart(int afd)
 	}
 
 	debug(LOG_DEBUG, "Creating socket");
-	sock = socket(PF_UNIX, SOCK_STREAM, 0);
+    if (-1 == (sock = socket(PF_UNIX, SOCK_STREAM, 0))) {
+        debug(LOG_ERR, "Could not created wdctl socket (%s)", strerror(errno));
+        exit(1);
+    }
 
 	debug(LOG_DEBUG, "Got internal socket %d", sock);
 
@@ -297,7 +303,7 @@ wdctl_restart(int afd)
 	debug(LOG_DEBUG, "Binding socket (%s) (%d)", sa_un.sun_path, strlen(sock_name));
 	
 	/* Which to use, AF_UNIX, PF_UNIX, AF_LOCAL, PF_LOCAL? */
-	if (-1 == bind(wdctl_socket_server, (struct sockaddr *)&sa_un, sizeof(struct sockaddr_un))) {
+	if (-1 == bind(sock, (struct sockaddr *)&sa_un, sizeof(struct sockaddr_un))) {
 		debug(LOG_ERR, "Could not bind internal socket: %s", strerror(errno));
 		return;
 	}
