@@ -114,12 +114,14 @@ thread_wdctl(void *arg)
 	if (-1 == bind(wdctl_socket_server, (struct sockaddr *)&sa_un, sizeof(struct sockaddr_un))) {
 		debug(LOG_ERR, "Could not bind control socket: %s",
 				strerror(errno));
+        close(wdctl_socket_server);
 		pthread_exit(NULL);
 	}
 
 	if (listen(wdctl_socket_server, 5)) {
 		debug(LOG_ERR, "Could not listen on control socket: %s",
 				strerror(errno));
+        close(wdctl_socket_server);
 		pthread_exit(NULL);
 	}
 
@@ -305,11 +307,13 @@ wdctl_restart(int afd)
 	/* Which to use, AF_UNIX, PF_UNIX, AF_LOCAL, PF_LOCAL? */
 	if (-1 == bind(sock, (struct sockaddr *)&sa_un, sizeof(struct sockaddr_un))) {
 		debug(LOG_ERR, "Could not bind internal socket: %s", strerror(errno));
+        close(sock);
 		return;
 	}
 
 	if (listen(sock, 5)) {
 		debug(LOG_ERR, "Could not listen on internal socket: %s", strerror(errno));
+        close(sock);
 		return;
 	}
 	
