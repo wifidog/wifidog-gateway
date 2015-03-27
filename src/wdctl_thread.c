@@ -108,8 +108,7 @@ thread_wdctl(void *arg)
 			strlen(sock_name));
 	
 	/* Which to use, AF_UNIX, PF_UNIX, AF_LOCAL, PF_LOCAL? */
-	if (bind(wdctl_socket_server, (struct sockaddr *)&sa_un, strlen(sock_name) 
-				+ sizeof(sa_un.sun_family))) {
+	if (-1 == bind(wdctl_socket_server, (struct sockaddr *)&sa_un, sizeof(struct sockaddr_un))) {
 		debug(LOG_ERR, "Could not bind control socket: %s",
 				strerror(errno));
 		pthread_exit(NULL);
@@ -298,7 +297,7 @@ wdctl_restart(int afd)
 	debug(LOG_DEBUG, "Binding socket (%s) (%d)", sa_un.sun_path, strlen(sock_name));
 	
 	/* Which to use, AF_UNIX, PF_UNIX, AF_LOCAL, PF_LOCAL? */
-	if (bind(sock, (struct sockaddr *)&sa_un, strlen(sock_name) + sizeof(sa_un.sun_family))) {
+	if (-1 == bind(wdctl_socket_server, (struct sockaddr *)&sa_un, sizeof(struct sockaddr_un))) {
 		debug(LOG_ERR, "Could not bind internal socket: %s", strerror(errno));
 		return;
 	}
