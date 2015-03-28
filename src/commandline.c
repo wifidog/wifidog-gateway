@@ -40,7 +40,14 @@
 /*
  * Holds an argv that could be passed to exec*() if we restart ourselves
  */
+<<<<<<< HEAD
 char ** restartargv = NULL;
+=======
+/* Declare variable */
+extern char **restartargv;
+/* Define variable */
+char **restartargv = NULL;
+>>>>>>> b80bc0b523d60a5c16040ef8a66827aab13541b3
 
 /**
  * A flag to denote whether we were restarted via a parent wifidog, or started normally
@@ -68,7 +75,8 @@ usage(void)
     fprintf(stdout, "  -w <path>     Wdctl socket path\n");
     fprintf(stdout, "  -h            Print usage\n");
     fprintf(stdout, "  -v            Print version information\n");
-    fprintf(stdout, "  -x pid        Used internally by WiFiDog when re-starting itself *DO NOT ISSUE THIS SWITCH MANUAlLY*\n");
+    fprintf(stdout,
+            "  -x pid        Used internally by WiFiDog when re-starting itself *DO NOT ISSUE THIS SWITCH MANUAlLY*\n");
     fprintf(stdout, "  -i <path>     Internal socket path used when re-starting self\n");
     fprintf(stdout, "\n");
 }
@@ -77,20 +85,29 @@ usage(void)
  * also populates restartargv
  */
 void
+<<<<<<< HEAD
 parse_commandline(int argc, char **argv) {
 	int c;
 	int skiponrestart;
 	int i;
+=======
+parse_commandline(int argc, char **argv)
+{
+    int c;
+    int skiponrestart;
+    int i;
+>>>>>>> b80bc0b523d60a5c16040ef8a66827aab13541b3
 
     s_config *config = config_get_config();
 
-	//MAGIC 3: Our own -x, the pid, and NULL :
-	restartargv = safe_malloc((size_t) (argc + 3) * sizeof(char*));
-	i=0;
-	restartargv[i++] = safe_strdup(argv[0]);
+    //MAGIC 3: Our own -x, the pid, and NULL :
+    restartargv = safe_malloc((size_t) (argc + 3) * sizeof(char *));
+    i = 0;
+    restartargv[i++] = safe_strdup(argv[0]);
 
     while (-1 != (c = getopt(argc, argv, "c:hfd:sw:vx:i:"))) {
 
+<<<<<<< HEAD
 		skiponrestart = 0;
 
 		switch(c) {
@@ -179,6 +196,94 @@ parse_commandline(int argc, char **argv) {
 	restartargv[i++] = NULL;
 	restartargv[i++] = NULL;
 	restartargv[i++] = NULL;
+=======
+        skiponrestart = 0;
+
+        switch (c) {
+
+        case 'h':
+            usage();
+            exit(1);
+            break;
+
+        case 'c':
+            if (optarg) {
+                free(config->configfile);
+                config->configfile = safe_strdup(optarg);
+            }
+            break;
+
+        case 'w':
+            if (optarg) {
+                free(config->wdctl_sock);
+                config->wdctl_sock = safe_strdup(optarg);
+            }
+            break;
+
+        case 'f':
+            skiponrestart = 1;
+            config->daemon = 0;
+            break;
+
+        case 'd':
+            if (optarg) {
+                config->debuglevel = atoi(optarg);
+            }
+            break;
+
+        case 's':
+            config->log_syslog = 1;
+            break;
+
+        case 'v':
+            fprintf(stdout, "This is WiFiDog version " VERSION "\n");
+            exit(1);
+            break;
+
+        case 'x':
+            skiponrestart = 1;
+            if (optarg) {
+                restart_orig_pid = atoi(optarg);
+            } else {
+                fprintf(stdout, "The expected PID to the -x switch was not supplied!");
+                exit(1);
+            }
+            break;
+
+        case 'i':
+            if (optarg) {
+                free(config->internal_sock);
+                config->internal_sock = safe_strdup(optarg);
+            }
+            break;
+
+        default:
+            usage();
+            exit(1);
+            break;
+
+        }
+
+        if (!skiponrestart) {
+            /* Add it to restartargv */
+            safe_asprintf(&(restartargv[i++]), "-%c", c);
+            if (optarg) {
+                restartargv[i++] = safe_strdup(optarg);
+            }
+        }
+
+    }
+
+    /* Finally, we should add  the -x, pid and NULL to restartargv
+     * HOWEVER we cannot do it here, since this is called before we fork to background
+     * so we'll leave this job to gateway.c after forking is completed
+     * so that the correct PID is assigned
+     *
+     * We add 3 nulls, and the first 2 will be overridden later
+     */
+    restartargv[i++] = NULL;
+    restartargv[i++] = NULL;
+    restartargv[i++] = NULL;
+>>>>>>> b80bc0b523d60a5c16040ef8a66827aab13541b3
 
 }
-
