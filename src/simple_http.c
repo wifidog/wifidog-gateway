@@ -75,7 +75,12 @@ http_get(const int sockfd, const char *req)
     }
 
     debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", req);
-    send(sockfd, req, reqlen, 0);
+    numbytes = send(sockfd, req, reqlen, 0);
+    // Cast numbytes to unsigned type because < 0 is already checked
+    if (numbytes < 0 || (size_t) numbytes != reqlen)  {
+        debug(LOG_ERR, "An error occurred while writing to server: %s", strerror(errno));
+        goto error;
+    }
 
     debug(LOG_DEBUG, "Reading response");
     done = 0;
