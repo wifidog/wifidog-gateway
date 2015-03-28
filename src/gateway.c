@@ -258,6 +258,7 @@ void
 termination_handler(int s)
 {
     static pthread_mutex_t sigterm_mutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_t self = pthread_self();
 
     debug(LOG_INFO, "Handler for termination caught signal %d", s);
 
@@ -277,11 +278,11 @@ termination_handler(int s)
      * termination handler) from happening so we need to explicitly kill the threads 
      * that use that
      */
-    if (tid_fw_counter) {
+    if (tid_fw_counter && self != tid_fw_counter) {
         debug(LOG_INFO, "Explicitly killing the fw_counter thread");
         pthread_kill(tid_fw_counter, SIGKILL);
     }
-    if (tid_ping) {
+    if (tid_ping && self != tid_ping) {
         debug(LOG_INFO, "Explicitly killing the ping thread");
         pthread_kill(tid_ping, SIGKILL);
     }

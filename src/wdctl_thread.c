@@ -95,7 +95,7 @@ thread_wdctl(void *arg)
 
     if (wdctl_socket_server < 0) {
         debug(LOG_DEBUG, "Could not get server socket: %s", strerror(errno));
-        terminate_handler();
+        termination_handler(0);
     }
     debug(LOG_DEBUG, "Got server socket %d", wdctl_socket_server);
 
@@ -112,12 +112,12 @@ thread_wdctl(void *arg)
     /* Which to use, AF_UNIX, PF_UNIX, AF_LOCAL, PF_LOCAL? */
     if (bind(wdctl_socket_server, (struct sockaddr *)&sa_un, sizeof(struct sockaddr_un))) {
         debug(LOG_ERR, "Could not bind control socket: %s", strerror(errno));
-        terminate_handler();
+        termination_handler(0);
     }
 
     if (listen(wdctl_socket_server, 5)) {
         debug(LOG_ERR, "Could not listen on control socket: %s", strerror(errno));
-        terminate_handler();
+        termination_handler(0);
     }
 
     while (1) {
