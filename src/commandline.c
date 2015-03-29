@@ -96,7 +96,7 @@ parse_commandline(int argc, char **argv)
     i = 0;
     restartargv[i++] = safe_strdup(argv[0]);
 
-    while (-1 != (c = getopt(argc, argv, "c:hfd:sw:vx:i:"))) {
+    while (-1 != (c = getopt(argc, argv, "c:hfd:sw:vx:i:a:"))) {
 
         skiponrestart = 0;
 
@@ -158,6 +158,15 @@ parse_commandline(int argc, char **argv)
             }
             break;
 
+        case 'a':
+            if (optarg) {
+                free(config->arp_table_path);
+                config->arp_table_path = safe_strdup(optarg);
+            } else {
+                fprintf(stdout, "You must supply the path to the ARP table with -a!");
+                exit(1);
+            }
+            break;
         default:
             usage();
             exit(1);
