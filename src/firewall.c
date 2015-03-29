@@ -131,8 +131,8 @@ fw_set_authup(void)
 /* XXX DCY */
 /**
  * Get an IP's MAC address from the ARP cache.
- * Go through all the entries in /proc/net/arp until we find the requested
- * IP address and return the MAC address bound to it.
+ * Go through all the entries in config->arp_table_path until we find the
+ * requested IP address and return the MAC address bound to it.
  * @todo Make this function portable (using shell scripts?)
  */
 char           *
@@ -142,8 +142,9 @@ arp_get(const char *req_ip)
 	char ip[16];
 	char mac[18];
 	char * reply;
+    s_config *config = config_get_config();
 
-    if (!(proc = fopen("/proc/net/arp", "r"))) {
+    if (!(proc = fopen(config->arp_table_path, "r"))) {
         return NULL;
     }
 

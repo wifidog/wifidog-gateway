@@ -196,6 +196,7 @@ config_init(void)
     config.ssl_certs = safe_strdup(DEFAULT_AUTHSERVSSLCERTPATH);
     config.ssl_verify = DEFAULT_AUTHSERVSSLPEERVER;
     config.ssl_cipher_list = NULL;
+    config.arp_table_path = safe_strdup(DEFAULT_ARPTABLE);
 }
 
 /**

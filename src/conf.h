@@ -71,6 +71,7 @@
 #define DEFAULT_AUTHSERVSSLCERTPATH "/etc/ssl/certs/"
 /** Note that DEFAULT_AUTHSERVSSLNOPEERVER must be 0 or 1, even if the config file syntax is yes or no */
 #define DEFAULT_AUTHSERVSSLPEERVER 1    /* 0 means: Enable peer verification */
+#define DEFAULT_ARPTABLE "/proc/net/arp"
 /*@}*/
 
 /*@{*/
@@ -190,6 +191,8 @@ typedef struct {
     char *ssl_cipher_list;  /**< @brief List of SSL ciphers allowed. Optional. */
     t_firewall_ruleset *rulesets;       /**< @brief firewall rules */
     t_trusted_mac *trustedmaclist; /**< @brief list of trusted macs */
+    char *arp_table_path; /**< @brief Path to custom ARP table, formatted
+        like /proc/net/arp */
 } s_config;
 
 /** @brief Get the current gateway configuration */
