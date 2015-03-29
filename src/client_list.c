@@ -261,6 +261,22 @@ client_list_find_by_token(const char *token)
     return NULL;
 }
 
+/** Destroy the client list. Including all free...
+ * DOES NOT UPDATE firstclient or anything else.
+ * @param list List to destroy (first item)
+ */
+void
+client_list_destroy(t_client *list)
+{
+    t_client *next;
+
+    while (NULL != list) {
+        next = list->next;
+        client_free_node(list);
+        list = next;
+    }
+}
+
 /** @internal
  * @brief Frees the memory used by a t_client structure
  * This function frees the memory used by the t_client structure in the

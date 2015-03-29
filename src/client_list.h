@@ -69,6 +69,9 @@ void client_list_init(void);
 /** @brief Insert client at head of list */
 void client_list_insert_client(t_client *);
 
+/** @brief Destroy the client list. Including all free... */
+void client_list_destroy(t_client *);
+
 /** @brief Adds a new client to the connections list */
 t_client *client_list_add(const char *, const char *, const char *);
 
