@@ -59,7 +59,6 @@
 #include "client_list.h"
 #include "commandline.h"
 
-
 static int _fw_deny_raw(const char *, const char *, const int);
 
 /**
@@ -71,14 +70,14 @@ static int _fw_deny_raw(const char *, const char *, const int);
  * @return Return code of the command
  */
 int
-fw_allow(t_client *client, int new_fw_connection_state)
+fw_allow(t_client * client, int new_fw_connection_state)
 {
     int result;
     int old_state = client->fw_connection_state;
 
     debug(LOG_DEBUG, "Allowing %s %s with fw_connection_state %d", client->ip, client->mac, new_fw_connection_state);
     client->fw_connection_state = new_fw_connection_state;
-    
+
     /* Grant first */
     result = iptables_fw_access(FW_ACCESS_ALLOW, client->ip, client->mac, new_fw_connection_state);
 
@@ -112,12 +111,12 @@ fw_allow_host(const char *host)
  * @return Return code of the command
  */
 int
-fw_deny(t_client *client)
+fw_deny(t_client * client)
 {
     int fw_connection_state = client->fw_connection_state;
     debug(LOG_DEBUG, "Denying %s %s with fw_connection_state %d", client->ip, client->mac, client->fw_connection_state);
 
-    client->fw_connection_state = FW_MARK_NONE;  /* Clear */
+    client->fw_connection_state = FW_MARK_NONE; /* Clear */
     return _fw_deny_raw(client->ip, client->mac, fw_connection_state);
 }
 
@@ -138,21 +137,19 @@ _fw_deny_raw(const char *ip, const char *mac, const int mark)
 int
 fw_set_authdown(void)
 {
-	debug(LOG_DEBUG, "Marking auth server down");
+    debug(LOG_DEBUG, "Marking auth server down");
 
-	return iptables_fw_auth_unreachable(FW_MARK_AUTH_IS_DOWN);
+    return iptables_fw_auth_unreachable(FW_MARK_AUTH_IS_DOWN);
 }
 
 /** Remove passthrough for clients when auth server is up */
 int
 fw_set_authup(void)
 {
-	debug(LOG_DEBUG, "Marking auth server up again");
+    debug(LOG_DEBUG, "Marking auth server up again");
 
-	return iptables_fw_auth_reachable();
+    return iptables_fw_auth_reachable();
 }
-
-
 
 /* XXX DCY */
 /**
@@ -161,28 +158,28 @@ fw_set_authup(void)
  * IP address and return the MAC address bound to it.
  * @todo Make this function portable (using shell scripts?)
  */
-char           *
+char *
 arp_get(const char *req_ip)
 {
-    FILE           *proc;
-	char ip[16];
-	char mac[18];
-	char * reply;
+    FILE *proc;
+    char ip[16];
+    char mac[18];
+    char *reply;
 
     if (!(proc = fopen("/proc/net/arp", "r"))) {
         return NULL;
     }
 
     /* Skip first line */
-	while (!feof(proc) && fgetc(proc) != '\n');
+    while (!feof(proc) && fgetc(proc) != '\n') ;
 
-	/* Find ip, copy mac in reply */
-	reply = NULL;
+    /* Find ip, copy mac in reply */
+    reply = NULL;
     while (!feof(proc) && (fscanf(proc, " %15[0-9.] %*s %*s %17[A-Fa-f0-9:] %*s %*s", ip, mac) == 2)) {
-		if (strcmp(ip, req_ip) == 0) {
-			reply = safe_strdup(mac);
-			break;
-		}
+        if (strcmp(ip, req_ip) == 0) {
+            reply = safe_strdup(mac);
+            break;
+        }
     }
 
     fclose(proc);
@@ -195,9 +192,9 @@ arp_get(const char *req_ip)
 int
 fw_init(void)
 {
-	int result = 0;
+    int result = 0;
     int new_fw_state;
-	t_client * client = NULL;
+    t_client *client = NULL;
 
     if (!init_icmp_socket()) {
         return 0;
@@ -206,20 +203,20 @@ fw_init(void)
     debug(LOG_INFO, "Initializing Firewall");
     result = iptables_fw_init();
 
-	if (restart_orig_pid) {
-		debug(LOG_INFO, "Restoring firewall rules for clients inherited from parent");
-		LOCK_CLIENT_LIST();
-		client = client_get_first_client();
-		while (client) {
+    if (restart_orig_pid) {
+        debug(LOG_INFO, "Restoring firewall rules for clients inherited from parent");
+        LOCK_CLIENT_LIST();
+        client = client_get_first_client();
+        while (client) {
             new_fw_state = client->fw_connection_state;
             client->fw_connection_state = FW_MARK_NONE;
-		    fw_allow(client, new_fw_state);
-			client = client->next;
-		}
-		UNLOCK_CLIENT_LIST();
-	}
+            fw_allow(client, new_fw_state);
+            client = client->next;
+        }
+        UNLOCK_CLIENT_LIST();
+    }
 
-	return result;
+    return result;
 }
 
 /** Remove all auth server firewall whitelist rules
@@ -227,8 +224,8 @@ fw_init(void)
 void
 fw_clear_authservers(void)
 {
-	debug(LOG_INFO, "Clearing the authservers list");
-	iptables_fw_clear_authservers();
+    debug(LOG_INFO, "Clearing the authservers list");
+    iptables_fw_clear_authservers();
 }
 
 /** Add the necessary firewall rules to whitelist the authservers
@@ -236,8 +233,8 @@ fw_clear_authservers(void)
 void
 fw_set_authservers(void)
 {
-	debug(LOG_INFO, "Setting the authservers list");
-	iptables_fw_set_authservers();
+    debug(LOG_INFO, "Setting the authservers list");
+    iptables_fw_set_authservers();
 }
 
 /** Remove the firewall rules
@@ -258,8 +255,8 @@ fw_destroy(void)
 void
 fw_sync_with_authserver(void)
 {
-    t_authresponse  authresponse;
-    t_client        *p1, *p2, *worklist, *tmp;
+    t_authresponse authresponse;
+    t_client *p1, *p2, *worklist, *tmp;
     s_config *config = config_get_config();
 
     if (-1 == iptables_fw_counters_update()) {
@@ -287,16 +284,19 @@ fw_sync_with_authserver(void)
         icmp_ping(p1->ip);
         /* Update the counters on the remote server only if we have an auth server */
         if (config->auth_servers != NULL) {
-            auth_server_request(&authresponse, REQUEST_TYPE_COUNTERS, p1->ip, p1->mac, p1->token, p1->counters.incoming, p1->counters.outgoing);
+            auth_server_request(&authresponse, REQUEST_TYPE_COUNTERS, p1->ip, p1->mac, p1->token, p1->counters.incoming,
+                                p1->counters.outgoing);
         }
 
-        time_t	current_time=time(NULL);
-        debug(LOG_INFO, "Checking client %s for timeout:  Last updated %ld (%ld seconds ago), timeout delay %ld seconds, current time %ld, ",
-                    p1->ip, p1->counters.last_updated, current_time-p1->counters.last_updated, config->checkinterval * config->clienttimeout, current_time);
+        time_t current_time = time(NULL);
+        debug(LOG_INFO,
+              "Checking client %s for timeout:  Last updated %ld (%ld seconds ago), timeout delay %ld seconds, current time %ld, ",
+              p1->ip, p1->counters.last_updated, current_time - p1->counters.last_updated,
+              config->checkinterval * config->clienttimeout, current_time);
         if (p1->counters.last_updated + (config->checkinterval * config->clienttimeout) <= current_time) {
             /* Timing out user */
             debug(LOG_INFO, "%s - Inactive for more than %ld seconds, removing client and denying in firewall",
-                    p1->ip, config->checkinterval * config->clienttimeout);
+                  p1->ip, config->checkinterval * config->clienttimeout);
             LOCK_CLIENT_LIST();
             tmp = client_list_find_by_client(p1);
             if (NULL != tmp) {
@@ -320,56 +320,59 @@ fw_sync_with_authserver(void)
             if (NULL == tmp) {
                 UNLOCK_CLIENT_LIST();
                 debug(LOG_NOTICE, "Client was already removed. Skipping auth processing");
-                continue;  /* Next client please */
+                continue;       /* Next client please */
             }
-            
+
             if (config->auth_servers != NULL) {
                 switch (authresponse.authcode) {
-                    case AUTH_DENIED:
-                        debug(LOG_NOTICE, "%s - Denied. Removing client and firewall rules", tmp->ip);
-                        fw_deny(tmp);
-                        client_list_delete(tmp);
-                        break;
+                case AUTH_DENIED:
+                    debug(LOG_NOTICE, "%s - Denied. Removing client and firewall rules", tmp->ip);
+                    fw_deny(tmp);
+                    client_list_delete(tmp);
+                    break;
 
-                    case AUTH_VALIDATION_FAILED:
-                        debug(LOG_NOTICE, "%s - Validation timeout, now denied. Removing client and firewall rules", tmp->ip);
-                        fw_deny(tmp);
-                        client_list_delete(tmp);
-                        break;
+                case AUTH_VALIDATION_FAILED:
+                    debug(LOG_NOTICE, "%s - Validation timeout, now denied. Removing client and firewall rules",
+                          tmp->ip);
+                    fw_deny(tmp);
+                    client_list_delete(tmp);
+                    break;
 
-                    case AUTH_ALLOWED:
-                        if (tmp->fw_connection_state != FW_MARK_KNOWN) {
-                            debug(LOG_INFO, "%s - Access has changed to allowed, refreshing firewall and clearing counters", tmp->ip);
-                            //WHY did we deny, then allow!?!? benoitg 2007-06-21
-                            //fw_deny(tmp->ip, tmp->mac, tmp->fw_connection_state); /* XXX this was possibly to avoid dupes. */
+                case AUTH_ALLOWED:
+                    if (tmp->fw_connection_state != FW_MARK_KNOWN) {
+                        debug(LOG_INFO, "%s - Access has changed to allowed, refreshing firewall and clearing counters",
+                              tmp->ip);
+                        //WHY did we deny, then allow!?!? benoitg 2007-06-21
+                        //fw_deny(tmp->ip, tmp->mac, tmp->fw_connection_state); /* XXX this was possibly to avoid dupes. */
 
-                            if (tmp->fw_connection_state != FW_MARK_PROBATION) {
-                                tmp->counters.incoming = tmp->counters.outgoing = 0;
-                            }
-                            else {
-                                //We don't want to clear counters if the user was in validation, it probably already transmitted data..
-                                debug(LOG_INFO, "%s - Skipped clearing counters after all, the user was previously in validation", tmp->ip);
-                            }
-                            fw_allow(tmp, FW_MARK_KNOWN);
+                        if (tmp->fw_connection_state != FW_MARK_PROBATION) {
+                            tmp->counters.incoming = tmp->counters.outgoing = 0;
+                        } else {
+                            //We don't want to clear counters if the user was in validation, it probably already transmitted data..
+                            debug(LOG_INFO,
+                                  "%s - Skipped clearing counters after all, the user was previously in validation",
+                                  tmp->ip);
                         }
-                        break;
+                        fw_allow(tmp, FW_MARK_KNOWN);
+                    }
+                    break;
 
-                    case AUTH_VALIDATION:
-                        /*
-                         * Do nothing, user
-                         * is in validation
-                         * period
-                         */
-                        debug(LOG_INFO, "%s - User in validation period", tmp->ip);
-                        break;
+                case AUTH_VALIDATION:
+                    /*
+                     * Do nothing, user
+                     * is in validation
+                     * period
+                     */
+                    debug(LOG_INFO, "%s - User in validation period", tmp->ip);
+                    break;
 
-                    case AUTH_ERROR:
-                        debug(LOG_WARNING, "Error communicating with auth server - leaving %s as-is for now", tmp->ip);
-                        break;
+                case AUTH_ERROR:
+                    debug(LOG_WARNING, "Error communicating with auth server - leaving %s as-is for now", tmp->ip);
+                    break;
 
-                    default:
-                        debug(LOG_ERR, "I do not know about authentication code %d", authresponse.authcode);
-                        break;
+                default:
+                    debug(LOG_ERR, "I do not know about authentication code %d", authresponse.authcode);
+                    break;
                 }
             }
             UNLOCK_CLIENT_LIST();
@@ -378,4 +381,3 @@ fw_sync_with_authserver(void)
 
     client_list_destroy(worklist);
 }
-

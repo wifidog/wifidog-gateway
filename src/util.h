@@ -67,7 +67,7 @@ void mark_auth_offline(void);
 int is_auth_online(void);
 
 /** @brief Creates a human-readable paragraph of the status of wifidog */
-char * get_status_text(void);
+char *get_status_text(void);
 
 /** @brief Initialize the ICMP socket */
 int init_icmp_socket(void);
@@ -90,5 +90,4 @@ void icmp_ping(const char *);
 	debug(LOG_DEBUG, "wd_gethostbyname() unlocked"); \
 } while (0)
 
-#endif /* _UTIL_H_ */
-
+#endif                          /* _UTIL_H_ */
