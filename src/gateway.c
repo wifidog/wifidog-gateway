@@ -19,7 +19,6 @@
  *                                                                  *
  \********************************************************************/
 
-/* $Id$ */
 /** @internal
   @file gateway.c
   @brief Main loop
@@ -483,7 +482,7 @@ main_loop(void)
 
 /** Reads the configuration file and then starts the main loop */
 int
-main(int argc, char **argv)
+gw_main(int argc, char **argv)
 {
 
     s_config *config = config_get_config();
