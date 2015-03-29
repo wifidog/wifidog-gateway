@@ -34,27 +34,27 @@ extern pthread_mutex_t client_list_mutex;
 /** Counters struct for a client's bandwidth usage (in bytes)
  */
 typedef struct _t_counters {
-    unsigned long long	incoming;	/**< @brief Incoming data total*/
-    unsigned long long	outgoing;	/**< @brief Outgoing data total*/
-    unsigned long long	incoming_history;	/**< @brief Incoming data before wifidog restarted*/
-    unsigned long long	outgoing_history;	/**< @brief Outgoing data before wifidog restarted*/
-    time_t	last_updated;	/**< @brief Last update of the counters */
+    unsigned long long incoming;        /**< @brief Incoming data total*/
+    unsigned long long outgoing;        /**< @brief Outgoing data total*/
+    unsigned long long incoming_history;        /**< @brief Incoming data before wifidog restarted*/
+    unsigned long long outgoing_history;        /**< @brief Outgoing data before wifidog restarted*/
+    time_t last_updated;        /**< @brief Last update of the counters */
 } t_counters;
 
 /** Client node for the connected client linked list.
  */
-typedef struct	_t_client {
-    struct	_t_client *next;        /**< @brief Pointer to the next client */
+typedef struct _t_client {
+    struct _t_client *next;             /**< @brief Pointer to the next client */
     unsigned long long id;           /**< @brief Unique ID per client */
-	char	*ip;			/**< @brief Client Ip address */
-	char	*mac;			/**< @brief Client Mac address */
-	char	*token;			/**< @brief Client token */
-	int fw_connection_state; /**< @brief Connection state in the
+    char *ip;                           /**< @brief Client Ip address */
+    char *mac;                          /**< @brief Client Mac address */
+    char *token;                        /**< @brief Client token */
+    int fw_connection_state;     /**< @brief Connection state in the
 						     firewall */
-	int	fd;			/**< @brief Client HTTP socket (valid only
+    int fd;                             /**< @brief Client HTTP socket (valid only
 					     during login before one of the
 					     _http_* function is called */
-	t_counters	counters;	/**< @brief Counters for input/output of
+    t_counters counters;                /**< @brief Counters for input/output of
 					     the client. */
 } t_client;
 
@@ -90,10 +90,10 @@ t_client *client_list_find_by_client(t_client *);
 
 /** @brief Finds a client only by its IP */
 t_client *client_list_find_by_ip(const char *); /* needed by fw_iptables.c, auth.c 
-					     * and wdctl_thread.c */
+                                                 * and wdctl_thread.c */
 
 /** @brief Finds a client only by its Mac */
-t_client *client_list_find_by_mac(const char *); /* needed by wdctl_thread.c */
+t_client *client_list_find_by_mac(const char *);        /* needed by wdctl_thread.c */
 
 /** @brief Finds a client by its token */
 t_client *client_list_find_by_token(const char *);
@@ -119,4 +119,4 @@ void client_free_node(t_client *);
 	debug(LOG_DEBUG, "Client list unlocked"); \
 } while (0)
 
-#endif /* _CLIENT_LIST_H_ */
+#endif                          /* _CLIENT_LIST_H_ */

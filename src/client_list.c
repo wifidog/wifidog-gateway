@@ -44,8 +44,8 @@
 
 /** @internal
  * Holds a pointer to the first element of the list 
- */ 
-static t_client         *firstclient = NULL;
+ */
+static t_client *firstclient = NULL;
 
 /** @internal
  * Client ID
@@ -92,7 +92,7 @@ client_list_init(void)
  * @param Pointer to t_client object.
  */
 void
-client_list_insert_client(t_client *client)
+client_list_insert_client(t_client * client)
 {
     t_client *prev_head;
 
@@ -104,7 +104,6 @@ client_list_insert_client(t_client *client)
     firstclient = client;
 }
 
-
 /** Based on the parameters it receives, this function creates a new entry
  * in the connections list. All the memory allocation is done here.
  * Client is inserted at the head of the list.
@@ -113,23 +112,23 @@ client_list_insert_client(t_client *client)
  * @param token Token
  * @return Pointer to the client we just created
  */
-t_client         *
+t_client *
 client_list_add(const char *ip, const char *mac, const char *token)
 {
-    t_client         *curclient;
-    
+    t_client *curclient;
+
     curclient = client_get_new();
 
     curclient->ip = safe_strdup(ip);
     curclient->mac = safe_strdup(mac);
     curclient->token = safe_strdup(token);
-    curclient->counters.incoming = curclient->counters.incoming_history = curclient->counters.outgoing = curclient->counters.outgoing_history = 0;
+    curclient->counters.incoming = curclient->counters.incoming_history = curclient->counters.outgoing =
+        curclient->counters.outgoing_history = 0;
     curclient->counters.last_updated = time(NULL);
 
     client_list_insert_client(curclient);
 
-    debug(LOG_INFO, "Added a new client to linked list: IP: %s Token: %s",
-          ip, token);
+    debug(LOG_INFO, "Added a new client to linked list: IP: %s Token: %s", ip, token);
 
     return curclient;
 }
@@ -140,7 +139,7 @@ client_list_add(const char *ip, const char *mac, const char *token)
  * @return int Number of clients copied
  */
 int
-client_list_dup(t_client **dest)
+client_list_dup(t_client ** dest)
 {
     t_client *new, *cur, *top, *prev;
     int copied = 0;
@@ -149,7 +148,7 @@ client_list_dup(t_client **dest)
     new = top = prev = NULL;
 
     if (NULL == cur) {
-        *dest = new;  /* NULL */
+        *dest = new;            /* NULL */
         return copied;
     }
 
@@ -162,7 +161,7 @@ client_list_dup(t_client **dest)
             prev->next = new;
         }
         prev = new;
-        copied ++;
+        copied++;
         cur = cur->next;
     }
 
@@ -175,7 +174,7 @@ client_list_dup(t_client **dest)
  * @return duplicate client object with next == NULL
  */
 t_client *
-client_dup(const t_client *src)
+client_dup(const t_client * src)
 {
     t_client *new = client_get_new();
 
@@ -199,7 +198,7 @@ client_dup(const t_client *src)
  * @return pointer to the client in the list.
  */
 t_client *
-client_list_find_by_client(t_client *client)
+client_list_find_by_client(t_client * client)
 {
     t_client *c = firstclient;
 
@@ -218,10 +217,10 @@ client_list_find_by_client(t_client *client)
  * @param mac MAC we are looking for in the linked list
  * @return Pointer to the client, or NULL if not found
  */
-t_client         *
+t_client *
 client_list_find(const char *ip, const char *mac)
 {
-    t_client         *ptr;
+    t_client *ptr;
 
     ptr = firstclient;
     while (NULL != ptr) {
@@ -239,10 +238,10 @@ client_list_find(const char *ip, const char *mac)
  * @param ip IP we are looking for in the linked list
  * @return Pointer to the client, or NULL if not found
  */
-t_client         *
+t_client *
 client_list_find_by_ip(const char *ip)
 {
-    t_client         *ptr;
+    t_client *ptr;
 
     ptr = firstclient;
     while (NULL != ptr) {
@@ -260,10 +259,10 @@ client_list_find_by_ip(const char *ip)
  * @param mac Mac we are looking for in the linked list
  * @return Pointer to the client, or NULL if not found
  */
-t_client         *
+t_client *
 client_list_find_by_mac(const char *mac)
 {
-    t_client         *ptr;
+    t_client *ptr;
 
     ptr = firstclient;
     while (NULL != ptr) {
@@ -282,7 +281,7 @@ client_list_find_by_mac(const char *mac)
 t_client *
 client_list_find_by_token(const char *token)
 {
-    t_client         *ptr;
+    t_client *ptr;
 
     ptr = firstclient;
     while (NULL != ptr) {
@@ -299,7 +298,7 @@ client_list_find_by_token(const char *token)
  * @param list List to destroy (first item)
  */
 void
-client_list_destroy(t_client *list)
+client_list_destroy(t_client * list)
 {
     t_client *next;
 
@@ -354,7 +353,7 @@ client_list_delete(t_client * client)
 void
 client_list_remove(t_client * client)
 {
-    t_client         *ptr;
+    t_client *ptr;
 
     ptr = firstclient;
 
