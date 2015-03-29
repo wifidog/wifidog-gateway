@@ -19,6 +19,10 @@ MA_PID="$!"
 #sudo valgrind --leak-check=full --trace-children=yes --trace-children-skip=/bin/sh \
 #    --log-file=valgrind.log ../../src/wifidog -d 7 -f -c wifidog-mock.conf 2> wifidog.log &
 
+# for -fsanitize=address
+export ASAN_OPTIONS=check_initialization_order=1
+export ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-3.5
+
 ../../src/wifidog -d 7 -f -c wifidog-mock.conf -a /tmp/arp 2> wifidog.log &
 WD_PID="$!"
 
@@ -28,17 +32,11 @@ echo "Waiting for wifidog to come up"
 
 sleep 10
 
-usage: fire_requests.py [-h] --target-interface TARGET_INTERFACE
-                        --source-interface-prefix SOURCE_INTERFACE_PREFIX
-                        --source-interface-count SOURCE_INTERFACE_COUNT
-                        --process-count PROCESS_COUNT
-
-
 ./fire_requests.py \
     --target-interface $IF \
     --source-interface-prefix mac \
     --source-interface-count $COUNT \
-    --process-count 3
+    --process-count 2
 
 #./generate_interfaces.sh stop
 
