@@ -355,8 +355,8 @@ wdctl_restart(int afd)
     } else {
         /* Child */
         close(wdctl_socket_server);
-        close(icmp_fd);
         close(sock);
+        close_icmp_socket();
         shutdown(afd, 2);
         close(afd);
         debug(LOG_NOTICE, "Re-executing myself (%s)", restartargv[0]);

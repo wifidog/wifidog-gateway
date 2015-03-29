@@ -29,8 +29,6 @@
 
 #include "client_list.h"
 
-extern int icmp_fd;
-
 /** Used by fw_iptables.c */
 typedef enum _t_fw_marks {
     FW_MARK_NONE = 0, /**< @brief No mark set. */
@@ -73,11 +71,5 @@ void fw_sync_with_authserver(void);
 
 /** @brief Get an IP's MAC address from the ARP cache.*/
 char *arp_get(const char *);
-
-/** @brief ICMP Ping an IP */
-void icmp_ping(const char *);
-
-/** @brief cheap random */
-unsigned short rand16(void);
 
 #endif /* _FIREWALL_H_ */
