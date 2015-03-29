@@ -30,7 +30,6 @@
 #include "client_list.h"
 
 extern int icmp_fd;
-int icmp_fd;
 
 /** Used by fw_iptables.c */
 typedef enum _t_fw_marks {
@@ -80,8 +79,5 @@ void icmp_ping(const char *);
 
 /** @brief cheap random */
 unsigned short rand16(void);
-
-/** @brief Logout a client and report to auth server. */
-void logout_client(t_client *);
 
 #endif /* _FIREWALL_H_ */

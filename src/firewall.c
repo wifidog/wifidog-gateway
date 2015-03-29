@@ -64,6 +64,9 @@
 #include "client_list.h"
 #include "commandline.h"
 
+
+int icmp_fd;
+
 static int _fw_deny_raw(const char *, const char *, const int);
 
 /**
@@ -395,38 +398,9 @@ fw_sync_with_authserver(void)
 }
 
 /**
- * @brief Logout a client and report to auth server.
- *
- * This function assumes it is being called with the client lock held! This
- * function remove the client from the client list and free its memory, so
- * client is no langer valid when this method returns.
- *
- * @param client Points to the client to be logged out
+ * Ping an IP.
+ * @param IP/host as string, will be sent to gethostbyname
  */
-void
-logout_client(t_client *client)
-{
-    t_authresponse  authresponse;
-    const s_config *config = config_get_config();
-    fw_deny(client);
-    client_list_remove(client);
-
-    /* Advertise the logout if we have an auth server */
-    if (config->auth_servers != NULL) {
-        UNLOCK_CLIENT_LIST();
-        auth_server_request(&authresponse, REQUEST_TYPE_LOGOUT,
-            client->ip, client->mac, client->token,
-            client->counters.incoming,
-            client->counters.outgoing);
-
-        if (authresponse.authcode==AUTH_ERROR)
-            debug(LOG_WARNING, "Auth server error when reporting logout");
-        LOCK_CLIENT_LIST();
-    }
-
-    client_free_node(client);
-}
-
 void
 icmp_ping(const char *host)
 {
