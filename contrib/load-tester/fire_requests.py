@@ -10,6 +10,12 @@ import uuid
 import sys
 import random
 
+import argparse
+import functools
+
+
+from multiprocessing import Pool
+
 from httplib import HTTPConnection
 
 PORT = "2060"
@@ -18,6 +24,9 @@ PORT = "2060"
 def main(targetIF, prefix, maxI):
     target = get_ip_address(targetIF)
     for i in xrange(int(maxI)):
+        main_single(target, prefix, i)
+
+def main_single(target, prefix, i):
         source = get_ip_address(prefix + str(i))
         # source_address requires python 2.7
         # urllib2 does not nicely expose source_address, so use
@@ -64,5 +73,22 @@ def get_ip_address(ifname):
         )[20:24])
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='Hammer a wifidog instance with requests')
+    parser.add_argument('--target-interface', required=True,
+                   help='Interface where Wifidog is listening')
+    parser.add_argument('--source-interface-prefix', required=True,
+                   help='Prefix of the virtual interfaces from which Wifidog is exercised.')
+    parser.add_argument('--source-interface-count', required=True,
+                   help='Number of virtual interfaces, where interface is prefix+index')
+    parser.add_argument('--process-count', required=True,
+                   help='How many processes to run')
+
+    args = parser.parse_args()
+
+    target = get_ip_address(args.target_interface)
+    p = Pool(int(args.process_count))
+    partial = functools.partial(main_single, target, args.source_interface_prefix)
     while True:
-        main(sys.argv[1], sys.argv[2], sys.argv[3])
+        p.map(partial, list(xrange(int(args.source_interface_count))))
+

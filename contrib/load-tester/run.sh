@@ -4,8 +4,8 @@
 # echo "core.%e.%p" > /proc/sys/kernel/core_pattern
 # http://stackoverflow.com/a/18368068
 
+echo "core.%e.%p" > /proc/sys/kernel/core_pattern
 ulimit -c unlimited
-ulimit -a
 
 COUNT=40
 echo "Make sure to configure GatewayInterface in wifidog_mock.conf"
@@ -27,7 +27,18 @@ IF=`grep GatewayInterface wifidog-mock.conf | cut -f 2 -d ' '`
 echo "Waiting for wifidog to come up"
 
 sleep 10
-./fire_requests.py $IF mac $COUNT
+
+usage: fire_requests.py [-h] --target-interface TARGET_INTERFACE
+                        --source-interface-prefix SOURCE_INTERFACE_PREFIX
+                        --source-interface-count SOURCE_INTERFACE_COUNT
+                        --process-count PROCESS_COUNT
+
+
+./fire_requests.py \
+    --target-interface $IF \
+    --source-interface-prefix mac \
+    --source-interface-count $COUNT \
+    --process-count 3
 
 #./generate_interfaces.sh stop
 
