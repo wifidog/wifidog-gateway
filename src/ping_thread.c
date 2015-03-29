@@ -53,12 +53,10 @@
 #include "util.h"
 #include "centralserver.h"
 #include "firewall.h"
-
+#include "gateway.h"
 #include "simple_http.h"
 
 static void ping(void);
-
-extern time_t started_time;
 
 /** Launches a thread that periodically checks in with the wifidog auth server to perform heartbeat function.
 @param arg NULL

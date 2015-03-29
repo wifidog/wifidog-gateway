@@ -75,7 +75,14 @@ http_get(const int sockfd, const char *req)
     }
 
     debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", req);
-    send(sockfd, req, reqlen, 0);
+    numbytes = send(sockfd, req, reqlen, 0);
+    if (numbytes <= 0) {
+        debug(LOG_ERR, "send failed: %s", strerror(errno));
+        goto error;
+    } else if ((size_t) numbytes != reqlen) {
+        debug(LOG_ERR, "send failed: only %d bytes out of %d bytes sent!", numbytes, reqlen);
+        goto error;
+    }
 
     debug(LOG_DEBUG, "Reading response");
     done = 0;
@@ -99,6 +106,7 @@ http_get(const int sockfd, const char *req)
             } else if (numbytes == 0) {
                 done = 1;
             } else {
+                readbuf[numbytes] = '\0';
                 pstr_cat(response, readbuf);
                 debug(LOG_DEBUG, "Read %d bytes", numbytes);
             }
@@ -117,7 +125,9 @@ http_get(const int sockfd, const char *req)
     return retval;
 
  error:
-    close(sockfd);
+    if (sockfd >= 0) {
+        close(sockfd);
+    }
     retval = pstr_to_string(response);
     free(retval);
     return NULL;
@@ -286,6 +296,7 @@ https_get(const int sockfd, const char *req, const char *hostname)
                    connection. We can't distinguish between these cases right now. */
                 done = 1;
             } else {
+                readbuf[numbytes] = '\0';
                 pstr_cat(response, readbuf);
                 debug(LOG_DEBUG, "Read %d bytes", numbytes);
             }
@@ -310,7 +321,9 @@ https_get(const int sockfd, const char *req, const char *hostname)
     if (ssl) {
         CyaSSL_free(ssl);
     }
-    close(sockfd);
+    if (sockfd >= 0) {
+        close(sockfd);
+    }
     retval = pstr_to_string(response);
     free(retval);
     return NULL;

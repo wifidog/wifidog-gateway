@@ -57,20 +57,12 @@
 #include "conf.h"
 #include "debug.h"
 #include "pstring.h"
+#include "gateway.h"
+#include "commandline.h"
 
 #include "../config.h"
 
 static pthread_mutex_t ghbn_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-/* Defined in ping_thread.c */
-extern time_t started_time;
-
-/* Defined in clientlist.c */
-extern pthread_mutex_t client_list_mutex;
-extern pthread_mutex_t config_mutex;
-
-/* Defined in commandline.c */
-extern pid_t restart_orig_pid;
 
 /* XXX Do these need to be locked ? */
 static time_t last_online_time = 0;
@@ -78,7 +70,6 @@ static time_t last_offline_time = 0;
 static time_t last_auth_online_time = 0;
 static time_t last_auth_offline_time = 0;
 
-extern long served_this_session;
 long served_this_session = 0;
 
 /** Fork a child and execute a shell command, the parent

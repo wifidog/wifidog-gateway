@@ -55,7 +55,6 @@ static s_config config;
 /**
  * Mutex for the configuration file, used by the auth_servers related
  * functions. */
-extern pthread_mutex_t config_mutex;
 pthread_mutex_t config_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /** @internal
@@ -170,7 +169,7 @@ void
 config_init(void)
 {
     debug(LOG_DEBUG, "Setting default config parameters");
-    strncpy(config.configfile, DEFAULT_CONFIGFILE, sizeof(config.configfile));
+    config.configfile = safe_strdup(DEFAULT_CONFIGFILE);
     config.htmlmsgfile = safe_strdup(DEFAULT_HTMLMSGFILE);
     config.debuglevel = DEFAULT_DEBUGLEVEL;
     config.httpdmaxconn = DEFAULT_HTTPDMAXCONN;
@@ -197,6 +196,7 @@ config_init(void)
     config.ssl_certs = safe_strdup(DEFAULT_AUTHSERVSSLCERTPATH);
     config.ssl_verify = DEFAULT_AUTHSERVSSLPEERVER;
     config.ssl_cipher_list = NULL;
+    config.arp_table_path = safe_strdup(DEFAULT_ARPTABLE);
 }
 
 /**
@@ -874,7 +874,9 @@ parse_trusted_mac_list(const char *ptr)
                         p->mac = safe_strdup(mac);
                         p->next = NULL;
                     } else {
-                        debug(LOG_ERR, "MAC address [%s] already on trusted list. See option TrustedMACList in wifidog.conf file ", mac);
+                        debug(LOG_ERR,
+                              "MAC address [%s] already on trusted list. See option TrustedMACList in wifidog.conf file ",
+                              mac);
                     }
                 }
             }

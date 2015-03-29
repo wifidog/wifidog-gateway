@@ -52,9 +52,6 @@ static int iptables_do_command(const char *format, ...);
 static char *iptables_compile(const char *, const char *, const t_firewall_rule *);
 static void iptables_load_ruleset(const char *, const char *, const char *);
 
-extern pthread_mutex_t	client_list_mutex;
-extern pthread_mutex_t	config_mutex;
-
 /**
 Used to supress the error output of the firewall during destruction */ 
 static int fw_quiet = 0;

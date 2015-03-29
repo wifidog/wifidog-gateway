@@ -1,3 +1,4 @@
+/* vim: set et sw=4 ts=4 sts=4 : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -26,6 +27,9 @@
 
 #ifndef _CLIENT_LIST_H_
 #define _CLIENT_LIST_H_
+
+/** Global mutex to protect access to the client list */
+extern pthread_mutex_t client_list_mutex;
 
 /** Counters struct for a client's bandwidth usage (in bytes)
  */

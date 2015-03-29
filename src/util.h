@@ -29,6 +29,8 @@
 
 #define STATUS_BUF_SIZ	16384
 
+extern long served_this_session;
+
 /** @brief Execute a shell command
  */
 int execute(const char *cmd_line, int quiet);
