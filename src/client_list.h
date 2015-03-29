@@ -67,32 +67,38 @@ t_client *client_get_first_client(void);
 void client_list_init(void);
 
 /** @brief Insert client at head of list */
-void client_list_insert_client(t_client *client);
+void client_list_insert_client(t_client *);
 
 /** @brief Adds a new client to the connections list */
-t_client *client_list_append(const char *ip, const char *mac, const char *token);
+t_client *client_list_add(const char *, const char *, const char *);
+
+/** Duplicate the whole client list to process in a thread safe way */
+int client_list_dup(t_client **);
+
+/** @brief Create a duplicate of a client. */
+t_client *client_dup(const t_client *);
 
 /** @brief Finds a client by its IP and MAC */
-t_client *client_list_find(const char *ip, const char *mac);
+t_client *client_list_find(const char *, const char *);
 
 /** @brief Finds a client only by its IP */
-t_client *client_list_find_by_ip(const char *ip); /* needed by fw_iptables.c, auth.c 
+t_client *client_list_find_by_ip(const char *); /* needed by fw_iptables.c, auth.c 
 					     * and wdctl_thread.c */
 
 /** @brief Finds a client only by its Mac */
-t_client *client_list_find_by_mac(const char *mac); /* needed by wdctl_thread.c */
+t_client *client_list_find_by_mac(const char *); /* needed by wdctl_thread.c */
 
 /** @brief Finds a client by its token */
-t_client *client_list_find_by_token(const char *token);
+t_client *client_list_find_by_token(const char *);
 
 /** @brief Deletes a client from the connections list and frees its memory*/
-void client_list_delete(t_client *client);
+void client_list_delete(t_client *);
 
 /** @brief Removes a client from the connections list */
-void client_list_remove(t_client *client);
+void client_list_remove(t_client *);
 
 /** @brief Free memory associated with a client */
-void client_free_node(t_client *client);
+void client_free_node(t_client *);
 
 #define LOCK_CLIENT_LIST() do { \
 	debug(LOG_DEBUG, "Locking client list"); \

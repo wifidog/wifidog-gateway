@@ -94,24 +94,17 @@ client_list_insert_client(t_client *client)
 
 /** Based on the parameters it receives, this function creates a new entry
  * in the connections list. All the memory allocation is done here.
+ * Client is inserted at the head of the list.
  * @param ip IP address
  * @param mac MAC address
  * @param token Token
  * @return Pointer to the client we just created
  */
 t_client         *
-client_list_append(const char *ip, const char *mac, const char *token)
+client_list_add(const char *ip, const char *mac, const char *token)
 {
-    t_client         *curclient, *prevclient;
-
-    prevclient = NULL;
-    curclient = firstclient;
-
-    while (curclient != NULL) {
-        prevclient = curclient;
-        curclient = curclient->next;
-    }
-
+    t_client         *curclient;
+    
     curclient = client_get_new();
 
     curclient->ip = safe_strdup(ip);
@@ -120,16 +113,70 @@ client_list_append(const char *ip, const char *mac, const char *token)
     curclient->counters.incoming = curclient->counters.incoming_history = curclient->counters.outgoing = curclient->counters.outgoing_history = 0;
     curclient->counters.last_updated = time(NULL);
 
-    if (prevclient == NULL) {
-        firstclient = curclient;
-    } else {
-        prevclient->next = curclient;
-    }
+    client_list_insert_client(curclient);
 
     debug(LOG_INFO, "Added a new client to linked list: IP: %s Token: %s",
           ip, token);
 
     return curclient;
+}
+
+/** Duplicate the whole client list to process in a thread safe way
+ * MUTEX MUST BE HELD.
+ * @param dest pointer TO A POINTER to a t_client (i.e.: t_client **ptr)
+ * @return int Number of clients copied
+ */
+int
+client_list_dup(t_client **dest)
+{
+    t_client *new, *cur, *top, *prev;
+    int copied = 0;
+
+    cur = firstclient;
+    new = top = prev = NULL;
+
+    if (NULL == cur) {
+        *dest = new;  /* NULL */
+        return copied;
+    }
+
+    while (NULL != cur) {
+        new = client_dup(cur);
+        if (NULL == top) {
+            /* first item */
+            top = new;
+        } else {
+            prev->next = new;
+        }
+        prev = new;
+        copied ++;
+        cur = cur->next;
+    }
+
+    *dest = top;
+    return copied;
+}
+
+/** Create a duplicate of a client.
+ * @param src Original client
+ * @return duplicate client object with next == NULL
+ */
+t_client *
+client_dup(const t_client *src)
+{
+    t_client *new = client_get_new();
+
+    new->ip = safe_strdup(src->ip);
+    new->mac = safe_strdup(src->mac);
+    new->token = safe_strdup(src->token);
+    new->counters.incoming = src->counters.incoming;
+    new->counters.incoming_history = src->counters.incoming_history;
+    new->counters.outgoing = src->counters.outgoing;
+    new->counters.outgoing_history = src->counters.outgoing_history;
+    new->counters.last_updated = src->counters.last_updated;
+    new->next = NULL;
+
+    return new;
 }
 
 /** Finds a  client by its IP and MAC, returns NULL if the client could not

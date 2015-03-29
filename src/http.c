@@ -269,7 +269,7 @@ http_callback_auth(httpd * webserver, request * r)
 
             if ((client = client_list_find(r->clientAddr, mac)) == NULL) {
                 debug(LOG_DEBUG, "New client for %s", r->clientAddr);
-                client_list_append(r->clientAddr, mac, token->value);
+                client_list_add(r->clientAddr, mac, token->value);
             } else if (logout) {
                 t_authresponse authresponse;
                 s_config *config = config_get_config();
