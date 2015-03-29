@@ -280,7 +280,7 @@ fw_sync_with_authserver(void)
             debug(LOG_INFO, "%s - Inactive for more than %ld seconds, removing client and denying in firewall",
                     p1->ip, config->checkinterval * config->clienttimeout);
             LOCK_CLIENT_LIST();
-            tmp = client_list_find(p1->ip, p1->mac);
+            tmp = client_list_find_by_client(p1);
             if (NULL != tmp) {
                 logout_client(tmp);
             } else {
@@ -298,7 +298,7 @@ fw_sync_with_authserver(void)
              * configured!
              */
             LOCK_CLIENT_LIST();
-            tmp = client_list_find(p1->ip, p1->mac);
+            tmp = client_list_find_by_client(p1);
             if (NULL == tmp) {
                 UNLOCK_CLIENT_LIST();
                 debug(LOG_NOTICE, "Client was already removed. Skipping auth processing");

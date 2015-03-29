@@ -47,6 +47,16 @@
  */ 
 static t_client         *firstclient = NULL;
 
+/** @internal
+ * Client ID
+ */
+static volatile long long client_id = 1;
+
+/**
+ * Mutex to protect client_id and guarantee uniqueness.
+ */
+static pthread_mutex_t client_id_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 /** Global mutex to protect access to the client list */
 pthread_mutex_t client_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -86,6 +96,9 @@ client_list_insert_client(t_client *client)
 {
     t_client *prev_head;
 
+    pthread_mutex_lock(&client_id_mutex);
+    client->id = client_id++;
+    pthread_mutex_unlock(&client_id_mutex);
     prev_head = firstclient;
     client->next = prev_head;
     firstclient = client;
@@ -166,6 +179,7 @@ client_dup(const t_client *src)
 {
     t_client *new = client_get_new();
 
+    new->id = src->id;
     new->ip = safe_strdup(src->ip);
     new->mac = safe_strdup(src->mac);
     new->token = safe_strdup(src->token);
@@ -177,6 +191,25 @@ client_dup(const t_client *src)
     new->next = NULL;
 
     return new;
+}
+
+/** Find a client in the list from a client struct, matching operates by id.
+ * This is useful from a copy of client to find the original.
+ * @param client Client to find
+ * @return pointer to the client in the list.
+ */
+t_client *
+client_list_find_by_client(t_client *client)
+{
+    t_client *c = firstclient;
+
+    while (NULL != c) {
+        if (c->id == client->id) {
+            return c;
+        }
+        c = c->next;
+    }
+    return NULL;
 }
 
 /** Finds a  client by its IP and MAC, returns NULL if the client could not
