@@ -73,11 +73,12 @@
  * @return Return code of the command
  */
 int
-fw_allow(const char *ip, const char *mac, int fw_connection_state)
+fw_allow(t_client *client, int new_fw_connection_state)
 {
-    debug(LOG_DEBUG, "Allowing %s %s with fw_connection_state %d", ip, mac, fw_connection_state);
+    debug(LOG_DEBUG, "Allowing %s %s with fw_connection_state %d", client->ip, client->mac, new_fw_connection_state);
+    client->fw_connection_state = new_fw_connection_state;
 
-    return iptables_fw_access(FW_ACCESS_ALLOW, ip, mac, fw_connection_state);
+    return iptables_fw_access(FW_ACCESS_ALLOW, client->ip, client->mac, new_fw_connection_state);
 }
 
 /**
@@ -101,11 +102,12 @@ fw_allow_host(const char *host)
  * @return Return code of the command
  */
 int
-fw_deny(const char *ip, const char *mac, int fw_connection_state)
+fw_deny(t_client *client, int new_fw_connection_state)
 {
-    debug(LOG_DEBUG, "Denying %s %s with fw_connection_state %d", ip, mac, fw_connection_state);
+    debug(LOG_DEBUG, "Denying %s %s with fw_connection_state %d", client->ip, client->mac, new_fw_connection_state);
+    client->fw_connection_state = new_fw_connection_state;
 
-    return iptables_fw_access(FW_ACCESS_DENY, ip, mac, fw_connection_state);
+    return iptables_fw_access(FW_ACCESS_DENY, client->ip, client->mac, new_fw_connection_state);
 }
 
 /** Passthrough for clients when auth server is down */
@@ -171,6 +173,7 @@ fw_init(void)
 {
     int flags, oneopt = 1, zeroopt = 0;
 	int result = 0;
+    int new_fw_state;
 	t_client * client = NULL;
 
     debug(LOG_INFO, "Creating ICMP socket");
@@ -191,7 +194,9 @@ fw_init(void)
 		LOCK_CLIENT_LIST();
 		client = client_get_first_client();
 		while (client) {
-		    fw_allow(client->ip, client->mac, client->fw_connection_state);
+            new_fw_state = client->fw_connection_state;
+            client->fw_connection_state = FW_MARK_NONE;
+		    fw_allow(client, new_fw_state);
 			client = client->next;
 		}
 		UNLOCK_CLIENT_LIST();
@@ -309,13 +314,13 @@ fw_sync_with_authserver(void)
                 switch (authresponse.authcode) {
                     case AUTH_DENIED:
                         debug(LOG_NOTICE, "%s - Denied. Removing client and firewall rules", tmp->ip);
-                        fw_deny(tmp->ip, tmp->mac, tmp->fw_connection_state);
+                        fw_deny(tmp, tmp->fw_connection_state);
                         client_list_delete(tmp);
                         break;
 
                     case AUTH_VALIDATION_FAILED:
                         debug(LOG_NOTICE, "%s - Validation timeout, now denied. Removing client and firewall rules", tmp->ip);
-                        fw_deny(tmp->ip, tmp->mac, tmp->fw_connection_state);
+                        fw_deny(tmp, tmp->fw_connection_state);
                         client_list_delete(tmp);
                         break;
 
@@ -332,8 +337,7 @@ fw_sync_with_authserver(void)
                                 //We don't want to clear counters if the user was in validation, it probably already transmitted data..
                                 debug(LOG_INFO, "%s - Skipped clearing counters after all, the user was previously in validation", tmp->ip);
                             }
-                            tmp->fw_connection_state = FW_MARK_KNOWN;
-                            fw_allow(tmp->ip, tmp->mac, tmp->fw_connection_state);
+                            fw_allow(tmp, FW_MARK_KNOWN);
                         }
                         break;
 
@@ -376,7 +380,7 @@ logout_client(t_client *client)
 {
     t_authresponse  authresponse;
     const s_config *config = config_get_config();
-    fw_deny(client->ip, client->mac, client->fw_connection_state);
+    fw_deny(client, client->fw_connection_state);
     client_list_remove(client);
 
     /* Advertise the logout if we have an auth server */

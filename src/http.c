@@ -279,7 +279,7 @@ http_callback_auth(httpd * webserver, request * r)
                 char *urlFragment = NULL;
                 t_auth_serv *auth_server = get_auth_server();
 
-                fw_deny(client->ip, client->mac, client->fw_connection_state);
+                fw_deny(client, client->fw_connection_state);
                 client_list_delete(client);
                 debug(LOG_DEBUG, "Got logout from %s", ip);
 

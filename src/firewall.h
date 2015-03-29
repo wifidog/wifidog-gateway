@@ -34,6 +34,7 @@ int icmp_fd;
 
 /** Used by fw_iptables.c */
 typedef enum _t_fw_marks {
+    FW_MARK_NONE = 0, /**< @brief No mark set. */
     FW_MARK_PROBATION = 1, /**< @brief The client is in probation period and must be authenticated 
 			    @todo: VERIFY THAT THIS IS ACCURATE*/
     FW_MARK_KNOWN = 2,  /**< @brief The client is known to the firewall */ 
@@ -54,13 +55,13 @@ void fw_set_authservers(void);
 int fw_destroy(void);
 
 /** @brief Allow a user through the firewall*/
-int fw_allow(const char *ip, const char *mac, int profile);
+int fw_allow(t_client *, int);
 
 /** @brief Allow a host through the firewall*/
-int fw_allow_host(const char *host);
+int fw_allow_host(const char *);
 
 /** @brief Deny a client access through the firewall*/
-int fw_deny(const char *ip, const char *mac, int profile);
+int fw_deny(t_client *, int);
 
 /** @brief Passthrough for clients when auth server is down */
 int fw_set_authdown(void);
@@ -72,15 +73,15 @@ int fw_set_authup(void);
 void fw_sync_with_authserver(void);
 
 /** @brief Get an IP's MAC address from the ARP cache.*/
-char *arp_get(const char *req_ip);
+char *arp_get(const char *);
 
 /** @brief ICMP Ping an IP */
-void icmp_ping(const char *host);
+void icmp_ping(const char *);
 
 /** @brief cheap random */
 unsigned short rand16(void);
 
 /** @brief Logout a client and report to auth server. */
-void logout_client(t_client *client);
+void logout_client(t_client *);
 
 #endif /* _FIREWALL_H_ */
