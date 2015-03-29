@@ -85,6 +85,11 @@
 /*@}*/
 
 /**
+ * Mutex for the configuration file, used by the auth_servers related
+ * functions. */
+extern pthread_mutex_t config_mutex;
+
+/**
  * Information about the authentication server
  */
 typedef struct _auth_serv_t {

@@ -1,3 +1,4 @@
+/* vim: set et sw=4 ts=4 sts=4 : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -18,7 +19,6 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Id$ */
 /** @file commandline.c
     @brief Command line argument handling
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
@@ -33,27 +33,22 @@
 #include "debug.h"
 #include "safe.h"
 #include "conf.h"
+#include "commandline.h"
 
 #include "../config.h"
 
 /*
  * Holds an argv that could be passed to exec*() if we restart ourselves
  */
-/* Declare variable */
-extern char **restartargv;
-/* Define variable */
-char **restartargv = NULL;
+char ** restartargv = NULL;
 
-static void usage(void);
-
-void parse_commandline(int argc, char **argv);
-
-/*
+/**
  * A flag to denote whether we were restarted via a parent wifidog, or started normally
  * 0 means normally, otherwise it will be populated by the PID of the parent
  */
-extern pid_t restart_orig_pid;
 pid_t restart_orig_pid = 0;
+
+static void usage(void);
 
 /** @internal
  * @brief Print usage
@@ -194,5 +189,4 @@ parse_commandline(int argc, char **argv)
     restartargv[i++] = NULL;
     restartargv[i++] = NULL;
     restartargv[i++] = NULL;
-
 }

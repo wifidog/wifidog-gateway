@@ -19,9 +19,6 @@
  *                                                                  *
  \********************************************************************/
 
-/*
- * $Id$
- */
 /**
   @file safe.c
   @brief Safe versions of stdlib/string functions that error out and exit if memory allocation fails
@@ -36,14 +33,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
-#include "httpd.h"
-#include "safe.h"
-#include "debug.h"
 #include <syslog.h>
 
-/* From gateway.c */
-extern httpd *webserver;
+#include "httpd.h"
+#include "gateway.h"
+#include "safe.h"
+#include "debug.h"
 
 void *
 safe_malloc(size_t size)

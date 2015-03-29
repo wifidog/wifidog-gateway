@@ -1,3 +1,4 @@
+/* vim: set et sw=4 ts=4 sts=4 : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -18,9 +19,6 @@
  *                                                                  *
  \********************************************************************/
 
-/*
- * $Id$
- */
 /** @internal
   @file firewall.c
   @brief Firewall update functions
@@ -64,13 +62,7 @@
 #include "auth.h"
 #include "centralserver.h"
 #include "client_list.h"
-
-extern pthread_mutex_t client_list_mutex;
-
-/* from commandline.c */
-extern pid_t restart_orig_pid;
-
-
+#include "commandline.h"
 
 /**
  * Allow a client access through the firewall by adding a rule in the firewall to MARK the user's packets with the proper
