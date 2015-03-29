@@ -443,7 +443,9 @@ main_loop(void)
          * values that are not -1, 0 or 1. */
         if (webserver->lastError == -1) {
             /* Interrupted system call */
-            continue;           /* restart loop */
+            if (NULL != r) {
+                httpdEndRequest(r);
+            }
         } else if (webserver->lastError < -1) {
             /*
              * FIXME
