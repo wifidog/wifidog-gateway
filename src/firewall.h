@@ -61,7 +61,7 @@ int fw_allow(t_client *, int);
 int fw_allow_host(const char *);
 
 /** @brief Deny a client access through the firewall*/
-int fw_deny(t_client *, int);
+int fw_deny(t_client *);
 
 /** @brief Passthrough for clients when auth server is down */
 int fw_set_authdown(void);

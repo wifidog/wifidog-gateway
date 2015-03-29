@@ -64,6 +64,8 @@
 #include "client_list.h"
 #include "commandline.h"
 
+static int _fw_deny_raw(const char *, const char *, const int);
+
 /**
  * Allow a client access through the firewall by adding a rule in the firewall to MARK the user's packets with the proper
  * rule by providing his IP and MAC address
@@ -75,10 +77,22 @@
 int
 fw_allow(t_client *client, int new_fw_connection_state)
 {
+    int result;
+    int old_state = client->fw_connection_state;
+
     debug(LOG_DEBUG, "Allowing %s %s with fw_connection_state %d", client->ip, client->mac, new_fw_connection_state);
     client->fw_connection_state = new_fw_connection_state;
+    
+    /* Grant first */
+    result = iptables_fw_access(FW_ACCESS_ALLOW, client->ip, client->mac, new_fw_connection_state);
 
-    return iptables_fw_access(FW_ACCESS_ALLOW, client->ip, client->mac, new_fw_connection_state);
+    /* Deny after if needed. */
+    if (old_state != FW_MARK_NONE) {
+        debug(LOG_DEBUG, "Clearing previous fw_connection_state %d", old_state);
+        _fw_deny_raw(client->ip, client->mac, old_state);
+    }
+
+    return result;
 }
 
 /**
@@ -102,12 +116,26 @@ fw_allow_host(const char *host)
  * @return Return code of the command
  */
 int
-fw_deny(t_client *client, int new_fw_connection_state)
+fw_deny(t_client *client)
 {
-    debug(LOG_DEBUG, "Denying %s %s with fw_connection_state %d", client->ip, client->mac, new_fw_connection_state);
-    client->fw_connection_state = new_fw_connection_state;
+    int fw_connection_state = client->fw_connection_state;
+    debug(LOG_DEBUG, "Denying %s %s with fw_connection_state %d", client->ip, client->mac, client->fw_connection_state);
 
-    return iptables_fw_access(FW_ACCESS_DENY, client->ip, client->mac, new_fw_connection_state);
+    client->fw_connection_state = FW_MARK_NONE;  /* Clear */
+    return _fw_deny_raw(client->ip, client->mac, fw_connection_state);
+}
+
+/** @internal
+ * Actually does the clearing, so fw_allow can call it to clear previous mark.
+ * @param ip IP address to deny
+ * @param mac MAC address to deny
+ * @param mark fw_connection_state Tag
+ * @return Return code of the command
+ */
+static int
+_fw_deny_raw(const char *ip, const char *mac, const int mark)
+{
+    return iptables_fw_access(FW_ACCESS_DENY, ip, mac, mark);
 }
 
 /** Passthrough for clients when auth server is down */
@@ -314,13 +342,13 @@ fw_sync_with_authserver(void)
                 switch (authresponse.authcode) {
                     case AUTH_DENIED:
                         debug(LOG_NOTICE, "%s - Denied. Removing client and firewall rules", tmp->ip);
-                        fw_deny(tmp, tmp->fw_connection_state);
+                        fw_deny(tmp);
                         client_list_delete(tmp);
                         break;
 
                     case AUTH_VALIDATION_FAILED:
                         debug(LOG_NOTICE, "%s - Validation timeout, now denied. Removing client and firewall rules", tmp->ip);
-                        fw_deny(tmp, tmp->fw_connection_state);
+                        fw_deny(tmp);
                         client_list_delete(tmp);
                         break;
 
@@ -380,7 +408,7 @@ logout_client(t_client *client)
 {
     t_authresponse  authresponse;
     const s_config *config = config_get_config();
-    fw_deny(client, client->fw_connection_state);
+    fw_deny(client);
     client_list_remove(client);
 
     /* Advertise the logout if we have an auth server */

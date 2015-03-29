@@ -162,7 +162,7 @@ authenticate_client(request *r)
 	case AUTH_DENIED:
 		/* Central server said invalid token */
 		debug(LOG_INFO, "Got DENIED from central server authenticating token %s from %s at %s - deleting from firewall and redirecting them to denied message", client->token, client->ip, client->mac);
-		fw_deny(client, FW_MARK_KNOWN);
+		fw_deny(client);
 		safe_asprintf(&urlFragment, "%smessage=%s",
 			auth_server->authserv_msg_script_path_fragment,
 			GATEWAY_MESSAGE_DENIED
