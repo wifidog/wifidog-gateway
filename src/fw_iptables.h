@@ -29,7 +29,7 @@
 
 #include "firewall.h"
 
-/*@{*/ 
+/*@{*/
 /**Iptable chain names used by WifiDog */
 #define CHAIN_OUTGOING  "WiFiDog_$ID$_Outgoing"
 #define CHAIN_TO_INTERNET "WiFiDog_$ID$_Internet"
@@ -43,7 +43,7 @@
 #define CHAIN_LOCKED    "WiFiDog_$ID$_Locked"
 #define CHAIN_TRUSTED    "WiFiDog_$ID$_Trusted"
 #define CHAIN_AUTH_IS_DOWN "WiFiDog_$ID$_AuthIsDown"
-/*@}*/ 
+/*@}*/
 
 /** Used by iptables_fw_access to select if the client should be granted of denied access */
 typedef enum fw_access_t_ {
@@ -64,7 +64,7 @@ void iptables_fw_clear_authservers(void);
 int iptables_fw_destroy(void);
 
 /** @brief Helper function for iptables_fw_destroy */
-int iptables_fw_destroy_mention( const char * table, const char * chain, const char * mention);
+int iptables_fw_destroy_mention(const char *table, const char *chain, const char *mention);
 
 /** @brief Define the access of a specific client */
 int iptables_fw_access(fw_access_t type, const char *ip, const char *mac, int tag);
@@ -81,4 +81,4 @@ int iptables_fw_auth_reachable(void);
 /** @brief All counters in the client list */
 int iptables_fw_counters_update(void);
 
-#endif /* _IPTABLES_H_ */
+#endif                          /* _IPTABLES_H_ */
