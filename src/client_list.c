@@ -50,7 +50,7 @@ static t_client         *firstclient = NULL;
 /** @internal
  * Client ID
  */
-static volatile long long client_id = 1;
+static volatile unsigned long long client_id = 1;
 
 /**
  * Mutex to protect client_id and guarantee uniqueness.

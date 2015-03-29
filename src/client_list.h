@@ -45,7 +45,7 @@ typedef struct _t_counters {
  */
 typedef struct	_t_client {
     struct	_t_client *next;        /**< @brief Pointer to the next client */
-    long long id;           /**< @brief Unique ID per client */
+    unsigned long long id;           /**< @brief Unique ID per client */
 	char	*ip;			/**< @brief Client Ip address */
 	char	*mac;			/**< @brief Client Mac address */
 	char	*token;			/**< @brief Client token */
