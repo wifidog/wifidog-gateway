@@ -1,3 +1,4 @@
+/* vim: set et sw=4 ts=4 sts=4 : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -18,9 +19,6 @@
  *                                                                  *
  \********************************************************************/
 
-/*
- * $Id$
- */
 /** @file client_list.c
   @brief Client List Functions
   @author Copyright (C) 2004 Alexandre Carmel-Veillex <acv@acv.ca>
@@ -44,14 +42,13 @@
 #include "conf.h"
 #include "client_list.h"
 
-/** Global mutex to protect access to the client list */
-extern pthread_mutex_t client_list_mutex;
-pthread_mutex_t client_list_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 /** @internal
  * Holds a pointer to the first element of the list 
  */ 
 static t_client         *firstclient = NULL;
+
+/** Global mutex to protect access to the client list */
+pthread_mutex_t client_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /** Get a new client struct, not added to the list yet
  * @return Pointer to newly created client object not on the list yet.

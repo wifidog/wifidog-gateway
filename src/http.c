@@ -57,7 +57,6 @@
 
 #include "../config.h"
 
-extern pthread_mutex_t client_list_mutex;
 
 /** The 404 handler is also responsible for redirecting to the auth server */
 void

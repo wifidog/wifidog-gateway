@@ -50,15 +50,10 @@
 #include "firewall.h"
 #include "client_list.h"
 #include "wdctl_thread.h"
+#include "commandline.h"
 #include "gateway.h"
 #include "safe.h"
 
-/* Defined in clientlist.c */
-extern pthread_mutex_t client_list_mutex;
-extern pthread_mutex_t config_mutex;
-
-/* From commandline.c: */
-extern char **restartargv;
 
 static int write_to_socket(int, char *, size_t);
 static void *thread_wdctl_handler(void *);
@@ -100,7 +95,7 @@ thread_wdctl(void *arg)
 
     if (wdctl_socket_server < 0) {
         debug(LOG_DEBUG, "Could not get server socket: %s", strerror(errno));
-        pthread_exit(NULL);
+        termination_handler(0);
     }
     debug(LOG_DEBUG, "Got server socket %d", wdctl_socket_server);
 
@@ -115,15 +110,14 @@ thread_wdctl(void *arg)
     debug(LOG_DEBUG, "Binding socket (%s) (%d)", sa_un.sun_path, strlen(sock_name));
 
     /* Which to use, AF_UNIX, PF_UNIX, AF_LOCAL, PF_LOCAL? */
-    if (bind(wdctl_socket_server, (struct sockaddr *)&sa_un, strlen(sock_name)
-             + sizeof(sa_un.sun_family))) {
+    if (bind(wdctl_socket_server, (struct sockaddr *)&sa_un, sizeof(struct sockaddr_un))) {
         debug(LOG_ERR, "Could not bind control socket: %s", strerror(errno));
-        pthread_exit(NULL);
+        termination_handler(0);
     }
 
     if (listen(wdctl_socket_server, 5)) {
         debug(LOG_ERR, "Could not listen on control socket: %s", strerror(errno));
-        pthread_exit(NULL);
+        termination_handler(0);
     }
 
     while (1) {
@@ -286,7 +280,7 @@ wdctl_restart(int afd)
 
     if (sock < 0) {
         debug(LOG_DEBUG, "Could not get server socket: %s", strerror(errno));
-        pthread_exit(NULL);
+        return;
     }
     debug(LOG_DEBUG, "Got internal socket %d", sock);
 
@@ -373,7 +367,6 @@ wdctl_restart(int afd)
         debug(LOG_ERR, "Exiting without cleanup");
         exit(1);
     }
-
 }
 
 static void
