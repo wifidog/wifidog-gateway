@@ -2,7 +2,7 @@
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
- * published by the Free Software Foundation; either version 2 of   *
+ * published by the Free:Software Foundation; either version 2 of   *
  * the License, or (at your option) any later version.              *
  *                                                                  *
  * This program is distributed in the hope that it will be useful,  *
@@ -17,30 +17,18 @@
  * 59 Temple Place - Suite 330        Fax:    +1-617-542-2652       *
  * Boston, MA  02111-1307,  USA       gnu@gnu.org                   *
  *                                                                  *
-\********************************************************************/
+ \********************************************************************/
 
-/* $Id$ */
-/** @file gateway.h
-    @brief Main loop
-    @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
-*/
+/** @internal
+  @file main.c
+  @brief Entry point only
+  @author Copyright (C) 2015 Alexandre Carmel-Veilleux <acv@miniguru.ca>
+ */
 
-#ifndef _GATEWAY_H_
-#define _GATEWAY_H_
+#include "gateway.h"
 
-#include <stdio.h>
-
-#include "httpd.h"
-
-extern time_t started_time;
-
-/** @brief The internal web server */
-extern httpd *webserver;
-
-/** @brief actual program entry point. */
-int gw_main(int, char **);
-
-/** @brief exits cleanly and clear the firewall rules. */
-void termination_handler(int s);
-
-#endif                          /* _GATEWAY_H_ */
+int
+main(int argc, char **argv)
+{
+    return gw_main(argc, argv);
+}
