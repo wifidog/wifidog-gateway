@@ -129,7 +129,7 @@ http_callback_404(httpd * webserver, request * r, int error_code)
         for (rule = get_ruleset("global"); rule != NULL; rule = rule->next) {
             debug(LOG_INFO, "rule mask %s", rule->mask);
             if (strstr(r->request.host, rule->mask) == NULL) {
-                debug(LOG_INFO, "host %s is not in %s, contiue", r->request.host, rule->mask);
+                debug(LOG_INFO, "host %s is not in %s, continue", r->request.host, rule->mask);
                 continue;
             }
             int host_length = strlen(r->request.host);
