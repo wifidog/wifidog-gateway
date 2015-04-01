@@ -442,7 +442,9 @@ main_loop(void)
          * values that are not -1, 0 or 1. */
         if (webserver->lastError == -1) {
             /* Interrupted system call */
-            continue;           /* restart loop */
+            if (NULL != r) {
+                httpdEndRequest(r);
+            }
         } else if (webserver->lastError < -1) {
             /*
              * FIXME
@@ -474,6 +476,9 @@ main_loop(void)
             /* webserver->lastError should be 2 */
             /* XXX We failed an ACL.... No handling because
              * we don't set any... */
+            if (NULL != r) {
+                httpdEndRequest(r);
+            }
         }
     }
 
