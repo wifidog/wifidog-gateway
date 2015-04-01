@@ -14,17 +14,20 @@ function plot {
     gnuplot memory.plot 
 }
 
-SLEEP=5
-COUNT=0
-while true; do
-    vmdata=`getdatum VmData`
-    vmrss=`getdatum VmRSS`
-    echo "$(($COUNT * $SLEEP)) $vmdata" >> vmdata.log
-    echo "$(($COUNT * $SLEEP)) $vmrss" >> vmrss.log
-    COUNT=$(($COUNT + 1))
-    sleep $SLEEP
-done
+function main {
+    SLEEP=5
+    COUNT=0
+    while true; do
+        vmdata=`getdatum VmData`
+        vmrss=`getdatum VmRSS`
+        echo "$(($COUNT * $SLEEP)) $vmdata" >> vmdata.log
+        echo "$(($COUNT * $SLEEP)) $vmrss" >> vmrss.log
+        COUNT=$(($COUNT + 1))
+        sleep $SLEEP
+    done
+}
 
+main
 
 # on exit, do plot
 trap plot EXIT
