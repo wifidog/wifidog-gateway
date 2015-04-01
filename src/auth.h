@@ -28,6 +28,7 @@
 #define _AUTH_H_
 
 #include "httpd.h"
+#include "client_list.h"
 
 /**
  * @brief Authentication codes returned by auth server.
@@ -51,6 +52,8 @@ typedef struct _t_authresponse {
     t_authcode authcode; /**< Authentication code returned by the server */
 } t_authresponse;
 
+/** @brief Logout a client and report to auth server. */
+void logout_client(t_client *);
 
 /** @brief Authenticate a single client against the central server */
 void authenticate_client(request *);

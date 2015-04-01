@@ -81,6 +81,39 @@ thread_client_timeout_check(const void *arg)
 	}
 }
 
+/**
+ * @brief Logout a client and report to auth server.
+ *
+ * This function assumes it is being called with the client lock held! This
+ * function remove the client from the client list and free its memory, so
+ * client is no langer valid when this method returns.
+ *
+ * @param client Points to the client to be logged out
+ */
+void
+logout_client(t_client *client)
+{
+    t_authresponse  authresponse;
+    const s_config *config = config_get_config();
+    fw_deny(client);
+    client_list_remove(client);
+
+    /* Advertise the logout if we have an auth server */
+    if (config->auth_servers != NULL) {
+        UNLOCK_CLIENT_LIST();
+        auth_server_request(&authresponse, REQUEST_TYPE_LOGOUT,
+            client->ip, client->mac, client->token,
+            client->counters.incoming,
+            client->counters.outgoing);
+
+        if (authresponse.authcode==AUTH_ERROR)
+            debug(LOG_WARNING, "Auth server error when reporting logout");
+        LOCK_CLIENT_LIST();
+    }
+
+    client_free_node(client);
+}
+
 /** Authenticates a single client against the central server and returns when done
  * Alters the firewall rules depending on what the auth server says
 @param r httpd request struct
@@ -162,7 +195,7 @@ authenticate_client(request *r)
 	case AUTH_DENIED:
 		/* Central server said invalid token */
 		debug(LOG_INFO, "Got DENIED from central server authenticating token %s from %s at %s - deleting from firewall and redirecting them to denied message", client->token, client->ip, client->mac);
-		fw_deny(client->ip, client->mac, FW_MARK_KNOWN);
+		fw_deny(client);
 		safe_asprintf(&urlFragment, "%smessage=%s",
 			auth_server->authserv_msg_script_path_fragment,
 			GATEWAY_MESSAGE_DENIED
@@ -176,8 +209,7 @@ authenticate_client(request *r)
 		debug(LOG_INFO, "Got VALIDATION from central server authenticating token %s from %s at %s"
 				"- adding to firewall and redirecting them to activate message", client->token,
 				client->ip, client->mac);
-		client->fw_connection_state = FW_MARK_PROBATION;
-		fw_allow(client->ip, client->mac, FW_MARK_PROBATION);
+		fw_allow(client, FW_MARK_PROBATION);
 		safe_asprintf(&urlFragment, "%smessage=%s",
 			auth_server->authserv_msg_script_path_fragment,
 			GATEWAY_MESSAGE_ACTIVATE_ACCOUNT
@@ -190,8 +222,7 @@ authenticate_client(request *r)
 		/* Logged in successfully as a regular account */
 		debug(LOG_INFO, "Got ALLOWED from central server authenticating token %s from %s at %s - "
 				"adding to firewall and redirecting them to portal", client->token, client->ip, client->mac);
-		client->fw_connection_state = FW_MARK_KNOWN;
-		fw_allow(client->ip, client->mac, FW_MARK_KNOWN);
+		fw_allow(client, FW_MARK_KNOWN);
         served_this_session++;
 		safe_asprintf(&urlFragment, "%sgw_id=%s",
 			auth_server->authserv_portal_script_path_fragment,

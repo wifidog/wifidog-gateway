@@ -46,6 +46,12 @@
 #include <netinet/in.h>
 #include <net/if.h>
 
+#include <fcntl.h>
+#include <net/ethernet.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+#include <netpacket/packet.h>
+
 #include <string.h>
 #include <pthread.h>
 #include <netdb.h>
@@ -62,6 +68,10 @@
 
 #include "../config.h"
 
+/** @brief FD for icmp raw socket */
+static int icmp_fd;
+
+/** @brief Mutex to protect gethostbyname since not reentrant */
 static pthread_mutex_t ghbn_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* XXX Do these need to be locked ? */
@@ -71,6 +81,8 @@ static time_t last_auth_online_time = 0;
 static time_t last_auth_offline_time = 0;
 
 long served_this_session = 0;
+
+static unsigned short rand16(void);
 
 /** Fork a child and execute a shell command, the parent
  * process waits for the child to return and returns the child's exit()
@@ -423,7 +435,8 @@ get_status_text()
         pstr_append_sprintf(pstr, "\nClient %d\n", count);
         pstr_append_sprintf(pstr, "  IP: %s MAC: %s\n", first->ip, first->mac);
         pstr_append_sprintf(pstr, "  Token: %s\n", first->token);
-        pstr_append_sprintf(pstr, "  Downloaded: %llu\n  Uploaded: %llu\n", first->counters.incoming, first->counters.outgoing);
+        pstr_append_sprintf(pstr, "  Downloaded: %llu\n  Uploaded: %llu\n", first->counters.incoming,
+                            first->counters.outgoing);
 
         count++;
         first = first->next;
@@ -452,4 +465,108 @@ get_status_text()
     UNLOCK_CONFIG();
 
     return pstr_to_string(pstr);
+}
+
+/** Initialize the ICMP socket
+ * @return A boolean of the success
+ */
+int
+init_icmp_socket(void)
+{
+    int flags, oneopt = 1, zeroopt = 0;
+
+    debug(LOG_INFO, "Creating ICMP socket");
+    if ((icmp_fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) == -1 ||
+        (flags = fcntl(icmp_fd, F_GETFL, 0)) == -1 ||
+        fcntl(icmp_fd, F_SETFL, flags | O_NONBLOCK) == -1 ||
+        setsockopt(icmp_fd, SOL_SOCKET, SO_RCVBUF, &oneopt, sizeof(oneopt)) ||
+        setsockopt(icmp_fd, SOL_SOCKET, SO_DONTROUTE, &zeroopt, sizeof(zeroopt)) == -1) {
+        debug(LOG_ERR, "Cannot create ICMP raw socket.");
+        return 0;
+    }
+    return 1;
+}
+
+/** Close the ICMP socket. */
+void
+close_icmp_socket(void)
+{
+    debug(LOG_INFO, "Closing ICMP socket");
+    close(icmp_fd);
+}
+
+/**
+ * Ping an IP.
+ * @param IP/host as string, will be sent to gethostbyname
+ */
+void
+icmp_ping(const char *host)
+{
+    struct sockaddr_in saddr;
+    struct {
+        struct ip ip;
+        struct icmp icmp;
+    } packet;
+    unsigned int i, j;
+    int opt = 2000;
+    unsigned short id = rand16();
+
+    memset(&saddr, 0, sizeof(saddr));
+    saddr.sin_family = AF_INET;
+    inet_aton(host, &saddr.sin_addr);
+#if defined(HAVE_SOCKADDR_SA_LEN)
+    saddr.sin_len = sizeof(struct sockaddr_in);
+#endif
+
+    memset(&packet.icmp, 0, sizeof(packet.icmp));
+    packet.icmp.icmp_type = ICMP_ECHO;
+    packet.icmp.icmp_id = id;
+
+    for (j = 0, i = 0; i < sizeof(struct icmp) / 2; i++)
+        j += ((unsigned short *)&packet.icmp)[i];
+
+    while (j >> 16)
+        j = (j & 0xffff) + (j >> 16);
+
+    packet.icmp.icmp_cksum = (j == 0xffff) ? j : ~j;
+
+    if (setsockopt(icmp_fd, SOL_SOCKET, SO_RCVBUF, &opt, sizeof(opt)) == -1)
+        debug(LOG_ERR, "setsockopt(): %s", strerror(errno));
+
+    if (sendto(icmp_fd, (char *)&packet.icmp, sizeof(struct icmp), 0,
+               (const struct sockaddr *)&saddr, sizeof(saddr)) == -1)
+        debug(LOG_ERR, "sendto(): %s", strerror(errno));
+
+    opt = 1;
+    if (setsockopt(icmp_fd, SOL_SOCKET, SO_RCVBUF, &opt, sizeof(opt)) == -1)
+        debug(LOG_ERR, "setsockopt(): %s", strerror(errno));
+
+    return;
+}
+
+/** Get a 16-bit unsigned random number.
+ * @return unsigned short a random number
+ */
+static unsigned short
+rand16(void)
+{
+    static int been_seeded = 0;
+
+    if (!been_seeded) {
+        unsigned int seed = 0;
+        struct timeval now;
+
+        /* not a very good seed but what the heck, it needs to be quickly acquired */
+        gettimeofday(&now, NULL);
+        seed = now.tv_sec ^ now.tv_usec ^ (getpid() << 16);
+
+        srand(seed);
+        been_seeded = 1;
+    }
+
+    /* Some rand() implementations have less randomness in low bits
+     * than in high bits, so we only pay attention to the high ones.
+     * But most implementations don't touch the high bit, so we
+     * ignore that one. */
+    return ((unsigned short)(rand() >> 15));
 }
