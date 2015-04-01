@@ -311,7 +311,8 @@ struct timeval *timeout;
     socklen_t addrLen;
     char *ipaddr;
     request *r;
-
+    /* Reset error */
+    server->lastError = 0;
     FD_ZERO(&fds);
     FD_SET(server->serverSock, &fds);
     result = 0;
