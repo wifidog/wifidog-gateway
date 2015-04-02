@@ -71,6 +71,7 @@ usage(void)
     fprintf(stdout,
             "  -x pid        Used internally by WiFiDog when re-starting itself *DO NOT ISSUE THIS SWITCH MANUAlLY*\n");
     fprintf(stdout, "  -i <path>     Internal socket path used when re-starting self\n");
+    fprintf(stdout, "  -a <path>     Path to /proc/net/arp replacement - mainly useful for debugging.\n");
     fprintf(stdout, "\n");
 }
 
