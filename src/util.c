@@ -381,7 +381,7 @@ get_status_text()
     pstr_t *pstr = pstr_new();
     s_config *config;
     t_auth_serv *auth_server;
-    t_client *first;
+    t_client *sublist, *current;
     int count;
     time_t uptime = 0;
     unsigned int days = 0, hours = 0, minutes = 0, seconds = 0;
@@ -414,35 +414,26 @@ get_status_text()
 
     LOCK_CLIENT_LIST();
 
-    first = client_get_first_client();
+    count = client_list_dup(&sublist);
 
-    if (first == NULL) {
-        count = 0;
-    } else {
-        count = 1;
-        while (first->next != NULL) {
-            first = first->next;
-            count++;
-        }
-    }
+    UNLOCK_CLIENT_LIST();
+
+    current = sublist;
 
     pstr_append_sprintf(pstr, "%d clients " "connected.\n", count);
 
-    first = client_get_first_client();
-
-    count = 0;
-    while (first != NULL) {
+    count = 1;
+    while (current != NULL) {
         pstr_append_sprintf(pstr, "\nClient %d\n", count);
-        pstr_append_sprintf(pstr, "  IP: %s MAC: %s\n", first->ip, first->mac);
-        pstr_append_sprintf(pstr, "  Token: %s\n", first->token);
-        pstr_append_sprintf(pstr, "  Downloaded: %llu\n  Uploaded: %llu\n", first->counters.incoming,
-                            first->counters.outgoing);
-
+        pstr_append_sprintf(pstr, "  IP: %s MAC: %s\n", current->ip, current->mac);
+        pstr_append_sprintf(pstr, "  Token: %s\n", current->token);
+        pstr_append_sprintf(pstr, "  Downloaded: %llu\n  Uploaded: %llu\n", current->counters.incoming,
+                            current->counters.outgoing);
         count++;
-        first = first->next;
+        current = current->next;
     }
 
-    UNLOCK_CLIENT_LIST();
+    client_list_destroy(sublist);
 
     config = config_get_config();
 
