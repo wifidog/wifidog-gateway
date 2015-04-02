@@ -1,3 +1,4 @@
+/* vim: set et sw=4 ts=4 sts=4 : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -121,10 +122,9 @@ logout_client(t_client *client)
 void
 authenticate_client(request *r)
 {
-	t_client	*client;
+	t_client	*client, *tmp;
 	t_authresponse	auth_response;
-	char	*mac,
-		*token;
+	char	*token;
 	httpVar *var;
 	char *urlFragment = NULL;
 	s_config	*config = NULL;
@@ -132,53 +132,54 @@ authenticate_client(request *r)
 
 	LOCK_CLIENT_LIST();
 
-	client = client_list_find_by_ip(r->clientAddr);
+	client = client_dup(client_list_find_by_ip(r->clientAddr));
+    
+    UNLOCK_CLIENT_LIST();
 
 	if (client == NULL) {
 		debug(LOG_ERR, "authenticate_client(): Could not find client for %s", r->clientAddr);
-		UNLOCK_CLIENT_LIST();
 		return;
 	}
 	
-	mac = safe_strdup(client->mac);
-
 	/* Users could try to log in(so there is a valid token in
 	 * request) even after they have logged in, try to deal with
 	 * this */
 	if ((var = httpdGetVariableByName(r, "token")) != NULL) {
-		if (client->token)
-			free(client->token);
-
-		client->token = safe_strdup(var->value);
 		token = safe_strdup(var->value);
 	} else {
 		token = safe_strdup(client->token);
 	}
-
-	UNLOCK_CLIENT_LIST();
 	
 	/* 
 	 * At this point we've released the lock while we do an HTTP request since it could
 	 * take multiple seconds to do and the gateway would effectively be frozen if we
 	 * kept the lock.
 	 */
-	auth_server_request(&auth_response, REQUEST_TYPE_LOGIN, r->clientAddr, mac, token, 0, 0);
+	auth_server_request(&auth_response, REQUEST_TYPE_LOGIN, client->ip, client->mac, token, 0, 0);
 	
 	LOCK_CLIENT_LIST();
 	
 	/* can't trust the client to still exist after n seconds have passed */
-	client = client_list_find(r->clientAddr, mac);
+	tmp = client_list_find_by_client(client);
 	
-	if (client == NULL) {
-		debug(LOG_ERR, "authenticate_client(): Could not find client node for %s (%s)", r->clientAddr, mac);
+	if (NULL == tmp) {
+		debug(LOG_ERR, "authenticate_client(): Could not find client node for %s (%s)", client->ip, client->mac);
 		UNLOCK_CLIENT_LIST();
+        client_list_destroy(client); /* Free the cloned client */
 		free(token);
-		free(mac);
 		return;
 	}
+
+    client_list_destroy(client); /* Free the cloned client */
+    client = tmp;
 	
-	free(token);
-	free(mac);
+    if (strcmp(token, client->token) != 0) {
+        /* If token changed, save it. */
+        free(client->token);
+        client->token = token;
+    } else {
+        free(token);
+    }
 
 	/* Prepare some variables we'll need below */
 	config = config_get_config();
