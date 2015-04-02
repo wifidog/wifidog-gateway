@@ -118,7 +118,12 @@ execute(const char *cmd_line, int quiet)
     rc = waitpid(pid, &status, 0);
     debug(LOG_DEBUG, "Process PID %d exited", rc);
 
-    return (WEXITSTATUS(status));
+    if (WIFEXITED(status)) {
+        return (WEXITSTATUS(status));
+    } else {
+        /* If we get here, child did not exit cleanly. Will return non-zero exit code to caller*/
+        return 1;
+    }
 }
 
 struct in_addr *
