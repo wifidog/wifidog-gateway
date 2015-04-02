@@ -17,6 +17,7 @@ import functools
 from multiprocessing import Pool
 
 from httplib import HTTPConnection
+from httplib import BadStatusLine
 
 PORT = "2060"
 
@@ -37,8 +38,9 @@ def main_single(target, prefix, i):
         try:
             resp = conn.getresponse()
             resp.read()
-        except:
-            pass
+            conn.close()
+        except BadStatusLine as e:
+            print "Got BadStatusLine for /: %s" % e
         conn = HTTPConnection(target, PORT, timeout=10, source_address=(source, 0))
         conn.connect()
         token = str(uuid.uuid4())
@@ -48,8 +50,9 @@ def main_single(target, prefix, i):
             # this causes wifidog to ask our mock auth server if the token is
             # correct
             resp.read()
-        except:
-            pass
+            conn.close()
+        except BadStatusLine as e:
+            print "Got BadStatusLine for login: %s" % e
         # log out sometimes
         if random.choice([True, False, False]):
             conn = HTTPConnection(target, PORT, timeout=10, source_address=(source, 0))
@@ -58,8 +61,9 @@ def main_single(target, prefix, i):
             try:
                 resp = conn.getresponse()
                 resp.read()
-            except:
-                pass
+                conn.close()
+            except BadStatusLine as e:
+                print "Got BadStatusLine for logout: %s" % e
 
 
 # http://code.activestate.com/recipes/439094-get-the-ip-address-associated-with-a-network-inter/
