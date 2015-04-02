@@ -176,7 +176,13 @@ client_list_dup(t_client ** dest)
 t_client *
 client_dup(const t_client * src)
 {
-    t_client *new = client_get_new();
+    t_client *new = NULL;
+    
+    if (NULL == src) {
+        return NULL;
+    }
+    
+    new = client_get_new();
 
     new->id = src->id;
     new->ip = safe_strdup(src->ip);
