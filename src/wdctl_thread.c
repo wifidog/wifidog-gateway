@@ -267,7 +267,7 @@ wdctl_restart(int afd)
     char *sock_name;
     s_config *conf = NULL;
     struct sockaddr_un sa_un;
-    t_client *client, *head;
+    t_client *client;
     char *tempstring = NULL;
     pid_t pid;
     socklen_t len;
@@ -309,9 +309,7 @@ wdctl_restart(int afd)
 
         /* The child is connected. Send them over the socket the existing clients */
         LOCK_CLIENT_LIST();
-        client_list_dup(&head);
-        UNLOCK_CLIENT_LIST();
-        client = head;
+        client = client_get_first_client();
         while (client) {
             /* Send this client */
             safe_asprintf(&tempstring,
@@ -323,7 +321,7 @@ wdctl_restart(int afd)
             free(tempstring);
             client = client->next;
         }
-        client_list_destroy(head);
+        UNLOCK_CLIENT_LIST();
 
         close(fd);
 
