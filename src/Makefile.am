@@ -35,7 +35,6 @@ libgateway_a_SOURCES = commandline.c \
 	simple_http.c \
 	pstring.c \
 	capabilities.c
-# TODO: capabilities.c is always compiled, protect with ifdef?
 
 noinst_HEADERS = commandline.h \
 	common.h \
