@@ -19,9 +19,6 @@
  *                                                                  *
  \********************************************************************/
 
-/*
- * $Id$
- */
 /**
   @file util.c
   @brief Misc utility functions
@@ -38,12 +35,12 @@
 #include <pthread.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <sys/unistd.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
 
-#include <netinet/in.h>
 #include <net/if.h>
 
 #include <fcntl.h>
@@ -53,34 +50,33 @@
 #include <netpacket/packet.h>
 
 #include <string.h>
-#include <pthread.h>
 #include <netdb.h>
 
 #include "common.h"
-#include "client_list.h"
 #include "safe.h"
 #include "util.h"
-#include "conf.h"
 #include "debug.h"
 #include "pstring.h"
-#include "gateway.h"
-#include "commandline.h"
 
 #include "../config.h"
+
+#define LOCK_GHBN() do { \
+	debug(LOG_DEBUG, "Locking wd_gethostbyname()"); \
+	pthread_mutex_lock(&ghbn_mutex); \
+	debug(LOG_DEBUG, "wd_gethostbyname() locked"); \
+} while (0)
+
+#define UNLOCK_GHBN() do { \
+	debug(LOG_DEBUG, "Unlocking wd_gethostbyname()"); \
+	pthread_mutex_unlock(&ghbn_mutex); \
+	debug(LOG_DEBUG, "wd_gethostbyname() unlocked"); \
+} while (0)
 
 /** @brief FD for icmp raw socket */
 static int icmp_fd;
 
 /** @brief Mutex to protect gethostbyname since not reentrant */
 static pthread_mutex_t ghbn_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-/* XXX Do these need to be locked ? */
-static time_t last_online_time = 0;
-static time_t last_offline_time = 0;
-static time_t last_auth_online_time = 0;
-static time_t last_auth_offline_time = 0;
-
-long served_this_session = 0;
 
 static unsigned short rand16(void);
 
@@ -152,8 +148,6 @@ wd_gethostbyname(const char *name)
         UNLOCK_GHBN();
         return NULL;
     }
-
-    mark_online();
 
     in_addr_temp = (struct in_addr *)he->h_addr_list[0];
     addr->s_addr = in_addr_temp->s_addr;
@@ -283,190 +277,6 @@ get_ext_iface(void)
     free(device);
     free(gw);
     return NULL;
-}
-
-void
-mark_online()
-{
-    int before;
-    int after;
-
-    before = is_online();
-    time(&last_online_time);
-    after = is_online();        /* XXX is_online() looks at last_online_time... */
-
-    if (before != after) {
-        debug(LOG_INFO, "ONLINE status became %s", (after ? "ON" : "OFF"));
-    }
-
-}
-
-void
-mark_offline()
-{
-    int before;
-    int after;
-
-    before = is_online();
-    time(&last_offline_time);
-    after = is_online();
-
-    if (before != after) {
-        debug(LOG_INFO, "ONLINE status became %s", (after ? "ON" : "OFF"));
-    }
-
-    /* If we're offline it definately means the auth server is offline */
-    mark_auth_offline();
-
-}
-
-int
-is_online()
-{
-    if (last_online_time == 0 || (last_offline_time - last_online_time) >= (config_get_config()->checkinterval * 2)) {
-        /* We're probably offline */
-        return (0);
-    } else {
-        /* We're probably online */
-        return (1);
-    }
-}
-
-void
-mark_auth_online()
-{
-    int before;
-    int after;
-
-    before = is_auth_online();
-    time(&last_auth_online_time);
-    after = is_auth_online();
-
-    if (before != after) {
-        debug(LOG_INFO, "AUTH_ONLINE status became %s", (after ? "ON" : "OFF"));
-    }
-
-    /* If auth server is online it means we're definately online */
-    mark_online();
-
-}
-
-void
-mark_auth_offline()
-{
-    int before;
-    int after;
-
-    before = is_auth_online();
-    time(&last_auth_offline_time);
-    after = is_auth_online();
-
-    if (before != after) {
-        debug(LOG_INFO, "AUTH_ONLINE status became %s", (after ? "ON" : "OFF"));
-    }
-
-}
-
-int
-is_auth_online()
-{
-    if (!is_online()) {
-        /* If we're not online auth is definately not online :) */
-        return (0);
-    } else if (last_auth_online_time == 0
-               || (last_auth_offline_time - last_auth_online_time) >= (config_get_config()->checkinterval * 2)) {
-        /* Auth is  probably offline */
-        return (0);
-    } else {
-        /* Auth is probably online */
-        return (1);
-    }
-}
-
-        /*
-         * @return A string containing human-readable status text. MUST BE free()d by caller
-         */
-char *
-get_status_text()
-{
-    pstr_t *pstr = pstr_new();
-    s_config *config;
-    t_auth_serv *auth_server;
-    t_client *sublist, *current;
-    int count;
-    time_t uptime = 0;
-    unsigned int days = 0, hours = 0, minutes = 0, seconds = 0;
-    t_trusted_mac *p;
-
-    pstr_cat(pstr, "WiFiDog status\n\n");
-
-    uptime = time(NULL) - started_time;
-    days = (unsigned int)uptime / (24 * 60 * 60);
-    uptime -= days * (24 * 60 * 60);
-    hours = (unsigned int)uptime / (60 * 60);
-    uptime -= hours * (60 * 60);
-    minutes = (unsigned int)uptime / 60;
-    uptime -= minutes * 60;
-    seconds = (unsigned int)uptime;
-
-    pstr_cat(pstr, "Version: " VERSION "\n");
-    pstr_append_sprintf(pstr, "Uptime: %ud %uh %um %us\n", days, hours, minutes, seconds);
-    pstr_cat(pstr, "Has been restarted: ");
-
-    if (restart_orig_pid) {
-        pstr_append_sprintf(pstr, "yes (from PID %d)\n", restart_orig_pid);
-    } else {
-        pstr_cat(pstr, "no\n");
-    }
-
-    pstr_append_sprintf(pstr, "Internet Connectivity: %s\n", (is_online()? "yes" : "no"));
-    pstr_append_sprintf(pstr, "Auth server reachable: %s\n", (is_auth_online()? "yes" : "no"));
-    pstr_append_sprintf(pstr, "Clients served this session: %lu\n\n", served_this_session);
-
-    LOCK_CLIENT_LIST();
-
-    count = client_list_dup(&sublist);
-
-    UNLOCK_CLIENT_LIST();
-
-    current = sublist;
-
-    pstr_append_sprintf(pstr, "%d clients " "connected.\n", count);
-
-    count = 1;
-    while (current != NULL) {
-        pstr_append_sprintf(pstr, "\nClient %d\n", count);
-        pstr_append_sprintf(pstr, "  IP: %s MAC: %s\n", current->ip, current->mac);
-        pstr_append_sprintf(pstr, "  Token: %s\n", current->token);
-        pstr_append_sprintf(pstr, "  Downloaded: %llu\n  Uploaded: %llu\n", current->counters.incoming,
-                            current->counters.outgoing);
-        count++;
-        current = current->next;
-    }
-
-    client_list_destroy(sublist);
-
-    config = config_get_config();
-
-    if (config->trustedmaclist != NULL) {
-        pstr_cat(pstr, "\nTrusted MAC addresses:\n");
-
-        for (p = config->trustedmaclist; p != NULL; p = p->next) {
-            pstr_append_sprintf(pstr, "  %s\n", p->mac);
-        }
-    }
-
-    pstr_cat(pstr, "\nAuthentication servers:\n");
-
-    LOCK_CONFIG();
-
-    for (auth_server = config->auth_servers; auth_server != NULL; auth_server = auth_server->next) {
-        pstr_append_sprintf(pstr, "  Host: %s (%s)\n", auth_server->authserv_hostname, auth_server->last_ip);
-    }
-
-    UNLOCK_CONFIG();
-
-    return pstr_to_string(pstr);
 }
 
 /** Initialize the ICMP socket

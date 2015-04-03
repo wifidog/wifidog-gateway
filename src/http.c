@@ -52,8 +52,8 @@
 #include "client_list.h"
 #include "common.h"
 #include "centralserver.h"
-
 #include "util.h"
+#include "wd_util.h"
 
 #include "../config.h"
 
