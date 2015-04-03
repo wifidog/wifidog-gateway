@@ -76,6 +76,7 @@ drop_privileges(const char *user, const char *group)
     struct group *grp = getgrnam(group);
     if (grp) {
         gid_t gid = grp->gr_gid;
+        // TODO: check retval
         setegid(gid);
     } else {
         debug(LOG_ERR, "Failed to look up GID for group %s", group);
@@ -86,6 +87,7 @@ drop_privileges(const char *user, const char *group)
     struct passwd *pwd = getpwnam(user);
     if (pwd) {
         uid_t uid = pwd->pw_uid;
+        // TODO: check retval
         seteuid(uid);
     } else {
         debug(LOG_ERR, "Failed to look up UID for user %s", user);
