@@ -23,7 +23,7 @@
  * Wifidog does not need to run as root. The only capabilities required
  * are:
  *  - CAP_NET_RAW: get IP addresses from sockets, ICMP ping
- *  - CAP_NET_ADMIN: set up iptables
+ *  - CAP_NET_ADMIN: modify firewall rules
  *
  * This function drops all other capabilities. As only the effective
  * user id is set, it is theoretically possible for an attacker to
@@ -44,14 +44,16 @@ drop_privileges(const char *user, const char *group)
     debug(LOG_DEBUG, "Entered drop_privileges");
     /* The capabilities we want.
      * CAP_NET_RAW is used for our socket handling.
-     * We actually require CAP_NET_ADMIN for iptables. However,
-     * iptables must be run as root so we do that instead. */
+     * CAP_NET_ADMIN is not used directly by iptables which
+     * is called by Wifidog
+     */
     cap_value_t cap_values[] = { CAP_NET_RAW, CAP_NET_ADMIN };
     cap_t caps;
 
     caps = cap_get_proc();
     debug(LOG_DEBUG, "Current capabilities: %s", cap_to_text(caps, NULL));
-    /* Hopefully clear all caps but cap_values */
+    /* Clear all caps and then set the caps we desire */
+    cap_clear(caps);
     cap_set_flag(caps, CAP_PERMITTED, 2, cap_values, CAP_SET);
     ret = cap_set_proc(caps);
     if (ret == -1) {
@@ -93,7 +95,7 @@ drop_privileges(const char *user, const char *group)
     debug(LOG_DEBUG, "Current capabilities: %s", cap_to_text(caps, NULL));
     debug(LOG_DEBUG, "Regaining capabilities.");
     /* Re-gain privileges */
-    cap_set_flag(caps, CAP_EFFECTIVE, 2, cap_values, CAP_SET);
+    cap_set_flag(caps, CAP_EFFECTIVE, 1, cap_values, CAP_SET);
     /* Note that we keep CAP_INHERITABLE empty. In theory, CAP_INHERITABLE
      * would be useful to execve iptables as non-root. In practice, Wifidog
      * often runs on embedded systems (OpenWrt) where the required file-based
@@ -106,8 +108,13 @@ drop_privileges(const char *user, const char *group)
      * capabilities on the executable. Alas, it's not relevant here.
      *
      * This is also the main reason why we only seteuid() instead of setuid():
-     * iptables will be called as root (with ALL capabilities!) and thus continue
-     * to work as before.
+     * When an executable is called as root (real UID == 0), the INHERITED
+     * and PERMITTED file capabilities are implicitly marked as enabled.
+     *
+     * TODO: what about EFFECTIVE? What is set-user-id-root in this context?
+     * Iptables probably works because of (F(permitted) & cap_bset)
+     * So, what is the bounding set after we're done?
+     *
      */
     ret = cap_set_proc(caps);
     if (ret == -1) {
