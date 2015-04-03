@@ -48,6 +48,9 @@
 #include "debug.h"
 #include "util.h"
 #include "client_list.h"
+#include "capabilities.h"
+
+#include "../config.h"
 
 static int iptables_do_command(const char *format, ...);
 static char *iptables_compile(const char *, const char *, const t_firewall_rule *);
@@ -514,7 +517,13 @@ iptables_fw_destroy_mention(const char *table, const char *chain, const char *me
     safe_asprintf(&command, "iptables -t %s -L %s -n --line-numbers -v", table, chain);
     iptables_insert_gateway_id(&command);
 
-    if ((p = popen(command, "r"))) {
+    /* TODO: execute() already has privilege handling code */
+#ifdef USE_LIBCAP
+    p = popen_as_root(command, "r");
+#else
+    p = open(command, "r");
+#endif /* USE_LIBCAP */
+    if (p) {
         /* Skip first 2 lines */
         while (!feof(p) && fgetc(p) != '\n') ;
         while (!feof(p) && fgetc(p) != '\n') ;

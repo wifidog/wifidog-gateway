@@ -10,6 +10,8 @@
 #include <sys/capability.h>
 #include <sys/prctl.h>
 #include <unistd.h>
+/* FILE and popen */
+#include <stdio.h>
 /* For strerror */
 #include <string.h>
 /* For exit */
@@ -19,6 +21,7 @@
 /* For getgrnam */
 #include <grp.h>
 
+#include "capabilities.h"
 #include "debug.h"
 
 /**
@@ -46,6 +49,17 @@ drop_privileges(const char *user, const char *group)
 {
     int ret = 0;
     debug(LOG_DEBUG, "Entered drop_privileges");
+
+    /*
+     * We are about to drop our effective UID to a non-privileged user.
+     * This clears the EFFECTIVE capabilities set, so we later re-enable
+     * re-enable these. We can do that because they are not cleared from
+     * the PERMITTED set.
+     * Note: if we used setuid() instead of seteuid(), we would have lost the
+     * PERMITTED set as well. In this case, we would need to call prctl
+     * with PR_SET_KEEPCAPS.
+     */
+    set_user_group(user, group);
     /* The capabilities we want.
      * CAP_NET_RAW is used for our socket handling.
      * CAP_NET_ADMIN is not used directly by iptables which
@@ -68,46 +82,14 @@ drop_privileges(const char *user, const char *group)
     caps = cap_get_proc();
     debug(LOG_DEBUG, "Dropped caps, now: %s", cap_to_text(caps, NULL));
     cap_free(caps);
-    /* We are about to drop our effective UID to a non-privileged user.
-     * This clears the EFFECTIVE capabilities set, so we will have to
-     * re-enable these. We can do that because they are not cleared from
-     * the PERMITTED set.
-     * Note: if we used setuid() instead of seteuid(), we would have lost the
-     * PERMITTED set as well. In this case, we would need to call prctl
-     * with PR_SET_KEEPCAPS.
-     */
-    debug(LOG_DEBUG, "Switching to group %s", group);
-    /* don't free grp, see getpwnam() for details */
-    struct group *grp = getgrnam(group);
-    if (NULL == grp) {
-        debug(LOG_ERR, "Failed to look up GID for group %s: %s", group, strerror(errno));
-        exit(1);
-    }
-    gid_t gid = grp->gr_gid;
-    ret = setegid(gid);
-    if (ret != 0) {
-        debug(LOG_ERR, "Failed to setegid() for group %s: %s", group, strerror(errno));
-        exit(1);
-    }
-    debug(LOG_DEBUG, "Switching to user %s", user);
-    /* don't free pwd, see getpwnam() for details */
-    struct passwd *pwd = getpwnam(user);
-    if (NULL == pwd) {
-        debug(LOG_ERR, "Failed to look up UID for user %s", user);
-        exit(1);
-    }
-    uid_t uid = pwd->pw_uid;
-    ret = seteuid(uid);
-    if (ret != 0) {
-        debug(LOG_ERR, "Failed to seteuid() for user %s: %s", user, strerror(errno));
-        exit(1);
-    }
     caps = cap_get_proc();
     debug(LOG_DEBUG, "Current capabilities: %s", cap_to_text(caps, NULL));
     debug(LOG_DEBUG, "Regaining capabilities.");
     /* Re-gain privileges */
     cap_set_flag(caps, CAP_EFFECTIVE, num_caps, cap_values, CAP_SET);
-    /* Note that we keep CAP_INHERITABLE empty. In theory, CAP_INHERITABLE
+    cap_set_flag(caps, CAP_INHERITABLE, num_caps, cap_values, CAP_SET);
+    /*
+     * Note that we keep CAP_INHERITABLE empty. In theory, CAP_INHERITABLE
      * would be useful to execve iptables as non-root. In practice, Wifidog
      * often runs on embedded systems (OpenWrt) where the required file-based
      * capabilities are not available as the underlying file system does not
@@ -121,17 +103,6 @@ drop_privileges(const char *user, const char *group)
      * This is also the main reason why we only seteuid() instead of setuid():
      * When an executable is called as root (real UID == 0), the INHERITABLE
      * and PERMITTED file capability sets are implicitly marked as enabled.
-     *
-     * TODO:
-     * It is not clear to me why iptables has the necessary capabilities in its
-     * EFFECTIVE set. This should only happen for SUID0 executables. I also do
-     * not understand why iptables receives the necessary capabilities at all:
-     *
-     *  P'(permitted) = (P(inheritable) & F(inheritable)) |
-     *                      (F(permitted) & cap_bset)
-     *
-     * Since P(inheritable) is empty, P'(permitted) should be empty as well
-     * unless cap_bset is automatically populated.
      */
     ret = cap_set_proc(caps);
     if (ret == -1) {
@@ -141,6 +112,105 @@ drop_privileges(const char *user, const char *group)
     caps = cap_get_proc();
     debug(LOG_INFO, "Final capabilities: %s", cap_to_text(caps, NULL));
     cap_free(caps);
+}
+
+
+/**
+ * Switches the effective user ID to 0 (root).
+ *
+ * If the underlying seteuid call fails, an error message is logged.
+ * No other error handling is performed.
+ *
+ */
+void switch_to_root() {
+    int ret = 0;
+    ret = seteuid(0);
+    /* Not being able to raise privileges is not fatal. */
+    if (ret != 0) {
+        debug(LOG_ERR, "execute: Could not seteuid(0): %s", strerror(errno));
+    }
+    ret = setegid(0);
+    if (ret != 0) {
+        debug(LOG_ERR, "execute: Could not setegid(0): %s", strerror(errno));
+    }
+    debug(LOG_DEBUG, "execute: Switched to UID 0!");;
+}
+
+
+/**
+ * Switches user and group, typically to a non-privileged user.
+ *
+ * If either user or group switching fails, this is considered fatal
+ * and exit() is called.
+ *
+ * @param user name of the user
+ * @param group name of the group
+ *
+ */
+void set_user_group(const char* user, const char* group) {
+    debug(LOG_DEBUG, "Switching to group %s", group);
+    /* don't free grp, see getpwnam() for details */
+    struct group *grp = getgrnam(group);
+    if (NULL == grp) {
+        debug(LOG_ERR, "Failed to look up GID for group %s: %s", group, strerror(errno));
+        exit(1);
+    }
+    gid_t gid = grp->gr_gid;
+    struct passwd *pwd = getpwnam(user);
+    if (NULL == pwd) {
+        debug(LOG_ERR, "Failed to look up UID for user %s", user);
+        exit(1);
+    }
+    uid_t uid = pwd->pw_uid;
+    set_uid_gid(uid, gid);
+
+}
+
+/**
+ * Switches user ID and group ID, typically to a non-privileged user.
+ *
+ * If either user or group switching fails, this is considered fatal
+ * and exit() is called.
+ *
+ * @param uid the ID of the user
+ * @param gid the ID of the group
+ *
+ */
+void set_uid_gid(uid_t uid, gid_t gid) {
+    int ret;
+    ret = setegid(gid);
+    if (ret != 0) {
+        debug(LOG_ERR, "Failed to setegid() %s", strerror(errno));
+        exit(1);
+    }
+    ret = seteuid(uid);
+    if (ret != 0) {
+        debug(LOG_ERR, "Failed to seteuid(): %s", strerror(errno));
+        exit(1);
+    }
+}
+
+
+/**
+ * Calls popen with root privileges.
+ *
+ * This method is a wrapper around popen(). The effective
+ * user and group IDs of the current process are temporarily set
+ * to 0 (root) and then reset to the original, typically non-privileged,
+ * values before returning.
+ *
+ * @param command First popen parameter
+ * @param type Second popen parameter
+ * @returns File handle pointer returned by popen
+ */
+FILE *popen_as_root(const char *command, const char *type) {
+    FILE *p = NULL;
+    uid_t uid = getuid();
+    gid_t gid = getgid();
+    switch_to_root();
+    p = popen(command, type);
+    set_uid_gid(uid, gid);
+    return p;
 }
 
 #endif /* USE_LIBCAP */

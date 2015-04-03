@@ -65,6 +65,7 @@
 #include "pstring.h"
 #include "gateway.h"
 #include "commandline.h"
+#include "capabilities.h"
 
 #include "../config.h"
 
@@ -105,6 +106,11 @@ execute(const char *cmd_line, int quiet)
         /* We don't want to see any errors if quiet flag is on */
         if (quiet)
             close(2);
+
+#ifdef USE_LIBCAP
+        /* There is no need to lower privileges again; we're exiting anyways */
+        switch_to_root();
+#endif
         if (execvp("/bin/sh", (char *const *)new_argv) == -1) { /* execute the command  */
             debug(LOG_ERR, "execvp(): %s", strerror(errno));
         } else {
