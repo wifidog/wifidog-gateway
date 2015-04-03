@@ -88,7 +88,7 @@ BB_ENABLE_DOXYGEN
 # Enable capabilities?
 AC_DEFUN([BB_LIBCAP],
 [
-AC_ARG_ENABLE(libcap, [  --enable-libcap        enable privilege dropping with capabilities (no)], [], [enable_libcap=no])
+AC_ARG_ENABLE(libcap, [  --enable-libcap         enable privilege dropping with capabilities (no)], [], [enable_libcap=no])
 if test "x$enable_libcap" = xyes; then
     AC_CHECK_HEADERS(sys/capability.h)
     AC_SEARCH_LIBS([cap_get_proc], [cap], [], [
@@ -103,7 +103,7 @@ BB_LIBCAP
 # Enable cyassl?
 AC_DEFUN([BB_CYASSL],
 [
-AC_ARG_ENABLE(cyassl, [  --enable-cyassl        enable TLS support for auth server communication (no)], [], [enable_cyassl=no])
+AC_ARG_ENABLE(cyassl, [  --enable-cyassl         enable TLS support for auth server communication (no)], [], [enable_cyassl=no])
 if test "x$enable_cyassl" = xyes; then
         AC_CHECK_HEADERS(cyassl/ssl.h)
         AC_SEARCH_LIBS([CyaSSLv23_client_method], [cyassl wolfssl], [], [
