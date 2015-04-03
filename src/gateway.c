@@ -502,13 +502,14 @@ gw_main(int argc, char **argv)
     config_init();
 
     parse_commandline(argc, argv);
-#ifdef USE_LIBCAP
-    drop_privileges("nobody", "nogroup");
-#endif /* USE LIBCAP */
 
     /* Initialize the config */
     config_read(config->configfile);
     config_validate();
+
+#ifdef USE_LIBCAP
+    drop_privileges(config->user, config->group);
+#endif /* USE LIBCAP */
 
     /* Initializes the linked list of connected clients */
     client_list_init();

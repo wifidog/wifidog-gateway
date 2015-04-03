@@ -8,6 +8,8 @@
 #include <sys/capability.h>
 #include <sys/prctl.h>
 #include <unistd.h>
+/* For exit */
+#include <stdlib.h>
 /* For getpwnam */
 #include <pwd.h>
 /* For getgrnam */
@@ -15,6 +17,26 @@
 
 #include "debug.h"
 
+/**
+ * Switches to non-privileged user and drops unneeded capabilities.
+ *
+ * Wifidog does not need to run as root. The only capabilities required
+ * are:
+ *  - CAP_NET_RAW: get IP addresses from sockets, ICMP ping
+ *  - CAP_NET_ADMIN: set up iptables
+ *
+ * This function drops all other capabilities. As only the effective
+ * user id is set, it is theoretically possible for an attacker to
+ * regain root privileges.
+ * Any processes started with execve will
+ * have UID0. This is a convenient side effect to allow for proper
+ * operation of iptables.
+ *
+ * Any error is considered fatal and exit() is called.
+ *
+ * @param user Non-privileged user
+ * @param Non-privileged group
+ */
 void
 drop_privileges(const char *user, const char *group)
 {
@@ -34,6 +56,7 @@ drop_privileges(const char *user, const char *group)
     ret = cap_set_proc(caps);
     if (ret == -1) {
         debug(LOG_ERR, "Could not set capabilities!");
+        exit(1);
     }
     caps = cap_get_proc();
     debug(LOG_DEBUG, "Dropped caps, now: %s", cap_to_text(caps, NULL));

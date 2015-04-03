@@ -72,6 +72,8 @@
 /** Note that DEFAULT_AUTHSERVSSLNOPEERVER must be 0 or 1, even if the config file syntax is yes or no */
 #define DEFAULT_AUTHSERVSSLPEERVER 1    /* 0 means: Enable peer verification */
 #define DEFAULT_ARPTABLE "/proc/net/arp"
+#define DEFAULT_USER "nobody" /* Unprivileged user, used if compiled with capabilities */
+#define DEFAULT_GROUP "nobody" /* Unprivileged group, used if compiled with capabilities */
 /*@}*/
 
 /*@{*/
@@ -193,6 +195,8 @@ typedef struct {
     t_trusted_mac *trustedmaclist; /**< @brief list of trusted macs */
     char *arp_table_path; /**< @brief Path to custom ARP table, formatted
         like /proc/net/arp */
+    char *user; /**< @brief Name of non-privileged user */
+    char *group; /**< @brief Name of non-privileged group */
 } s_config;
 
 /** @brief Get the current gateway configuration */
