@@ -521,7 +521,7 @@ iptables_fw_destroy_mention(const char *table, const char *chain, const char *me
 #ifdef USE_LIBCAP
     p = popen_as_root(command, "r");
 #else
-    p = open(command, "r");
+    p = popen(command, "r");
 #endif /* USE_LIBCAP */
     if (p) {
         /* Skip first 2 lines */
