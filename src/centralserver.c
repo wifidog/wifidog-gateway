@@ -52,8 +52,6 @@
 
 #include "simple_http.h"
 
-extern pthread_mutex_t config_mutex;
-
 /** Initiates a transaction with the auth server, either to authenticate or to
  * update the traffic counters at the server
 @param authresponse Returns the information given by the central server 

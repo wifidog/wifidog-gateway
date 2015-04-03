@@ -1,3 +1,4 @@
+/* vim: set et sw=4 ts=4 sts=4 : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -18,7 +19,6 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Id$ */
 /** @file commandline.c
     @brief Command line argument handling
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
@@ -33,27 +33,22 @@
 #include "debug.h"
 #include "safe.h"
 #include "conf.h"
+#include "commandline.h"
 
 #include "../config.h"
 
 /*
  * Holds an argv that could be passed to exec*() if we restart ourselves
  */
-/* Declare variable */
-extern char **restartargv;
-/* Define variable */
-char **restartargv = NULL;
+char ** restartargv = NULL;
 
-static void usage(void);
-
-void parse_commandline(int argc, char **argv);
-
-/*
+/**
  * A flag to denote whether we were restarted via a parent wifidog, or started normally
  * 0 means normally, otherwise it will be populated by the PID of the parent
  */
-extern pid_t restart_orig_pid;
 pid_t restart_orig_pid = 0;
+
+static void usage(void);
 
 /** @internal
  * @brief Print usage
@@ -76,6 +71,7 @@ usage(void)
     fprintf(stdout,
             "  -x pid        Used internally by WiFiDog when re-starting itself *DO NOT ISSUE THIS SWITCH MANUAlLY*\n");
     fprintf(stdout, "  -i <path>     Internal socket path used when re-starting self\n");
+    fprintf(stdout, "  -a <path>     Path to /proc/net/arp replacement - mainly useful for debugging.\n");
     fprintf(stdout, "\n");
 }
 
@@ -96,7 +92,7 @@ parse_commandline(int argc, char **argv)
     i = 0;
     restartargv[i++] = safe_strdup(argv[0]);
 
-    while (-1 != (c = getopt(argc, argv, "c:hfd:sw:vx:i:"))) {
+    while (-1 != (c = getopt(argc, argv, "c:hfd:sw:vx:i:a:"))) {
 
         skiponrestart = 0;
 
@@ -109,6 +105,7 @@ parse_commandline(int argc, char **argv)
 
         case 'c':
             if (optarg) {
+                free(config->configfile);
                 config->configfile = safe_strdup(optarg);
             }
             break;
@@ -157,6 +154,15 @@ parse_commandline(int argc, char **argv)
             }
             break;
 
+        case 'a':
+            if (optarg) {
+                free(config->arp_table_path);
+                config->arp_table_path = safe_strdup(optarg);
+            } else {
+                fprintf(stdout, "You must supply the path to the ARP table with -a!");
+                exit(1);
+            }
+            break;
         default:
             usage();
             exit(1);
@@ -184,5 +190,4 @@ parse_commandline(int argc, char **argv)
     restartargv[i++] = NULL;
     restartargv[i++] = NULL;
     restartargv[i++] = NULL;
-
 }

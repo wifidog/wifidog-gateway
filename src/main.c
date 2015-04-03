@@ -1,8 +1,8 @@
-/* vim: set et ts=4 sts=4 sw=4 : */
+/* vim: set et sw=4 ts=4 sts=4 : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
- * published by the Free Software Foundation; either version 2 of   *
+ * published by the Free:Software Foundation; either version 2 of   *
  * the License, or (at your option) any later version.              *
  *                                                                  *
  * This program is distributed in the hope that it will be useful,  *
@@ -17,40 +17,18 @@
  * 59 Temple Place - Suite 330        Fax:    +1-617-542-2652       *
  * Boston, MA  02111-1307,  USA       gnu@gnu.org                   *
  *                                                                  *
-\********************************************************************/
+ \********************************************************************/
 
-/* $Id$ */
-/** @file safe.h
-	  @brief Safe versions of stdlib/string functions that error out and exit if memory allocation fails
-	  @author Copyright (C) 2005 Mina Naguib <mina@ilesansfil.org>
-*/
+/** @internal
+  @file main.c
+  @brief Entry point only
+  @author Copyright (C) 2015 Alexandre Carmel-Veilleux <acv@miniguru.ca>
+ */
 
-#ifndef _SAFE_H_
-#define _SAFE_H_
+#include "gateway.h"
 
-#include <stdarg.h>             /* For va_list */
-#include <sys/types.h>          /* For fork */
-#include <unistd.h>             /* For fork */
-
-/** Register an fd for auto-cleanup on fork() */
-void register_fd_cleanup_on_fork(const int);
-
-/** @brief Safe version of malloc */
-void *safe_malloc(size_t);
-
-/** @brief Safe version of realloc */
-void *safe_realloc(void *, size_t);
-
-/* @brief Safe version of strdup */
-char *safe_strdup(const char *);
-
-/* @brief Safe version of asprintf */
-int safe_asprintf(char **, const char *, ...);
-
-/* @brief Safe version of vasprintf */
-int safe_vasprintf(char **, const char *, va_list);
-
-/* @brief Safe version of fork */
-pid_t safe_fork(void);
-
-#endif                          /* _SAFE_H_ */
+int
+main(int argc, char **argv)
+{
+    return gw_main(argc, argv);
+}

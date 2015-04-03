@@ -1,3 +1,4 @@
+/* vim: set et ts=4 sts=4 sw=4 : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -29,38 +30,53 @@
 
 #define STATUS_BUF_SIZ	16384
 
-/** @brief Execute a shell command
- */
-int execute(const char *cmd_line, int quiet);
-struct in_addr *wd_gethostbyname(const char *name);
+/** @brief Client server this session. */
+extern long served_this_session;
 
-/* @brief Get IP address of an interface */
-char *get_iface_ip(const char *ifname);
+/** @brief Execute a shell command */
+int execute(const char *, int);
 
-/* @brief Get MAC address of an interface */
-char *get_iface_mac(const char *ifname);
+/** @brief Thread safe gethostbyname */
+struct in_addr *wd_gethostbyname(const char *);
 
-/* @brief Get interface name of default gateway */
-char *get_ext_iface (void);
+/** @brief Get IP address of an interface */
+char *get_iface_ip(const char *);
 
-/* @brief Sets hint that an online action (dns/connect/etc using WAN) succeeded */
+/** @brief Get MAC address of an interface */
+char *get_iface_mac(const char *);
+
+/** @brief Get interface name of default gateway */
+char *get_ext_iface(void);
+
+/** @brief Sets hint that an online action (dns/connect/etc using WAN) succeeded */
 void mark_online(void);
-/* @brief Sets hint that an online action (dns/connect/etc using WAN) failed */
+
+/** @brief Sets hint that an online action (dns/connect/etc using WAN) failed */
 void mark_offline(void);
-/* @brief Returns a guess (true or false) on whether we're online or not based on previous calls to mark_online and mark_offline */
+
+/** @brief Returns a guess (true or false) on whether we're online or not based on previous calls to mark_online and mark_offline */
 int is_online(void);
 
-/* @brief Sets hint that an auth server online action succeeded */
+/** @brief Sets hint that an auth server online action succeeded */
 void mark_auth_online(void);
-/* @brief Sets hint that an auth server online action failed */
+
+/** @brief Sets hint that an auth server online action failed */
 void mark_auth_offline(void);
-/* @brief Returns a guess (true or false) on whether we're an auth server is online or not based on previous calls to mark_auth_online and mark_auth_offline */
+
+/** @brief Returns a guess (true or false) on whether we're an auth server is online or not based on previous calls to mark_auth_online and mark_auth_offline */
 int is_auth_online(void);
 
-/*
- * @brief Creates a human-readable paragraph of the status of wifidog
- */
-char * get_status_text(void);
+/** @brief Creates a human-readable paragraph of the status of wifidog */
+char *get_status_text(void);
+
+/** @brief Initialize the ICMP socket */
+int init_icmp_socket(void);
+
+/** @brief Close the ICMP socket. */
+void close_icmp_socket(void);
+
+/** @brief ICMP Ping an IP */
+void icmp_ping(const char *);
 
 #define LOCK_GHBN() do { \
 	debug(LOG_DEBUG, "Locking wd_gethostbyname()"); \
@@ -74,5 +90,4 @@ char * get_status_text(void);
 	debug(LOG_DEBUG, "wd_gethostbyname() unlocked"); \
 } while (0)
 
-#endif /* _UTIL_H_ */
-
+#endif                          /* _UTIL_H_ */

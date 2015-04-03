@@ -19,7 +19,6 @@
  *                                                                  *
  \********************************************************************/
 
-/* $Id$ */
 /** @internal
   @file gateway.c
   @brief Main loop
@@ -74,20 +73,10 @@
 static pthread_t tid_fw_counter = 0;
 static pthread_t tid_ping = 0;
 
-/* The internal web server */
-extern httpd *webserver;
-httpd *webserver = NULL;
-
-/* from commandline.c */
-extern char **restartargv;
-extern pid_t restart_orig_pid;
-
-/* from client_list.c */
-extern pthread_mutex_t client_list_mutex;
-
-/* Time when wifidog started  */
-extern time_t started_time;
 time_t started_time = 0;
+
+/* The internal web server */
+httpd * webserver = NULL;
 
 /* Appends -x, the current PID, and NULL to restartargv
  * see parse_commandline in commandline.c for details
@@ -274,6 +263,7 @@ void
 termination_handler(int s)
 {
     static pthread_mutex_t sigterm_mutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_t self = pthread_self();
 
     debug(LOG_INFO, "Handler for termination caught signal %d", s);
 
@@ -293,11 +283,11 @@ termination_handler(int s)
      * termination handler) from happening so we need to explicitly kill the threads 
      * that use that
      */
-    if (tid_fw_counter) {
+    if (tid_fw_counter && self != tid_fw_counter) {
         debug(LOG_INFO, "Explicitly killing the fw_counter thread");
         pthread_kill(tid_fw_counter, SIGKILL);
     }
-    if (tid_ping) {
+    if (tid_ping && self != tid_ping) {
         debug(LOG_INFO, "Explicitly killing the ping thread");
         pthread_kill(tid_ping, SIGKILL);
     }
@@ -407,6 +397,7 @@ main_loop(void)
         debug(LOG_ERR, "Could not create web server: %s", strerror(errno));
         exit(1);
     }
+    register_fd_cleanup_on_fork(webserver->serverSock);
 
     debug(LOG_DEBUG, "Assigning callbacks to web server");
     httpdAddCContent(webserver, "/", "wifidog", 0, NULL, http_callback_wifidog);
@@ -458,7 +449,9 @@ main_loop(void)
          * values that are not -1, 0 or 1. */
         if (webserver->lastError == -1) {
             /* Interrupted system call */
-            continue;           /* restart loop */
+            if (NULL != r) {
+                httpdEndRequest(r);
+            }
         } else if (webserver->lastError < -1) {
             /*
              * FIXME
@@ -490,6 +483,9 @@ main_loop(void)
             /* webserver->lastError should be 2 */
             /* XXX We failed an ACL.... No handling because
              * we don't set any... */
+            if (NULL != r) {
+                httpdEndRequest(r);
+            }
         }
     }
 
@@ -499,7 +495,7 @@ main_loop(void)
 
 /** Reads the configuration file and then starts the main loop */
 int
-main(int argc, char **argv)
+gw_main(int argc, char **argv)
 {
 
     s_config *config = config_get_config();

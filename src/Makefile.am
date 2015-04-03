@@ -2,6 +2,8 @@
 # $Id$
 #
 
+noinst_LIBRARIES = libgateway.a
+
 bin_PROGRAMS = wifidog \
 	wdctl
  
@@ -11,9 +13,11 @@ AM_CPPFLAGS = \
 	-Wall \
 	-Wextra \
 	-Wno-unused-parameter
-wifidog_LDADD = $(top_builddir)/libhttpd/libhttpd.la
+wifidog_LDADD = libgateway.a $(top_builddir)/libhttpd/libhttpd.la
 
-wifidog_SOURCES = commandline.c \
+wifidog_SOURCES = main.c
+
+libgateway_a_SOURCES = commandline.c \
 	conf.c \
 	debug.c \
 	fw_iptables.c \
@@ -53,5 +57,7 @@ noinst_HEADERS = commandline.h \
 	simple_http.h \
 	pstring.h \
 	capabilities.h
+
+wdctl_LDADD = libgateway.a
 
 wdctl_SOURCES = wdctl.c

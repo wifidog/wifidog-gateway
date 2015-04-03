@@ -50,16 +50,12 @@
 #include "firewall.h"
 #include "client_list.h"
 #include "wdctl_thread.h"
+#include "commandline.h"
 #include "gateway.h"
 #include "safe.h"
 
-/* Defined in clientlist.c */
-extern pthread_mutex_t client_list_mutex;
-extern pthread_mutex_t config_mutex;
 
-/* From commandline.c: */
-extern char **restartargv;
-
+static int create_unix_socket(const char *);
 static int write_to_socket(int, char *, size_t);
 static void *thread_wdctl_handler(void *);
 static void wdctl_status(int);
@@ -68,6 +64,50 @@ static void wdctl_reset(int, const char *);
 static void wdctl_restart(int);
 
 static int wdctl_socket_server;
+
+static int
+create_unix_socket(const char *sock_name)
+{
+    struct sockaddr_un sa_un;
+    int sock;
+
+    memset(&sa_un, 0, sizeof(sa_un));
+
+    if (strlen(sock_name) > (sizeof(sa_un.sun_path) - 1)) {
+        /* TODO: Die handler with logging.... */
+        debug(LOG_ERR, "WDCTL socket name too long");
+        return -1;
+    }
+
+    sock = socket(PF_UNIX, SOCK_STREAM, 0);
+
+    if (sock < 0) {
+        debug(LOG_DEBUG, "Could not get unix socket: %s", strerror(errno));
+        return -1;
+    }
+    debug(LOG_DEBUG, "Got unix socket %d", sock);
+
+    /* If it exists, delete... Not the cleanest way to deal. */
+    unlink(sock_name);
+
+    debug(LOG_DEBUG, "Filling sockaddr_un");
+    strcpy(sa_un.sun_path, sock_name);
+    sa_un.sun_family = AF_UNIX;
+
+    debug(LOG_DEBUG, "Binding socket (%s) (%d)", sa_un.sun_path, strlen(sock_name));
+
+    /* Which to use, AF_UNIX, PF_UNIX, AF_LOCAL, PF_LOCAL? */
+    if (bind(sock, (struct sockaddr *)&sa_un, sizeof(struct sockaddr_un))) {
+        debug(LOG_ERR, "Could not bind unix socket: %s", strerror(errno));
+        return -1;
+    }
+
+    if (listen(sock, 5)) {
+        debug(LOG_ERR, "Could not listen on control socket: %s", strerror(errno));
+        return -1;
+    }
+    return sock;
+}
 
 /** Launches a thread that monitors the control socket for request
 @param arg Must contain a pointer to a string containing the Unix domain socket to open
@@ -85,45 +125,13 @@ thread_wdctl(void *arg)
 
     debug(LOG_DEBUG, "Starting wdctl.");
 
-    memset(&sa_un, 0, sizeof(sa_un));
     sock_name = (char *)arg;
     debug(LOG_DEBUG, "Socket name: %s", sock_name);
 
-    if (strlen(sock_name) > (sizeof(sa_un.sun_path) - 1)) {
-        /* TODO: Die handler with logging.... */
-        debug(LOG_ERR, "WDCTL socket name too long");
-        exit(1);
-    }
-
     debug(LOG_DEBUG, "Creating socket");
-    wdctl_socket_server = socket(PF_UNIX, SOCK_STREAM, 0);
-
-    if (wdctl_socket_server < 0) {
-        debug(LOG_DEBUG, "Could not get server socket: %s", strerror(errno));
-        pthread_exit(NULL);
-    }
-    debug(LOG_DEBUG, "Got server socket %d", wdctl_socket_server);
-
-    /* If it exists, delete... Not the cleanest way to deal. */
-    unlink(sock_name);
-
-    debug(LOG_DEBUG, "Filling sockaddr_un");
-    strcpy(sa_un.sun_path, sock_name);  /* XXX No size check because we
-                                         * check a few lines before. */
-    sa_un.sun_family = AF_UNIX;
-
-    debug(LOG_DEBUG, "Binding socket (%s) (%d)", sa_un.sun_path, strlen(sock_name));
-
-    /* Which to use, AF_UNIX, PF_UNIX, AF_LOCAL, PF_LOCAL? */
-    if (bind(wdctl_socket_server, (struct sockaddr *)&sa_un, strlen(sock_name)
-             + sizeof(sa_un.sun_family))) {
-        debug(LOG_ERR, "Could not bind control socket: %s", strerror(errno));
-        pthread_exit(NULL);
-    }
-
-    if (listen(wdctl_socket_server, 5)) {
-        debug(LOG_ERR, "Could not listen on control socket: %s", strerror(errno));
-        pthread_exit(NULL);
+    wdctl_socket_server = create_unix_socket(sock_name);
+    if (-1 == wdctl_socket_server) {
+        termination_handler(0);
     }
 
     while (1) {
@@ -257,9 +265,9 @@ wdctl_restart(int afd)
 {
     int sock, fd;
     char *sock_name;
-    struct sockaddr_un sa_un;
     s_config *conf = NULL;
-    t_client *client = NULL;
+    struct sockaddr_un sa_un;
+    t_client *client;
     char *tempstring = NULL;
     pid_t pid;
     socklen_t len;
@@ -268,47 +276,13 @@ wdctl_restart(int afd)
 
     debug(LOG_NOTICE, "Will restart myself");
 
-    /*
-     * First, prepare the internal socket
-     */
-    memset(&sa_un, 0, sizeof(sa_un));
+    /* First, prepare the internal socket */
     sock_name = conf->internal_sock;
     debug(LOG_DEBUG, "Socket name: %s", sock_name);
 
-    if (strlen(sock_name) > (sizeof(sa_un.sun_path) - 1)) {
-        /* TODO: Die handler with logging.... */
-        debug(LOG_ERR, "INTERNAL socket name too long");
-        return;
-    }
-
     debug(LOG_DEBUG, "Creating socket");
-    sock = socket(PF_UNIX, SOCK_STREAM, 0);
-
-    if (sock < 0) {
-        debug(LOG_DEBUG, "Could not get server socket: %s", strerror(errno));
-        pthread_exit(NULL);
-    }
-    debug(LOG_DEBUG, "Got internal socket %d", sock);
-
-    /* If it exists, delete... Not the cleanest way to deal. */
-    unlink(sock_name);
-
-    debug(LOG_DEBUG, "Filling sockaddr_un");
-    strcpy(sa_un.sun_path, sock_name);  /* XXX No size check because we check a few lines before. */
-    sa_un.sun_family = AF_UNIX;
-
-    debug(LOG_DEBUG, "Binding socket (%s) (%d)", sa_un.sun_path, strlen(sock_name));
-
-    /* Which to use, AF_UNIX, PF_UNIX, AF_LOCAL, PF_LOCAL? */
-    if (bind(sock, (struct sockaddr *)&sa_un, strlen(sock_name) + sizeof(sa_un.sun_family))) {
-        debug(LOG_ERR, "Could not bind internal socket: %s", strerror(errno));
-        close(sock);
-        return;
-    }
-
-    if (listen(sock, 5)) {
-        debug(LOG_ERR, "Could not listen on internal socket: %s", strerror(errno));
-        close(sock);
+    sock = create_unix_socket(sock_name);
+    if (-1 == sock) {
         return;
     }
 
@@ -361,8 +335,8 @@ wdctl_restart(int afd)
     } else {
         /* Child */
         close(wdctl_socket_server);
-        close(icmp_fd);
         close(sock);
+        close_icmp_socket();
         shutdown(afd, 2);
         close(afd);
         debug(LOG_NOTICE, "Re-executing myself (%s)", restartargv[0]);
@@ -373,7 +347,6 @@ wdctl_restart(int afd)
         debug(LOG_ERR, "Exiting without cleanup");
         exit(1);
     }
-
 }
 
 static void
