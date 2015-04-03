@@ -27,8 +27,6 @@ drop_privileges(const char *user, const char *group)
     cap_value_t cap_values[] = { CAP_NET_RAW, CAP_NET_ADMIN };
     cap_t caps;
 
-    // TODO: what happens on reload?
-
     caps = cap_get_proc();
     debug(LOG_DEBUG, "Current capabilities: %s", cap_to_text(caps, NULL));
     /* Hopefully clear all caps but cap_values */
@@ -39,40 +37,59 @@ drop_privileges(const char *user, const char *group)
     }
     caps = cap_get_proc();
     debug(LOG_DEBUG, "Dropped caps, now: %s", cap_to_text(caps, NULL));
-    /* About to switch uid. This is necessary because the process can
-       still read everyting owned by root - IIRC.
-       However, we need to have our capabilities survive setuid */
-    // TODO: also see SECBIT_KEEP_CAPS
-    prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0);
     cap_free(caps);
+    /* We are about to drop our effective UID to a non-privileged user.
+     * This clears the EFFECTIVE capabilities set, so we will have to
+     * re-enable these. We can do that because they are not cleared from
+     * the PERMITTED set.
+     * Note: if we used setuid() instead of seteuid(), we would have lost the
+     * PERMITTED set as well. In this case, we would need to call prctl
+     * with PR_SET_KEEPCAPS.
+     */
     debug(LOG_DEBUG, "Switching to group %s", group);
+    /* don't free grp, see getpwnam() for details */
     struct group *grp = getgrnam(group);
     if (grp) {
         gid_t gid = grp->gr_gid;
-        setgid(gid);
+        setegid(gid);
     } else {
         debug(LOG_ERR, "Failed to look up GID for group %s", group);
+        exit(1);
     }
-    /* don't free, see getpwnam() for details */
     debug(LOG_DEBUG, "Switching to user %s", user);
+    /* don't pwd, see getpwnam() for details */
     struct passwd *pwd = getpwnam(user);
     if (pwd) {
         uid_t uid = pwd->pw_uid;
-        setuid(uid);
+        seteuid(uid);
     } else {
         debug(LOG_ERR, "Failed to look up UID for user %s", user);
+        exit(1);
     }
     caps = cap_get_proc();
     debug(LOG_DEBUG, "Current capabilities: %s", cap_to_text(caps, NULL));
-    debug(LOG_DEBUG, "Regaining privileges.");
+    debug(LOG_DEBUG, "Regaining capabilities.");
     /* Re-gain privileges */
     cap_set_flag(caps, CAP_EFFECTIVE, 2, cap_values, CAP_SET);
-    /* Child processes get the same privileges. In particular,
-     * iptables */
-    cap_set_flag(caps, CAP_INHERITABLE, 2, cap_values, CAP_SET);
+    /* Note that we keep CAP_INHERITABLE empty. In theory, CAP_INHERITABLE
+     * would be useful to execve iptables as non-root. In practice, Wifidog
+     * often runs on embedded systems (OpenWrt) where the required file-based
+     * capabilities are not available as the underlying file system does not
+     * support extended attributes.
+     *
+     * The linux capabilities implementation requires that the executable is
+     * specifically marked as being able to inherit capabilities from a calling
+     * process. This can be done by setting the Inheritable+Effective file
+     * capabilities on the executable. Alas, it's not relevant here.
+     *
+     * This is also the main reason why we only seteuid() instead of setuid():
+     * iptables will be called as root (with ALL capabilities!) and thus continue
+     * to work as before.
+     */
     ret = cap_set_proc(caps);
     if (ret == -1) {
         debug(LOG_ERR, "Could not set capabilities!");
+        exit(1);
     }
     caps = cap_get_proc();
     debug(LOG_DEBUG, "Regained: %s", cap_to_text(caps, NULL));
