@@ -36,11 +36,14 @@ drop_privileges(const char*, const char*);
 void
 switch_to_root();
 
-FILE *popen_as_root(const char*, const char*);
+FILE*
+popen_as_root(const char*, const char*);
 
-void set_user_group(const char*, const char*);
+void
+set_user_group(const char*, const char*);
 
-void set_uid_gid(uid_t, gid_t);
+void
+set_uid_gid(uid_t, gid_t);
 
 #endif                          /* _CAPABILITIES_H_ */
 
