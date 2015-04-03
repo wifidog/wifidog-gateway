@@ -34,7 +34,12 @@
 
 #include "debug.h"
 
-debugconf_t debugconf = {0, 0, 0, 0};
+debugconf_t debugconf = {
+    .debuglevel = LOG_INFO,
+    .log_stderr = 1,
+    .log_syslog = 0,
+    .syslog_facility = 0
+};
 
 /** @internal
 Do not use directly, use the debug macro */
