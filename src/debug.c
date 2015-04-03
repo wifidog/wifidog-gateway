@@ -1,3 +1,4 @@
+/* vim: set et ts=4 sts=4 sw=4 : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -18,7 +19,6 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Id$ */
 /** @file debug.c
     @brief Debug output routines
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
@@ -32,7 +32,9 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include "conf.h"
+#include "debug.h"
+
+debugconf_t debugconf = {0, 0, 0, 0};
 
 /** @internal
 Do not use directly, use the debug macro */
@@ -41,40 +43,39 @@ _debug(const char *filename, int line, int level, const char *format, ...)
 {
     char buf[28];
     va_list vlist;
-    s_config *config = config_get_config();
     time_t ts;
     sigset_t block_chld;
 
     time(&ts);
 
-    if (config->debuglevel >= level) {
+    if (debugconf.debuglevel >= level) {
         sigemptyset(&block_chld);
         sigaddset(&block_chld, SIGCHLD);
         sigprocmask(SIG_BLOCK, &block_chld, NULL);
 
         if (level <= LOG_WARNING) {
             fprintf(stderr, "[%d][%.24s][%u](%s:%d) ", level, ctime_r(&ts, buf), getpid(),
-			    filename, line);
+                filename, line);
             va_start(vlist, format);
             vfprintf(stderr, format, vlist);
             va_end(vlist);
             fputc('\n', stderr);
-        } else if (!config->daemon) {
+        } else if (debugconf.log_stderr) {
             fprintf(stderr, "[%d][%.24s][%u](%s:%d) ", level, ctime_r(&ts, buf), getpid(),
-			    filename, line);
+                filename, line);
             va_start(vlist, format);
             vfprintf(stderr, format, vlist);
             va_end(vlist);
             fputc('\n', stderr);
         }
 
-        if (config->log_syslog) {
-            openlog("wifidog", LOG_PID, config->syslog_facility);
+        if (debugconf.log_syslog) {
+            openlog("wifidog", LOG_PID, debugconf.syslog_facility);
             va_start(vlist, format);
             vsyslog(level, format, vlist);
             va_end(vlist);
             closelog();
-	}
+        }
         
         sigprocmask(SIG_UNBLOCK, &block_chld, NULL);
     }
