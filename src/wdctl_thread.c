@@ -99,11 +99,13 @@ create_unix_socket(const char *sock_name)
     /* Which to use, AF_UNIX, PF_UNIX, AF_LOCAL, PF_LOCAL? */
     if (bind(sock, (struct sockaddr *)&sa_un, sizeof(struct sockaddr_un))) {
         debug(LOG_ERR, "Could not bind unix socket: %s", strerror(errno));
+        close(sock);
         return -1;
     }
 
     if (listen(sock, 5)) {
         debug(LOG_ERR, "Could not listen on control socket: %s", strerror(errno));
+        close(sock);
         return -1;
     }
     return sock;
