@@ -110,12 +110,12 @@ http_callback_404(httpd * webserver, request * r, int error_code)
             /* We could not get their MAC address */
             debug(LOG_INFO, "Failed to retrieve MAC address for ip %s, so not putting in the login request",
                   r->clientAddr);
-            safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&ip=%s&url=%s",
+            safe_asprintf(&urlFragment, "%sGatewayAddress=%s&GatewayPort=%d&GatewayID=%s&ClientIP=%s&RedirectURL=%s",
                           auth_server->authserv_login_script_path_fragment, config->gw_address, config->gw_port,
                           config->gw_id, r->clientAddr, url);
         } else {
             debug(LOG_INFO, "Got client MAC address for ip %s: %s", r->clientAddr, mac);
-            safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&ip=%s&mac=%s&url=%s",
+            safe_asprintf(&urlFragment, "%sGatewayAddress=%s&GatewayPort=%d&GatewayID=%s&ClientIP=%s&ClientMAC=%s&RedirectURL=%s",
                           auth_server->authserv_login_script_path_fragment,
                           config->gw_address, config->gw_port, config->gw_id, r->clientAddr, mac, url);
             free(mac);
