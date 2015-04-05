@@ -12,7 +12,7 @@ URL 的更改：
 
 /UserAuth/Portal?GatewayID=%s
 
-/UserAuth/Message?GatewayID=%s
+/UserAuth/Message?Message=%s
 
 conf.h 的更改：
 
