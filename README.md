@@ -1,3 +1,7 @@
+# t123yh-Mod #
+
+修改了 HTTP 请求的参数使其适合 AuthSharp 使用
+
 # WifiDog #
 
 [![Build Status](https://travis-ci.org/wifidog/wifidog-gateway.svg?branch=master)](https://travis-ci.org/wifidog/wifidog-gateway)
