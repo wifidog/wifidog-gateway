@@ -1,3 +1,34 @@
+# t123yh-Mod #
+
+修改了 HTTP 请求的参数使其适合 AuthSharp 使用。
+
+URL 的更改：
+
+/Gateway/Ping?GatewayID=%s&SystemUpTime=%lu&FreeMemory=%u&Load=%.2f&WifiDogUpTime=%lu
+
+/Gateway/Auth?Stage=%s&ClientIP=%s&ClientMAC=%s&Token=%s&Incoming=%llu&Outgoing=%llu&GatewayID=%s
+
+/UserAuth/Login?GatewayAddress=%s&GatewayPort=%d&GatewayID=%s&ClientIP=%s&ClientMAC=%s&RedirectURL=%s
+
+/UserAuth/Portal?GatewayID=%s
+
+/UserAuth/Message?GatewayID=%s
+
+conf.h 的更改：
+
+\#define DEFAULT_AUTHSERVPATH "/"
+
+\#define DEFAULT_AUTHSERVLOGINPATHFRAGMENT "UserAuth/Login?"
+
+\#define DEFAULT_AUTHSERVPORTALPATHFRAGMENT "UserAuth/Portal?"
+
+\#define DEFAULT_AUTHSERVMSGPATHFRAGMENT "UserAuth/Message?"
+
+\#define DEFAULT_AUTHSERVPINGPATHFRAGMENT "Gateway/Ping?"
+
+\#define DEFAULT_AUTHSERVAUTHPATHFRAGMENT "Gateway/Auth?"
+
+
 # WifiDog #
 
 [![Build Status](https://travis-ci.org/wifidog/wifidog-gateway.svg?branch=master)](https://travis-ci.org/wifidog/wifidog-gateway)
