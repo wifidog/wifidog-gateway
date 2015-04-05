@@ -15,10 +15,15 @@ URL 的更改：
 
 conf.h 里面的更改：
 \#define DEFAULT_AUTHSERVPATH "/"
+
 \#define DEFAULT_AUTHSERVLOGINPATHFRAGMENT "UserAuth/Login?"
+
 \#define DEFAULT_AUTHSERVPORTALPATHFRAGMENT "UserAuth/Portal?"
+
 \#define DEFAULT_AUTHSERVMSGPATHFRAGMENT "UserAuth/Message?"
+
 \#define DEFAULT_AUTHSERVPINGPATHFRAGMENT "Gateway/Ping?"
+
 \#define DEFAULT_AUTHSERVAUTHPATHFRAGMENT "Gateway/Auth?"
 
 
