@@ -3,6 +3,7 @@
 修改了 HTTP 请求的参数使其适合 AuthSharp 使用。
 
 URL 的更改：
+
 /Gateway/Ping?GatewayID=%s&SystemUpTime=%lu&FreeMemory=%u&Load=%.2f&WifiDogUpTime=%lu
 
 /Gateway/Auth?Stage=%s&ClientIP=%s&ClientMAC=%s&Token=%s&Incoming=%llu&Outgoing=%llu&GatewayID=%s
@@ -13,7 +14,8 @@ URL 的更改：
 
 /UserAuth/Message?GatewayID=%s
 
-conf.h 里面的更改：
+conf.h 的更改：
+
 \#define DEFAULT_AUTHSERVPATH "/"
 
 \#define DEFAULT_AUTHSERVLOGINPATHFRAGMENT "UserAuth/Login?"
