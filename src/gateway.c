@@ -477,9 +477,6 @@ main_loop(void)
             /* webserver->lastError should be 2 */
             /* XXX We failed an ACL.... No handling because
              * we don't set any... */
-            if (NULL != r) {
-                httpdEndRequest(r);
-            }
         }
     }
 
