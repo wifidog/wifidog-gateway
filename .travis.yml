@@ -13,7 +13,7 @@ env:
   - secure: fiVVKcMM8Cz8WAj6PB6eD/b+Y77klXOe9jbpehf6QwjFwf6paEHoMsrZ0aFXogm2Uej47GlTdRb3UkBqonbK4ANbu0ewsWCW0RGClZz5ghaSnfwdxEhuXsrFIax7DvJCStk2V84Keb+tSVemx4opxqZAlZ/Nen28S91KSDoJeRA=
   matrix:
   - BUILD_TYPE=normal
-  - LIBCAP="2.24" CYASSL="3.3.2" BUILD_TYPE="full"
+  - LIBATTR="2.4.47" LIBCAP="2.24" CYASSL="3.3.2" BUILD_TYPE="full"
 cache:
   directories:
   - dependencies-src

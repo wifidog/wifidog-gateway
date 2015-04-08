@@ -72,6 +72,52 @@ elif [[ "$BUILD_TYPE" == "full" ]]; then
     else
         echo "Cached libcap install found."
     fi
+    if [[ ! -f dependencies-installed/include/attr/libattr.h ]]; then
+        echo "Cached libattr not found. Installing."
+        cd dependencies-src
+        if [[ -f libattr-${LIBATTR}/configure ]]; then
+            echo "Found cached libattr package"
+        else
+            echo "No cache, downloading libattr"
+            wget http://download.savannah.gnu.org/releases/attr/attr-${LIBATTR}.src.tar.gz \
+                -O attr-${LIBATTR}.tar.gz
+            tar -xvzf attr-${LIBATTR}.tar.gz
+        fi
+        cd attr-${LIBATTR}
+        echo "Content of attr-${LIBATTR}"
+        ls
+        echo "Running attr configure"
+        ./configure --prefix="$CUR"/dependencies-installed/
+        echo "Running attr make install"
+        make install
+        cd $CUR
+    else
+        echo "Cached attr install found."
+    fi
+    if [[ ! -f dependencies-installed/include/sys/capability.h ]]; then
+        echo "Cached libcap not found. Installing."
+        cd dependencies-src
+        if [[ -f libcap-${LIBCAP}/Makefile ]]; then
+            echo "Found cached libcap package"
+        else
+            echo "No cache, downloading libcap"
+            wget https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-${LIBCAP}.tar.gz \
+                -O libcap-${LIBCAP}.tar.gz
+            tar -xvzf libcap-${LIBCAP}.tar.gz
+        fi
+        cd libcap-${LIBCAP}
+        echo "Content of libcap-${LIBCAP}"
+        ls
+        echo "Running libcap make"
+        make
+        echo "Running libcap make install"
+        make install DESTDIR="$CUR"/dependencies-installed/
+        cd $CUR
+    else
+        echo "Cached libcap install found."
+    fi
+
+
     echo "Running Wifidog configure"
     export CFLAGS="${CFLAGS} -I${CUR}/dependencies-installed/include/"
     export LDFLAGS="${CFLAGS} -L${CUR}/dependencies-installed/lib/"
