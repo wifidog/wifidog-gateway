@@ -19,13 +19,20 @@ function main {
         fi
         mkdir -p dependencies-src || true
         mkdir -p dependencies-installed || true
+        # reset CFLAGS because some dependencies generate warnings
+        OLD_CFLAGS="${CFLAGS}"
+        OLD_CXXFLAGS="${CXXFLAGS}"
+        OLD_LDFLAGS="${LDFLAGS}"
+        export CFLAGS="-I${CUR}/dependencies-installed/include/"
+        export CXXFLAGS="-I${CUR}/dependencies-installed/include/"
+        export LDFLAGS="-L${CUR}/dependencies-installed/lib/"
         build_cyassl
         build_libattr
         build_libcap
-
         echo "Running Wifidog configure"
-        export CFLAGS="${CFLAGS} -I${CUR}/dependencies-installed/include/"
-        export LDFLAGS="${CFLAGS} -L${CUR}/dependencies-installed/lib/"
+        export CFLAGS="${OLD_CFLAGS} ${CFLAGS}"
+        export CXXFLAGS="${OLD_CXXFLAGS} ${LDFLAGS}"
+        export LDFLAGS="${OLD_LDFLAGS} ${LDFLAGS}"
         ./configure --enable-cyassl --enable-libcap $@
     else
         echo "Unknow BUILD_TYPE $BUILD_TYPE"
