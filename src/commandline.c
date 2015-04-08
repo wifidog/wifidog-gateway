@@ -120,16 +120,17 @@ parse_commandline(int argc, char **argv)
         case 'f':
             skiponrestart = 1;
             config->daemon = 0;
+            debugconf.log_stderr = 1;
             break;
 
         case 'd':
             if (optarg) {
-                config->debuglevel = atoi(optarg);
+                debugconf.debuglevel = atoi(optarg);
             }
             break;
 
         case 's':
-            config->log_syslog = 1;
+            debugconf.log_syslog = 1;
             break;
 
         case 'v':
