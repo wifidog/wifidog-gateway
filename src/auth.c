@@ -48,6 +48,7 @@
 #include "firewall.h"
 #include "client_list.h"
 #include "util.h"
+#include "wd_util.h"
 
 /** Launches a thread that periodically checks if any of the connections has timed out
 @param arg Must contain a pointer to a string containing the IP adress of the client to check to check

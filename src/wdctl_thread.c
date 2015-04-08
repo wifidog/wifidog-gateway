@@ -42,6 +42,7 @@
 #include "common.h"
 #include "httpd.h"
 #include "util.h"
+#include "wd_util.h"
 #include "conf.h"
 #include "debug.h"
 #include "auth.h"
