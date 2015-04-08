@@ -106,7 +106,8 @@ drop_privileges(const char *user, const char *group)
         debug(LOG_ERR, "Could not set capabilities!");
         exit(1);
     }
-    cap_free(caps), caps = cap_get_proc();
+    cap_free(caps);
+    caps = cap_get_proc();
     if (NULL == caps) {
         debug(LOG_ERR, "cap_get_proc failed, exiting!");
         exit(1);
