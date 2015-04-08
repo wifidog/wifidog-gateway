@@ -71,9 +71,17 @@
 void
 drop_privileges(const char *user, const char *group)
 {
+    const int num_caps = 2;
+    /* The capabilities we want.
+     * CAP_NET_RAW is used for our socket handling.
+     * CAP_NET_ADMIN is not used directly by iptables which
+     * is called by Wifidog
+     */
+    cap_value_t cap_values[] = { CAP_NET_RAW, CAP_NET_ADMIN };
+    cap_t caps;
     int ret = 0;
+    
     debug(LOG_DEBUG, "Entered drop_privileges");
-
     /*
      * We are about to drop our effective UID to a non-privileged user.
      * This clears the EFFECTIVE capabilities set, so we later re-enable
@@ -84,15 +92,6 @@ drop_privileges(const char *user, const char *group)
      * with PR_SET_KEEPCAPS.
      */
     set_user_group(user, group);
-    /* The capabilities we want.
-     * CAP_NET_RAW is used for our socket handling.
-     * CAP_NET_ADMIN is not used directly by iptables which
-     * is called by Wifidog
-     */
-    const int num_caps = 2;
-    cap_value_t cap_values[] = { CAP_NET_RAW, CAP_NET_ADMIN };
-    cap_t caps;
-
     caps = cap_get_proc();
     if (NULL == caps) {
         debug(LOG_ERR, "cap_get_proc failed, exiting!");
