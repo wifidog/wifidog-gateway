@@ -48,8 +48,8 @@ elif [[ "$BUILD_TYPE" == "full" ]]; then
         echo "Cached CyaSSL install found."
     fi
     echo "Running Wifidog configure"
-    export CFLAGS="-I${CUR}/dependencies-installed/include/"
-    export LDFLAGS="-L${CUR}/dependencies-installed/lib/"
+    export CFLAGS="${CFLAGS} -I${CUR}/dependencies-installed/include/"
+    export LDFLAGS="${CFLAGS} -L${CUR}/dependencies-installed/lib/"
     ./configure --enable-cyassl --enable-libcap $@
 else
     echo "Unknow BUILD_TYPE $BUILD_TYPE"
