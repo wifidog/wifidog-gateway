@@ -230,6 +230,12 @@ void set_user_group(const char* user, const char* group) {
     }
 
     set_uid_gid(pwd->pw_uid, grp->gr_gid);
+    free(pwd);
+    free(pwdresult);
+    free(grp);
+    free(grpresult);
+    free(buf);
+    
 
 }
 
