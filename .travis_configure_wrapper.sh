@@ -23,6 +23,7 @@ function main {
         OLD_CFLAGS="${CFLAGS}"
         OLD_CXXFLAGS="${CXXFLAGS}"
         OLD_LDFLAGS="${LDFLAGS}"
+        CUR=`pwd`
         export CFLAGS="-I${CUR}/dependencies-installed/include/"
         export CXXFLAGS="-I${CUR}/dependencies-installed/include/"
         export LDFLAGS="-L${CUR}/dependencies-installed/lib/"
