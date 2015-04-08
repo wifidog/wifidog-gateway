@@ -46,6 +46,7 @@
 
 #include "capabilities.h"
 #include "debug.h"
+#include "safe.h"
 
 /**
  * Switches to non-privileged user and drops unneeded capabilities.
@@ -93,6 +94,10 @@ drop_privileges(const char *user, const char *group)
     cap_t caps;
 
     caps = cap_get_proc();
+    if (NULL == caps) {
+        debug(LOG_ERR, "cap_get_proc failed, exiting!");
+        exit(1);
+    }
     debug(LOG_DEBUG, "Current capabilities: %s", cap_to_text(caps, NULL));
     /* Clear all caps and then set the caps we desire */
     cap_clear(caps);
@@ -102,11 +107,20 @@ drop_privileges(const char *user, const char *group)
         debug(LOG_ERR, "Could not set capabilities!");
         exit(1);
     }
+    cap_free(caps),
     caps = cap_get_proc();
+    if (NULL == caps) {
+        debug(LOG_ERR, "cap_get_proc failed, exiting!");
+        exit(1);
+    }
     debug(LOG_DEBUG, "Dropped caps, now: %s", cap_to_text(caps, NULL));
     cap_free(caps);
     caps = cap_get_proc();
     debug(LOG_DEBUG, "Current capabilities: %s", cap_to_text(caps, NULL));
+    if (NULL == caps) {
+        debug(LOG_ERR, "cap_get_proc failed, exiting!");
+        exit(1);
+    }
     debug(LOG_DEBUG, "Regaining capabilities.");
     /* Re-gain privileges */
     cap_set_flag(caps, CAP_EFFECTIVE, num_caps, cap_values, CAP_SET);
@@ -132,7 +146,12 @@ drop_privileges(const char *user, const char *group)
         debug(LOG_ERR, "Could not set capabilities!");
         exit(1);
     }
+    cap_free(caps);
     caps = cap_get_proc();
+    if (NULL == caps) {
+        debug(LOG_ERR, "cap_get_proc failed, exiting!");
+        exit(1);
+    }
     debug(LOG_INFO, "Final capabilities: %s", cap_to_text(caps, NULL));
     cap_free(caps);
 }
@@ -172,20 +191,46 @@ void switch_to_root() {
  */
 void set_user_group(const char* user, const char* group) {
     debug(LOG_DEBUG, "Switching to group %s", group);
-    /* don't free grp, see getpwnam() for details */
-    struct group *grp = getgrnam(group);
-    if (NULL == grp) {
-        debug(LOG_ERR, "Failed to look up GID for group %s: %s", group, strerror(errno));
+    struct passwd *pwd = NULL;
+    struct passwd *pwdresult = NULL;
+    struct group *grp = NULL;
+    struct group *grpresult = NULL;
+    char *buf;
+    ssize_t bufsize;
+    int s;
+
+    bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+
+    if (bufsize == -1) {
+        /* Suggested by man getgrnam_r */
+        bufsize = 16384;
+    }
+    buf = safe_malloc(bufsize);
+
+    s = getgrnam_r(group, grp, buf, bufsize, &grpresult);
+
+    if (grpresult == NULL) {
+        if (s == 0) {
+            debug(LOG_ERR, "GID for group %s not found!", group);
+        }
+        else {
+            debug(LOG_ERR, "Failed to look up GID for group %s: %s", group, strerror(errno));
+        }
         exit(1);
     }
-    gid_t gid = grp->gr_gid;
-    struct passwd *pwd = getpwnam(user);
-    if (NULL == pwd) {
-        debug(LOG_ERR, "Failed to look up UID for user %s", user);
+
+    s = getpwnam_r(user, pwd, buf, bufsize, &pwdresult);
+    if (pwdresult == NULL) {
+        if (s == 0) {
+            debug(LOG_ERR, "UID for user %s not found!", user);
+        }
+        else {
+            debug(LOG_ERR, "Failed to look up UID for user %s: %s", user, strerror(errno));
+        }
         exit(1);
     }
-    uid_t uid = pwd->pw_uid;
-    set_uid_gid(uid, gid);
+
+    set_uid_gid(pwd->pw_uid, grp->gr_gid);
 
 }
 
