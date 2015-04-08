@@ -80,7 +80,7 @@ drop_privileges(const char *user, const char *group)
     cap_value_t cap_values[] = { CAP_NET_RAW, CAP_NET_ADMIN };
     cap_t caps;
     int ret = 0;
-    
+
     debug(LOG_DEBUG, "Entered drop_privileges");
     /*
      * We are about to drop our effective UID to a non-privileged user.
@@ -106,8 +106,7 @@ drop_privileges(const char *user, const char *group)
         debug(LOG_ERR, "Could not set capabilities!");
         exit(1);
     }
-    cap_free(caps),
-    caps = cap_get_proc();
+    cap_free(caps), caps = cap_get_proc();
     if (NULL == caps) {
         debug(LOG_ERR, "cap_get_proc failed, exiting!");
         exit(1);
@@ -155,7 +154,6 @@ drop_privileges(const char *user, const char *group)
     cap_free(caps);
 }
 
-
 /**
  * Switches the effective user ID to 0 (root).
  *
@@ -163,7 +161,9 @@ drop_privileges(const char *user, const char *group)
  * No other error handling is performed.
  *
  */
-void switch_to_root() {
+void
+switch_to_root()
+{
     int ret = 0;
     ret = seteuid(0);
     /* Not being able to raise privileges is not fatal. */
@@ -177,7 +177,6 @@ void switch_to_root() {
     debug(LOG_DEBUG, "execute: Switched to UID 0!");;
 }
 
-
 /**
  * Switches user and group, typically to a non-privileged user.
  *
@@ -188,7 +187,9 @@ void switch_to_root() {
  * @param group name of the group
  *
  */
-void set_user_group(const char* user, const char* group) {
+void
+set_user_group(const char *user, const char *group)
+{
     debug(LOG_DEBUG, "Switching to group %s", group);
     struct passwd *pwd = NULL;
     struct passwd *pwdresult = NULL;
@@ -211,8 +212,7 @@ void set_user_group(const char* user, const char* group) {
     if (grpresult == NULL) {
         if (s == 0) {
             debug(LOG_ERR, "GID for group %s not found!", group);
-        }
-        else {
+        } else {
             debug(LOG_ERR, "Failed to look up GID for group %s: %s", group, strerror(errno));
         }
         exit(1);
@@ -222,8 +222,7 @@ void set_user_group(const char* user, const char* group) {
     if (pwdresult == NULL) {
         if (s == 0) {
             debug(LOG_ERR, "UID for user %s not found!", user);
-        }
-        else {
+        } else {
             debug(LOG_ERR, "Failed to look up UID for user %s: %s", user, strerror(errno));
         }
         exit(1);
@@ -235,7 +234,6 @@ void set_user_group(const char* user, const char* group) {
     free(grp);
     free(grpresult);
     free(buf);
-    
 
 }
 
@@ -249,7 +247,9 @@ void set_user_group(const char* user, const char* group) {
  * @param gid the ID of the group
  *
  */
-void set_uid_gid(uid_t uid, gid_t gid) {
+void
+set_uid_gid(uid_t uid, gid_t gid)
+{
     int ret;
     ret = setegid(gid);
     if (ret != 0) {
@@ -263,7 +263,6 @@ void set_uid_gid(uid_t uid, gid_t gid) {
     }
 }
 
-
 /**
  * Calls popen with root privileges.
  *
@@ -276,7 +275,9 @@ void set_uid_gid(uid_t uid, gid_t gid) {
  * @param type Second popen parameter
  * @returns File handle pointer returned by popen
  */
-FILE *popen_as_root(const char *command, const char *type) {
+FILE *
+popen_as_root(const char *command, const char *type)
+{
     FILE *p = NULL;
     uid_t uid = getuid();
     gid_t gid = getgid();
@@ -286,4 +287,4 @@ FILE *popen_as_root(const char *command, const char *type) {
     return p;
 }
 
-#endif /* USE_LIBCAP */
+#endif                          /* USE_LIBCAP */
