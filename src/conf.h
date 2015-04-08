@@ -152,7 +152,6 @@ typedef struct {
     char *wdctl_sock;           /**< @brief wdctl path to socket */
     char *internal_sock;                /**< @brief internal path to socket */
     int daemon;                 /**< @brief if daemon > 0, use daemon mode */
-    int debuglevel;             /**< @brief Debug information verbosity */
     char *external_interface;   /**< @brief External network interface name for
 				     firewall rules */
     char *gw_id;                /**< @brief ID of the Gateway, sent to central
@@ -174,9 +173,6 @@ typedef struct {
 				     must be re-authenticated */
     int checkinterval;          /**< @brief Frequency the the client timeout check
 				     thread will run. */
-    int log_syslog;             /**< @brief boolean, wether to log to syslog */
-    int syslog_facility;        /**< @brief facility to use when using syslog for
-				     logging */
     int proxy_port;             /**< @brief Transparent proxy port (0 to disable) */
     char *ssl_certs;            /**< @brief Path to SSL certs for auth server
 		verification */

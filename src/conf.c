@@ -171,7 +171,6 @@ config_init(void)
     debug(LOG_DEBUG, "Setting default config parameters");
     config.configfile = safe_strdup(DEFAULT_CONFIGFILE);
     config.htmlmsgfile = safe_strdup(DEFAULT_HTMLMSGFILE);
-    config.debuglevel = DEFAULT_DEBUGLEVEL;
     config.httpdmaxconn = DEFAULT_HTTPDMAXCONN;
     config.external_interface = NULL;
     config.gw_id = DEFAULT_GATEWAYID;
@@ -185,9 +184,7 @@ config_init(void)
     config.httpdpassword = NULL;
     config.clienttimeout = DEFAULT_CLIENTTIMEOUT;
     config.checkinterval = DEFAULT_CHECKINTERVAL;
-    config.syslog_facility = DEFAULT_SYSLOG_FACILITY;
     config.daemon = -1;
-    config.log_syslog = DEFAULT_LOG_SYSLOG;
     config.wdctl_sock = safe_strdup(DEFAULT_WDCTL_SOCK);
     config.internal_sock = safe_strdup(DEFAULT_INTERNAL_SOCK);
     config.rulesets = NULL;
@@ -197,6 +194,11 @@ config_init(void)
     config.ssl_verify = DEFAULT_AUTHSERVSSLPEERVER;
     config.ssl_cipher_list = NULL;
     config.arp_table_path = safe_strdup(DEFAULT_ARPTABLE);
+
+    debugconf.log_stderr = 1;
+    debugconf.debuglevel = DEFAULT_DEBUGLEVEL;
+    debugconf.syslog_facility = DEFAULT_SYSLOG_FACILITY;
+    debugconf.log_syslog = DEFAULT_LOG_SYSLOG;
 }
 
 /**
@@ -205,8 +207,12 @@ config_init(void)
 void
 config_init_override(void)
 {
-    if (config.daemon == -1)
+    if (config.daemon == -1) {
         config.daemon = DEFAULT_DAEMON;
+        if (config.daemon > 0) {
+            debugconf.log_stderr = 0;
+        }
+    }
 }
 
 /** @internal
@@ -681,6 +687,11 @@ config_read(const char *filename)
                 case oDaemon:
                     if (config.daemon == -1 && ((value = parse_boolean_value(p1)) != -1)) {
                         config.daemon = value;
+                        if (config.daemon > 0) {
+                            debugconf.log_stderr = 0;
+                        } else {
+                            debugconf.log_stderr = 1;
+                        }
                     }
                     break;
                 case oExternalInterface:
@@ -733,7 +744,7 @@ config_read(const char *filename)
                     sscanf(p1, "%d", &config.clienttimeout);
                     break;
                 case oSyslogFacility:
-                    sscanf(p1, "%d", &config.syslog_facility);
+                    sscanf(p1, "%d", &debugconf.syslog_facility);
                     break;
                 case oHtmlMessageFile:
                     config.htmlmsgfile = safe_strdup(p1);
