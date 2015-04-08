@@ -95,7 +95,7 @@ function build_libcap {
         echo "Content of libcap-${LIBCAP}"
         ls
         echo "Running libcap make install"
-        make install DESTDIR="$CUR"/dependencies-installed/ IPATH="${CFLAGS} -fPIC -I\$(topdir)/libcap/include/uapi -I\$(topdir)/libcap/include" LDFLAGS=${LDFLAGS} RAISE_SETFCAP=no
+        make install DESTDIR="$CUR"/dependencies-installed/ IPATH="${CFLAGS} -fPIC -I\$(topdir)/libcap/include/uapi -I\$(topdir)/libcap/include" LDFLAGS=${LDFLAGS} RAISE_SETFCAP=no lib=lib
         cd "$CUR"
     else
         echo "Cached libcap install found."
