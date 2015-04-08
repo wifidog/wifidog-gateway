@@ -10,7 +10,7 @@ if [[ "$BUILD_TYPE" == "normal" ]]; then
     echo "Running Wifidog configure"
     ./configure $@
 
-elif [[ "$BUILD_TYPE" == "cyassl" ]]; then
+elif [[ "$BUILD_TYPE" == "full" ]]; then
     if [[ -z "$CYASSL" ]]; then
         echo "CYASSL not set."
         exit 1
@@ -50,7 +50,7 @@ elif [[ "$BUILD_TYPE" == "cyassl" ]]; then
     echo "Running Wifidog configure"
     export CFLAGS="-I${CUR}/dependencies-installed/include/"
     export LDFLAGS="-L${CUR}/dependencies-installed/lib/"
-    ./configure --enable-cyassl $@
+    ./configure --enable-cyassl --enable-libcap $@
 else
     echo "Unknow BUILD_TYPE $BUILD_TYPE"
     exit 1
