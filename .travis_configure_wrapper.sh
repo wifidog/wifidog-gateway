@@ -18,6 +18,9 @@ elif [[ "$BUILD_TYPE" == "full" ]]; then
     CUR=`pwd`
     mkdir -p dependencies-src || true
     mkdir -p dependencies-installed || true
+    # TODO: changing $CYASSL version number will not invalidate this check
+    # Need to remove full cache in travis interface if we want to upgrade
+    # CyaSSL
     if [[ ! -f dependencies-installed/include/cyassl/ssl.h ]]; then
         echo "Cached CyaSSL install not found. Installing."
         cd dependencies-src
@@ -46,6 +49,28 @@ elif [[ "$BUILD_TYPE" == "full" ]]; then
         cd "$CUR"
     else
         echo "Cached CyaSSL install found."
+    fi
+    if [[ ! -f dependencies-installed/include/sys/capability.h ]]; then
+        echo "Cached libcap not found. Installing."
+        cd dependencies-src
+        if [[ -f libcap-${LIBCAP}/Makefile ]]; then
+            echo "Found cached libcap package"
+        else
+            echo "No cache, downloading libcap"
+            wget https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-${LIBCAP}.tar.gz \
+                -O libcap-${LIBCAP}.tar.gz
+            tar -xvzf libcap-${LIBCAP}.tar.gz
+        fi
+        cd libcap-${LIBCAP}
+        echo "Content of libcap-${LIBCAP}"
+        ls
+        echo "Running libcap make"
+        make
+        echo "Running libcap make install"
+        make install DESTDIR="$CUR"/dependencies-installed/
+        cd $CUR
+    else
+        echo "Cached libcap install found."
     fi
     echo "Running Wifidog configure"
     export CFLAGS="${CFLAGS} -I${CUR}/dependencies-installed/include/"
