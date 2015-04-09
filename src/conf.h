@@ -144,6 +144,14 @@ typedef struct _trusted_mac_t {
 } t_trusted_mac;
 
 /**
+ * Popular Servers
+ */
+typedef struct _popular_server_t {
+    char *hostname;
+    struct _popular_server_t *next;
+} t_popular_server;
+
+/**
  * Configuration structure
  */
 typedef struct {
@@ -185,6 +193,7 @@ typedef struct {
     char *ssl_cipher_list;  /**< @brief List of SSL ciphers allowed. Optional. */
     t_firewall_ruleset *rulesets;       /**< @brief firewall rules */
     t_trusted_mac *trustedmaclist; /**< @brief list of trusted macs */
+    t_popular_server *popular_servers; /**< @brief list of popular servers */
 } s_config;
 
 /** @brief Get the current gateway configuration */
@@ -212,6 +221,8 @@ void mark_auth_server_bad(t_auth_serv *);
 t_firewall_rule *get_ruleset(const char *);
 
 void parse_trusted_mac_list(const char *);
+
+void parse_popular_servers(const char *);
 
 #define LOCK_CONFIG() do { \
 	debug(LOG_DEBUG, "Locking config"); \
