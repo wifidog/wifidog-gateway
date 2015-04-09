@@ -124,22 +124,6 @@ drop_privileges(const char *user, const char *group)
     /* Re-gain privileges */
     cap_set_flag(caps, CAP_EFFECTIVE, num_caps, cap_values, CAP_SET);
     cap_set_flag(caps, CAP_INHERITABLE, num_caps, cap_values, CAP_SET);
-    /*
-     * Note that we keep CAP_INHERITABLE empty. In theory, CAP_INHERITABLE
-     * would be useful to execve iptables as non-root. In practice, Wifidog
-     * often runs on embedded systems (OpenWrt) where the required file-based
-     * capabilities are not available as the underlying file system does not
-     * support extended attributes.
-     *
-     * The linux capabilities implementation requires that the executable is
-     * specifically marked as being able to inherit capabilities from a calling
-     * process. This can be done by setting the Inheritable+Effective file
-     * capabilities on the executable. Alas, it's not relevant here.
-     *
-     * This is also the main reason why we only seteuid() instead of setuid():
-     * When an executable is called as root (real UID == 0), the INHERITABLE
-     * and PERMITTED file capability sets are implicitly marked as enabled.
-     */
     ret = cap_set_proc(caps);
     if (ret == -1) {
         debug(LOG_ERR, "Could not set capabilities!");
