@@ -85,7 +85,7 @@ drop_privileges(const char *user, const char *group)
     /*
      * We are about to drop our effective UID to a non-privileged user.
      * This clears the EFFECTIVE capabilities set, so we later re-enable
-     * re-enable these. We can do that because they are not cleared from
+     * these. We can do that because they are not cleared from
      * the PERMITTED set.
      * Note: if we used setuid() instead of seteuid(), we would have lost the
      * PERMITTED set as well. In this case, we would need to call prctl
