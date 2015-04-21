@@ -46,13 +46,20 @@ function main() {
 
     sleep 10
 
+    ./fire_wdctl.py \
+        --target-interface $IF \
+        --source-interface-prefix mac \
+        --source-interface-count $COUNT \
+        --process-count 3 &
+    WDCTL="$!"
+
     sudo -u "$SUDO_USER" ./fire_requests.py \
         --target-interface $IF \
         --source-interface-prefix mac \
         --source-interface-count $COUNT \
         --process-count 3
+    REQUESTS="$!"
 
-    #./generate_interfaces.sh stop
 
 }
 
@@ -61,6 +68,8 @@ function cleanup() {
     kill $MA_PID
     kill $WD_PID
     kill $M_PID
+    kill $WDCTL
+    kill $REQUESTS
     ./generate_interfaces.sh stop $COUNT
 
 }
