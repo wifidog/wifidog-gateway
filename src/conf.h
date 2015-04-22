@@ -81,6 +81,10 @@
 /**
  * Mutex for the configuration file, used by the auth_servers related
  * functions. */
+// fix for Android build
+#ifdef __ANDROID__
+#include <pthread.h>
+#endif
 extern pthread_mutex_t config_mutex;
 
 /**
