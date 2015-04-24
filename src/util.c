@@ -72,6 +72,13 @@
 	debug(LOG_DEBUG, "wd_gethostbyname() unlocked"); \
 } while (0)
 
+#include "../config.h"
+#ifdef __ANDROID__
+#define WD_SHELL_PATH "/system/bin/sh"
+#else
+#define WD_SHELL_PATH "/bin/sh"
+#endif
+
 /** @brief FD for icmp raw socket */
 static int icmp_fd;
 
@@ -91,7 +98,7 @@ execute(const char *cmd_line, int quiet)
     int pid, status, rc;
 
     const char *new_argv[4];
-    new_argv[0] = "/bin/sh";
+    new_argv[0] = WD_SHELL_PATH;
     new_argv[1] = "-c";
     new_argv[2] = cmd_line;
     new_argv[3] = NULL;
@@ -101,7 +108,7 @@ execute(const char *cmd_line, int quiet)
         /* We don't want to see any errors if quiet flag is on */
         if (quiet)
             close(2);
-        if (execvp("/bin/sh", (char *const *)new_argv) == -1) { /* execute the command  */
+        if (execvp(WD_SHELL_PATH, (char *const *)new_argv) == -1) { /* execute the command  */
             debug(LOG_ERR, "execvp(): %s", strerror(errno));
         } else {
             debug(LOG_ERR, "execvp() failed");
