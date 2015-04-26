@@ -104,7 +104,7 @@ logout_client(t_client * client)
         UNLOCK_CLIENT_LIST();
         auth_server_request(&authresponse, REQUEST_TYPE_LOGOUT,
                             client->ip, client->mac, client->token,
-                            client->counters.incoming, client->counters.outgoing);
+                            client->counters.incoming, client->counters.outgoing, client->counters.incoming_delta, client->counters.outgoing_delta);
 
         if (authresponse.authcode == AUTH_ERROR)
             debug(LOG_WARNING, "Auth server error when reporting logout");
