@@ -197,9 +197,11 @@ get_clients_from_parent(void)
                         } else if (strcmp(key, "counters_incoming") == 0) {
                             client->counters.incoming_history = (unsigned long long)atoll(value);
                             client->counters.incoming = client->counters.incoming_history;
+                            client->counters.incoming_delta = 0;
                         } else if (strcmp(key, "counters_outgoing") == 0) {
                             client->counters.outgoing_history = (unsigned long long)atoll(value);
                             client->counters.outgoing = client->counters.outgoing_history;
+                            client->counters.outgoing_delta = 0;
                         } else if (strcmp(key, "counters_last_updated") == 0) {
                             client->counters.last_updated = atol(value);
                         } else {
