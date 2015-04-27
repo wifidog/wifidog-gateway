@@ -96,6 +96,7 @@ typedef enum {
     oFirewallRule,
     oFirewallRuleSet,
     oTrustedMACList,
+    oPopularServers,
     oHtmlMessageFile,
     oProxyPort,
     oSSLPeerVerification,
@@ -140,6 +141,7 @@ static const struct {
     "firewallruleset", oFirewallRuleSet}, {
     "firewallrule", oFirewallRule}, {
     "trustedmaclist", oTrustedMACList}, {
+    "popularservers", oPopularServers}, {
     "htmlmessagefile", oHtmlMessageFile}, {
     "proxyport", oProxyPort}, {
     "sslpeerverification", oSSLPeerVerification}, {
@@ -189,6 +191,7 @@ config_init(void)
     config.internal_sock = safe_strdup(DEFAULT_INTERNAL_SOCK);
     config.rulesets = NULL;
     config.trustedmaclist = NULL;
+    config.popular_servers = NULL;
     config.proxy_port = 0;
     config.ssl_certs = safe_strdup(DEFAULT_AUTHSERVSSLCERTPATH);
     config.ssl_verify = DEFAULT_AUTHSERVSSLPEERVER;
@@ -718,6 +721,9 @@ config_read(const char *filename)
                 case oTrustedMACList:
                     parse_trusted_mac_list(p1);
                     break;
+                case oPopularServers:
+                    parse_popular_servers(p1);
+                    break;
                 case oHTTPDName:
                     config.httpdname = safe_strdup(p1);
                     break;
@@ -898,6 +904,48 @@ parse_trusted_mac_list(const char *ptr)
 
     free(mac);
 
+}
+
+void
+parse_popular_servers(const char *ptr)
+{
+    char *ptrcopy = NULL;
+    char *hostname = NULL;
+    t_popular_server *p = NULL;
+
+    debug(LOG_DEBUG, "Parsing string [%s] for popular servers", ptr);
+
+    // max length of domain name is 253 characters
+    hostname = safe_malloc(254);
+
+    /* strsep modifies original, so let's make a copy */
+    ptrcopy = safe_strdup(ptr);
+
+    while ((hostname = strsep(&ptrcopy, ", "))) {
+        if (strcmp(hostname, "") == 0) {
+            continue;
+        }
+        debug(LOG_DEBUG, "Adding Popular Server [%s] to list", hostname);
+
+        if (config.popular_servers == NULL) {
+            config.popular_servers = safe_malloc(sizeof(t_popular_server));
+            config.popular_servers->hostname = safe_strdup(hostname);
+            config.popular_servers->next = NULL;
+        } else {
+            p = config.popular_servers;
+            /* Advance to the last entry */
+            while (p->next != NULL) {
+                p = p->next;
+            }
+            p->next = safe_malloc(sizeof(t_popular_server));
+            p = p->next;
+            p->hostname = safe_strdup(hostname);
+            p->next = NULL;
+        }
+    }
+
+    free(ptrcopy);
+    free(hostname);
 }
 
 /** Verifies if the configuration is complete and valid.  Terminates the program if it isn't */
