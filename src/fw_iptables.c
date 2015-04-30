@@ -660,10 +660,12 @@ iptables_fw_counters_update(void)
             LOCK_CLIENT_LIST();
             if ((p1 = client_list_find_by_ip(ip))) {
                 if ((p1->counters.outgoing - p1->counters.outgoing_history) < counter) {
+                				p1->counters.outgoing = counter;
+                		p1->counters.outgoing_delta = counter;
                     p1->counters.outgoing = p1->counters.outgoing_history + counter;
                     p1->counters.last_updated = time(NULL);
-                    debug(LOG_DEBUG, "%s - Updated counter.outgoing to %llu bytes.  Updated last_updated to %d", ip,
-                          counter, p1->counters.last_updated);
+                    debug(LOG_DEBUG, "%s - Outgoing traffic %llu bytes, updated counter.outgoing to %llu bytes.  Updated last_updated to %d", ip,
+                          counter, p1->counters.outgoing, p1->counters.last_updated);
                 }
             } else {
                 debug(LOG_ERR,
@@ -704,8 +706,9 @@ iptables_fw_counters_update(void)
             LOCK_CLIENT_LIST();
             if ((p1 = client_list_find_by_ip(ip))) {
                 if ((p1->counters.incoming - p1->counters.incoming_history) < counter) {
+                		p1->counters.incoming_delta = counter;
                     p1->counters.incoming = p1->counters.incoming_history + counter;
-                    debug(LOG_DEBUG, "%s - Updated counter.incoming to %llu bytes", ip, counter);
+                    debug(LOG_DEBUG, "%s - Incoming traffic %llu bytes, Updated counter.incoming to %llu bytes", ip, counter, p1->counters.incoming);
                 }
             } else {
                 debug(LOG_ERR,

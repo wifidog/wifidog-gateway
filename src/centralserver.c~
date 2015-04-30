@@ -86,6 +86,7 @@ auth_server_request(t_authresponse * authresponse, const char *request_type, con
 	 */
     memset(buf, 0, sizeof(buf));
     safe_token = httpdUrlEncode(token);
+<<<<<<< HEAD
     if(config -> deltatraffic) {
     	   snprintf(buf, (sizeof(buf) - 1),
              "GET %s%sStage=%s&ClientIP=%s&ClientMAC=%s&Token=%s&Incoming=%llu&Outgoing=%llu&DeltaIncoming=%llu&DeltaOutgoing=%llu&GatewayID=%s HTTP/1.0\r\n"
@@ -103,6 +104,9 @@ auth_server_request(t_authresponse * authresponse, const char *request_type, con
              config->gw_id, VERSION, auth_server->authserv_hostname);
     } else {
     		snprintf(buf, (sizeof(buf) - 1),
+=======
+    snprintf(buf, (sizeof(buf) - 1),
+>>>>>>> master
              "GET %s%sStage=%s&ClientIP=%s&ClientMAC=%s&Token=%s&Incoming=%llu&Outgoing=%llu&GatewayID=%s HTTP/1.0\r\n"
              "User-Agent: WiFiDog %s\r\n"
              "Host: %s\r\n"
