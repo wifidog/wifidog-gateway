@@ -71,6 +71,7 @@ iptables_insert_gateway_id(char **input)
     char *token;
     const s_config *config;
     char *buffer;
+    char *tmp_intf;
 
     if (strstr(*input, "$ID$") == NULL)
         return;
@@ -80,9 +81,14 @@ iptables_insert_gateway_id(char **input)
         memcpy(token, "%1$s", 4);
 
     config = config_get_config();
-    safe_asprintf(&buffer, *input, config->gw_interface);
+    tmp_intf = safe_strdup(config->gw_interface);
+    if (strlen(tmp_intf) > CHAIN_NAME_MAX_LEN) {
+        *(tmp_intf + CHAIN_NAME_MAX_LEN) = '\0';
+    }
+    safe_asprintf(&buffer, *input, tmp_intf);
 
-    free(*input);
+    free(tmp_intf);
+    free(*input);  /* Not an error, input from safe_asprintf */
     *input = buffer;
 }
 

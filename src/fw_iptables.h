@@ -30,20 +30,22 @@
 
 #include "firewall.h"
 
+#define CHAIN_NAME_MAX_LEN 15  /* 28 (actual max) - 13 (AuthServers chain fixed part. */
+
 /*@{*/
 /**Iptable chain names used by WifiDog */
-#define CHAIN_OUTGOING  "WiFiDog_$ID$_Outgoing"
-#define CHAIN_TO_INTERNET "WiFiDog_$ID$_Internet"
-#define CHAIN_TO_ROUTER "WiFiDog_$ID$_Router"
-#define CHAIN_INCOMING  "WiFiDog_$ID$_Incoming"
-#define CHAIN_AUTHSERVERS "WiFiDog_$ID$_AuthServers"
-#define CHAIN_GLOBAL  "WiFiDog_$ID$_Global"
-#define CHAIN_VALIDATE  "WiFiDog_$ID$_Validate"
-#define CHAIN_KNOWN     "WiFiDog_$ID$_Known"
-#define CHAIN_UNKNOWN   "WiFiDog_$ID$_Unknown"
-#define CHAIN_LOCKED    "WiFiDog_$ID$_Locked"
-#define CHAIN_TRUSTED    "WiFiDog_$ID$_Trusted"
-#define CHAIN_AUTH_IS_DOWN "WiFiDog_$ID$_AuthIsDown"
+#define CHAIN_OUTGOING  "WD_$ID$_Outgoing"
+#define CHAIN_TO_INTERNET "WD_$ID$_Internet"
+#define CHAIN_TO_ROUTER "WD_$ID$_Router"
+#define CHAIN_INCOMING  "WD_$ID$_Incoming"
+#define CHAIN_AUTHSERVERS "WD_$ID$_AuthServs"  /* Longest chain, 13 chars ecluding ID */
+#define CHAIN_GLOBAL  "WD_$ID$_Global"
+#define CHAIN_VALIDATE  "WD_$ID$_Validate"
+#define CHAIN_KNOWN     "WD_$ID$_Known"
+#define CHAIN_UNKNOWN   "WD_$ID$_Unknown"
+#define CHAIN_LOCKED    "WD_$ID$_Locked"
+#define CHAIN_TRUSTED    "WD_$ID$_Trusted"
+#define CHAIN_AUTH_IS_DOWN "WD_$ID$_AuthDown"
 /*@}*/
 
 /** Used by iptables_fw_access to select if the client should be granted of denied access */
