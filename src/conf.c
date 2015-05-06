@@ -102,6 +102,7 @@ typedef enum {
     oSSLPeerVerification,
     oSSLCertPath,
     oSSLAllowedCipherList,
+    oMarkOffsetBits,
 } OpCodes;
 
 /** @internal
@@ -147,6 +148,7 @@ static const struct {
     "sslpeerverification", oSSLPeerVerification}, {
     "sslcertpath", oSSLCertPath}, {
     "sslallowedcipherlist", oSSLAllowedCipherList}, {
+    "markoffsetbits", oMarkOffsetBits}, {
 NULL, oBadOption},};
 
 static void config_notnull(const void *, const char *);
@@ -201,6 +203,7 @@ config_init(void)
     config.ssl_verify = DEFAULT_AUTHSERVSSLPEERVER;
     config.ssl_cipher_list = NULL;
     config.arp_table_path = safe_strdup(DEFAULT_ARPTABLE);
+    config.markoffsetbits = DEFAULT_MARKOFFSETBITS;
 
     debugconf.log_stderr = 1;
     debugconf.debuglevel = DEFAULT_DEBUGLEVEL;
@@ -784,6 +787,10 @@ config_read(const char *filename)
 #ifndef USE_CYASSL
                     debug(LOG_WARNING, "SSLAllowedCipherList is set but no SSL compiled in. Ignoring!");
 #endif
+                    break;
+                case oMarkOffsetBits:
+                    sscanf(p1, "%u", &config.markoffsetbits);
+                    config.markoffsetbits = config.markoffsetbits > 31 ? 0 : config.markoffsetbits;
                     break;
                 case oBadOption:
                     /* FALL THROUGH */

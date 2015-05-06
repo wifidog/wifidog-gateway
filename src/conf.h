@@ -67,6 +67,7 @@
 #define DEFAULT_AUTHSERVSSLPEERVER 1    /* 0 means: Enable peer verification */
 #define DEFAULT_ARPTABLE "/proc/net/arp"
 /*@}*/
+#define DEFAULT_MARKOFFSETBITS 0
 
 /*@{*/
 /** Defines for firewall rule sets. */
@@ -192,6 +193,8 @@ typedef struct {
     char *arp_table_path; /**< @brief Path to custom ARP table, formatted
         like /proc/net/arp */
     t_popular_server *popular_servers; /**< @brief list of popular servers */
+    unsigned int markoffsetbits; /**< @brief bits, left shifted mark values
+        for n bits */
 } s_config;
 
 /** @brief Get the current gateway configuration */
