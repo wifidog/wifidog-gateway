@@ -49,9 +49,13 @@
 #include "util.h"
 #include "client_list.h"
 
+#define COUNTER_INCOMING 0
+#define COUNTER_OUTGOING 1
+
 static int iptables_do_command(const char *format, ...);
 static char *iptables_compile(const char *, const char *, const t_firewall_rule *);
 static void iptables_load_ruleset(const char *, const char *, const char *);
+static int read_counter(int);
 
 /**
 Used to supress the error output of the firewall during destruction */
@@ -628,15 +632,36 @@ iptables_fw_auth_reachable(void)
 int
 iptables_fw_counters_update(void)
 {
+    int rc = 1;
+    if (read_counter(COUNTER_INCOMING) != 1) {
+        rc = -1;
+    }
+    if (read_counter(COUNTER_OUTGOING) != 1) {
+        rc = -1;
+    }
+    return rc;
+}
+
+/** Utility function that removes code duplication since reading either incoming
+ * or outgoing counters is very similar.
+ * @param which One of COUNTER_INCOMING or COUNTER_OUTGOING
+ * @return int 1 on success, !1 on failure
+ */
+static int
+read_counter(int which)
+{
     FILE *output;
-    char *script, ip[16], rc;
+    char *script, ip[16], buf[MAX_BUF];
+    int rc;
     unsigned long long int counter;
     t_client *p1;
     struct in_addr tempaddr;
 
     /* Look for outgoing traffic */
-    safe_asprintf(&script, "%s %s", "iptables", "-v -n -x -t mangle -L " CHAIN_OUTGOING);
+    safe_asprintf(&script, "%s %s %s", "iptables", "-v -n -x -t mangle -L",
+            which == COUNTER_OUTGOING ? CHAIN_OUTGOING : CHAIN_INCOMING);
     iptables_insert_gateway_id(&script);
+
     output = popen(script, "r");
     free(script);
     if (!output) {
@@ -647,28 +672,44 @@ iptables_fw_counters_update(void)
     /* skip the first two lines */
     while (('\n' != fgetc(output)) && !feof(output)) ;
     while (('\n' != fgetc(output)) && !feof(output)) ;
-    while (output && !(feof(output))) {
-        rc = fscanf(output, "%*s %llu %*s %*s %*s %*s %*s %15[0-9.] %*s %*s %*s %*s %*s %*s", &counter, ip);
-        //rc = fscanf(output, "%*s %llu %*s %*s %*s %*s %*s %15[0-9.] %*s %*s %*s %*s %*s 0x%*u", &counter, ip);
+    while (output && !feof(output)) {
+        if (NULL == fgets(buf, MAX_BUF, output)) {
+            /* NULL could mean EOF and nothing read, except for !feof() above */
+            debug(LOG_ERR, "fgets(): %s", strerror(errno));
+            pclose(output);
+            return -1;
+        }
+        if (COUNTER_OUTGOING == which) {
+            rc = sscanf(buf, "%*s %llu %*s %*s %*s %*s %*s %15[0-9.]", &counter, ip);
+        } else {
+            rc = sscanf(buf, "%*s %llu %*s %*s %*s %*s %*s %*s %15[0-9.]", &counter, ip);
+        }
         if (2 == rc && EOF != rc) {
             /* Sanity */
             if (!inet_aton(ip, &tempaddr)) {
                 debug(LOG_WARNING, "I was supposed to read an IP address but instead got [%s] - ignoring it", ip);
                 continue;
             }
-            debug(LOG_DEBUG, "Read outgoing traffic for %s: Bytes=%llu", ip, counter);
+            debug(LOG_DEBUG, "Read %s traffic for %s: Bytes=%llu", which == COUNTER_OUTGOING ? "outgoing" : "incoming", ip, counter);
             LOCK_CLIENT_LIST();
             if ((p1 = client_list_find_by_ip(ip))) {
-                if ((p1->counters.outgoing - p1->counters.outgoing_history) < counter) {
-                    p1->counters.outgoing = p1->counters.outgoing_history + counter;
-                    p1->counters.last_updated = time(NULL);
-                    debug(LOG_DEBUG, "%s - Updated counter.outgoing to %llu bytes.  Updated last_updated to %d", ip,
-                          counter, p1->counters.last_updated);
+                p1->counters.last_updated = time(NULL);
+                debug(LOG_DEBUG, "%s - Updated last_updated to %d", ip, p1->counters.last_updated);
+                if (COUNTER_OUTGOING == which) {
+                    if ((p1->counters.outgoing - p1->counters.outgoing_history) < counter) {
+                        p1->counters.outgoing = p1->counters.outgoing_history + counter;
+                        debug(LOG_DEBUG, "%s - Updated counter.outgoing to %llu bytes.", ip, counter);
+                    }
+                } else {
+                    if ((p1->counters.incoming - p1->counters.incoming_history) < counter) {
+                        p1->counters.incoming = p1->counters.incoming_history + counter;
+                        debug(LOG_DEBUG, "%s - Updated counter.incoming to %llu bytes", ip, counter);
+                    }
                 }
             } else {
-                debug(LOG_ERR,
-                      "iptables_fw_counters_update(): Could not find %s in client list, this should not happen unless if the gateway crashed",
-                      ip);
+                /* Does this ever happen? */
+                debug(LOG_ERR, "iptables_fw_counters_update(): Could not find %s in client list, "
+                      "this should not happen unless if the gateway crashed", ip);
                 debug(LOG_ERR, "Preventively deleting firewall rules for %s in table %s", ip, CHAIN_OUTGOING);
                 iptables_fw_destroy_mention("mangle", CHAIN_OUTGOING, ip);
                 debug(LOG_ERR, "Preventively deleting firewall rules for %s in table %s", ip, CHAIN_INCOMING);
@@ -678,48 +719,5 @@ iptables_fw_counters_update(void)
         }
     }
     pclose(output);
-
-    /* Look for incoming traffic */
-    safe_asprintf(&script, "%s %s", "iptables", "-v -n -x -t mangle -L " CHAIN_INCOMING);
-    iptables_insert_gateway_id(&script);
-    output = popen(script, "r");
-    free(script);
-    if (!output) {
-        debug(LOG_ERR, "popen(): %s", strerror(errno));
-        return -1;
-    }
-
-    /* skip the first two lines */
-    while (('\n' != fgetc(output)) && !feof(output)) ;
-    while (('\n' != fgetc(output)) && !feof(output)) ;
-    while (output && !(feof(output))) {
-        rc = fscanf(output, "%*s %llu %*s %*s %*s %*s %*s %*s %15[0-9.]", &counter, ip);
-        if (2 == rc && EOF != rc) {
-            /* Sanity */
-            if (!inet_aton(ip, &tempaddr)) {
-                debug(LOG_WARNING, "I was supposed to read an IP address but instead got [%s] - ignoring it", ip);
-                continue;
-            }
-            debug(LOG_DEBUG, "Read incoming traffic for %s: Bytes=%llu", ip, counter);
-            LOCK_CLIENT_LIST();
-            if ((p1 = client_list_find_by_ip(ip))) {
-                if ((p1->counters.incoming - p1->counters.incoming_history) < counter) {
-                    p1->counters.incoming = p1->counters.incoming_history + counter;
-                    debug(LOG_DEBUG, "%s - Updated counter.incoming to %llu bytes", ip, counter);
-                }
-            } else {
-                debug(LOG_ERR,
-                      "iptables_fw_counters_update(): Could not find %s in client list, this should not happen unless if the gateway crashed",
-                      ip);
-                debug(LOG_ERR, "Preventively deleting firewall rules for %s in table %s", ip, CHAIN_OUTGOING);
-                iptables_fw_destroy_mention("mangle", CHAIN_OUTGOING, ip);
-                debug(LOG_ERR, "Preventively deleting firewall rules for %s in table %s", ip, CHAIN_INCOMING);
-                iptables_fw_destroy_mention("mangle", CHAIN_INCOMING, ip);
-            }
-            UNLOCK_CLIENT_LIST();
-        }
-    }
-    pclose(output);
-
     return 1;
 }
