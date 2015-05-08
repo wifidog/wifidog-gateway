@@ -144,6 +144,14 @@ typedef struct _trusted_mac_t {
 } t_trusted_mac;
 
 /**
+ * Popular Servers
+ */
+typedef struct _popular_server_t {
+    char *hostname;
+    struct _popular_server_t *next;
+} t_popular_server;
+
+/**
  * Configuration structure
  */
 typedef struct {
@@ -183,6 +191,7 @@ typedef struct {
     t_trusted_mac *trustedmaclist; /**< @brief list of trusted macs */
     char *arp_table_path; /**< @brief Path to custom ARP table, formatted
         like /proc/net/arp */
+    t_popular_server *popular_servers; /**< @brief list of popular servers */
 } s_config;
 
 /** @brief Get the current gateway configuration */
@@ -209,7 +218,6 @@ void mark_auth_server_bad(t_auth_serv *);
 /** @brief Fetch a firewall rule set. */
 t_firewall_rule *get_ruleset(const char *);
 
-void parse_trusted_mac_list(const char *);
 
 #define LOCK_CONFIG() do { \
 	debug(LOG_DEBUG, "Locking config"); \

@@ -159,15 +159,10 @@ _connect_auth_server(int level)
 {
     s_config *config = config_get_config();
     t_auth_serv *auth_server = NULL;
+    t_popular_server *popular_server = NULL;
     struct in_addr *h_addr;
     int num_servers = 0;
     char *hostname = NULL;
-    char *popular_servers[] = {
-        "www.google.com",
-        "www.yahoo.com",
-        NULL
-    };
-    char **popularserver;
     char *ip;
     struct sockaddr_in their_addr;
     int sockfd;
@@ -207,20 +202,18 @@ _connect_auth_server(int level)
     if (!h_addr) {
         /*
          * DNS resolving it failed
-         *
-         * Can we resolve any of the popular servers ?
          */
         debug(LOG_DEBUG, "Level %d: Resolving auth server [%s] failed", level, hostname);
 
-        for (popularserver = popular_servers; *popularserver; popularserver++) {
-            debug(LOG_DEBUG, "Level %d: Resolving popular server [%s]", level, *popularserver);
-            h_addr = wd_gethostbyname(*popularserver);
+        for (popular_server = config->popular_servers; popular_server; popular_server = popular_server->next) {
+            debug(LOG_DEBUG, "Level %d: Resolving popular server [%s]", level, popular_server->hostname);
+            h_addr = wd_gethostbyname(popular_server->hostname);
             if (h_addr) {
-                debug(LOG_DEBUG, "Level %d: Resolving popular server [%s] succeeded = [%s]", level, *popularserver,
+                debug(LOG_DEBUG, "Level %d: Resolving popular server [%s] succeeded = [%s]", level, popular_server->hostname,
                       inet_ntoa(*h_addr));
                 break;
             } else {
-                debug(LOG_DEBUG, "Level %d: Resolving popular server [%s] failed", level, *popularserver);
+                debug(LOG_DEBUG, "Level %d: Resolving popular server [%s] failed", level, popular_server->hostname);
             }
         }
 
