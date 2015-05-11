@@ -790,7 +790,11 @@ config_read(const char *filename)
                     break;
                 case oMarkOffsetBits:
                     sscanf(p1, "%u", &config.markoffsetbits);
-                    config.markoffsetbits = config.markoffsetbits > 31 ? 0 : config.markoffsetbits;
+                    if (config.markoffsetbits > 31) {
+                      config.markoffsetbits = 0;
+                      debug(LOG_WARNING, "MarkOffsetBits is invalid. It should be in the range of 0 to 31. "
+                          "Fallback to no offset!");
+                    }
                     break;
                 case oBadOption:
                     /* FALL THROUGH */
