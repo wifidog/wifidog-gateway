@@ -73,6 +73,7 @@ typedef enum {
     oGatewayInterface,
     oGatewayAddress,
     oGatewayPort,
+    oDeltaTraffic,
     oAuthServer,
     oAuthServHostname,
     oAuthServSSLAvailable,
@@ -111,6 +112,7 @@ static const struct {
     OpCodes opcode;
 } keywords[] = {
     {
+    "deltatraffic", oDeltaTraffic}, {
     "daemon", oDaemon}, {
     "debuglevel", oDebugLevel}, {
     "externalinterface", oExternalInterface}, {
@@ -199,6 +201,7 @@ config_init(void)
     config.proxy_port = 0;
     config.ssl_certs = safe_strdup(DEFAULT_AUTHSERVSSLCERTPATH);
     config.ssl_verify = DEFAULT_AUTHSERVSSLPEERVER;
+    config.deltatraffic = DEFAULT_DELTATRAFFIC;
     config.ssl_cipher_list = NULL;
     config.arp_table_path = safe_strdup(DEFAULT_ARPTABLE);
 
@@ -691,6 +694,9 @@ config_read(const char *filename)
                 opcode = config_parse_token(s, filename, linenum);
 
                 switch (opcode) {
+                case oDeltaTraffic:
+                    config.deltatraffic = parse_boolean_value(p1);
+                    break;
                 case oDaemon:
                     if (config.daemon == -1 && ((value = parse_boolean_value(p1)) != -1)) {
                         config.daemon = value;
