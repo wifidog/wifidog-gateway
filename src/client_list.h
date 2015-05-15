@@ -39,8 +39,8 @@ typedef struct _t_counters {
     unsigned long long incoming_history;        /**< @brief Incoming data before wifidog restarted*/
     unsigned long long outgoing_history;        /**< @brief Outgoing data before wifidog restarted*/
     /* Delta traffic stats by t123yh */
-    unsigned long long incoming_delta;					/**< @brief Incoming data after last report*/
-    unsigned long long outgoing_delta;					/**< @brief Outgoing data after last report*/
+    unsigned long long incoming_delta;                    /**< @brief Incoming data after last report*/
+    unsigned long long outgoing_delta;                    /**< @brief Outgoing data after last report*/
     time_t last_updated;        /**< @brief Last update of the counters */
 } t_counters;
 

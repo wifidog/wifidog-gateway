@@ -123,7 +123,7 @@ client_list_add(const char *ip, const char *mac, const char *token)
     curclient->mac = safe_strdup(mac);
     curclient->token = safe_strdup(token);
     curclient->counters.incoming_delta = curclient->counters.outgoing_delta = 
-    		curclient->counters.incoming = curclient->counters.incoming_history = curclient->counters.outgoing =
+            curclient->counters.incoming = curclient->counters.incoming_history = curclient->counters.outgoing =
         curclient->counters.outgoing_history = 0;
     curclient->counters.last_updated = time(NULL);
 

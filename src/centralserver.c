@@ -67,7 +67,7 @@ t_authcode
 auth_server_request(t_authresponse * authresponse, const char *request_type, const char *ip, const char *mac,
                     const char *token, unsigned long long int incoming, unsigned long long int outgoing, unsigned long long int incoming_delta, unsigned long long int outgoing_delta)
 {
-		s_config *config = config_get_config();
+    s_config *config = config_get_config();
     int sockfd;
     char buf[MAX_BUF];
     char *tmp;
@@ -87,7 +87,7 @@ auth_server_request(t_authresponse * authresponse, const char *request_type, con
     memset(buf, 0, sizeof(buf));
     safe_token = httpdUrlEncode(token);
     if(config -> deltatraffic) {
-    	   snprintf(buf, (sizeof(buf) - 1),
+           snprintf(buf, (sizeof(buf) - 1),
              "GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&incomingdelta=%llu&outgoingdelta=%llu&gw_id=%s HTTP/1.0\r\n"
              "User-Agent: WiFiDog %s\r\n"
              "Host: %s\r\n"
@@ -102,7 +102,7 @@ auth_server_request(t_authresponse * authresponse, const char *request_type, con
              outgoing_delta,
              config->gw_id, VERSION, auth_server->authserv_hostname);
     } else {
-    		snprintf(buf, (sizeof(buf) - 1),
+            snprintf(buf, (sizeof(buf) - 1),
              "GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&gw_id=%s HTTP/1.0\r\n"
              "User-Agent: WiFiDog %s\r\n"
              "Host: %s\r\n"
@@ -112,7 +112,7 @@ auth_server_request(t_authresponse * authresponse, const char *request_type, con
              request_type,
              ip,
              mac, safe_token, incoming, outgoing, config->gw_id, VERSION, auth_server->authserv_hostname);
-		}
+        }
     free(safe_token);
 
     char *res;

@@ -160,7 +160,7 @@ typedef struct {
     char *htmlmsgfile;          /**< @brief name of the HTML file used for messages */
     char *wdctl_sock;           /**< @brief wdctl path to socket */
     char *internal_sock;                /**< @brief internal path to socket */
-    int deltatraffic;						/**< @brief reset each user's traffic (Outgoing and Incoming) value after each Auth operation. */
+    int deltatraffic;                   /**< @brief reset each user's traffic (Outgoing and Incoming) value after each Auth operation. */
     int daemon;                 /**< @brief if daemon > 0, use daemon mode */
     char *external_interface;   /**< @brief External network interface name for
 				     firewall rules */

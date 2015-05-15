@@ -695,8 +695,8 @@ config_read(const char *filename)
 
                 switch (opcode) {
                 case oDeltaTraffic:
-                	config.deltatraffic = parse_boolean_value(p1);
-                		break;
+                    config.deltatraffic = parse_boolean_value(p1);
+                    break;
                 case oDaemon:
                     if (config.daemon == -1 && ((value = parse_boolean_value(p1)) != -1)) {
                         config.daemon = value;
