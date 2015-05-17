@@ -85,6 +85,7 @@ typedef enum {
     oAuthServMsgScriptPathFragment,
     oAuthServPingScriptPathFragment,
     oAuthServAuthScriptPathFragment,
+    oAuthServHookScriptPath,
     oHTTPDMaxConn,
     oHTTPDName,
     oHTTPDRealm,
@@ -140,6 +141,7 @@ static const struct {
     "msgscriptpathfragment", oAuthServMsgScriptPathFragment}, {
     "pingscriptpathfragment", oAuthServPingScriptPathFragment}, {
     "authscriptpathfragment", oAuthServAuthScriptPathFragment}, {
+    "hookscriptpath", 		oAuthServHookScriptPath}, {
     "firewallruleset", oFirewallRuleSet}, {
     "firewallrule", oFirewallRule}, {
     "trustedmaclist", oTrustedMACList}, {
@@ -252,6 +254,7 @@ parse_auth_server(FILE * file, const char *filename, int *linenum)
         *loginscriptpathfragment = NULL,
         *portalscriptpathfragment = NULL,
         *msgscriptpathfragment = NULL,
+        *hookscriptpath = NULL,
         *pingscriptpathfragment = NULL, *authscriptpathfragment = NULL, line[MAX_BUF], *p1, *p2;
     int http_port, ssl_port, ssl_available, opcode;
     t_auth_serv *new, *tmp;
@@ -337,6 +340,9 @@ parse_auth_server(FILE * file, const char *filename, int *linenum)
                 free(authscriptpathfragment);
                 authscriptpathfragment = safe_strdup(p2);
                 break;
+            case oAuthServHookScriptPath:
+                hookscriptpath = safe_strdup(p2);
+                break;
             case oAuthServSSLPort:
                 ssl_port = atoi(p2);
                 break;
@@ -369,6 +375,7 @@ parse_auth_server(FILE * file, const char *filename, int *linenum)
         free(msgscriptpathfragment);
         free(portalscriptpathfragment);
         free(loginscriptpathfragment);
+        free(hookscriptpath);
         return;
     }
 
@@ -386,6 +393,7 @@ parse_auth_server(FILE * file, const char *filename, int *linenum)
     new->authserv_msg_script_path_fragment = msgscriptpathfragment;
     new->authserv_ping_script_path_fragment = pingscriptpathfragment;
     new->authserv_auth_script_path_fragment = authscriptpathfragment;
+    new->authserv_hook_script_path = hookscriptpath;
     new->authserv_http_port = http_port;
     new->authserv_ssl_port = ssl_port;
 
