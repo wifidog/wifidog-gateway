@@ -389,3 +389,21 @@ rand16(void)
      * ignore that one. */
     return ((unsigned short)(rand() >> 15));
 }
+
+/*
+ * Save pid of this wifidog in pid file
+ * @param 'pf' as string, it is the pid file absolutely path
+ */
+void
+save_pid_file(const char *pf)
+{
+	if (pf) {
+		FILE *f = fopen(pf, "w");
+		if (f) {
+			fprintf(f, "%lu\n", getpid());
+			fclose(f);
+		}
+	}
+
+	return;
+}

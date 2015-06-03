@@ -162,6 +162,8 @@ typedef struct {
     char *internal_sock;                /**< @brief internal path to socket */
     int deltatraffic;                   /**< @brief reset each user's traffic (Outgoing and Incoming) value after each Auth operation. */
     int daemon;                 /**< @brief if daemon > 0, use daemon mode */
+    int save_pid;			/**< @brief if save_pid == 1, save the pid in file */
+    char pidfile[255];		/**< @brief pid file path of wifidog */
     char *external_interface;   /**< @brief External network interface name for
 				     firewall rules */
     char *gw_id;                /**< @brief ID of the Gateway, sent to central
