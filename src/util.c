@@ -397,13 +397,13 @@ rand16(void)
 void
 save_pid_file(const char *pf)
 {
-	if (pf) {
-		FILE *f = fopen(pf, "w");
-		if (f) {
-			fprintf(f, "%lu\n", getpid());
-			fclose(f);
-		}
-	}
+    if (pf) {
+        FILE *f = fopen(pf, "w");
+        if (f) {
+            fprintf(f, "%zu\n", getpid());
+            fclose(f);
+        }
+    }
 
-	return;
+    return;
 }
