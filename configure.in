@@ -90,9 +90,16 @@ AC_DEFUN([BB_CYASSL],
 [
 AC_ARG_ENABLE(cyassl, [  --enable-cyassl        enable TLS support for auth server communication (no)], [], [enable_cyassl=no])
 if test "x$enable_cyassl" = xyes; then
+        # CyaSSL has been renamed wolfSSL. Old method names are still available
+        # via cyassl/ssl.h, which maps old methods to new methods via macros.
+        # To find the proper lib to link against (cyassl or wolfssl), we do have
+        # the use the new naming scheme below as cyassl/ssl.h is not available for
+        # AC_SEARCH_LIBS
         AC_CHECK_HEADERS(cyassl/ssl.h)
-        AC_SEARCH_LIBS([CyaTLSv1_client_method], [cyassl wolfssl], [], [
-                AC_MSG_ERROR([unable to find the CyaTLSv1_client_method function.])
+        AC_SEARCH_LIBS([CyaTLSv1_client_method], [cyassl], [], [
+            AC_SEARCH_LIBS([wolfTLSv1_client_method], [wolfssl], [], [
+                            AC_MSG_ERROR([unable to locate SSL lib: either wolfSSL or CyaSSL needed.])
+            ])
         ])
         AC_DEFINE(USE_CYASSL,, "Compile with CyaSSL support")
 fi
