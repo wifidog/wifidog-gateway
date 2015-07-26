@@ -67,6 +67,8 @@
 #define DEFAULT_AUTHSERVSSLPEERVER 1    /* 0 means: Enable peer verification */
 #define DEFAULT_DELTATRAFFIC 0    /* 0 means: Enable peer verification */
 #define DEFAULT_ARPTABLE "/proc/net/arp"
+#define DEFAULT_USER "nobody" /* Unprivileged user, used if compiled with capabilities */
+#define DEFAULT_GROUP "nobody" /* Unprivileged group, used if compiled with capabilities */
 /*@}*/
 
 /*@{*/
@@ -193,6 +195,8 @@ typedef struct {
     t_trusted_mac *trustedmaclist; /**< @brief list of trusted macs */
     char *arp_table_path; /**< @brief Path to custom ARP table, formatted
         like /proc/net/arp */
+    char *user; /**< @brief Name of non-privileged user */
+    char *group; /**< @brief Name of non-privileged group */
     t_popular_server *popular_servers; /**< @brief list of popular servers */
 } s_config;
 

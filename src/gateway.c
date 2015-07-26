@@ -59,6 +59,12 @@
 #include "ping_thread.h"
 #include "httpd_thread.h"
 #include "util.h"
+#include "config.h"
+
+
+#ifdef USE_LIBCAP
+#include "capabilities.h"
+#endif /* USE LIBCAP */
 
 /** XXX Ugly hack 
  * We need to remember the thread IDs of threads that simulate wait with pthread_cond_timedwait
@@ -485,6 +491,7 @@ main_loop(void)
     /* never reached */
 }
 
+
 /** Reads the configuration file and then starts the main loop */
 int
 gw_main(int argc, char **argv)
@@ -498,6 +505,10 @@ gw_main(int argc, char **argv)
     /* Initialize the config */
     config_read(config->configfile);
     config_validate();
+
+#ifdef USE_LIBCAP
+    drop_privileges(config->user, config->group);
+#endif /* USE LIBCAP */
 
     /* Initializes the linked list of connected clients */
     client_list_init();

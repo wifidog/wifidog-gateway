@@ -103,6 +103,8 @@ typedef enum {
     oSSLPeerVerification,
     oSSLCertPath,
     oSSLAllowedCipherList,
+    oUser,
+    oGroup,
 } OpCodes;
 
 /** @internal
@@ -149,6 +151,8 @@ static const struct {
     "sslpeerverification", oSSLPeerVerification}, {
     "sslcertpath", oSSLCertPath}, {
     "sslallowedcipherlist", oSSLAllowedCipherList}, {
+    "user", oUser}, {
+    "group", oGroup}, {
 NULL, oBadOption},};
 
 static void config_notnull(const void *, const char *);
@@ -204,7 +208,9 @@ config_init(void)
     config.deltatraffic = DEFAULT_DELTATRAFFIC;
     config.ssl_cipher_list = NULL;
     config.arp_table_path = safe_strdup(DEFAULT_ARPTABLE);
-
+    config.user = safe_strdup(DEFAULT_USER);
+    config.group = safe_strdup(DEFAULT_GROUP);
+    
     debugconf.log_stderr = 1;
     debugconf.debuglevel = DEFAULT_DEBUGLEVEL;
     debugconf.syslog_facility = DEFAULT_SYSLOG_FACILITY;
@@ -790,6 +796,22 @@ config_read(const char *filename)
 #ifndef USE_CYASSL
                     debug(LOG_WARNING, "SSLAllowedCipherList is set but no SSL compiled in. Ignoring!");
 #endif
+                    break;
+                case oUser:
+#ifndef USE_LIBCAP
+                    debug(LOG_WARNING, "Non-privileged user is set but not compiled with libcap. Bailing out!");
+                    exit(1);
+#endif
+                    free(config.user);
+                    config.user = safe_strdup(p1);
+                    break;
+                case oGroup:
+#ifndef USE_LIBCAP
+                    debug(LOG_WARNING, "Non-privileged group is set but not compiled with libcap. Bailing out!");
+                    exit(1);
+#endif
+                    free(config.group);
+                    config.group = safe_strdup(p1);
                     break;
                 case oBadOption:
                     /* FALL THROUGH */
