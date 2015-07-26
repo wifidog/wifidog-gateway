@@ -28,6 +28,7 @@
 
 #if defined(_WIN32)
 #else
+#include <fcntl.h>
 #include <unistd.h>
 #include <sys/file.h>
 #endif

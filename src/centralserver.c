@@ -65,8 +65,9 @@
 */
 t_authcode
 auth_server_request(t_authresponse * authresponse, const char *request_type, const char *ip, const char *mac,
-                    const char *token, unsigned long long int incoming, unsigned long long int outgoing)
+                    const char *token, unsigned long long int incoming, unsigned long long int outgoing, unsigned long long int incoming_delta, unsigned long long int outgoing_delta)
 {
+    s_config *config = config_get_config();
     int sockfd;
     char buf[MAX_BUF];
     char *tmp;
@@ -85,7 +86,23 @@ auth_server_request(t_authresponse * authresponse, const char *request_type, con
 	 */
     memset(buf, 0, sizeof(buf));
     safe_token = httpdUrlEncode(token);
-    snprintf(buf, (sizeof(buf) - 1),
+    if(config -> deltatraffic) {
+           snprintf(buf, (sizeof(buf) - 1),
+             "GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&incomingdelta=%llu&outgoingdelta=%llu&gw_id=%s HTTP/1.0\r\n"
+             "User-Agent: WiFiDog %s\r\n"
+             "Host: %s\r\n"
+             "\r\n",
+             auth_server->authserv_path,
+             auth_server->authserv_auth_script_path_fragment,
+             request_type,
+             ip, mac, safe_token, 
+             incoming, 
+             outgoing, 
+             incoming_delta, 
+             outgoing_delta,
+             config->gw_id, VERSION, auth_server->authserv_hostname);
+    } else {
+            snprintf(buf, (sizeof(buf) - 1),
              "GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&gw_id=%s HTTP/1.0\r\n"
              "User-Agent: WiFiDog %s\r\n"
              "Host: %s\r\n"
@@ -94,8 +111,8 @@ auth_server_request(t_authresponse * authresponse, const char *request_type, con
              auth_server->authserv_auth_script_path_fragment,
              request_type,
              ip,
-             mac, safe_token, incoming, outgoing, config_get_config()->gw_id, VERSION, auth_server->authserv_hostname);
-
+             mac, safe_token, incoming, outgoing, config->gw_id, VERSION, auth_server->authserv_hostname);
+        }
     free(safe_token);
 
     char *res;
@@ -159,15 +176,10 @@ _connect_auth_server(int level)
 {
     s_config *config = config_get_config();
     t_auth_serv *auth_server = NULL;
+    t_popular_server *popular_server = NULL;
     struct in_addr *h_addr;
     int num_servers = 0;
     char *hostname = NULL;
-    char *popular_servers[] = {
-        "www.google.com",
-        "www.yahoo.com",
-        NULL
-    };
-    char **popularserver;
     char *ip;
     struct sockaddr_in their_addr;
     int sockfd;
@@ -207,20 +219,18 @@ _connect_auth_server(int level)
     if (!h_addr) {
         /*
          * DNS resolving it failed
-         *
-         * Can we resolve any of the popular servers ?
          */
         debug(LOG_DEBUG, "Level %d: Resolving auth server [%s] failed", level, hostname);
 
-        for (popularserver = popular_servers; *popularserver; popularserver++) {
-            debug(LOG_DEBUG, "Level %d: Resolving popular server [%s]", level, *popularserver);
-            h_addr = wd_gethostbyname(*popularserver);
+        for (popular_server = config->popular_servers; popular_server; popular_server = popular_server->next) {
+            debug(LOG_DEBUG, "Level %d: Resolving popular server [%s]", level, popular_server->hostname);
+            h_addr = wd_gethostbyname(popular_server->hostname);
             if (h_addr) {
-                debug(LOG_DEBUG, "Level %d: Resolving popular server [%s] succeeded = [%s]", level, *popularserver,
+                debug(LOG_DEBUG, "Level %d: Resolving popular server [%s] succeeded = [%s]", level, popular_server->hostname,
                       inet_ntoa(*h_addr));
                 break;
             } else {
-                debug(LOG_DEBUG, "Level %d: Resolving popular server [%s] failed", level, *popularserver);
+                debug(LOG_DEBUG, "Level %d: Resolving popular server [%s] failed", level, popular_server->hostname);
             }
         }
 

@@ -73,6 +73,7 @@ typedef enum {
     oGatewayInterface,
     oGatewayAddress,
     oGatewayPort,
+    oDeltaTraffic,
     oAuthServer,
     oAuthServHostname,
     oAuthServSSLAvailable,
@@ -96,6 +97,7 @@ typedef enum {
     oFirewallRule,
     oFirewallRuleSet,
     oTrustedMACList,
+    oPopularServers,
     oHtmlMessageFile,
     oProxyPort,
     oSSLPeerVerification,
@@ -112,6 +114,7 @@ static const struct {
     OpCodes opcode;
 } keywords[] = {
     {
+    "deltatraffic", oDeltaTraffic}, {
     "daemon", oDaemon}, {
     "debuglevel", oDebugLevel}, {
     "externalinterface", oExternalInterface}, {
@@ -142,6 +145,7 @@ static const struct {
     "firewallruleset", oFirewallRuleSet}, {
     "firewallrule", oFirewallRule}, {
     "trustedmaclist", oTrustedMACList}, {
+    "popularservers", oPopularServers}, {
     "htmlmessagefile", oHtmlMessageFile}, {
     "proxyport", oProxyPort}, {
     "sslpeerverification", oSSLPeerVerification}, {
@@ -151,13 +155,17 @@ static const struct {
     "group", oGroup}, {
 NULL, oBadOption},};
 
-static void config_notnull(const void *parm, const char *parmname);
+static void config_notnull(const void *, const char *);
 static int parse_boolean_value(char *);
 static void parse_auth_server(FILE *, const char *, int *);
-static int _parse_firewall_rule(const char *ruleset, char *leftover);
+static int _parse_firewall_rule(const char *, char *);
 static void parse_firewall_ruleset(const char *, FILE *, const char *, int *);
+static void parse_trusted_mac_list(const char *);
+static void parse_popular_servers(const char *);
+static void validate_popular_servers(void);
+static void add_popular_server(const char *);
 
-static OpCodes config_parse_token(const char *cp, const char *filename, int linenum);
+static OpCodes config_parse_token(const char *, const char *, int);
 
 /** Accessor for the current gateway configuration
 @return:  A pointer to the current config.  The pointer isn't opaque, but should be treated as READ-ONLY
@@ -193,9 +201,11 @@ config_init(void)
     config.internal_sock = safe_strdup(DEFAULT_INTERNAL_SOCK);
     config.rulesets = NULL;
     config.trustedmaclist = NULL;
+    config.popular_servers = NULL;
     config.proxy_port = 0;
     config.ssl_certs = safe_strdup(DEFAULT_AUTHSERVSSLCERTPATH);
     config.ssl_verify = DEFAULT_AUTHSERVSSLPEERVER;
+    config.deltatraffic = DEFAULT_DELTATRAFFIC;
     config.ssl_cipher_list = NULL;
     config.arp_table_path = safe_strdup(DEFAULT_ARPTABLE);
     config.user = safe_strdup(DEFAULT_USER);
@@ -636,7 +646,7 @@ void
 config_read(const char *filename)
 {
     FILE *fd;
-    char line[MAX_BUF], *s, *p1, *p2;
+    char line[MAX_BUF], *s, *p1, *p2, *rawarg = NULL;
     int linenum = 0, opcode, value;
     size_t len;
 
@@ -672,7 +682,7 @@ config_read(const char *filename)
                     break;
                 len = strlen(p1);
             }
-
+            rawarg = safe_strdup(p1);
             if ((p2 = strchr(p1, ' '))) {
                 p2[0] = '\0';
             } else if ((p2 = strstr(p1, "\r\n"))) {
@@ -690,6 +700,9 @@ config_read(const char *filename)
                 opcode = config_parse_token(s, filename, linenum);
 
                 switch (opcode) {
+                case oDeltaTraffic:
+                    config.deltatraffic = parse_boolean_value(p1);
+                    break;
                 case oDaemon:
                     if (config.daemon == -1 && ((value = parse_boolean_value(p1)) != -1)) {
                         config.daemon = value;
@@ -723,6 +736,9 @@ config_read(const char *filename)
                     break;
                 case oTrustedMACList:
                     parse_trusted_mac_list(p1);
+                    break;
+                case oPopularServers:
+                    parse_popular_servers(rawarg);
                     break;
                 case oHTTPDName:
                     config.httpdname = safe_strdup(p1);
@@ -807,6 +823,10 @@ config_read(const char *filename)
                 }
             }
         }
+        if (rawarg) {
+            free(rawarg);
+            rawarg = NULL;
+        }
     }
 
     if (config.httpdusername && !config.httpdpassword) {
@@ -839,7 +859,8 @@ parse_boolean_value(char *line)
     return -1;
 }
 
-/* Parse possiblemac to see if it is valid MAC address format */
+/**
+ * Parse possiblemac to see if it is valid MAC address format */
 int
 check_mac_format(char *possiblemac)
 {
@@ -850,7 +871,10 @@ check_mac_format(char *possiblemac)
                hex2, hex2, hex2, hex2, hex2, hex2) == 6;
 }
 
-void
+/** @internal
+ * Parse the trusted mac list.
+ */
+static void
 parse_trusted_mac_list(const char *ptr)
 {
     char *ptrcopy = NULL;
@@ -865,7 +889,7 @@ parse_trusted_mac_list(const char *ptr)
     /* strsep modifies original, so let's make a copy */
     ptrcopy = safe_strdup(ptr);
 
-    while ((possiblemac = strsep(&ptrcopy, ", "))) {
+    while ((possiblemac = strsep(&ptrcopy, ","))) {
         /* check for valid format */
         if (!check_mac_format(possiblemac)) {
             debug(LOG_ERR,
@@ -922,16 +946,87 @@ parse_trusted_mac_list(const char *ptr)
 
 }
 
+/** @internal
+ * Add a popular server to the list. It prepends for simplicity.
+ * @param server The hostname to add.
+ */
+static void
+add_popular_server(const char *server)
+{
+    t_popular_server *p = NULL;
+
+    p = (t_popular_server *)safe_malloc(sizeof(t_popular_server));
+    p->hostname = safe_strdup(server);
+
+    if (config.popular_servers == NULL) {
+        p->next = NULL;
+        config.popular_servers = p;
+    } else {
+        p->next = config.popular_servers;
+        config.popular_servers = p;
+    }
+}
+
+static void
+parse_popular_servers(const char *ptr)
+{
+    char *ptrcopy = NULL;
+    char *hostname = NULL;
+    char *tmp = NULL;
+
+    debug(LOG_DEBUG, "Parsing string [%s] for popular servers", ptr);
+
+    /* strsep modifies original, so let's make a copy */
+    ptrcopy = safe_strdup(ptr);
+
+    while ((hostname = strsep(&ptrcopy, ","))) {  /* hostname does *not* need allocation. strsep
+                                                     provides a pointer in ptrcopy. */
+        /* Skip leading spaces. */
+        while (*hostname != '\0' && isblank(*hostname)) { 
+            hostname++;
+        }
+        if (*hostname == '\0') {  /* Equivalent to strcmp(hostname, "") == 0 */
+            continue;
+        }
+        /* Remove any trailing blanks. */
+        tmp = hostname;
+        while (*tmp != '\0' && !isblank(*tmp)) {
+            tmp++;
+        }
+        if (*tmp != '\0' && isblank(*tmp)) {
+            *tmp = '\0';
+        }
+        debug(LOG_DEBUG, "Adding Popular Server [%s] to list", hostname);
+        add_popular_server(hostname);
+    }
+
+    free(ptrcopy);
+}
+
 /** Verifies if the configuration is complete and valid.  Terminates the program if it isn't */
 void
 config_validate(void)
 {
     config_notnull(config.gw_interface, "GatewayInterface");
     config_notnull(config.auth_servers, "AuthServer");
+    validate_popular_servers();
 
     if (missing_parms) {
         debug(LOG_ERR, "Configuration is not complete, exiting...");
         exit(-1);
+    }
+}
+
+/** @internal
+ * Validate that popular servers are populated or log a warning and set a default.
+ */
+static void
+validate_popular_servers(void)
+{
+    if (config.popular_servers == NULL) {
+        debug(LOG_WARNING, "PopularServers not set in config file, this will become fatal in a future version.");
+        add_popular_server("www.google.com");
+        add_popular_server("www.yahoo.com");
     }
 }
 

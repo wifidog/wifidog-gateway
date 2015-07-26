@@ -599,6 +599,7 @@ httpdAddCContent(server, dir, name, indexFlag, preload, function)
 httpd *server;
 char *dir;
 char *name;
+int indexFlag;
 int (*preload) ();
 void (*function) ();
 {
@@ -650,6 +651,7 @@ httpdAddStaticContent(server, dir, name, indexFlag, preload, data)
 httpd *server;
 char *dir;
 char *name;
+int indexFlag;
 int (*preload) ();
 char *data;
 {
@@ -914,7 +916,7 @@ httpdSendFile(httpd * server, request * r, const char *path)
     char *suffix;
     struct stat sbuf;
 
-    suffix = rindex(path, '.');
+    suffix = strrchr(path, '.');
     if (suffix != NULL) {
         if (strcasecmp(suffix, ".gif") == 0)
             strcpy(r->response.contentType, "image/gif");

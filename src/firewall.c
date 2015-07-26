@@ -35,7 +35,6 @@
 #include <pthread.h>
 #include <sys/wait.h>
 #include <sys/types.h>
-#include <sys/unistd.h>
 
 #include <string.h>
 
@@ -286,7 +285,7 @@ fw_sync_with_authserver(void)
         /* Update the counters on the remote server only if we have an auth server */
         if (config->auth_servers != NULL) {
             auth_server_request(&authresponse, REQUEST_TYPE_COUNTERS, p1->ip, p1->mac, p1->token, p1->counters.incoming,
-                                p1->counters.outgoing);
+                                p1->counters.outgoing, p1->counters.incoming_delta, p1->counters.outgoing_delta);
         }
 
         time_t current_time = time(NULL);
@@ -347,7 +346,10 @@ fw_sync_with_authserver(void)
                         //fw_deny(tmp->ip, tmp->mac, tmp->fw_connection_state); /* XXX this was possibly to avoid dupes. */
 
                         if (tmp->fw_connection_state != FW_MARK_PROBATION) {
-                            tmp->counters.incoming = tmp->counters.outgoing = 0;
+                            tmp->counters.incoming_delta =
+                             tmp->counters.outgoing_delta =
+                             tmp->counters.incoming =
+                             tmp->counters.outgoing = 0;
                         } else {
                             //We don't want to clear counters if the user was in validation, it probably already transmitted data..
                             debug(LOG_INFO,

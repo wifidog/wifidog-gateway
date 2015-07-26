@@ -31,9 +31,9 @@
 #include <syslog.h>
 #include <errno.h>
 #include <pthread.h>
+#include <unistd.h>
 #include <sys/wait.h>
 #include <sys/types.h>
-#include <sys/unistd.h>
 
 #include <string.h>
 
@@ -122,7 +122,8 @@ client_list_add(const char *ip, const char *mac, const char *token)
     curclient->ip = safe_strdup(ip);
     curclient->mac = safe_strdup(mac);
     curclient->token = safe_strdup(token);
-    curclient->counters.incoming = curclient->counters.incoming_history = curclient->counters.outgoing =
+    curclient->counters.incoming_delta = curclient->counters.outgoing_delta = 
+            curclient->counters.incoming = curclient->counters.incoming_history = curclient->counters.outgoing =
         curclient->counters.outgoing_history = 0;
     curclient->counters.last_updated = time(NULL);
 
@@ -190,8 +191,10 @@ client_dup(const t_client * src)
     new->token = safe_strdup(src->token);
     new->counters.incoming = src->counters.incoming;
     new->counters.incoming_history = src->counters.incoming_history;
+    new->counters.incoming_delta = src->counters.incoming_delta;
     new->counters.outgoing = src->counters.outgoing;
     new->counters.outgoing_history = src->counters.outgoing_history;
+    new->counters.outgoing_delta = src->counters.outgoing_delta;
     new->counters.last_updated = src->counters.last_updated;
     new->next = NULL;
 

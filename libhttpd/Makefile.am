@@ -14,6 +14,8 @@ noinst_HEADERS = httpd_priv.h
 pkginclude_HEADERS = httpd.h
 
 EXTRA_DIST = README
-	
-#AM_CPPFLAGS = \
-#	-I${top_srcdir}/inc
+
+AM_CPPFLAGS = \
+	-Wall \
+	-Wextra \
+	-Wno-unused-parameter
