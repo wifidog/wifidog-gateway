@@ -179,6 +179,7 @@ get_cyassl_ctx(const char *hostname)
             }
         }
 
+#ifdef HAVE_SNI
         if (config->ssl_use_sni) {
             debug(LOG_INFO, "Setting SSL using SNI for hostname %s",
                 hostname);
@@ -191,6 +192,7 @@ get_cyassl_ctx(const char *hostname)
                 return NULL;
             }
         }
+#endif
 
         if (config->ssl_verify) {
             /* Use trusted certs */

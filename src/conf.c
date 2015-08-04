@@ -803,6 +803,10 @@ config_read(const char *filename)
                     }
 #ifndef USE_CYASSL
                     debug(LOG_WARNING, "SSLUseSNI is set but no SSL compiled in. Ignoring!");
+#else
+#ifndef HAVE_SNI
+                    debug(LOG_WARNING, "SSLUseSNI is set but no CyaSSL SNI enabled. Ignoring!");
+#endif
 #endif
                     break;
                 case oBadOption:
