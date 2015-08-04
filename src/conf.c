@@ -103,6 +103,7 @@ typedef enum {
     oSSLPeerVerification,
     oSSLCertPath,
     oSSLAllowedCipherList,
+    oSSLUseSNI,
 } OpCodes;
 
 /** @internal
@@ -149,6 +150,7 @@ static const struct {
     "sslpeerverification", oSSLPeerVerification}, {
     "sslcertpath", oSSLCertPath}, {
     "sslallowedcipherlist", oSSLAllowedCipherList}, {
+    "sslusesni", oSSLUseSNI}, {
 NULL, oBadOption},};
 
 static void config_notnull(const void *, const char *);
@@ -204,6 +206,7 @@ config_init(void)
     config.deltatraffic = DEFAULT_DELTATRAFFIC;
     config.ssl_cipher_list = NULL;
     config.arp_table_path = safe_strdup(DEFAULT_ARPTABLE);
+    config.ssl_use_sni = DEFAULT_AUTHSERVSSLSNI;
 
     debugconf.log_stderr = 1;
     debugconf.debuglevel = DEFAULT_DEBUGLEVEL;
@@ -789,6 +792,17 @@ config_read(const char *filename)
                     config.ssl_cipher_list = safe_strdup(p1);
 #ifndef USE_CYASSL
                     debug(LOG_WARNING, "SSLAllowedCipherList is set but no SSL compiled in. Ignoring!");
+#endif
+                    break;
+                case oSSLUseSNI:
+                    config.ssl_use_sni = parse_boolean_value(p1);
+                    if (config.ssl_use_sni < 0) {
+                        debug(LOG_WARNING, "Bad syntax for Parameter: SSLUseSNI on line %d " "in %s."
+                            "The syntax is yes or no." , linenum, filename);
+                        exit(-1);
+                    }
+#ifndef USE_CYASSL
+                    debug(LOG_WARNING, "SSLUseSNI is set but no SSL compiled in. Ignoring!");
 #endif
                     break;
                 case oBadOption:
