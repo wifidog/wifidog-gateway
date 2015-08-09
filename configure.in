@@ -94,6 +94,26 @@ if test "x$enable_cyassl" = xyes; then
         AC_SEARCH_LIBS([CyaSSLv23_client_method], [cyassl wolfssl], [], [
                 AC_MSG_ERROR([unable to find the CyaSSLv23_client_method function.])
         ])
+
+        AC_MSG_CHECKING([for the CyaSSL SNI enabled])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM(
+        [[
+                #define HAVE_SNI
+                #include <cyassl/ssl.h>
+        ]], [[
+                CYASSL_CTX *ctx;
+                CyaSSL_Init();
+                ctx = CyaSSL_CTX_new(CyaTLSv1_client_method());
+                CyaSSL_CTX_UseSNI(ctx, CYASSL_SNI_HOST_NAME, "wifidog.org", 11);
+        ]])], [enabled_sni=yes], [enabled_sni=no])
+
+        if test "x$enabled_sni" = xyes; then
+                AC_MSG_RESULT([yes])
+                AC_DEFINE([HAVE_SNI],, "Compile with CyaSSL SNI support")
+        else
+                AC_MSG_RESULT([no])
+        fi
+
         AC_DEFINE(USE_CYASSL,, "Compile with CyaSSL support")
 fi
 ])

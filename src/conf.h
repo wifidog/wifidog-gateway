@@ -67,6 +67,7 @@
 #define DEFAULT_AUTHSERVSSLPEERVER 1    /* 0 means: Enable peer verification */
 #define DEFAULT_DELTATRAFFIC 0    /* 0 means: Enable peer verification */
 #define DEFAULT_ARPTABLE "/proc/net/arp"
+#define DEFAULT_AUTHSERVSSLSNI 0  /* 0 means: Disable SNI */
 /*@}*/
 
 /*@{*/
@@ -189,6 +190,8 @@ typedef struct {
     int ssl_verify;             /**< @brief boolean, whether to enable
 		auth server certificate verification */
     char *ssl_cipher_list;  /**< @brief List of SSL ciphers allowed. Optional. */
+    int ssl_use_sni;            /**< @brief boolean, whether to enable
+    auth server for server name indication, the TLS extension */
     t_firewall_ruleset *rulesets;       /**< @brief firewall rules */
     t_trusted_mac *trustedmaclist; /**< @brief list of trusted macs */
     char *arp_table_path; /**< @brief Path to custom ARP table, formatted

@@ -46,7 +46,7 @@
 #endif
 
 #ifdef USE_CYASSL
-static CYASSL_CTX *get_cyassl_ctx(void);
+static CYASSL_CTX *get_cyassl_ctx(const char *hostname);
 #endif
 
 /**
@@ -151,7 +151,7 @@ static pthread_mutex_t cyassl_ctx_mutex = PTHREAD_MUTEX_INITIALIZER;
 } while (0)
 
 static CYASSL_CTX *
-get_cyassl_ctx(void)
+get_cyassl_ctx(const char *hostname)
 {
     int err;
     CYASSL_CTX *ret;
@@ -178,6 +178,21 @@ get_cyassl_ctx(void)
                 return NULL;
             }
         }
+
+#ifdef HAVE_SNI
+        if (config->ssl_use_sni) {
+            debug(LOG_INFO, "Setting SSL using SNI for hostname %s",
+                hostname);
+            err = CyaSSL_CTX_UseSNI(cyassl_ctx, CYASSL_SNI_HOST_NAME, hostname,
+                      strlen(hostname));
+            if (SSL_SUCCESS != err) {
+                debug(LOG_ERR, "Could not setup SSL using SNI for hostname %s",
+                    hostname);
+                UNLOCK_CYASSL_CTX();
+                return NULL;
+            }
+        }
+#endif
 
         if (config->ssl_verify) {
             /* Use trusted certs */
@@ -233,7 +248,7 @@ https_get(const int sockfd, const char *req, const char *hostname)
     s_config *config;
     config = config_get_config();
 
-    ctx = get_cyassl_ctx();
+    ctx = get_cyassl_ctx(hostname);
     if (NULL == ctx) {
         debug(LOG_ERR, "Could not get CyaSSL Context!");
         goto error;
