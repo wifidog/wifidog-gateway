@@ -1,0 +1,104 @@
+#!/bin/sh /etc/rc.common
+#卓微科技＠limeng
+#2014.08.22
+
+START=65
+
+EXTRA_COMMANDS="status"
+EXTRA_HELP="        status Print the status of the service"
+
+config_load()
+{
+	rm -f /etc/wifidog.conf
+	gateway_id=$(uci get wifidog.@wifidog[0].gateway_id)
+	gateway_interface=$(uci get wifidog.@wifidog[0].gateway_interface) 
+	gateway_eninterface=$(uci get wifidog.@wifidog[0].gateway_eninterface)
+	gateway_hostname=$(uci get wifidog.@wifidog[0].gateway_hostname) 
+	gateway_httpport=$(uci get wifidog.@wifidog[0].gateway_httpport) 
+	gateway_path=$(uci get wifidog.@wifidog[0].gateway_path) 
+	gateway_connmax=$(uci get wifidog.@wifidog[0].gateway_connmax) 
+	ssl_enable=$(uci get wifidog.@wifidog[0].ssl_enable) 
+	check_interval=$(uci get wifidog.@wifidog[0].check_interval)
+	client_timeout=$(uci get wifidog.@wifidog[0].client_timeout)
+	sslport=$(uci get wifidog.@wifidog[0].sslport)
+	deamo_enable=$(uci get wifidog.@wifidog[0].deamo_enable)
+	white_black_enable=$(uci get wifidog.@wifidog[0].white_black_enable)
+	gatewayport=$(uci get wifidog.@wifidog[0].gatewayport)
+	myz_mac=$(uci get wifidog.@wifidog[0].myz_mac)
+	tbmd_url=$(uci get wifidog.@wifidog[0].bmd_url) 
+	thmd_url=$(uci get wifidog.@wifidog[0].hmd_url) 
+    bmd_url=`echo $tbmd_url | tr " " ","`
+    hmd_url=`echo $thmd_url | tr " " ","`
+    
+echo "
+GatewayID $gateway_id
+GatewayInterface $gateway_interface
+ExternalInterface $gateway_eninterface
+AuthServer {
+	Hostname $gateway_hostname
+	SSLAvailable $ssl_enable
+	SSLPort $sslport
+	HTTPPort $gateway_httpport
+	Path $gateway_path
+	}
+Daemon $deamo_enable
+GatewayPort $gatewayport
+CheckInterval $check_interval
+ClientTimeout $client_timeout
+HTTPDMaxConn $gateway_connmax
+TrustedMACList $myz_mac
+WhiteList $bmd_url
+BlackList  $hmd_url
+
+FirewallRuleSet global {
+FirewallRule allow to 61.139.2.69
+FirewallRule allow to 8.8.8.8
+FirewallRule allow to 114.114.114.114
+}
+FirewallRuleSet validating-users {
+    FirewallRule allow to 0.0.0.0/0
+}
+
+FirewallRuleSet known-users {
+    FirewallRule allow to 0.0.0.0/0
+}
+
+FirewallRuleSet unknown-users {
+    FirewallRule allow udp port 53
+    FirewallRule allow tcp port 53
+    FirewallRule allow udp port 67
+    FirewallRule allow tcp port 67
+}
+
+FirewallRuleSet locked-users {
+    FirewallRule block to 0.0.0.0/0
+}
+" >> /etc/wifidog.conf
+}
+  
+start() {	
+	wifidog_enable=$(uci get wifidog.@wifidog[0].wifidog_enable)
+	 stop;
+	 [ "$wifidog_enable" -eq 0 ] && exit 0
+	sleep 1
+	config_load
+	/usr/bin/wifidog-init start
+	if [ "$white_black_enable" -eq 1 ]; then
+		sleep 1
+		/usr/lm/script/white_black_flush.sh &
+	fi
+}
+
+stop() {
+	/usr/bin/wifidog-init stop
+	sleep 1
+	rst=`ps | grep white_black | cut -d "r" -f 1`
+	if [ -n "$rst" ]; then
+		kill -9 $rst
+	fi
+}
+
+status() {
+	/usr/bin/wifidog-init status
+}
+

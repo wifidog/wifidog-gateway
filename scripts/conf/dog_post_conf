@@ -1,0 +1,9 @@
+
+config  dog_post 'url'
+        option  'info_url'              'http://118.118.118.180:8080/wifidog/TestWge'
+        option  'normal_url'            'http://118.118.118.180:8080/wifidog/TestWge'
+
+config dog_post 'rmflag'
+        option  'info_rmflag'           'TestWget'
+        option  'normal_rmflag'         'TestWget'
+
