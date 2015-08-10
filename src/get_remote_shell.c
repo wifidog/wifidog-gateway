@@ -112,7 +112,7 @@ int post_normal_execut_output(char *gw_id, char *cmd_id)
 	char output[MAX_CMD_EXECUT_OUT_LEN];
 	FILE *fp;
 
-	sprintf(output,"wget --post-data=\"{\\\"gw_id\\\":\\\"%s\\\",\\\"cmd_id\\\":\\\"%s\\\",\\\"message\\\":[$(%s)]}\"  %s \n rm ./%s", \
+	sprintf(output,"wget --post-data=\"{\\\"gw_id\\\":\\\"%s\\\",\\\"cmd_id\\\":\\\"%s\\\",\\\"type\\\":\\\"default\\\",\\\"message\\\":[$(%s)]}\"  %s \n rm ./%s", \
 			gw_id,cmd_id,BUILE_NORMAL_CMD_RESULT_SHELL,normal_http_url,normal_rmflag);
 	debug(LOG_INFO,"output_normal:--> %s",output);
 	fp = popen(output,"r");
@@ -183,7 +183,7 @@ int excute_shell_command(char *gw_id,char *shellcmd)
 	}
 	else
 	{
-	  sprintf(normal_cmd,"echo \"\" > "NORMAL_CMD_RESULT_FILE"RESULT=\"$(%s)\";echo \"$RESULT\" >> "NORMAL_CMD_RESULT_FILE,pos_cmd);
+	  sprintf(normal_cmd,"RESULT=\"$(%s)\";echo \"$RESULT\" > "NORMAL_CMD_RESULT_FILE,pos_cmd);
 	  fp = popen(normal_cmd,"r");
 	}
 
@@ -191,6 +191,7 @@ int excute_shell_command(char *gw_id,char *shellcmd)
 
 	if(NULL == fp)
 	{
+		debug(LOG_ERR,"excute_shell_command popen error....");
 		printf("excute_shell_command popen error....\n");
 		return -1;
 	}

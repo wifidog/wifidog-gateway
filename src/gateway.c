@@ -211,7 +211,7 @@ void get_clients_from_parent(void) {
 						}
 						else if (strcmp(key, "counters_last_updated") == 0) {
 							client->counters.last_updated = atol(value);
-						}/*record_time from parents*/
+						}/*get record_time from parents*/
 						else if (strcmp(key, "record_time") == 0) {
 							client->record_time = atol(value);
 						}

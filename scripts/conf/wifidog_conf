@@ -14,7 +14,7 @@ config	'wifidog_conf'	'single'
 	 option		httpdRealm		'# HTTPDRealm WiFiDog'
 	 option		httpdUserName		'# HTTPDUserName admin'
 	 option		httpdPassword		'# HTTPDPassword secret'
-	 option		checkInterval		'# CheckInterval 60'
+	 option		checkInterval		'CheckInterval 30'
 	 option		clientTimeout		'ClientTimeout 5'
 
 
