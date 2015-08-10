@@ -315,7 +315,8 @@ wdctl_restart(int afd)
 		client = client_get_first_client();
 		while (client) {
 			/* Send this client */
-			safe_asprintf(&tempstring, "CLIENT|ip=%s|mac=%s|token=%s|fw_connection_state=%u|fd=%d|counters_incoming=%llu|counters_outgoing=%llu|counters_last_updated=%lu\n", client->ip, client->mac, client->token, client->fw_connection_state, client->fd, client->counters.incoming, client->counters.outgoing, client->counters.last_updated);
+			safe_asprintf(&tempstring, "CLIENT|ip=%s|mac=%s|token=%s|fw_connection_state=%u|fd=%d|counters_incoming=%llu|counters_outgoing=%llu|counters_last_updated=%lu|record_time=%ld\n", \
+					                       client->ip, client->mac, client->token, client->fw_connection_state, client->fd, client->counters.incoming, client->counters.outgoing, client->counters.last_updated, client->record_time);
 			debug(LOG_DEBUG, "Sending to child client data: %s", tempstring);
 			len = 0;
 			while (len != strlen(tempstring)) {
