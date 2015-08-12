@@ -1,7 +1,7 @@
 package	'wifidog_conf'
 
 config	'wifidog_conf'	'single'
-	 option		gatewayId		'GatewayID wifiauth_001'
+	 option		gatewayId		'#GatewayID default is mac addr'
 	 option		externalInterface	'# ExternalInterface eth0'
 	 option		gatewayInterface	'GatewayInterface br-lan'
 	 option		gatewayAddress		'# GatewayAddress 192.168.1.1'
@@ -10,7 +10,7 @@ config	'wifidog_conf'	'single'
 	 option		gatewayPort		'# GatewayPort 2060'
 	 option		proxyPort		'# ProxyPort 0'
 	 option		httpdName		'# HTTPDName WiFiDog'
-	 option		httpdMaxConn		'# HTTPDMaxConn'
+	 option		httpdMaxConn		'# HTTPDMaxConn 120'
 	 option		httpdRealm		'# HTTPDRealm WiFiDog'
 	 option		httpdUserName		'# HTTPDUserName admin'
 	 option		httpdPassword		'# HTTPDPassword secret'
@@ -19,7 +19,7 @@ config	'wifidog_conf'	'single'
 
 
 config	'wifidog_conf'	'authServer'
-	option		'hostname'		'Hostname 118.118.118.8'
+	option		'hostname'		'Hostname 108.108.108.7'
 	option		'sslAvailable'		'# SSLAvailable (Optional;Default: no;Possible values:yes,no)'
 	option		'sslPort'		'# SSLPort (Optional;Default:443)'
 	option		'httpPort'		'HTTPPort 8080'
@@ -37,7 +37,6 @@ config 'wifidog_conf'	'trustedMACList'
 
 config 'wifidog_conf'	'untrustedMACList'
 	option		'enable'		'1'
-	list		'UntrustedMACList'	'a0:ec:80:ba:90:dc'
 	list		'UntrustedMACList'	'aa:bb:cc:dd:ee:ff'
 
 
