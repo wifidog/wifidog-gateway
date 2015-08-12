@@ -2,7 +2,7 @@
 #
 # description: get the settings of wireless,
 #		lan,wan,reboot_info and dhcp.
-#		use in OpenWrt router,based on uci.
+#		use in OpenWrt router,based on uci
 # Version: 1.0.0
 # Author: GaomingPan
 #         2015-07-29
@@ -15,7 +15,7 @@ STMP=/tmp/.stmpfile
 RESULT_FILE=/tmp/routersettings
 RESULT=""
 echo "" > $RESULT_FILE
-RESULT="$RESULT$(echo "{\"gw_id\":\"$1\",\"cmd_id\":\"$2\",")"
+RESULT="$RESULT$(echo "{\"gw_id\":\"$1\",\"cmd_id\":\"$2\",\"type\":\"getsettings\",")"
 RESULT="$RESULT$(echo "\"result\":{\"wireless\":{")"
 uci show wireless > $TMP
 while read line;do echo $line>$STMP; RESULT="$RESULT$(awk -F "=" '{print "\""$1"\":","\""$2"\"," }'<$STMP)";done < $TMP
