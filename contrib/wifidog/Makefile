@@ -23,7 +23,7 @@ PKG_INSTALL:=1
 include $(INCLUDE_DIR)/package.mk
 
 define Package/wifidog
-  SUBMENU:=Captive Portals
+#  SUBMENU:=Captive Portals
   SECTION:=wifidog
   CATEGORY:=Wifidog
 #  SECTION:=net
