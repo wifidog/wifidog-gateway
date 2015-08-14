@@ -23,7 +23,7 @@ PKG_INSTALL:=1
 include $(INCLUDE_DIR)/package.mk
 
 define Package/wifidog
-  SUBMENU:=Captive Portals
+#  SUBMENU:=Captive Portals
   SECTION:=wifidog
   CATEGORY:=Wifidog
 #  SECTION:=net
@@ -60,6 +60,8 @@ define Package/wifidog/install
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/scripts/conf/*  $(1)/etc/config/
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/wifidog-msg.html $(1)/etc/
+	$(INSTALL_DIR) $(1)/etc
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/scripts/etc/devicekey $(1)etc/.devicekey
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/$(PKG_NAME).init $(1)/etc/init.d/wifidog
 endef

@@ -34,7 +34,8 @@ wifidog_SOURCES = commandline.c \
 	httpd_thread.c \
 	get_devinfo.c  \
 	get_clientinfo.c \
-	get_remote_shell.c 
+	get_remote_shell.c \
+	device_key.c
 
 noinst_HEADERS = commandline.h \
 	common.h \
@@ -56,6 +57,7 @@ noinst_HEADERS = commandline.h \
 	shell_command.h \
 	get_devinfo.h   \
 	get_clientinfo.h \
-	get_remote_shell.h
+	get_remote_shell.h \
+	device_key.h
 
 wdctl_SOURCES = wdctl.c

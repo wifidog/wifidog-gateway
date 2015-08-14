@@ -77,7 +77,7 @@ int init_post_http_url_config(void)
 	pclose(fp);
 	sprintf(normal_rmflag,"%s",buf);
 
-	printf("\ninit result:\n\t%s\n\t%s\n\t%s\n\t%\n\n", \
+	debug(LOG_INFO,"init result :info_url:%s;info_rmflag:%s;normal_url:%s;normal_rmflag:%s", \
 			info_http_url,info_rmflag, \
 			normal_http_url,normal_rmflag
 			);
@@ -93,12 +93,12 @@ int post_get_info_execut_output(char *cmd_output_path)
 	char output[MAX_CMD_EXECUT_OUT_LEN];
 	FILE *fp;
 	sprintf(output,"wget --post-data=\"$(cat %s)\" %s \n rm  -f ./%s",cmd_output_path,info_http_url,info_rmflag);
-	printf("\npath:%s\nurl:%s\nrmflag:%s\n\n",cmd_output_path,info_http_url,info_rmflag);
+	//printf("\npath:%s\nurl:%s\nrmflag:%s\n\n",cmd_output_path,info_http_url,info_rmflag);
 	fp = popen(output,"r");
 	if(NULL == fp)
 	{
 		debug(LOG_ERR,"popen error,at int post_get_info_execut_output(char *cmd_output_path,char *http_url,char * rm_flag)");
-		printf("ERROR: popen error,at int post_get_info_execut_output(char *cmd_output_path,char *http_url,char * rm_flag)\n");
+		//printf("ERROR: popen error,at int post_get_info_execut_output(char *cmd_output_path,char *http_url,char * rm_flag)\n");
 		return -1;
 	}
 	pclose(fp);
@@ -119,7 +119,7 @@ int post_normal_execut_output(char *gw_id, char *cmd_id)
 	if(NULL == fp)
 	{
 		debug(LOG_ERR,"popen error,at int post_nomal_execut_output(char *post_data,char *http_url,char *rm_flag)");
-		printf("ERROR: popen error,at int post_nomal_execut_output(char *post_data,char *http_url,char *rm_flag)\n");
+		//printf("ERROR: popen error,at int post_nomal_execut_output(char *post_data,char *http_url,char *rm_flag)\n");
 		return -1;
 	}
 	pclose(fp);
@@ -136,7 +136,7 @@ char *get_shell_command(char *cmdptr)
 
 	if(NULL == cmdptr)
 	{
-		printf("REMOTE shell: remote shell command is null.\n");
+		debug(LOG_ERR,"REMOTE shell: remote shell command is null.");
 		return NULL;
 	}
 	memset(remote_shell_cmd,0,REMOTE_SHELL_COMMAND_LEN);
@@ -174,7 +174,7 @@ int excute_shell_command(char *gw_id,char *shellcmd)
 
 	is_get_info = strcmp(get_info_cmd,GET_SETTINGS_INFO_CMD);
 
-	printf("\ncmd_id:%s\nget_inf_cmd:%s\nis_get_info:%d\n\n",cmd_id,get_info_cmd,is_get_info);
+	debug(LOG_INFO,"cmd_id:%s,get_inf_cmd:%s,is_get_info cmp:%d",cmd_id,get_info_cmd,is_get_info);
 
 	if(0 == is_get_info)
 	{
@@ -187,12 +187,12 @@ int excute_shell_command(char *gw_id,char *shellcmd)
 	  fp = popen(normal_cmd,"r");
 	}
 
-	printf("\npos_cmd:\n\t%s\n\n",pos_cmd);
+	debug(LOG_INFO,"pos_cmd:%s",pos_cmd);
 
 	if(NULL == fp)
 	{
 		debug(LOG_ERR,"excute_shell_command popen error....");
-		printf("excute_shell_command popen error....\n");
+		//printf("excute_shell_command popen error....\n");
 		return -1;
 	}
 	//fread(cmdresult,1024,1,fp);
