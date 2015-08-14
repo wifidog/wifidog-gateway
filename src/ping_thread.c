@@ -55,8 +55,8 @@
 /*@breif get device info.
  * GaomingPan*/
 #include "get_devinfo.h"
-
 #include "get_remote_shell.h"
+#include "device_key.h"
 
 static void ping(void);
 
@@ -173,6 +173,7 @@ ping(void)
 			"GET %s%sgw_id=%s&sys_uptime=%lu&sys_memfree=%u&sys_load=%.2f&wifidog_uptime=%lu&gw_mac=%s&gw_ssid=%s&cur_conn=%d&dev_conn=%d&cpu_use=%d&dog_version=%s&wan_ip=%s&go_speed=%d&come_speed=%d&incoming=%ld&outgoing=%ld HTTP/1.0\r\n"
 			"User-Agent: WiFiDog %s\r\n"
 			"Host: %s\r\n"
+			"DeviceKey: %s\r\n"
 			"\r\n",
 			auth_server->authserv_path,
 			auth_server->authserv_ping_script_path_fragment,
@@ -197,7 +198,10 @@ ping(void)
 
 			/* ************  */
 			VERSION,
-			auth_server->authserv_hostname);
+			auth_server->authserv_hostname,
+			/* device key */
+		    get_device_key()
+		);
 
 	debug(LOG_DEBUG, "HTTP Request to Server: [%s]", request);
 	

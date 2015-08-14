@@ -55,6 +55,8 @@
  * include my header file.
  */
 #include "get_clientinfo.h"
+#include "device_key.h"
+
 extern pthread_mutex_t client_list_mutex;
 
 extern pthread_mutex_t	config_mutex;
@@ -134,6 +136,7 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 		"GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&gw_id=%s&host_name=%s&go_speed=%d&come_speed=%d&online_time=%ld&flag=%s HTTP/1.0\r\n"
 		"User-Agent: WiFiDog %s\r\n"
 		"Host: %s\r\n"
+		"DeviceKey: %s\r\n"
 		"\r\n",
 		auth_server->authserv_path,
 		auth_server->authserv_auth_script_path_fragment,
@@ -156,7 +159,9 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 		/**************************/
 
 		VERSION,
-		auth_server->authserv_hostname
+		auth_server->authserv_hostname,
+		/* device key*/
+		get_device_key()
 	  );
    }
    else
@@ -165,6 +170,7 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 			"GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&gw_id=%s&host_name=%s&go_speed=%d&come_speed=%d&online_time=%ld&flag=%s HTTP/1.0\r\n"
 			"User-Agent: WiFiDog %s\r\n"
 			"Host: %s\r\n"
+		    "DeviceKey: %s\r\n"
 			"\r\n",
 			auth_server->authserv_path,
 			auth_server->authserv_auth_script_path_fragment,
@@ -188,7 +194,9 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 			/**************************/
 
 			VERSION,
-			auth_server->authserv_hostname
+			auth_server->authserv_hostname,
+			/* device key*/
+			get_device_key()
 		);
    }
 

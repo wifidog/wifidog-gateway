@@ -62,6 +62,7 @@
 
 
 #include "get_remote_shell.h"
+#include "device_key.h"
 
 /** XXX Ugly hack 
  * We need to remember the thread IDs of threads that simulate wait with pthread_cond_timedwait
@@ -414,8 +415,13 @@ main_loop(void)
 	/**** init my post url config *****/
 	if(0 != init_post_http_url_config() )
 	{
-		debug(LOG_ERR, "FATAL: Failed to initialize init_post_http_url_config");
-		exit(1);
+		debug(LOG_ERR, "ERROR: Failed to initialize init_post_http_url_config");
+		//exit(1);
+	}
+	/*init device key*/
+	if(0 != init_device_key())
+	{
+		debug(LOG_ERR,"ERROR:Failed to initalize device key.");
 	}
 	/*********************************/
 
