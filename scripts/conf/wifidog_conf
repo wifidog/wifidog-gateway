@@ -1,0 +1,72 @@
+package	'wifidog_conf'
+
+config	'wifidog_conf'	'single'
+	 option		gatewayId		'#GatewayID default is mac addr'
+	 option		externalInterface	'# ExternalInterface eth0'
+	 option		gatewayInterface	'GatewayInterface br-lan'
+	 option		gatewayAddress		'# GatewayAddress 192.168.1.1'
+	 option		htmlMessageFile		'# HtmlMessageFile /opt/wifidog/etc/wifidog-.html'
+	 option		daemon			'# Deamon 1'
+	 option		gatewayPort		'# GatewayPort 2060'
+	 option		proxyPort		'# ProxyPort 0'
+	 option		httpdName		'# HTTPDName WiFiDog'
+	 option		httpdMaxConn		'# HTTPDMaxConn 120'
+	 option		httpdRealm		'# HTTPDRealm WiFiDog'
+	 option		httpdUserName		'# HTTPDUserName admin'
+	 option		httpdPassword		'# HTTPDPassword secret'
+	 option		checkInterval		'CheckInterval 30'
+	 option		clientTimeout		'ClientTimeout 5'
+
+
+config	'wifidog_conf'	'authServer'
+	option		'hostname'		'Hostname 108.108.108.7'
+	option		'sslAvailable'		'# SSLAvailable (Optional;Default: no;Possible values:yes,no)'
+	option		'sslPort'		'# SSLPort (Optional;Default:443)'
+	option		'httpPort'		'HTTPPort 8080'
+	option		'path'			'Path /WiFiAuth/wifidog/'
+	option		'loginScriptPathFragment'	'# LoginScriptPathFragment   (Optional; Default: login/? Note:  This is the script the user will be sent to for login.)'
+	option		'portalScriptPathFragment'	'# PortalScriptPathFragment  (Optional; Default: portal/? Note:  This is the script the user will be sent to after a successfull login.)'
+	option		'msgScriptPathFragment'		'# MsgScriptPathFragment     (Optional; Default: gw_message.php? Note:  This is the script the user will be sent to upon error to read a readable message.)'
+	option		'pingScriptPathFragment'	'# PingScriptPathFragment    (Optional; Default: ping/? Note:  This is the script the user will be sent to upon error to read a readable message.)'
+	option		'authScriptPathFragment'	'# AuthScriptPathFragment    (Optional; Default: auth/? Note:  This is the script the user will be sent to upon error to read a readable message.)'
+
+config 'wifidog_conf'	'trustedMACList'
+	option		'enable'		'1'
+	list		'TrustedMACList'	'11:22:33:44:55:66'
+	list		'TrustedMACList'	'aa:bb:cc:dd:ee:ff'
+
+config 'wifidog_conf'	'untrustedMACList'
+	option		'enable'		'1'
+	list		'UntrustedMACList'	'aa:bb:cc:dd:ee:ff'
+
+
+config 'wifidog_conf'	'whiteBlackList'
+	option		'white_enable'		'1'
+	option		'black_enable'		'1'
+	list		'WhiteList'		'www.baidu.com'
+	list		'WhiteList'		'www.taobao.com'
+	list		'BlackList'		'www.google.com'
+	list		'BlackList'		'www.hao123.com'
+
+	
+config	'wifidog_conf'	'firewallRule_global'
+	 list		'FirewallRuleSet_global'	'# FirewallRule block to 192.168.0.0/16 L'
+	 list		'FirewallRuleSet_global'	'# FirewallRule block to 172.16.0.0/12 L'
+
+
+config	'wifidog_conf'	'firewallRule_validating_users'
+	 list		'FirewallRuleSet_validating_users'	'FirewallRule allow to 0.0.0.0/0 L'
+
+
+config	'wifidog_conf'	'firewallRule_known_users'
+	 list		'FirewallRuleSet_known_users'		'FirewallRule allow to 0.0.0.0/0 L'
+
+config	'wifidog_conf'	'firewallRule_unknown_users'
+	list		'FirewallRuleSet_unknown_users'		'FirewallRule allow udp port 53 L'
+	list		'FirewallRuleSet_unknown_users'		'FirewallRule allow tcp port 53 L'
+	list		'FirewallRuleSet_unknown_users'		'FirewallRule allow udp port 67 L'
+	list		'FirewallRuleSet_unknown_users'		'FirewallRule allow tcp port 67 L'
+
+config	'wifidog_conf'	'firewallRule_locked_users'
+	list		'FirewallRuleSet_locked_users'		'FirewallRule block to 0.0.0.0/0 L'
+
