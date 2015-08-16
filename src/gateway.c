@@ -366,6 +366,10 @@ main_loop(void)
         started_time = time(NULL);
     }
 
+	/* save the pid file if needed */
+    if ((!config) && (!config->pidfile))
+        save_pid_file(config->pidfile);
+
     /* If we don't have the Gateway IP address, get it. Can't fail. */
     if (!config->gw_address) {
         debug(LOG_DEBUG, "Finding IP address of %s", config->gw_interface);

@@ -72,6 +72,7 @@ usage(void)
             "  -x pid        Used internally by WiFiDog when re-starting itself *DO NOT ISSUE THIS SWITCH MANUAlLY*\n");
     fprintf(stdout, "  -i <path>     Internal socket path used when re-starting self\n");
     fprintf(stdout, "  -a <path>     Path to /proc/net/arp replacement - mainly useful for debugging.\n");
+    fprintf(stdout, "  -p <path>     Save pid to file\n");
     fprintf(stdout, "\n");
 }
 
@@ -161,6 +162,15 @@ parse_commandline(int argc, char **argv)
                 config->arp_table_path = safe_strdup(optarg);
             } else {
                 fprintf(stdout, "You must supply the path to the ARP table with -a!");
+                exit(1);
+            }
+            break;
+        case 'p':
+            if (optarg) {
+                free(config->pidfile);
+                config->pidfile = safe_strdup(optarg);
+            } else {
+                fprintf(stdout, "The expected PID file path to the wifidog was not supplied!\n");
                 exit(1);
             }
             break;

@@ -195,6 +195,7 @@ config_init(void)
     config.clienttimeout = DEFAULT_CLIENTTIMEOUT;
     config.checkinterval = DEFAULT_CHECKINTERVAL;
     config.daemon = -1;
+    config.pidfile = NULL;
     config.wdctl_sock = safe_strdup(DEFAULT_WDCTL_SOCK);
     config.internal_sock = safe_strdup(DEFAULT_INTERNAL_SOCK);
     config.rulesets = NULL;
