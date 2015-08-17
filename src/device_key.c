@@ -11,11 +11,25 @@
 
 #include "device_key.h"
 
+<<<<<<< HEAD
 
 static char device_key[64] = {0};
 
 
 
+=======
+/**
+ * the global device key char array.
+ * */
+static char device_key[64] = {0};
+
+
+/* @breif get the global device key.the key will be use as auth key
+ * @PARAMETER: void
+ * @RETURN_VALUE: a none NULL char pointer
+ * GaomingPan lonely-test:yes
+ * */
+>>>>>>> 5e30f644f767573bfa1ed114514e20babcac1a72
 char * get_device_key()
 {
 	return device_key;
@@ -24,7 +38,16 @@ char * get_device_key()
 
 
 
+<<<<<<< HEAD
 
+=======
+/* @breif get the device key from a configure file
+ * @PARAMETER: void
+ * @RETURN_VALUE: success return zero and set the KEY in the device key global array,
+ * failed return a none zero number.
+ * GaomingPan lonely-test:yes
+ * */
+>>>>>>> 5e30f644f767573bfa1ed114514e20babcac1a72
 int init_device_key()
 {
 	FILE *fp;
