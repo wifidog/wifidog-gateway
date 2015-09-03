@@ -51,10 +51,11 @@ int collect_client_info()
 		 *fp_downspeed;
 
 	char info_buf[1024],
-	     chain_test[64],
+	     //chain_test[64],
 	     ip[18];
 
 	int  speed;
+	int  ret;
 
 	char *ptr,
 	     *token;
@@ -69,7 +70,7 @@ int collect_client_info()
     if(NULL == first_client_info)
     {
     	debug(LOG_ERR,"ERROR: at collect_client_info(), malloc error.");
-    	printf("ERROR: at collect_client_info(), malloc error.\n");
+    	//printf("ERROR: at collect_client_info(), malloc error.\n");
     	return -1;
     }
     first_client_info->next = NULL;
@@ -77,12 +78,15 @@ int collect_client_info()
     p1 = first_client_info;
     p2 = p1;
 
+    /**
+     * Get client ip,mac and hostname
+     * */
     fp = popen(CMD_GET_CLIENT_LIST,"r");
 
     if(NULL == fp)
     {
     	debug(LOG_ERR,"ERROR: at collect_client_info(),popen error.");
-    	printf("ERROR: at collect_client_info(),popen error.\n");
+    	//printf("ERROR: at collect_client_info(),popen error.\n");
     	return -2;
     }
 
@@ -95,8 +99,7 @@ int collect_client_info()
 			if(NULL == p1)
 			{
 				debug(LOG_ERR,"ERROR: at collect_client_info(), malloc error.");
-
-				printf("ERROR: at collect_client_info(), malloc error.\n");
+				//printf("ERROR: at collect_client_info(), malloc error.\n");
 				pclose(fp);
 				return -3;
 			}
@@ -113,7 +116,7 @@ int collect_client_info()
     		if(NULL == token)
     		{
     			debug(LOG_ERR,"ERROR: at collect_client_info(), malloc error.\n");
-    			printf("ERROR: at collect_client_info(), malloc error.\n");
+    			//printf("ERROR: at collect_client_info(), malloc error.\n");
     			pclose(fp);
     			return -4;
     		}
@@ -147,26 +150,25 @@ int collect_client_info()
 
     /* get speed files
      * */
-    memset(chain_test,0,64);
+    //memset(chain_test,0,64);
     fp_shell = popen(CMD_MAKE_SPEED_FILE,"r");
     if(NULL == fp_shell)
     {
     	debug(LOG_ERR,"ERROR: at collect_client_info(),popen for fp_shell error.");
-    	printf("ERROR: at collect_client_info(),popen for fp_shell error.\n");
+    	//printf("ERROR: at collect_client_info(),popen for fp_shell error.\n");
     	return -5;
     }
-    fread(chain_test,64,1,fp_shell);
+    //fread(chain_test,64,1,fp_shell);
     pclose(fp_shell);
 
 
     /* do some clean up,if it needs.
      * */
-    int ret;
     ret  = clean_more_chain();
     if(0 != ret)
     {
     	debug(LOG_ERR,"ERROR: clean_more_chain() return value:%d\n",ret);
-    	printf("ERROR: clean_more_chain() return value:%d\n",ret);
+    	//printf("ERROR: clean_more_chain() return value:%d\n",ret);
     }
 
 
@@ -176,7 +178,7 @@ int collect_client_info()
     if(NULL == fp_upspeed)
     {
     	debug(LOG_ERR,"ERROR: at collect_client_info(),fopen for fp_upseed error.");
-    	printf("ERROR: at collect_client_info(),fopen for fp_upseed error.\n");
+    	//printf("ERROR: at collect_client_info(),fopen for fp_upseed error.\n");
     	return -6;
     }
     memset(info_buf,0,1024);
@@ -191,7 +193,7 @@ int collect_client_info()
     		if(NULL == token)
     		{
     			debug(LOG_ERR,"ERROR: at collect_client_info(), malloc error.");
-    			printf("ERROR: at collect_client_info(), malloc error.\n");
+    			//printf("ERROR: at collect_client_info(), malloc error.\n");
     			fclose(fp_upspeed);
     			return -7;
     		}
@@ -226,7 +228,7 @@ int collect_client_info()
     if(NULL == fp_downspeed)
     {
     	debug(LOG_ERR,"ERROR: at collect_client_info(),fopen for fp_downspeed error.");
-    	printf("ERROR: at collect_client_info(),fopen for fp_downspeed error.\n");
+    	//printf("ERROR: at collect_client_info(),fopen for fp_downspeed error.\n");
     	return -8;
     }
     memset(info_buf,0,1024);
@@ -241,7 +243,7 @@ int collect_client_info()
     		if(NULL == token)
     		{
     			debug(LOG_ERR,"ERROR: at collect_client_info(), malloc error.");
-    			printf("ERROR: at collect_client_info(), malloc error.\n");
+    			//printf("ERROR: at collect_client_info(), malloc error.\n");
     			fclose(fp_downspeed);
     			return -9;
     		}
@@ -378,7 +380,7 @@ int clean_more_chain()
 	    if(NULL == fp)
 	    {
 	    	debug(LOG_ERR,"ERROR: at collect_client_info(),popen for fp_shell error.");
-	    	printf("ERROR: at collect_client_info(),popen for fp error.\n");
+	    	//printf("ERROR: at collect_client_info(),popen for fp error.\n");
 	    	return -1;
 	    }
 	    pclose(fp);
@@ -387,7 +389,7 @@ int clean_more_chain()
 	    if(NULL == fp)
 	    {
 	    	debug(LOG_ERR,"ERROR: fopen() /tmp/client.speed.chain.num\n");
-	    	printf("ERROR: fopen() /tmp/client.speed.chain.num\n");
+	    	//printf("ERROR: fopen() /tmp/client.speed.chain.num\n");
 		    return -2;
 	    }
 	    while(NULL != fgets(chain_test,10,fp))
@@ -407,13 +409,13 @@ int clean_more_chain()
 	        {
 		       pclose(fp);
 		        debug(LOG_INFO,"INFO: clean iptables chain");
-		        printf("INFO: clean iptables chain\n");
+		        //printf("INFO: clean iptables chain\n");
 	        }
 	        else
 		    {
 		        failed_count++;
 		        debug(LOG_ERR,"ERROR: popen(CMD_CLEAN_SPEED_CHAIN,r)");
-		        printf("ERROR: popen(CMD_CLEAN_SPEED_CHAIN,r)\n");
+		        //printf("ERROR: popen(CMD_CLEAN_SPEED_CHAIN,r)\n");
 		    }
 	    }
 

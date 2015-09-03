@@ -186,7 +186,7 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 			/****************************
 			 * my new info.
 			 * */
-			"null",//client_info->host_name,
+			"unknown",//client_info->host_name,
 			-1,    //client_info->go_speed,
 			-1,    //client_info->come_speed,
 			-1,    //online_time,

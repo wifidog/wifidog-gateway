@@ -8,6 +8,8 @@
 #
 ##########################################################
 
+version="1.0.0"
+
 WIFI_DOG_CONF_FILE=/etc/wifidog.conf
 WIFI_DOG_CONF=/etc/config/wifidog_conf
 SINGLE=wifidog_conf.single
@@ -128,14 +130,31 @@ generate_firewallRule_locked_users()
     echo "}" >> $WIFI_DOG_CONF_FILE  
 }
 
+conf_character_check()
+{
+    
+#####
+#    delete the single quote ' character,because some uci version will echo ' to the
+#    config file.
+    sed -i 's/'\''//g'  $WIFI_DOG_CONF_FILE
+####
+#   delete the blank character at the line header
+    sed -i 's/^[[:space:]]*//' $WIFI_DOG_CONF_FILE
+
+####
+#   delete the blank character at the line tail
+    sed -i 's/[[:space:]]*$//' $WIFI_DOG_CONF_FILE
+
+}
 
 generate_wifidog_conf_file()
 {
-    echo "#############################################" > $WIFI_DOG_CONF_FILE
-    echo "## this is wifidog config file            ###" >> $WIFI_DOG_CONF_FILE
-    echo "## auto generate by dog_conf_generator.sh ###" >> $WIFI_DOG_CONF_FILE
-    echo "## Version: 1.0.0 Based on UCI            ###" >> $WIFI_DOG_CONF_FILE
-    echo "#############################################" >> $WIFI_DOG_CONF_FILE
+    echo "###########################################################"  > $WIFI_DOG_CONF_FILE
+    echo "## this is wifidog config file"                               >> $WIFI_DOG_CONF_FILE
+    echo "## auto generate by dog_conf_generator.sh"                    >> $WIFI_DOG_CONF_FILE
+    echo "## Version: $version Based on UCI"                            >> $WIFI_DOG_CONF_FILE
+    echo "############################################################" >> $WIFI_DOG_CONF_FILE
+    
     generate_single
     generate_authServer
     generate_trustedMACList
@@ -147,21 +166,14 @@ generate_wifidog_conf_file()
     generate_firewallRule_known_users
     generate_firewallRule_unknown_users
     generate_firewallRule_locked_users
-
-####
-#   delete the blank character at the line header
-    sed -i 's/^[[:space:]]*//' $WIFI_DOG_CONF_FILE
-
-####
-#   delete the blank character at the line tail
-    sed -i 's/[[:space:]]*$//' $WIFI_DOG_CONF_FILE
+    
+    conf_character_check
 }
 
-#
-#echo "----- start generate ---------"
-#
+
+echo "------ starting generate wifidog config file --------"
+
 generate_wifidog_conf_file
 
-#
-#echo "------ generate ok   ----------"
-#
+echo "------ wifidog config file generate complete --------"
+

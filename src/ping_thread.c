@@ -203,6 +203,8 @@ ping(void)
 		    get_device_key()
 		);
 
+	debug(LOG_INFO, "PingQString << %s >>", request);
+
 	debug(LOG_DEBUG, "HTTP Request to Server: [%s]", request);
 	
 	send(sockfd, request, strlen(request), 0);
