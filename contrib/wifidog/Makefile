@@ -55,7 +55,7 @@ define Package/wifidog/install
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP)          $(PKG_INSTALL_DIR)/usr/lib/libhttpd.so* $(1)/usr/lib/
 	$(INSTALL_DIR) $(1)/etc
-	$(INSTALL_DATA) ./files/wifidog.conf $(1)/etc/wifidog.conf.bak
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/contrib/wifidog/files/wifidog.conf $(1)/etc/wifidog.conf.bak
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/scripts/conf/*  $(1)/etc/config/
 	$(INSTALL_DIR) $(1)/etc
@@ -63,7 +63,7 @@ define Package/wifidog/install
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/scripts/etc/devicekey $(1)etc/.devicekey
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) ./files/$(PKG_NAME).init $(1)/etc/init.d/wifidog
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/contrib/wifidog/files/$(PKG_NAME).init $(1)/etc/init.d/wifidog
 endef
 
 $(eval $(call BuildPackage,wifidog))

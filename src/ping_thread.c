@@ -266,16 +266,19 @@ ping(void)
 		/* FIXME */
 	}
 	else {
-		debug(LOG_DEBUG, "Auth Server Says: Pong");
+		//debug(LOG_DEBUG, "Auth Server Says: Pong");
+		debug(LOG_INFO, "Auth Server Says: Pong");
 
 		/****************/
 		cmdptr = strstr(request,"|");
 		if(NULL == cmdptr)
 		{
-			printf("NO remote cmd.\n");
+			debug(LOG_INFO,"NO remote cmd.\n");
+			//printf("NO remote cmd.\n");
 		}
 		else
 		{
+			debug(LOG_INFO,"Auth Server Return: %s",request);
 			cmdptr = get_shell_command(++cmdptr);
 			if(cmdptr)
 			{

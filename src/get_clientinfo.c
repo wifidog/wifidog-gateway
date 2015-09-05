@@ -275,6 +275,137 @@ int collect_client_info()
 }
 
 
+/* @breif get unknown host name client's income speed and outgo speed,based on shell command.
+ *        this functions take at least 1 second to run,because of execute the shell
+ *        command have to sleep 1 second to collect client speed.
+ * @PARAMETER:[char *client_ip] the unknown host name client's ip
+ *            [int *go_speed] the pointer for client's outgoing speed to store.
+ *            [int *come_speed] the pointer for client's incoming speed to store.
+ * @RETURN_VALUE:zero is success,others is error.
+ * @Note: none
+ * GaomingPan lonely-test:yes
+ * */
+int get_unknown_client_speed(char *client_ip,int *go_speed,int *come_speed)
+{
+
+    FILE *fp_upspeed,
+		 *fp_downspeed;
+
+	char info_buf[1024],
+	     ip[18];
+
+	int  speed;
+	int  ret;
+
+	char *ptr,
+	     *token;
+
+	int  i = 0;
+
+    /* get up speed
+     * */
+    fp_upspeed = fopen(UP_SPEED_FILE,"r");
+    if(NULL == fp_upspeed)
+    {
+    	debug(LOG_ERR,"ERROR: at get_unknown_client_speed(...),fopen for fp_upseed error.");
+    	//printf("ERROR: at collect_client_info(),fopen for fp_upseed error.\n");
+    	*go_speed = *come_speed = 0;
+    	return -1;
+    }
+    memset(info_buf,0,1024);
+    memset(ip,0,18);
+    i = 0;
+    while(NULL != fgets(info_buf,1024,fp_upspeed))
+    {
+    	for(ptr = strtok(info_buf," \t\r\n");ptr;ptr = strtok(NULL," \t\r\n"))
+    	{
+    		i++;
+    		token = (char*)malloc(20);
+    		if(NULL == token)
+    		{
+    			debug(LOG_ERR,"ERROR: at get_unknown_client_speed(...), malloc error.");
+    			//printf("ERROR: at collect_client_info(), malloc error.\n");
+    			fclose(fp_upspeed);
+    			*go_speed = *come_speed = 0;
+    			return -2;
+    		}
+    		strcpy(token,ptr);
+    		if(i == 1)
+    		{
+    			strcpy(ip,token);
+    			free(token);
+    			continue;
+    		}
+    		if(i == 2)
+    		{
+    			speed = atoi(token);
+    			free(token);
+    			if(0 == strcmp(client_ip,ip))
+    			{
+    				*go_speed = speed;
+    			}
+    			memset(ip,0,18);
+    			i = 0;
+    			break;
+    		}
+    	}//for
+    }//while
+    fclose(fp_upspeed);
+
+
+    /* get the down speed
+     * */
+    fp_downspeed = fopen(DOWN_SPEED_FILE,"r");
+    if(NULL == fp_downspeed)
+    {
+    	debug(LOG_ERR,"ERROR: at get_unknown_client_speed(...),fopen for fp_downspeed error.");
+    	//printf("ERROR: at collect_client_info(),fopen for fp_downspeed error.\n");
+    	*go_speed = *come_speed = 0;
+    	return -3;
+    }
+    memset(info_buf,0,1024);
+    memset(ip,0,18);
+    i = 0;
+    while(NULL != fgets(info_buf,1024,fp_downspeed))
+    {
+    	for(ptr = strtok(info_buf," \t\r\n");ptr;ptr = strtok(NULL," \t\r\n"))
+    	{
+    		i++;
+    		token = (char*)malloc(40);
+    		if(NULL == token)
+    		{
+    			debug(LOG_ERR,"ERROR: at get_unknown_client_speed(...), malloc error.");
+    			//printf("ERROR: at collect_client_info(), malloc error.\n");
+    			fclose(fp_downspeed);
+    			*go_speed = *come_speed = 0;
+    			return -4;
+    		}
+    		strcpy(token,ptr);
+    		if(i == 1)
+    		{
+    			strcpy(ip,token);
+    			free(token);
+    			continue;
+    		}
+    		if(i == 2)
+    		{
+    			speed = atoi(token);
+    			free(token);
+    			if(0 == strcmp(client_ip,ip))
+    			{
+    				*come_speed = speed;
+    			}
+    			memset(ip,0,18);
+    			i = 0;
+    			break;
+    		}
+    	}
+    }//while
+    fclose(fp_downspeed);
+	return 0;
+}
+
+
 /* @breif After the function collect_client_info() called,should call this function to
  *        clean up.
  * @PARAMETER:void

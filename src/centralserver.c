@@ -86,6 +86,10 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 	t_auth_serv	*auth_server = NULL;
 	auth_server = get_auth_server();
 	
+	/* unknown host name client's parameter*/
+	int go_speed,
+	    come_speed;
+
 	/* Blanket default is error. */
 	authresponse->authcode = AUTH_ERROR;
 	
@@ -166,7 +170,9 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
    }
    else
    {
-		 snprintf(buf, (sizeof(buf) - 1),
+	   get_unknown_client_speed(ip,&go_speed,&come_speed);
+
+	   snprintf(buf, (sizeof(buf) - 1),
 			"GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&gw_id=%s&host_name=%s&go_speed=%d&come_speed=%d&online_time=%ld&flag=%s HTTP/1.0\r\n"
 			"User-Agent: WiFiDog %s\r\n"
 			"Host: %s\r\n"
@@ -187,9 +193,9 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 			 * my new info.
 			 * */
 			"unknown",//client_info->host_name,
-			-1,    //client_info->go_speed,
-			-1,    //client_info->come_speed,
-			-1,    //online_time,
+			go_speed,    //client_info->go_speed,
+			come_speed,    //client_info->come_speed,
+			online_time,    //online_time,
 			get_client_auth_flag(),
 			/**************************/
 

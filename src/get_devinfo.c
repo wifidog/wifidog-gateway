@@ -217,18 +217,24 @@ int get_curconn(void)
 int get_devconn(void)
 {
 	FILE *fp;
-	char buf[10];
+	char shell_cmd[1024],
+	     buf[10];
+	s_config *conf = config_get_config();
 	memset(buf,0,10);
-	fp = popen("awk \'END{print NR}\' $(uci get dhcp.@dnsmasq[0].leasefile)","r");
+
+	sprintf(shell_cmd,"cat /proc/net/arp|grep -e \"0x2\"|grep -e \"%s\" > /tmp/.devconn;awk \'END{print NR}\' /tmp/.devconn",conf->gw_interface);
+	//fp = popen("awk \'END{print NR}\' $(uci get dhcp.@dnsmasq[0].leasefile)","r");
+	fp = popen(shell_cmd,"r");
+
 	if(NULL == fp)
 	{
-		debug(LOG_ERR,"ERROR popen error, at get_devconn.");
+		debug(LOG_ERR,"ERROR popen error, at get_devconn().");
 		return -1;
 	}
     if(0 == fread(buf,1,10,fp))
     {
     	pclose(fp);
-    	return 0;
+    	return -2;
     }
     pclose(fp);
     return (atoi(buf));
@@ -429,10 +435,11 @@ int get_trafficCount(long *outgo,long *income)
  * */
 int get_wanbps(int *go,int *come)
 {
-    unsigned long long outgo = 0,
-                       income = 0;
-    unsigned long long outgo1 = 0,
-                       income1 = 0;
+    long outgo = 0,
+         income = 0;
+
+    long outgo1 = 0,
+         income1 = 0;
     int ret = 0;
 
     ret  = get_trafficCount(&outgo,&income);
