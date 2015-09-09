@@ -11,7 +11,6 @@
 
 #include "device_key.h"
 
-
 /**
  * the global device key char array.
  * */
@@ -27,6 +26,8 @@ char * get_device_key()
 {
 	return device_key;
 }
+
+
 
 
 /* @breif get the device key from a configure file

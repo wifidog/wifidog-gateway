@@ -172,9 +172,9 @@ generate_wifidog_conf_file()
 }
 
 
-#echo "------ starting generate wifidog config file --------"
+echo "------ starting generate wifidog config file --------"
 
 generate_wifidog_conf_file
 
-#echo "------ wifidog config file generate complete --------"
+echo "------ wifidog config file generate complete --------"
 

@@ -150,8 +150,8 @@ char *get_shell_command(char *cmdptr)
 
 int excute_shell_command(char *gw_id,char *shellcmd)
 {
-	char cmd_id[512],
-		 get_info_cmd[512],
+	char cmd_id[20],
+		 get_info_cmd[30],
 		 normal_cmd[MAX_CMD_EXECUT_OUT_LEN];
 	char *pos_id,
 		 *pos_cmd;
@@ -160,8 +160,9 @@ int excute_shell_command(char *gw_id,char *shellcmd)
 	char cmdresult[1024];
 
 	memset(cmdresult,0,1024);
-	memset(cmd_id,0,512);
-	memset(get_info_cmd,0,512);
+	memset(cmd_id,0,20);
+	memset(get_info_cmd,0,30);
+
 	pos_id = shellcmd;
 	pos_cmd = strstr(shellcmd,"|");
 
@@ -169,10 +170,11 @@ int excute_shell_command(char *gw_id,char *shellcmd)
 
 	pos_cmd = ++pos_cmd;
 
-	sprintf(get_info_cmd,"%s",pos_cmd);
+	snprintf(get_info_cmd,30,"%s",pos_cmd);
 
 	is_get_info = strcmp(get_info_cmd,GET_SETTINGS_INFO_CMD);
 
+	debug(LOG_INFO,"cmd_id:%s,get_inf_cmd:%s,is_get_info cmp:%d",cmd_id,get_info_cmd,is_get_info);
 
 	if(0 == is_get_info)
 	{
@@ -185,12 +187,17 @@ int excute_shell_command(char *gw_id,char *shellcmd)
 	  fp = popen(normal_cmd,"r");
 	}
 
+	debug(LOG_INFO,"pos_cmd:%s",pos_cmd);
+
 	if(NULL == fp)
 	{
 		debug(LOG_ERR,"excute_shell_command popen error....");
+		//printf("excute_shell_command popen error....\n");
 		return -1;
 	}
+	//fread(cmdresult,1024,1,fp);
 	pclose(fp);
+	//printf("\n\ncmd result:\n %s\n\n",cmdresult);
 
 	if(0 == is_get_info)
 	{

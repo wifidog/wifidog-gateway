@@ -222,7 +222,7 @@ int get_devconn(void)
 	s_config *conf = config_get_config();
 	memset(buf,0,10);
 
-	sprintf(shell_cmd,"cat /proc/net/arp|grep -e \"0x2\"|grep -e \"%s\" > /tmp/.devconn;awk \'END{print NR}\' /tmp/.devconn",conf->gw_interface);
+	sprintf(shell_cmd,"cat /proc/net/arp|grep -e \"0x2\"|grep -e \"%s\" | awk \'!a[$4]++\'> /tmp/.devconn;awk \'END{print NR}\' /tmp/.devconn",conf->gw_interface);
 	//fp = popen("awk \'END{print NR}\' $(uci get dhcp.@dnsmasq[0].leasefile)","r");
 	fp = popen(shell_cmd,"r");
 
@@ -234,7 +234,7 @@ int get_devconn(void)
     if(0 == fread(buf,1,10,fp))
     {
     	pclose(fp);
-    	return -2;
+    	return 0;
     }
     pclose(fp);
     return (atoi(buf));
@@ -435,11 +435,10 @@ int get_trafficCount(long *outgo,long *income)
  * */
 int get_wanbps(int *go,int *come)
 {
-    long outgo = 0,
-         income = 0;
-
-    long outgo1 = 0,
-         income1 = 0;
+    unsigned long long outgo = 0,
+                       income = 0;
+    unsigned long long outgo1 = 0,
+                       income1 = 0;
     int ret = 0;
 
     ret  = get_trafficCount(&outgo,&income);

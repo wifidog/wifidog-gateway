@@ -11,7 +11,6 @@
 
 #define  DEVICE_KEY_FILE  "/etc/.devicekey"
 
-
 /* @breif get the global device key.the key will be use as auth key
  * @PARAMETER: void
  * @RETURN_VALUE: a none NULL char pointer

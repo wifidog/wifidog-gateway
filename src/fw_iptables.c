@@ -288,8 +288,7 @@ iptables_fw_init(void)
 	/*gaomingpan untrusted mac list*/
 	iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " TABLE_WIFIDOG_UNTRUSTED, config->gw_interface);
 	for (p3 = config->untrustedmaclist; p3 != NULL; p3 = p3->next){
-		//iptables_do_command("-t mangle -A " TABLE_WIFIDOG_UNTRUSTED " -m mac --mac-source %s -j MARK --set-mark %d", p3->mac,FW_MARK_LOCKED);
-		iptables_do_command("-t mangle -A " TABLE_WIFIDOG_UNTRUSTED " -m mac --mac-source %s -j DROP", p3->mac);
+		iptables_do_command("-t mangle -A " TABLE_WIFIDOG_UNTRUSTED " -m mac --mac-source %s --j MARK --set-mark %d", p3->mac,FW_MARK_LOCKED);
 		debug(LOG_INFO,"Untrusted mac: %s ",p3->mac);
 	}
 	/* limeng */
@@ -297,7 +296,6 @@ iptables_fw_init(void)
 	for (p1 = config->black_list; p1 != NULL; p1 = p1->next)
 	{
 		iptables_do_command("-t mangle -A " TABLE_WIFIDOG_BLACKLIST " -d %s -j DROP ", p1->ip);
-		debug(LOG_INFO,"black url: %s ",p1->ip);
 	}
 	
 	/*

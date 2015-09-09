@@ -16,3 +16,4 @@ SERVER_PORT=$(uci get wifidog_conf.authServer.httpPort | awk '{print $2}')
 SERVER_URL_FOR_TEST=$SERVER_BASE_PATH:$SERVER_PORT/$SERVER_FILE_FOR_TEST
 
 
+

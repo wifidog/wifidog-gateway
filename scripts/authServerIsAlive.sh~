@@ -14,3 +14,5 @@ SERVER_FILE_FOR_TEST=IsAlive.html
 SERVER_BASE_PATH=http://$(uci get wifidog_conf.authServer.hostname | awk '{print $2}')
 SERVER_PORT=$(uci get wifidog_conf.authServer.httpPort | awk '{print $2}')
 SERVER_URL_FOR_TEST=$SERVER_BASE_PATH:$SERVER_PORT/$SERVER_FILE_FOR_TEST
+
+

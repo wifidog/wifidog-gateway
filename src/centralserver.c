@@ -61,6 +61,7 @@ extern pthread_mutex_t client_list_mutex;
 
 extern pthread_mutex_t	config_mutex;
 
+
 /** Initiates a transaction with the auth server, either to authenticate or to
  * update the traffic counters at the server
 @param authresponse Returns the information given by the central server 
@@ -86,10 +87,6 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 	t_auth_serv	*auth_server = NULL;
 	auth_server = get_auth_server();
 	
-	/* unknown host name client's parameter*/
-	int go_speed,
-	    come_speed;
-
 	/* Blanket default is error. */
 	authresponse->authcode = AUTH_ERROR;
 	
@@ -111,14 +108,12 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
       */
         t_clientinfo *client_info;
         long         online_time;
+        int go_speed,come_speed;
 
-        if(0 != collect_client_info())
-        {
-        	debug(LOG_ERR,"ERROR: at collect_client_info() failed.");
-        	printf("ERROR: at collect_client_info() failed.\n");
-        }
-        //client_info = get_client_info_by_ip(ip);
-        client_info = get_client_info_by_mac(mac);
+
+   if(0 == strcmp(request_type,REQUEST_TYPE_COUNTERS) || 0 == strcmp(request_type,REQUEST_TYPE_LOGOUT)){
+        client_info = get_client_info_by_ip(ip);
+        //client_info = get_client_info_by_mac(mac);
         if(NULL == client_info)
         {
         	//debug(LOG_ERR,"ERROR: at get_client_info_by_ip(ip) failed.");
@@ -127,15 +122,23 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
         }
 
         LOCK_CLIENT_LIST();
+
+        if(0 != collect_client_info())
+        {
+        	debug(LOG_ERR,"ERROR: at collect_client_info() failed.");
+        	printf("ERROR: at collect_client_info() failed.\n");
+        }
+
         online_time = get_online_time(ip,mac);
+
         UNLOCK_CLIENT_LIST();
 
         /******************************************/
 
 
 
-   if(NULL != client_info)
-   {
+   if(NULL != client_info){
+
 	 snprintf(buf, (sizeof(buf) - 1),
 		"GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&gw_id=%s&host_name=%s&go_speed=%d&come_speed=%d&online_time=%ld&flag=%s HTTP/1.0\r\n"
 		"User-Agent: WiFiDog %s\r\n"
@@ -150,7 +153,7 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 		safe_token,
 		incoming,
 		outgoing,
-                config_get_config()->gw_id,
+        config_get_config()->gw_id,
 
 		/****************************
 		* my new info.
@@ -167,12 +170,11 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 		/* device key*/
 		get_device_key()
 	  );
-   }
-   else
-   {
-	   get_unknown_client_speed(ip,&go_speed,&come_speed);
 
-	   snprintf(buf, (sizeof(buf) - 1),
+   } else{
+
+	   get_unknown_client_speed(ip,&go_speed,&come_speed);
+		 snprintf(buf, (sizeof(buf) - 1),
 			"GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&gw_id=%s&host_name=%s&go_speed=%d&come_speed=%d&online_time=%ld&flag=%s HTTP/1.0\r\n"
 			"User-Agent: WiFiDog %s\r\n"
 			"Host: %s\r\n"
@@ -186,7 +188,7 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 			safe_token,
 			incoming,
 			outgoing,
-	                config_get_config()->gw_id,
+	        config_get_config()->gw_id,
 
 
 			/****************************
@@ -204,11 +206,46 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 			/* device key*/
 			get_device_key()
 		);
+     }
+   }else{
+
+		 snprintf(buf, (sizeof(buf) - 1),
+			"GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&gw_id=%s&host_name=%s&go_speed=%d&come_speed=%d&online_time=%ld&flag=%s HTTP/1.0\r\n"
+			"User-Agent: WiFiDog %s\r\n"
+			"Host: %s\r\n"
+			"DeviceKey: %s\r\n"
+			"\r\n",
+			auth_server->authserv_path,
+			auth_server->authserv_auth_script_path_fragment,
+			request_type,
+			ip,
+			mac,
+			safe_token,
+			incoming,
+			outgoing,
+	        config_get_config()->gw_id,
+
+			/****************************
+			* my new info.
+			 * */
+			"null",//client_info->host_name,
+			 0,//client_info->go_speed,
+			 0,//client_info->come_speed,
+			 0,//online_time,
+			"null",//get_client_auth_flag(),
+			/**************************/
+
+			VERSION,
+			auth_server->authserv_hostname,
+			/* device key*/
+			get_device_key()
+		  );
    }
 
         free(safe_token);
 
-	debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", buf);
+	//debug(LOG_DEBUG, "Sending HTTP request to auth server: [%s]\n", buf);
+	debug(LOG_INFO, "\n\nSendingQString: [[<< %s >>]]\n\n", buf);
 	send(sockfd, buf, strlen(buf), 0);
 
 	debug(LOG_DEBUG, "Reading response");

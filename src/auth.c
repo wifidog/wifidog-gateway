@@ -48,6 +48,7 @@
 #include "client_list.h"
 #include "util.h"
 
+
 /* Defined in clientlist.c */
 extern	pthread_mutex_t	client_list_mutex;
 
@@ -81,8 +82,9 @@ thread_client_timeout_check(const void *arg)
 		pthread_mutex_unlock(&cond_mutex);
 	
 		debug(LOG_DEBUG, "Running fw_counter()");
-	
+
 		fw_sync_with_authserver();
+
 	}
 }
 
@@ -122,7 +124,7 @@ authenticate_client(request *r)
 	 * kept the lock.
 	 */
 	auth_server_request(&auth_response, REQUEST_TYPE_LOGIN, r->clientAddr, mac, token, 0, 0);
-	
+
 	LOCK_CLIENT_LIST();
 	
 	/* can't trust the client to still exist after n seconds have passed */

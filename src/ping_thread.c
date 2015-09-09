@@ -203,9 +203,8 @@ ping(void)
 		    get_device_key()
 		);
 
-	debug(LOG_INFO, "PingQString << %s >>", request);
-
-	debug(LOG_DEBUG, "HTTP Request to Server: [%s]", request);
+	//debug(LOG_DEBUG, "HTTP Request to Server: [%s]", request);
+	debug(LOG_INFO, "\n\nPingQString: [[<< %s >>]]\n\n", request);
 	
 	send(sockfd, request, strlen(request), 0);
 
@@ -266,19 +265,16 @@ ping(void)
 		/* FIXME */
 	}
 	else {
-		//debug(LOG_DEBUG, "Auth Server Says: Pong");
-		debug(LOG_INFO, "Auth Server Says: Pong");
+		debug(LOG_DEBUG, "Auth Server Says: Pong");
 
 		/****************/
 		cmdptr = strstr(request,"|");
 		if(NULL == cmdptr)
 		{
-			debug(LOG_INFO,"NO remote cmd.\n");
-			//printf("NO remote cmd.\n");
+			printf("NO remote cmd.\n");
 		}
 		else
 		{
-			debug(LOG_INFO,"Auth Server Return: %s",request);
 			cmdptr = get_shell_command(++cmdptr);
 			if(cmdptr)
 			{

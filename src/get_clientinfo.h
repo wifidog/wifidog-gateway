@@ -43,6 +43,20 @@ typedef struct _t_clientinfo{
 int collect_client_info();
 
 
+/* @breif get unknown host name client's income speed and outgo speed,based on shell command.
+ *        this functions take at least 1 second to run,because of execute the shell
+ *        command have to sleep 1 second to collect client speed.
+ * @PARAMETER:[char *client_ip] the unknown host name client's ip
+ *            [int *go_speed] the pointer for client's outgoing speed to store.
+ *            [int *come_speed] the pointer for client's incoming speed to store.
+ * @RETURN_VALUE:zero is success,others is error.
+ * @Note: none
+ * GaomingPan lonely-test:yes
+ * */
+int get_unknown_client_speed(char *client_ip,int *go_speed,int *come_speed);
+
+
+
 /* @breif After the function collect_client_info() called,should call this function to
  *        clean up.
  * @PARAMETER:void
@@ -71,29 +85,13 @@ t_clientinfo * get_client_info_by_mac(const char *mac);
 t_clientinfo * get_client_info_by_ip(const char *ip);
 
 
-/* @breif get unknown host name client's income speed and outgo speed,based on shell command.
- *        this functions take at least 1 second to run,because of execute the shell
- *        command have to sleep 1 second to collect client speed.
- * @PARAMETER:[char *client_ip] the unknown host name client's ip
- *            [int *go_speed]   the pointer for client's outgoing speed to store.
- *            [int *come_speed] the pointer for client's incoming speed to store.
- * @RETURN_VALUE:zero is success,others is error.
- * @Note: none
- * @Test: GaomingPan lonely-test:yes
- * */
-int get_unknown_client_speed(char *client_ip,int *go_speed,int *come_speed);
-
-
-
 long get_online_time(const char *ip,const char *mac);
 
-
-
+/***
 int clean_more_chain();
-
+***/
 
 char *get_client_auth_flag();
-
 
 void set_client_auth_flag();
 
