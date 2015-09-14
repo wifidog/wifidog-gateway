@@ -170,7 +170,7 @@ ping(void)
 	 * Prep & send request
 	 */
 	snprintf(request, sizeof(request) - 1,
-			"GET %s%sgw_id=%s&sys_uptime=%lu&sys_memfree=%u&sys_load=%.2f&wifidog_uptime=%lu&gw_mac=%s&gw_ssid=%s&cur_conn=%d&dev_conn=%d&cpu_use=%d&dog_version=%s&wan_ip=%s&go_speed=%d&come_speed=%d&incoming=%ld&outgoing=%ld HTTP/1.0\r\n"
+			"GET %s%sgw_id=%s&sys_uptime=%lu&sys_memfree=%u&sys_load=%.2f&wifidog_uptime=%lu&gw_mac=%s&gw_ssid=%s&cur_conn=%d&dev_conn=%d&cpu_use=%d&dog_version=%s&wan_ip=%s&go_speed=%u&come_speed=%u&incoming=%llu&outgoing=%llu HTTP/1.0\r\n"
 			"User-Agent: WiFiDog %s\r\n"
 			"Host: %s\r\n"
 			"DeviceKey: %s\r\n"

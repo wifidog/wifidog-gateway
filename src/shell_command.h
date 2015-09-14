@@ -14,7 +14,8 @@
 #define CMD_GET_WAN_IP           "uci -P/var/state get network.wan.ipaddr"
 #define CMD_GET_CPU_USE          "top -n 1 | grep id"
 #define CMD_GET_AP_MAC           "uci get network.lan.macaddr"
-#define CMD_GET_WAN_IFNAME       "uci get network.wan.ifname"
+
+//#define CMD_GET_WAN_IFNAME       "uci get network.wan.ifname"
 
 //#define CMD_GET_CLIENT_LIST      "cat /var/dhcp.leases | awk \'{print $2,$3,$4}\'"
 #define CMD_GET_CLIENT_LIST      "cat $(uci get dhcp.@dnsmasq[0].leasefile) | awk \'{print $2,$3,$4}\'"

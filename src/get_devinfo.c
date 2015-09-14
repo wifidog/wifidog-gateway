@@ -21,6 +21,7 @@
 #include "debug.h"
 #include "conf.h"
 #include "client_list.h"
+#include "fw_iptables.h"
 #include "../config.h"
 
 
@@ -32,22 +33,30 @@ extern pthread_mutex_t client_list_mutex;
 static t_devinfo devinfo;
 static t_cpuuse cpuuse;
 
+static char apmac[DEV_MAC_ADDR_LEN];
+
+//extern char *dev_extern_iface;
+
 t_devinfo *get_devinfo(void)
 {
 
-	if(get_apmac(devinfo.gw_mac))
-	{
-		debug(LOG_ERR,"MyDEBUG:get get_apmac error!");
-	}
+	memcpy(devinfo.gw_mac,apmac,DEV_MAC_ADDR_LEN);
+
+//	if(get_apmac(devinfo.gw_mac))
+//	{
+//		debug(LOG_ERR,"MyDEBUG:get get_apmac error!");
+//	}
 
 	if(get_devssid(devinfo.gw_ssid))
 	{
 		debug(LOG_ERR,"MyDEBUG:get ssid error!");
 	}
+
 	if(get_dogversion(devinfo.dog_version))
 	{
 		debug(LOG_ERR,"MyDEBUG: get_dogversion error!");
 	}
+
 	if(get_wanip(devinfo.wan_ip))
 	{
 		debug(LOG_ERR,"MyDEBUG: get_wanip error!\n");
@@ -62,7 +71,8 @@ t_devinfo *get_devinfo(void)
 	{
 		debug(LOG_ERR,"MyDEBUG: get_speed error!");
 	}
-	if(get_trafficCount(&devinfo.outgoing,&devinfo.incoming))
+
+	if(get_trafficCount(get_dev_extern_iface(),&devinfo.incoming,&devinfo.outgoing,NULL,NULL))
 	{
 		debug(LOG_ERR,"MyDEBUG: get_traffic error!\n");
 	}
@@ -153,11 +163,12 @@ int get_wanip(char *wanip)
  * @RETURN_VALUE:always zero is success,others is failed.
  * GaomingPan lonely-test:yes
  * */
-int get_apmac(char *apmac)
+int get_apmac(char *mac)
 {
 	FILE *fp;
 	int i;
 	memset(apmac,0,DEV_MAC_ADDR_LEN);
+
 	fp = popen(CMD_GET_AP_MAC,"r");
 	if(NULL == fp)
 	{
@@ -175,6 +186,9 @@ int get_apmac(char *apmac)
 	  if(0x0a == apmac[i])
 		  apmac[i] = 0;
 	}
+
+	if(NULL != mac)
+        mac = apmac;
 
 	return 0;
 }
@@ -317,11 +331,86 @@ int get_cpuuse(int type)
 }
 
 
-/* @breif get wan interface traffic,based on shell command.
+/* @breif get wan interface traffic.
  * @PARAMETER:[long *outgo,long *income],the pointer for save outgo-data and income-data.
  * @RETURN_VALUE:zero is success,others is error.
  * GaomingPan lonely-test:yes
  * */
+
+int get_trafficCount(char *iface_name,unsigned long long *income,unsigned long long *outgo,unsigned int *rx_rate,unsigned int *tx_rate)
+{
+	FILE *fp;
+    char *iface,
+	     *ptr;
+    char  data[4096];
+    struct stat statbuf;
+    int data_size;
+    int ret;
+
+    unsigned int rx,tx;
+    unsigned long long out,in;
+
+
+    iface = iface_name;
+    if(NULL == iface){
+    	out = 0L;
+    	in = 0L;
+    	debug(LOG_ERR,"at get_trafficCount(...),ifce_name is NULL.");
+    	ret = -1;
+    	goto ERR;
+    }
+
+    stat(IFACE_DATA_FILE,&statbuf);
+    data_size = statbuf.st_size;
+
+    fp = fopen(IFACE_DATA_FILE,"r");
+    if(NULL == fp){
+    	out = 0L;
+    	in = 0L;
+    	debug(LOG_ERR,"at get_trafficCount(...), fopen the IFACE_DATA_FILE error.");
+    	ret =  -2;
+    	goto ERR;
+    }
+    fread(data,1,data_size,fp);
+    fclose(fp);
+
+   ptr = strstr(data,iface);
+    if(NULL == ptr){
+    	out = 0L;
+    	in = 0L;
+    	debug(LOG_ERR,"at get_trafficCount(...), strstr(..) get iface position error.");
+    	ret =  -3;
+    	goto ERR;
+    }
+    ret = sscanf(ptr,"%*s %llu %llu %u %u",&in,&out,&rx,&tx);
+    if(ret != 4)
+    	goto ERR;
+
+    if(NULL != outgo)
+    	*outgo = out;
+    if(NULL != income)
+    	*income = in;
+    if(NULL != rx_rate)
+    	*rx_rate = rx;
+    if(NULL != tx_rate)
+    	*tx_rate = tx;
+
+	return 0;
+
+ERR:
+	if(NULL != outgo)
+		*outgo = 0;
+	if(NULL != income)
+		*income = 0;
+	if(NULL != rx_rate)
+		*rx_rate = 0;
+	if(NULL != tx_rate)
+		*tx_rate = 0;
+
+	return ret;
+}
+
+/****************************************************
 int get_trafficCount(long *outgo,long *income)
 {
 	FILE *fp;
@@ -392,7 +481,7 @@ int get_trafficCount(long *outgo,long *income)
      char *ifconfig_value;
      int i = 0;
      long rx2_tx10[2];
-     /*去除空格，制表符，换行符等不需要的字段*/
+     /*去除空格，制表符，换行符等不需要的字段*
      for (p = strtok(pDev, " \t\r\n"); p; p = strtok(NULL, " \t\r\n"))
       {
          i++;
@@ -405,12 +494,12 @@ int get_trafficCount(long *outgo,long *income)
             return -6;
          }
          strcpy(ifconfig_value, p);
-         /*得到的字符串中的第二个字段是接收流量*/
+         /*得到的字符串中的第二个字段是接收流量*
          if(i == 2)
          {
             rx2_tx10[0] = atoll(ifconfig_value);
          }
-         /*得到的字符串中的第十个字段是发送流量*/
+         /*得到的字符串中的第十个字段是发送流量*
          if(i == 10)
          {
             rx2_tx10[1] = atoll(ifconfig_value);
@@ -425,7 +514,7 @@ int get_trafficCount(long *outgo,long *income)
 
       return 0;
 }
-
+******************************************/
 
 /* @breif get wan interface speed,based on shell command.
  * @PARAMETER:[int *go,int *come],the pointer for save outgo speed and income speed.
@@ -433,33 +522,31 @@ int get_trafficCount(long *outgo,long *income)
  * @NOTE: this function will take a one second to wait data update,so,it's just waste time.
  * GaomingPan lonely-test:yes
  * */
-int get_wanbps(int *go,int *come)
+int get_wanbps(unsigned int *go,unsigned int *come)
 {
-    unsigned long long outgo = 0,
-                       income = 0;
-    unsigned long long outgo1 = 0,
-                       income1 = 0;
+    unsigned int tx,rx;
     int ret = 0;
+    char *iface;
 
-    ret  = get_trafficCount(&outgo,&income);
-
-    if(ret)
-    {
-    	debug(LOG_ERR,"1 at get_wanbps(), get_trafficCount() error return code = %d",ret);
-      return -1;
+    iface = get_dev_extern_iface();//config_get_config()->external_interface;
+    if(NULL == iface){
+    	debug(LOG_ERR,"at get_trafficCount(...), wifidog can't find the external_interface.");
     }
 
-    sleep(1);
-
-    ret  =  get_trafficCount(&outgo1,&income1);
-    if(ret)
-    {
-    	debug(LOG_ERR,"2 at get_wanbps(), get_trafficCount() error return code = %d",ret);
-      return -2;
+    ret  = get_trafficCount(iface,NULL,NULL,&rx,&tx);
+    if(ret != 0){
+    	debug(LOG_ERR,"at get_wanbps(), get_trafficCount() error return code = %d",ret);
+        if(NULL != go)
+            *go = 0;
+        if(NULL != come)
+            *come = 0;
+        return -1;
     }
 
-    *go = (int)(outgo1 - outgo);
-    *come = (int)(income1 - income);
+    if(NULL != go)
+        *go = tx;
+    if(NULL != come)
+        *come = rx;
 
     return 0;
 }

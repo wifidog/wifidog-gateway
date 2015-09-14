@@ -79,4 +79,9 @@ int iptables_fw_access(fw_access_t type, const char *ip, const char *mac, int ta
 /** @brief All counters in the client list */
 int iptables_fw_counters_update(void);
 
+
+/** @brief Get extern interface
+ * this function use at get_devinfo.c*/
+char *get_dev_extern_iface();
+
 #endif /* _IPTABLES_H_ */

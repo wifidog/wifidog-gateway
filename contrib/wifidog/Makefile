@@ -50,7 +50,7 @@ define Package/wifidog/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/scripts/GET_settings.sh   $(1)/usr/bin/GET_settings
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/scripts/dog_conf_generator.sh $(1)/usr/bin/dog_conf_generator
 #	$(INSTALL_BIN) $(PKG_BUILD_DIR)/scripts/white_black_flush.sh $(1)/usr/bin/white_black_flush
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/scripts/GET_clients_rate.sh $(1)/usr/bin/GET_clients_rate
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/scripts/DOG_monitor.sh $(1)/usr/bin/DOG_monitor
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/wifidog $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/wdctl $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/usr/lib

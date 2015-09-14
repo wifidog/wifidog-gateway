@@ -12,7 +12,7 @@
 UP_SPEED=/tmp/client.up.speed      
 DOWN_SPEED=/tmp/client.down.speed  
 MAC_IP=/tmp/mac-ip.client
-IFACE=$(uci get wifidog_conf.single.gatewayInterface | awk '{print $2}')
+I_FACE=$(uci get wifidog_conf.single.gatewayInterface | awk '{print $2}')
 CHECK_INTERVAL=$(uci get wifidog_conf.single.checkInterval | awk '{print $2}')
 
 while [ true ]

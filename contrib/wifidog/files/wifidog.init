@@ -19,8 +19,8 @@ start() {
 #    sleep 1
 #	/usr/bin/white_black_flush   &
 
-    sleep 3
-    /usr/bin/GET_clients_rate    &
+    sleep 5
+    /usr/bin/DOG_monitor    &
 }
 
 stop() {
@@ -32,7 +32,7 @@ stop() {
 #	fi
 
 	sleep 2
-	rst=`ps | grep GET_clients_rate | cut -d "r" -f 1`
+	rst=`ps | grep DOG_monitor | cut -d "r" -f 1`
 	if [ -n "$rst" ]; then
 		kill -9 $rst
 	fi
