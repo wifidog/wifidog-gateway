@@ -412,6 +412,7 @@ main_loop(void)
 		exit(1);
 	}
 
+	/**************************************************/
 	/**** init my post url config *****/
 	if(0 != init_post_http_url_config() )
 	{
@@ -422,6 +423,11 @@ main_loop(void)
 	if(0 != init_device_key())
 	{
 		debug(LOG_ERR,"ERROR:Failed to initalize device key.");
+	}
+	/*get ap mac*/
+	if(0 != get_apmac(NULL))
+	{
+		debug(LOG_ERR,"ERROR:Failed to get ap MAC.");
 	}
 	/*********************************/
 

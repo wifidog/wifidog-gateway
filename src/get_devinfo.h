@@ -14,6 +14,8 @@
 #define DEV_WAN_IP_LEN       16
 #define DEV_IFNAME_LEN       11
 
+#define IFACE_DATA_FILE   "/tmp/iface-data"
+
 
 #define	CPU_USER     1
 #define	CPU_SYS      3
@@ -24,19 +26,22 @@
 #define	CPU_SIRQ     13
 #define CPU_LOAD     16
 
+
+
+
 /*@ breif a struct hold information for ap*/
 typedef struct _t_devinfo{
 	char gw_mac[DEV_MAC_ADDR_LEN];          // ap mac address
 	char gw_ssid[DEV_SSID_NAME_LEN];        // ap wireless ssid
 	char dog_version[DEV_DOG_VERSION_LEN];  // wifidog version,private.
-	char wan_ip[DEV_WAN_IP_LEN];            // ap wan interface ip
+	char wan_ip[DEV_WAN_IP_LEN];            // ap's wan interface ip
 	int  cur_conn;                          // number of current connection client
 	int  dev_conn;							// number of connection in the device,maybe some has no authentication.
 	int  cpu_use;                          // percent of use CPU
-	int  go_speed;                         // wan interface go out speed
-	int  come_speed;                       // wan interface come in speed
-	long incoming;                         //
-	long outgoing;                         //
+	unsigned int  go_speed;                 // wan interface go out speed
+	unsigned int  come_speed;              // wan interface come in speed
+	unsigned long long incoming;           // wan interface incoming bytes
+	unsigned long long outgoing;            // wan interface outgoing bytes
 }t_devinfo;
 
 
@@ -105,7 +110,7 @@ int get_cpuuse(int type);
  * @RETURN_VALUE:zero is success,others is error.
  * GaomingPan lonely-test:yes
  * */
-int get_wanbps(int *go,int *come);
+int get_wanbps(unsigned int *go,unsigned int *come);
 
 
 /* @breif get wan interface traffic,based on shell command.
@@ -113,7 +118,7 @@ int get_wanbps(int *go,int *come);
  * @RETURN_VALUE:zero is success,others is error.
  * GaomingPan lonely-test:yes
  * */
-int get_trafficCount(long *outgo,long *income);
+int get_trafficCount(char *iface_name,unsigned long long *income,unsigned long long *outgo,unsigned int *rx_rate,unsigned int *tx_rate);
 
 
 #endif /* SRC_GET_DEVINFO_H_ */

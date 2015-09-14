@@ -76,6 +76,7 @@
 
 #include "get_clientinfo.h"
 
+
 extern pthread_mutex_t client_list_mutex;
 
 /* from commandline.c */
@@ -312,7 +313,7 @@ fw_sync_with_authserver(void)
                                 //fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
 
                                 if (p1->fw_connection_state != FW_MARK_PROBATION) {
-     p1->counters.incoming = p1->counters.outgoing = 0;
+                                     p1->counters.incoming = p1->counters.outgoing = 0;
                                 }
                                 else {
                                 	//We don't want to clear counters if the user was in validation, it probably already transmitted data..

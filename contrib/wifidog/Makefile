@@ -10,7 +10,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=wifidog
 #PKG_VERSION:=gateway
 PKG_VERSION:=20140822
-PKG_RELEASE:=1
+PKG_RELEASE:=v1.0.0
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:= @SF/$(PKG_NAME)
@@ -49,13 +49,14 @@ define Package/wifidog/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/scripts/init.d/wifidog $(1)/usr/bin/wifidog-init
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/scripts/GET_settings.sh   $(1)/usr/bin/GET_settings
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/scripts/dog_conf_generator.sh $(1)/usr/bin/dog_conf_generator
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/scripts/white_black_flush.sh $(1)/usr/bin/white_black_flush
+#	$(INSTALL_BIN) $(PKG_BUILD_DIR)/scripts/white_black_flush.sh $(1)/usr/bin/white_black_flush
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/scripts/DOG_monitor.sh $(1)/usr/bin/DOG_monitor
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/wifidog $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/wdctl $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP)          $(PKG_INSTALL_DIR)/usr/lib/libhttpd.so* $(1)/usr/lib/
 	$(INSTALL_DIR) $(1)/etc
-	$(INSTALL_DATA) ./files/wifidog.conf $(1)/etc/wifidog.conf.bak
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/contrib/wifidog/files/wifidog.conf $(1)/etc/wifidog.conf.bak
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/scripts/conf/*  $(1)/etc/config/
 	$(INSTALL_DIR) $(1)/etc
@@ -63,7 +64,7 @@ define Package/wifidog/install
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/scripts/etc/devicekey $(1)etc/.devicekey
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) ./files/$(PKG_NAME).init $(1)/etc/init.d/wifidog
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/contrib/wifidog/files/$(PKG_NAME).init $(1)/etc/init.d/wifidog
 endef
 
 $(eval $(call BuildPackage,wifidog))

@@ -48,6 +48,8 @@
 #include "util.h"
 #include "client_list.h"
 
+//#include "get_devinfo.h"
+
 /*limeng*/
 #include <time.h>
 
@@ -57,6 +59,17 @@ static void iptables_load_ruleset(const char *, const char *, const char *);
 
 extern pthread_mutex_t	client_list_mutex;
 extern pthread_mutex_t	config_mutex;
+
+static  char dev_extern_iface[64];
+
+
+/** @brief Get extern interface
+ * this function use at get_devinfo.c*/
+char *get_dev_extern_iface()
+{
+     return dev_extern_iface;
+}
+
 
 /**
 Used to supress the error output of the firewall during destruction */ 
@@ -253,8 +266,16 @@ iptables_fw_init(void)
 	gw_port = config->gw_port;
 	if (config->external_interface) {
 		ext_interface = safe_strdup(config->external_interface);
+
+		memset(dev_extern_iface,0,64);
+		sprintf(dev_extern_iface,"%s",ext_interface);
+		debug(LOG_INFO, "dev_extern_iface is: %s",dev_extern_iface);
 	} else {
 		ext_interface = get_ext_iface();
+
+		memset(dev_extern_iface,0,64);
+		sprintf(dev_extern_iface,"%s",ext_interface);
+		debug(LOG_INFO, "dev_extern_iface is: %s",dev_extern_iface);
 	}
 
 	if (ext_interface == NULL) {
