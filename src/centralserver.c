@@ -112,26 +112,22 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 
 
    if(0 == strcmp(request_type,REQUEST_TYPE_COUNTERS) || 0 == strcmp(request_type,REQUEST_TYPE_LOGOUT)){
+
+        LOCK_CLIENT_LIST();
+        if(0 != collect_client_info()){
+        	debug(LOG_ERR,"ERROR: at collect_client_info() failed.");
+        	printf("ERROR: at collect_client_info() failed.\n");
+        }
+        online_time = get_online_time(ip,mac);
+        UNLOCK_CLIENT_LIST();
+
         client_info = get_client_info_by_ip(ip);
         //client_info = get_client_info_by_mac(mac);
-        if(NULL == client_info)
-        {
+        if(NULL == client_info){
         	//debug(LOG_ERR,"ERROR: at get_client_info_by_ip(ip) failed.");
         	debug(LOG_ERR,"ERROR: at get_client_info_by_mac(mac) failed.");
         	//printf("ERROR: at get_client_info_by_ip(ip) failed.\n");
         }
-
-        LOCK_CLIENT_LIST();
-
-        if(0 != collect_client_info())
-        {
-        	debug(LOG_ERR,"ERROR: at collect_client_info() failed.");
-        	printf("ERROR: at collect_client_info() failed.\n");
-        }
-
-        online_time = get_online_time(ip,mac);
-
-        UNLOCK_CLIENT_LIST();
 
         /******************************************/
 
@@ -173,7 +169,7 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 
    } else{
 
-	   get_unknown_client_speed(ip,&go_speed,&come_speed);
+	     get_unknown_client_speed(ip,&go_speed,&come_speed);
 		 snprintf(buf, (sizeof(buf) - 1),
 			"GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&gw_id=%s&host_name=%s&go_speed=%d&come_speed=%d&online_time=%ld&flag=%s HTTP/1.0\r\n"
 			"User-Agent: WiFiDog %s\r\n"
@@ -207,6 +203,11 @@ auth_server_request(t_authresponse *authresponse, const char *request_type, cons
 			get_device_key()
 		);
      }
+
+   /** clean up the clients info,free the memories.
+    * */
+   clean_client_info();
+
    }else{
 
 		 snprintf(buf, (sizeof(buf) - 1),

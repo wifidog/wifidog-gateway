@@ -109,9 +109,12 @@ clients_RxTxRate_generator()
 ##              was down,then start it.
 ##
 #################################################
+PID_NAME=wifidog
+PID_FILE=/tmp/ps-info
 dog_daemon_monitor()
 {
-   pid=$(ps | grep wifidog | cut -d "r" -f 1)
+   ps > $PID_FILE
+   pid=$(cat $PID_FILE | grep $PID_NAME | awk '{print $1}')
   
    if [ -n "$pid" ]
      then
@@ -123,6 +126,21 @@ dog_daemon_monitor()
    /usr/bin/wifidog -d 1 &
 
    return 0
+}
+
+
+##################################################
+##
+## Function: hostname_file_generator
+## Description: this function generate and refresh 
+##		the hostname  file for wifidog.
+##
+##################################################
+HOST_NAME_FILE=/tmp/hostname.txt
+
+hostname_file_generator()
+{
+   cat $(uci get dhcp.@dnsmasq[0].leasefile) | awk '{print $2,$3,$4}' > $HOST_NAME_FILE
 }
 
 ##################################################
@@ -138,6 +156,7 @@ main_loop()
       do
          iface_data_file_generator
          clients_RxTxRate_generator
+         hostname_file_generator
          dog_daemon_monitor
          sleep  $(($CHECK_INTERVAL - 3))
       done
