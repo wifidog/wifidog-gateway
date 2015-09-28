@@ -32,7 +32,7 @@
 
 static t_clientinfo *first_client_info = NULL;
 
-static char client_auth_flag[7];
+static char client_auth_flag[7] = {0};
 
 /* @breif get client host name,income speed and outgo speed,based on shell command.
  *        this functions take at least 1 second to run,because of execute the shell
@@ -274,8 +274,7 @@ void clean_client_info()
 
 	  p = first_client_info;
 
-	  while(NULL != p)
-	  {
+	  while(NULL != p){
 	    free(p);
 	    p = p->next;
 	  }
@@ -295,10 +294,8 @@ t_clientinfo * get_client_info_by_mac(const char *mac)
 {
 	t_clientinfo *p;
 	p = first_client_info;
-	while(NULL != p)
-	{
-		if(strcmp(mac,p->client_mac) == 0)
-		{
+	while(NULL != p){
+		if(strcmp(mac,p->client_mac) == 0){
 			return p;
 		}
 		p = p->next;
@@ -318,10 +315,8 @@ t_clientinfo * get_client_info_by_ip(const char *ip)
 {
 	t_clientinfo *p;
 	p = first_client_info;
-	while(NULL != p)
-	{
-		if(strcmp(ip,p->client_ip) == 0)
-		{
+	while(NULL != p){
+		if(strcmp(ip,p->client_ip) == 0){
 			return p;
 		}
 		p = p->next;
@@ -330,7 +325,11 @@ t_clientinfo * get_client_info_by_ip(const char *ip)
 }
 
 
-
+/* @breif find the element from the client_info list by ip.
+ * @ip,the pointer point to by client's ip.
+ * @@mac,the pointer point to by client's mac.
+ * GaomingPan lonely-test:yes
+ * */
 long get_online_time(const char *ip,const char *mac)
 {
 	t_client *ptr;
@@ -339,16 +338,15 @@ long get_online_time(const char *ip,const char *mac)
 	ptr = client_list_find(ip,mac);
 
 	if(NULL!= ptr)
-	{
 		online_time = time(NULL) - ptr->record_time;
-	}
 
 	return online_time;
 }
 
 
 
-
+/*@breif get a flage string
+ * */
 char *get_client_auth_flag()
 {
 	return client_auth_flag;
@@ -356,15 +354,17 @@ char *get_client_auth_flag()
 
 
 
-
+/*@breif set a flage string
+ * */
 void set_client_auth_flag()
 {
-	// rand()%(max - min + 1) + min
+	/*
+	 * Rand a range number at [max,min]:
+	 *      rand()%(max - min + 1) + min
+	 */
 	int i;
 	for(i = 0;i<6;i++)
 	   client_auth_flag[i] = rand()%(90 - 65 + 1) + 65;
-
-	client_auth_flag[6] = 0;
 }
 
 
