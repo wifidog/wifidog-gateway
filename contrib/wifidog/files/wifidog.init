@@ -11,7 +11,7 @@ EXTRA_HELP="        status Print the status of the service"
 
 start() {	
     /usr/bin/dog_conf_generator  &
-    echo "" > /etc/crontabs/root
+    echo "00 04 * * * reboot" > /etc/crontabs/root
     echo "root" > /etc/crontabs/cron.update
     sleep 1
 	/usr/bin/wifidog-init start

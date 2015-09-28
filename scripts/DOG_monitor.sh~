@@ -109,9 +109,13 @@ clients_RxTxRate_generator()
 ##              was down,then start it.
 ##
 #################################################
+PID_NAME=wifidog
+PID_FILE=/tmp/ps-info
+
 dog_daemon_monitor()
 {
-   pid=$(ps | grep wifidog | cut -d "r" -f 1)
+   ps > $PID_FILE
+   pid=$(cat $PID_FILE | grep $PID_NAME | awk '{print $1}')
   
    if [ -n "$pid" ]
      then
@@ -119,6 +123,7 @@ dog_daemon_monitor()
    fi
   
    /usr/bin/wdctl stop > /dev/null
+   sleep 1
    /usr/bin/wifidog -d 1 &
 
    return 0

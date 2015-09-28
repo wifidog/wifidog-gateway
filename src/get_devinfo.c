@@ -183,6 +183,8 @@ int get_apmac(char *mac)
 	{
 	  if(':' == apmac[i])
 	    apmac[i] = '-';
+	  if(apmac[i] >= 'A' && apmac[i] <= 'F')
+		  apmac[i] += apmac[i] + 0x20;
 	  if(0x0a == apmac[i])
 		  apmac[i] = 0;
 	}

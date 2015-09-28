@@ -15,6 +15,7 @@
 
 #define  UP_SPEED_FILE             "/tmp/client.up.speed"
 #define  DOWN_SPEED_FILE           "/tmp/client.down.speed"
+#define  HOST_NAME_FILE            "/tmp/hostname.txt"
 
 
 /*@breif the sturct for client_info list
@@ -87,11 +88,12 @@ t_clientinfo * get_client_info_by_ip(const char *ip);
 
 long get_online_time(const char *ip,const char *mac);
 
-/***
-int clean_more_chain();
-***/
+
+
 
 char *get_client_auth_flag();
+
+
 
 void set_client_auth_flag();
 
