@@ -37,6 +37,8 @@
 #include <string.h>
 #include <ctype.h>
 
+#include <inttypes.h>
+
 #include "common.h"
 #include "safe.h"
 #include "debug.h"
@@ -104,6 +106,14 @@ typedef enum {
     oSSLCertPath,
     oSSLAllowedCipherList,
     oSSLUseSNI,
+    oBandwidthShaping,
+    oBandwidthShapingGWLimit,
+    oBandwidthShapingIFBIface,
+    oBandwidthShapingGWInterfaceTXQueueLen,
+    oBandwidthShapingGWMaxDown,
+    oBandwidthShapingGWMaxUp,
+    oBandwidthShapingDefMaxDown,
+    oBandwidthShapingDefMaxUp,
 } OpCodes;
 
 /** @internal
@@ -151,6 +161,14 @@ static const struct {
     "sslcertpath", oSSLCertPath}, {
     "sslallowedcipherlist", oSSLAllowedCipherList}, {
     "sslusesni", oSSLUseSNI}, {
+    "bandwidthshaping", oBandwidthShaping}, {
+    "bandwidthshapinggatewayspeedlimit", oBandwidthShapingGWLimit}, {
+    "bandwidthshapingifbinterface", oBandwidthShapingIFBIface}, {
+    "bandwidthshapinggatewayinterfacetxqueuelen", oBandwidthShapingGWInterfaceTXQueueLen}, {
+    "bandwidthgatewaymaxdown", oBandwidthShapingGWMaxDown}, {
+    "bandwidthgatewaymaxup", oBandwidthShapingGWMaxUp}, {
+    "bandwidthdefaultclientmaxdown", oBandwidthShapingDefMaxDown}, {
+    "bandwidthdefaultclientmaxup", oBandwidthShapingDefMaxUp}, {
 NULL, oBadOption},};
 
 static void config_notnull(const void *, const char *);
@@ -208,6 +226,14 @@ config_init(void)
     config.ssl_cipher_list = NULL;
     config.arp_table_path = safe_strdup(DEFAULT_ARPTABLE);
     config.ssl_use_sni = DEFAULT_AUTHSERVSSLSNI;
+    config.bw_shaping = DEFAULT_BWSHAPING;
+    config.bw_shaping_gw_limit = DEFAULT_BWSHAPING_GW_LIMIT;
+    config.bw_shaping_ifb_interface = safe_strdup(DEFAULT_BWSHAPING_IFB_IFACE);
+    config.bw_shaping_gw_interface_txqueuelen = DEFAULT_BWSHAPING_GW_IFACE_TXQUEUELEN;
+    config.bw_shaping_gw_max_down = DEFAULT_BWSHAPING_GW_MAX_DOWN;
+    config.bw_shaping_gw_max_up = DEFAULT_BWSHAPING_GW_MAX_UP;
+    config.bw_shaping_def_max_down = 0;
+    config.bw_shaping_def_max_up = 0;
 
     debugconf.log_stderr = 1;
     debugconf.debuglevel = DEFAULT_DEBUGLEVEL;
@@ -809,6 +835,65 @@ config_read(const char *filename)
                     debug(LOG_WARNING, "SSLUseSNI is set but no CyaSSL SNI enabled. Ignoring!");
 #endif
 #endif
+                    break;
+                case oBandwidthShaping:
+                    config.bw_shaping = parse_boolean_value(p1);
+                    if (config.bw_shaping < 0) {
+                        debug(LOG_WARNING, "Bad syntax for Parameter: BandwidthShaping on line %d " "in %s."
+                            "The syntax is yes or no." , linenum, filename);
+                        exit(-1);
+                    }
+                    break;
+                case oBandwidthShapingGWLimit:
+                    config.bw_shaping_gw_limit = parse_boolean_value(p1);
+                    if (config.bw_shaping_gw_limit < 0) {
+                        debug(LOG_WARNING, "Bad syntax for Parameter: BandwidthShapingGatewaySpeedLimit on line %d " "in %s."
+                            "The syntax is yes or no." , linenum, filename);
+                        exit(-1);
+                    }
+                    break;
+                case oBandwidthShapingIFBIface:
+                    free(config.bw_shaping_ifb_interface);
+                    config.bw_shaping_ifb_interface = safe_strdup(p1);
+                    break;
+                case oBandwidthShapingGWInterfaceTXQueueLen:
+                    if (sscanf(p1, "%" SCNu32, &config.bw_shaping_gw_interface_txqueuelen) != 1) {
+                        debug(LOG_WARNING, "BandwidthGatewayInterfaceTXQueueLen - %s is invalid. "
+                            "It should be in the range of 0 to %" PRIu32 ". "
+                            "Fallback to default %" PRIu32,
+                            p1, UINT32_MAX, DEFAULT_BWSHAPING_GW_IFACE_TXQUEUELEN);
+                        config.bw_shaping_gw_interface_txqueuelen = DEFAULT_BWSHAPING_GW_IFACE_TXQUEUELEN;
+                    }
+                    break;
+                case oBandwidthShapingGWMaxDown:
+                    if (sscanf(p1, "%" SCNu32, &config.bw_shaping_gw_max_down) != 1) {
+                        debug(LOG_WARNING, "BandwidthGatewayMaxDown - %s is invalid. "
+                            "It should be in the range of 0 to %" PRIu32 ". "
+                            "Fallback to default %u Mbps!", p1, UINT32_MAX,
+                            DEFAULT_BWSHAPING_GW_MAX_DOWN / 1024);
+                    }
+                    break;
+                case oBandwidthShapingGWMaxUp:
+                    if (sscanf(p1, "%" SCNu32, &config.bw_shaping_gw_max_up) != 1) {
+                        debug(LOG_WARNING, "BandwidthGatewayMaxUp - %s is invalid. "
+                            "It should be in the range of 0 to %" PRIu32 ". "
+                            "Fallback to default %u Mbps!", p1, UINT32_MAX,
+                            DEFAULT_BWSHAPING_GW_MAX_UP / 1024);
+                    }
+                    break;
+                case oBandwidthShapingDefMaxDown:
+                    if (sscanf(p1, "%" SCNu32, &config.bw_shaping_def_max_down) != 1) {
+                        debug(LOG_WARNING, "BandwidthDefaultClientMaxDown - %s is invalid. "
+                            "It should be in the range of 0 to %" PRIu32 ". "
+                            "Fallback to no shaping!", p1, UINT32_MAX);
+                    }
+                    break;
+                case oBandwidthShapingDefMaxUp:
+                    if (sscanf(p1, "%" SCNu32, &config.bw_shaping_def_max_up) != 1) {
+                        debug(LOG_WARNING, "BandwidthDefaultClientMaxUp - %s is invalid. "
+                            "It should be in the range of 0 to %" PRIu32 ". "
+                            "Fallback to no shaping!", p1, UINT32_MAX);
+                    }
                     break;
                 case oBadOption:
                     /* FALL THROUGH */
