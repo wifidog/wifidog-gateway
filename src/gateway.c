@@ -26,6 +26,8 @@
   @author Copyright (C) 2004 Alexandre Carmel-Veilleux <acv@miniguru.ca>
  */
 
+#include "gateway.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <syslog.h>
@@ -44,21 +46,21 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-#include "common.h"
 #include "httpd.h"
-#include "safe.h"
-#include "debug.h"
-#include "conf.h"
-#include "gateway.h"
-#include "firewall.h"
-#include "commandline.h"
 #include "auth.h"
-#include "http.h"
 #include "client_list.h"
-#include "wdctl_thread.h"
-#include "ping_thread.h"
+#include "commandline.h"
+#include "common.h"
+#include "conf.h"
+#include "debug.h"
+#include "extend_util.h"
+#include "firewall.h"
+#include "http.h"
 #include "httpd_thread.h"
+#include "ping_thread.h"
+#include "safe.h"
 #include "util.h"
+#include "wdctl_thread.h"
 
 /** XXX Ugly hack 
  * We need to remember the thread IDs of threads that simulate wait with pthread_cond_timedwait
@@ -416,6 +418,24 @@ main_loop(void)
         debug(LOG_ERR, "FATAL: Failed to initialize firewall");
         exit(1);
     }
+
+	/**
+	 * Init some parameters,command result send url,
+	 * device key and mac address.
+	 * */
+	if(0 != init_post_http_url_config() ){
+		debug(LOG_WARNING, "Warning: Failed to initialize init_post_http_url_config");
+		//exit(1);
+	}
+	/*init device key*/
+	if(0 != init_device_key()){
+		debug(LOG_WARNING,"Warning:Failed to initalize device key.");
+	}
+	/*get ap mac*/
+	if(0 != get_apmac(NULL)){
+		debug(LOG_WARNING,"Warning:Failed to get ap MAC.");
+	}
+	/*********************************/
 
     /* Start clean up thread */
     result = pthread_create(&tid_fw_counter, NULL, (void *)thread_client_timeout_check, NULL);

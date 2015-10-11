@@ -126,6 +126,10 @@ client_list_add(const char *ip, const char *mac, const char *token)
             curclient->counters.incoming = curclient->counters.incoming_history = curclient->counters.outgoing =
         curclient->counters.outgoing_history = 0;
     curclient->counters.last_updated = time(NULL);
+    /**
+     * record the time when client add to the list.
+     * */
+    curclient->record_time = time(NULL);
 
     client_list_insert_client(curclient);
 

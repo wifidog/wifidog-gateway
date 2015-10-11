@@ -1,0 +1,9 @@
+
+config  dog_post 'url'
+        option  'info_url'              'http://222.85.149.5/WiFiAuth/wifidog/result'
+        option  'normal_url'            'http://222.85.149.5/WiFiAuth/wifidog/result'
+
+config dog_post 'rmflag'
+        option  'info_rmflag'           'result'
+        option  'normal_rmflag'         'result'
+
