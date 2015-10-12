@@ -206,7 +206,10 @@ get_clients_from_parent(void)
                             client->counters.outgoing_delta = 0;
                         } else if (strcmp(key, "counters_last_updated") == 0) {
                             client->counters.last_updated = atol(value);
-                        } else {
+                        } else if (strcmp(key, "record_time") == 0) { /* get the record_time, added by GaomingPan */
+                        	client->record_time = atol(value);
+                        }else {
+
                             debug(LOG_NOTICE, "I don't know how to inherit key [%s] value [%s] from parent", key,
                                   value);
                         }

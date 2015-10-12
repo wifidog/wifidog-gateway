@@ -199,6 +199,7 @@ ping(void)
 			 /* add a device key to the header.Added by GaomingPan */
 			 get_device_key()
          );
+    debug(LOG_INFO,"PingQString:[[<< ===================\n\n %s ================= >>]]\n\n",request);
 
     char *res;
 #ifdef USE_CYASSL

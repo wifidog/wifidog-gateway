@@ -64,8 +64,9 @@
 #define  NORMAL_CMD_RESULT_FILE         "/tmp/.normal_cmd_result"
 #define  BUILE_NORMAL_CMD_RESULT_SHELL  "result=\"\";while read line;do result=\"\\\"$result$line\\\",\";done < "NORMAL_CMD_RESULT_FILE";result=${result%,};echo $result"
 #define  CMD_GET_WAN_IP                 "uci -P/var/state get network.wan.ipaddr"
-#define  CMD_GET_AP_MAC                 "uci -P/var/state get network.lan.macaddr"
+#define  CMD_GET_AP_MAC                 "uci get network.lan.macaddr" //"uci -P/var/state get network.lan.macaddr"
 #define  CMD_GET_WIRELESS_SSID          "uci get wireless.@wifi-iface[0].ssid"
+#define  WAN_IP_ADDR_FILE                "/tmp/.wan_ipaddr.txt"
 #define  REMOTE_SHELL_COMMAND_LEN       1024
 #define  MAX_CMD_EXECUT_OUT_LEN         4096
 
@@ -204,6 +205,7 @@ int get_wanip(char *wanip)
 	FILE *fp;
 
 	if(0 == strlen(apwanip)){
+		/*
 		fp = popen(CMD_GET_WAN_IP,"r");
 		if(NULL == fp){
 			debug(LOG_WARNING,"get_wanip error!");
@@ -213,6 +215,24 @@ int get_wanip(char *wanip)
 		}
 		fread(apwanip,DEV_WAN_IP_LEN - 1,1,fp);
 		pclose(fp);
+
+		int i = DEV_WAN_IP_LEN - 1;
+		for(;i >= 0;i--){
+			if(0x0a == apwanip[i]){
+				apwanip[i] = 0;
+				break;
+			}
+		}
+		*/
+		fp = fopen(WAN_IP_ADDR_FILE,"r");
+		if(NULL == fp){
+			debug(LOG_WARNING,"get_wanip error!");
+			if(NULL != wanip)
+			    sprintf(wanip,"%s","0.0.0.0");
+			return -1;
+		}
+		fread(apwanip,DEV_WAN_IP_LEN - 1,1,fp);
+		fclose(fp);
 
 		int i = DEV_WAN_IP_LEN - 1;
 		for(;i >= 0;i--){

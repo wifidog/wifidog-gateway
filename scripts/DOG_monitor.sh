@@ -121,9 +121,9 @@ dog_daemon_monitor()
        return 1
    fi
   
-   /usr/bin/wdctl stop > /dev/null
-   sleep 1
-   /usr/bin/wifidog -d 1 &
+   /usr/bin/wifidog-init stop > /dev/null
+   sleep 2
+   /usr/bin/wifidog-init start > /dev/null
 
    return 0
 }
@@ -178,6 +178,21 @@ cpu_use_info_file_generator()
     echo "$(top -n 1 | grep id | awk 'NR==2{print}')" > $CPU_USE_INFO_FILE
 }
 
+
+##################################################
+##
+## Function: wan_ipaddr_file_generator
+## Description: this function generate and refresh 
+##		the WAN ip address information file for wifidog.
+##
+##################################################
+WAN_IPADDR_FILE=/tmp/.wan_ipaddr.txt
+
+wan_ipaddr_file_generator()
+{
+    echo "$(ifconfig | grep $(uci get network.wan.ifname) -A 2 | grep addr | sed 1d | awk '{print $2}' | awk -F ":" '{print $2}')" > $WAN_IPADDR_FILE
+}
+
 ##################################################
 ##
 ## Function: man_loop
@@ -196,6 +211,7 @@ main_loop()
          hostname_file_generator
          iface_conn_file_generator
          cpu_use_info_file_generator
+         wan_ipaddr_file_generator
          dog_daemon_monitor
          sleep  $sleep_time
       done
