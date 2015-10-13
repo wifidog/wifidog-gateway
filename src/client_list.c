@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 /* vim: set et sw=4 ts=4 sts=4 : */
+=======
+>>>>>>> FETCH_HEAD
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -19,6 +22,12 @@
  *                                                                  *
  \********************************************************************/
 
+<<<<<<< HEAD
+=======
+/*
+ * $Id$
+ */
+>>>>>>> FETCH_HEAD
 /** @file client_list.c
   @brief Client List Functions
   @author Copyright (C) 2004 Alexandre Carmel-Veillex <acv@acv.ca>
@@ -31,9 +40,16 @@
 #include <syslog.h>
 #include <errno.h>
 #include <pthread.h>
+<<<<<<< HEAD
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+=======
+#include <sys/wait.h>
+#include <sys/types.h>
+//#include <sys/unistd.h>
+#include <unistd.h>
+>>>>>>> FETCH_HEAD
 
 #include <string.h>
 
@@ -42,6 +58,7 @@
 #include "conf.h"
 #include "client_list.h"
 
+<<<<<<< HEAD
 /** @internal
  * Holds a pointer to the first element of the list 
  */
@@ -70,6 +87,15 @@ client_get_new(void)
     client = safe_malloc(sizeof(t_client));
     return client;
 }
+=======
+/** Global mutex to protect access to the client list */
+pthread_mutex_t client_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+/** @internal
+ * Holds a pointer to the first element of the list 
+ */ 
+t_client         *firstclient = NULL;
+>>>>>>> FETCH_HEAD
 
 /** Get the first element of the list of connected clients
  */
@@ -88,6 +114,7 @@ client_list_init(void)
     firstclient = NULL;
 }
 
+<<<<<<< HEAD
 /** Insert client at head of list. Lock should be held when calling this!
  * @param Pointer to t_client object.
  */
@@ -107,21 +134,44 @@ client_list_insert_client(t_client * client)
 /** Based on the parameters it receives, this function creates a new entry
  * in the connections list. All the memory allocation is done here.
  * Client is inserted at the head of the list.
+=======
+/** Based on the parameters it receives, this function creates a new entry
+ * in the connections list. All the memory allocation is done here.
+>>>>>>> FETCH_HEAD
  * @param ip IP address
  * @param mac MAC address
  * @param token Token
  * @return Pointer to the client we just created
  */
+<<<<<<< HEAD
 t_client *
 client_list_add(const char *ip, const char *mac, const char *token)
 {
     t_client *curclient;
 
     curclient = client_get_new();
+=======
+t_client         *
+client_list_append(const char *ip, const char *mac, const char *token)
+{
+    t_client         *curclient, *prevclient;
+
+    prevclient = NULL;
+    curclient = firstclient;
+
+    while (curclient != NULL) {
+        prevclient = curclient;
+        curclient = curclient->next;
+    }
+
+    curclient = safe_malloc(sizeof(t_client));
+    memset(curclient, 0, sizeof(t_client));
+>>>>>>> FETCH_HEAD
 
     curclient->ip = safe_strdup(ip);
     curclient->mac = safe_strdup(mac);
     curclient->token = safe_strdup(token);
+<<<<<<< HEAD
     curclient->counters.incoming_delta = curclient->counters.outgoing_delta = 
             curclient->counters.incoming = curclient->counters.incoming_history = curclient->counters.outgoing =
         curclient->counters.outgoing_history = 0;
@@ -218,6 +268,28 @@ client_list_find_by_client(t_client * client)
         c = c->next;
     }
     return NULL;
+=======
+    curclient->counters.incoming = curclient->counters.incoming_history = curclient->counters.outgoing = curclient->counters.outgoing_history = 0;
+    curclient->counters.last_updated = time(NULL);
+
+    /*@breif:record the element create time
+    	 * GaomingPan
+    	 * */
+    curclient->record_time = time(NULL);
+   //printf("New client: mac-->%s\nip-->%s\nrecord_time-->%ld\n\n",mac,ip,curclient->record_time);
+
+
+    if (prevclient == NULL) {
+        firstclient = curclient;
+    } else {
+        prevclient->next = curclient;
+    }
+
+    debug(LOG_INFO, "Added a new client to linked list: IP: %s Token: %s",
+          ip, token);
+
+    return curclient;
+>>>>>>> FETCH_HEAD
 }
 
 /** Finds a  client by its IP and MAC, returns NULL if the client could not
@@ -226,10 +298,17 @@ client_list_find_by_client(t_client * client)
  * @param mac MAC we are looking for in the linked list
  * @return Pointer to the client, or NULL if not found
  */
+<<<<<<< HEAD
 t_client *
 client_list_find(const char *ip, const char *mac)
 {
     t_client *ptr;
+=======
+t_client         *
+client_list_find(const char *ip, const char *mac)
+{
+    t_client         *ptr;
+>>>>>>> FETCH_HEAD
 
     ptr = firstclient;
     while (NULL != ptr) {
@@ -247,10 +326,17 @@ client_list_find(const char *ip, const char *mac)
  * @param ip IP we are looking for in the linked list
  * @return Pointer to the client, or NULL if not found
  */
+<<<<<<< HEAD
 t_client *
 client_list_find_by_ip(const char *ip)
 {
     t_client *ptr;
+=======
+t_client         *
+client_list_find_by_ip(const char *ip)
+{
+    t_client         *ptr;
+>>>>>>> FETCH_HEAD
 
     ptr = firstclient;
     while (NULL != ptr) {
@@ -268,10 +354,17 @@ client_list_find_by_ip(const char *ip)
  * @param mac Mac we are looking for in the linked list
  * @return Pointer to the client, or NULL if not found
  */
+<<<<<<< HEAD
 t_client *
 client_list_find_by_mac(const char *mac)
 {
     t_client *ptr;
+=======
+t_client         *
+client_list_find_by_mac(const char *mac)
+{
+    t_client         *ptr;
+>>>>>>> FETCH_HEAD
 
     ptr = firstclient;
     while (NULL != ptr) {
@@ -290,7 +383,11 @@ client_list_find_by_mac(const char *mac)
 t_client *
 client_list_find_by_token(const char *token)
 {
+<<<<<<< HEAD
     t_client *ptr;
+=======
+    t_client         *ptr;
+>>>>>>> FETCH_HEAD
 
     ptr = firstclient;
     while (NULL != ptr) {
@@ -302,6 +399,7 @@ client_list_find_by_token(const char *token)
     return NULL;
 }
 
+<<<<<<< HEAD
 /** Destroy the client list. Including all free...
  * DOES NOT UPDATE firstclient or anything else.
  * @param list List to destroy (first item)
@@ -318,6 +416,8 @@ client_list_destroy(t_client * list)
     }
 }
 
+=======
+>>>>>>> FETCH_HEAD
 /** @internal
  * @brief Frees the memory used by a t_client structure
  * This function frees the memory used by the t_client structure in the
@@ -325,7 +425,11 @@ client_list_destroy(t_client * list)
  * @param client Points to the client to be freed
  */
 void
+<<<<<<< HEAD
 client_free_node(t_client * client)
+=======
+_client_list_free_node(t_client * client)
+>>>>>>> FETCH_HEAD
 {
 
     if (client->mac != NULL)
@@ -350,6 +454,7 @@ client_free_node(t_client * client)
 void
 client_list_delete(t_client * client)
 {
+<<<<<<< HEAD
     client_list_remove(client);
     client_free_node(client);
 }
@@ -363,6 +468,9 @@ void
 client_list_remove(t_client * client)
 {
     t_client *ptr;
+=======
+    t_client         *ptr;
+>>>>>>> FETCH_HEAD
 
     ptr = firstclient;
 
@@ -370,6 +478,10 @@ client_list_remove(t_client * client)
         debug(LOG_ERR, "Node list empty!");
     } else if (ptr == client) {
         firstclient = ptr->next;
+<<<<<<< HEAD
+=======
+        _client_list_free_node(client);
+>>>>>>> FETCH_HEAD
     } else {
         /* Loop forward until we reach our point in the list. */
         while (ptr->next != NULL && ptr->next != client) {
@@ -378,8 +490,15 @@ client_list_remove(t_client * client)
         /* If we reach the end before finding out element, complain. */
         if (ptr->next == NULL) {
             debug(LOG_ERR, "Node to delete could not be found.");
+<<<<<<< HEAD
         } else {
             ptr->next = client->next;
+=======
+        /* Free element. */
+        } else {
+            ptr->next = client->next;
+            _client_list_free_node(client);
+>>>>>>> FETCH_HEAD
         }
     }
 }

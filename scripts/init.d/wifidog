@@ -14,7 +14,11 @@
 
 IPT=/usr/sbin/iptables
 WD_DIR=/usr/bin
+<<<<<<< HEAD
 OPTIONS="-d 4"
+=======
+OPTIONS="-d 1"
+>>>>>>> FETCH_HEAD
 
 case "$1" in
   start)

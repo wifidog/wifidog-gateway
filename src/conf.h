@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 /* vim: set et sw=4 ts=4 sts=4 : */
+=======
+>>>>>>> FETCH_HEAD
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -28,6 +31,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+<<<<<<< HEAD
 /*@{*/
 /** Defines */
 
@@ -39,6 +43,25 @@
 #define DEFAULT_CONFIGFILE SYSCONFDIR"/wifidog.conf"
 #define DEFAULT_HTMLMSGFILE SYSCONFDIR"/wifidog-msg.html"
 #endif
+=======
+/*@{*/ 
+/** Defines */
+/** How many times should we try detecting the interface with the default route
+ * (in seconds).  If set to 0, it will keep retrying forever */
+#define NUM_EXT_INTERFACE_DETECT_RETRY 0
+/** How often should we try to detect the interface with the default route
+ *  if it isn't up yet (interval in seconds) */
+#define EXT_INTERFACE_DETECT_RETRY_INTERVAL 1
+
+/** Defaults configuration values */
+#ifndef SYSCONFDIR
+	#define DEFAULT_CONFIGFILE "/etc/wifidog.conf"
+	#define DEFAULT_HTMLMSGFILE "/etc/wifidog-msg.html"
+#else
+	#define DEFAULT_CONFIGFILE SYSCONFDIR"/wifidog.conf"
+	#define DEFAULT_HTMLMSGFILE SYSCONFDIR"/wifidog-msg.html"
+#endif	
+>>>>>>> FETCH_HEAD
 #define DEFAULT_DAEMON 1
 #define DEFAULT_DEBUGLEVEL LOG_INFO
 #define DEFAULT_HTTPDMAXCONN 10
@@ -46,8 +69,14 @@
 #define DEFAULT_GATEWAYPORT 2060
 #define DEFAULT_HTTPDNAME "WiFiDog"
 #define DEFAULT_CLIENTTIMEOUT 5
+<<<<<<< HEAD
 #define DEFAULT_CHECKINTERVAL 60
 #define DEFAULT_LOG_SYSLOG 0
+=======
+//#define DEFAULT_CHECKINTERVAL 60
+#define DEFAULT_CHECKINTERVAL 30
+#define DEFAULT_LOG_SYSLOG 1
+>>>>>>> FETCH_HEAD
 #define DEFAULT_SYSLOG_FACILITY LOG_DAEMON
 #define DEFAULT_WDCTL_SOCK "/tmp/wdctl.sock"
 #define DEFAULT_INTERNAL_SOCK "/tmp/wifidog.sock"
@@ -62,6 +91,7 @@
 #define DEFAULT_AUTHSERVMSGPATHFRAGMENT "gw_message.php?"
 #define DEFAULT_AUTHSERVPINGPATHFRAGMENT "ping/?"
 #define DEFAULT_AUTHSERVAUTHPATHFRAGMENT "auth/?"
+<<<<<<< HEAD
 #define DEFAULT_AUTHSERVSSLCERTPATH "/etc/ssl/certs/"
 /** Note that DEFAULT_AUTHSERVSSLNOPEERVER must be 0 or 1, even if the config file syntax is yes or no */
 #define DEFAULT_AUTHSERVSSLPEERVER 1    /* 0 means: Enable peer verification */
@@ -84,11 +114,15 @@
  * Mutex for the configuration file, used by the auth_servers related
  * functions. */
 extern pthread_mutex_t config_mutex;
+=======
+/*@}*/ 
+>>>>>>> FETCH_HEAD
 
 /**
  * Information about the authentication server
  */
 typedef struct _auth_serv_t {
+<<<<<<< HEAD
     char *authserv_hostname;    /**< @brief Hostname of the central server */
     char *authserv_path;        /**< @brief Path where wifidog resides */
     char *authserv_login_script_path_fragment;  /**< @brief This is the script the user will be sent to for login. */
@@ -102,6 +136,21 @@ typedef struct _auth_serv_t {
 				     listens on */
     int authserv_use_ssl;       /**< @brief Use SSL or not */
     char *last_ip;      /**< @brief Last ip used by authserver */
+=======
+    char *authserv_hostname;	/**< @brief Hostname of the central server */
+    char *authserv_path;	/**< @brief Path where wifidog resides */
+    char *authserv_login_script_path_fragment;	/**< @brief This is the script the user will be sent to for login. */
+    char *authserv_portal_script_path_fragment;	/**< @brief This is the script the user will be sent to after a successfull login. */
+    char *authserv_msg_script_path_fragment;	/**< @brief This is the script the user will be sent to upon error to read a readable message. */
+    char *authserv_ping_script_path_fragment;	/**< @brief This is the ping heartbeating script. */
+    char *authserv_auth_script_path_fragment;	/**< @brief This is the script that talks the wifidog gateway protocol. */
+    int authserv_http_port;	/**< @brief Http port the central server
+				     listens on */
+    int authserv_ssl_port;	/**< @brief Https port the central server
+				     listens on */
+    int authserv_use_ssl;	/**< @brief Use SSL or not */
+    char *last_ip;	/**< @brief Last ip used by authserver */
+>>>>>>> FETCH_HEAD
     struct _auth_serv_t *next;
 } t_auth_serv;
 
@@ -120,11 +169,18 @@ typedef enum {
  * Firewall rules
  */
 typedef struct _firewall_rule_t {
+<<<<<<< HEAD
     t_firewall_target target;   /**< @brief t_firewall_target */
     char *protocol;             /**< @brief tcp, udp, etc ... */
     char *port;                 /**< @brief Port to block/allow */
     char *mask;                 /**< @brief Mask for the rule *destination* */
     int mask_is_ipset; /**< @brief *destination* is ipset  */
+=======
+    t_firewall_target target;	/**< @brief t_firewall_target */
+    char *protocol;		/**< @brief tcp, udp, etc ... */
+    char *port;			/**< @brief Port to block/allow */
+    char *mask;			/**< @brief Mask for the rule *destination* */
+>>>>>>> FETCH_HEAD
     struct _firewall_rule_t *next;
 } t_firewall_rule;
 
@@ -132,31 +188,67 @@ typedef struct _firewall_rule_t {
  * Firewall rulesets
  */
 typedef struct _firewall_ruleset_t {
+<<<<<<< HEAD
     char *name;
     t_firewall_rule *rules;
     struct _firewall_ruleset_t *next;
+=======
+    char			*name;
+    t_firewall_rule		*rules;
+    struct _firewall_ruleset_t	*next;
+>>>>>>> FETCH_HEAD
 } t_firewall_ruleset;
 
 /**
  * Trusted MAC Addresses
  */
 typedef struct _trusted_mac_t {
+<<<<<<< HEAD
     char *mac;
+=======
+    char   *mac;
+>>>>>>> FETCH_HEAD
     struct _trusted_mac_t *next;
 } t_trusted_mac;
 
 /**
+<<<<<<< HEAD
  * Popular Servers
  */
 typedef struct _popular_server_t {
     char *hostname;
     struct _popular_server_t *next;
 } t_popular_server;
+=======
+ * gaomingpan
+ * untrusted mac addresses
+ * */
+typedef struct _untrusted_mac_t {
+	char *mac;
+	struct _untrusted_mac_t *next;
+} t_untrusted_mac;
+
+/*limeng*/
+/**
+ * Trusted White list Addresses
+ */
+typedef struct _white_list_t {
+    char   *ip;
+    struct _white_list_t *next;
+} t_white_list;
+
+typedef struct _black_list_t {
+    char   *ip;
+    struct _black_list_t *next;
+} t_black_list;
+
+>>>>>>> FETCH_HEAD
 
 /**
  * Configuration structure
  */
 typedef struct {
+<<<<<<< HEAD
     char *configfile;       /**< @brief name of the config file */
     char *htmlmsgfile;          /**< @brief name of the HTML file used for messages */
     char *wdctl_sock;           /**< @brief wdctl path to socket */
@@ -198,6 +290,45 @@ typedef struct {
     char *arp_table_path; /**< @brief Path to custom ARP table, formatted
         like /proc/net/arp */
     t_popular_server *popular_servers; /**< @brief list of popular servers */
+=======
+    char configfile[255];	/**< @brief name of the config file */
+    char *htmlmsgfile;		/**< @brief name of the HTML file used for messages */
+    char *wdctl_sock;		/**< @brief wdctl path to socket */
+    char *internal_sock;		/**< @brief internal path to socket */
+    int daemon;			/**< @brief if daemon > 0, use daemon mode */
+    int debuglevel;		/**< @brief Debug information verbosity */
+    char *external_interface;	/**< @brief External network interface name for
+				     firewall rules */
+    char *gw_id;		/**< @brief ID of the Gateway, sent to central
+				     server */
+    char *gw_interface;		/**< @brief Interface we will accept connections on */
+    char *gw_address;		/**< @brief Internal IP address for our web
+				     server */
+    int gw_port;		/**< @brief Port the webserver will run on */
+    
+    t_auth_serv	*auth_servers;	/**< @brief Auth servers list */
+    char *httpdname;		/**< @brief Name the web server will return when
+				     replying to a request */
+    int httpdmaxconn;		/**< @brief Used by libhttpd, not sure what it
+				     does */
+    char *httpdrealm;		/**< @brief HTTP Authentication realm */
+    char *httpdusername;	/**< @brief Username for HTTP authentication */
+    char *httpdpassword;	/**< @brief Password for HTTP authentication */
+    int clienttimeout;		/**< @brief How many CheckIntervals before a client
+				     must be re-authenticated */
+    int checkinterval;		/**< @brief Frequency the the client timeout check
+				     thread will run. */
+    int log_syslog;		/**< @brief boolean, wether to log to syslog */
+    int syslog_facility;	/**< @brief facility to use when using syslog for
+				     logging */
+    int proxy_port;		/**< @brief Transparent proxy port (0 to disable) */
+    /*limeng*/
+    t_white_list *white_list;		/**< @brief White list */
+    t_black_list *black_list;		/**< @brief black list */
+    t_firewall_ruleset	*rulesets;	/**< @brief firewall rules */
+    t_trusted_mac *trustedmaclist; /**< @brief list of trusted macs */
+    t_untrusted_mac *untrustedmaclist; /**< @brief list of untrusted macs*/
+>>>>>>> FETCH_HEAD
 } s_config;
 
 /** @brief Get the current gateway configuration */
@@ -224,6 +355,17 @@ void mark_auth_server_bad(t_auth_serv *);
 /** @brief Fetch a firewall rule set. */
 t_firewall_rule *get_ruleset(const char *);
 
+<<<<<<< HEAD
+=======
+void parse_trusted_mac_list(const char *);
+
+/*gaomingpan*/
+void parse_untrusted_mac_list(const char *);
+
+/* limeng */
+void parse_white_list(const char *); 
+void parse_black_list(const char *) ;
+>>>>>>> FETCH_HEAD
 
 #define LOCK_CONFIG() do { \
 	debug(LOG_DEBUG, "Locking config"); \
@@ -237,4 +379,8 @@ t_firewall_rule *get_ruleset(const char *);
 	debug(LOG_DEBUG, "Config unlocked"); \
 } while (0)
 
+<<<<<<< HEAD
 #endif                          /* _CONFIG_H_ */
+=======
+#endif /* _CONFIG_H_ */
+>>>>>>> FETCH_HEAD

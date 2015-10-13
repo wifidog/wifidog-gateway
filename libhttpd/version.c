@@ -18,6 +18,10 @@
 **
 */
 
+<<<<<<< HEAD
 char    LIBHTTPD_VERSION[] =  "1.4-wifidog",
+=======
+char    LIBHTTPD_VERSION[] =  "1.3",
+>>>>>>> FETCH_HEAD
         LIBHTTPD_VENDOR[] =   "Hughes Technologies Pty Ltd";
 

@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 /* vim: set et sw=4 ts=4 sts=4 : */
+=======
+>>>>>>> FETCH_HEAD
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -28,6 +31,7 @@
 #ifndef _COMMANDLINE_H_
 #define _COMMANDLINE_H_
 
+<<<<<<< HEAD
 /*
  * Holds an argv that could be passed to exec*() if we restart ourselves
  */
@@ -43,3 +47,9 @@ extern pid_t restart_orig_pid;
 void parse_commandline(int, char **);
 
 #endif                          /* _COMMANDLINE_H_ */
+=======
+/** @brief Parses the command line and set the config accordingly */
+void parse_commandline(int, char**);
+
+#endif /* _COMMANDLINE_H_ */
+>>>>>>> FETCH_HEAD

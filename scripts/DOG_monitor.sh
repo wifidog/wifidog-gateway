@@ -10,7 +10,11 @@
 ## Author: GaomingPan
 ## Lisence: GPL
 ## Date: 2015-09-12
+<<<<<<< HEAD
 ## Version: v1.2.1
+=======
+## Version: v1.2.0
+>>>>>>> FETCH_HEAD
 ##
 ############################################################
 
@@ -24,7 +28,11 @@
 ##         ifacename   RxBytes   TxBytes  dRx   dTx
 ##
 ############################################################
+<<<<<<< HEAD
 IFACE_DATA=/tmp/.iface-data
+=======
+IFACE_DATA=/tmp/iface-data
+>>>>>>> FETCH_HEAD
 T_IFACE_DATA=/tmp/.t_iface-data
 DEV_FILE=/proc/net/dev
 TMP=/tmp/.ftmp
@@ -80,9 +88,15 @@ iface_data_file_generator()
 ## Description: this function generator the client rate file.
 ##
 ###########################################################
+<<<<<<< HEAD
 UP_SPEED=/tmp/.client.up.speed      
 DOWN_SPEED=/tmp/.client.down.speed  
 MAC_IP=/tmp/.mac-ip.client
+=======
+UP_SPEED=/tmp/client.up.speed      
+DOWN_SPEED=/tmp/client.down.speed  
+MAC_IP=/tmp/mac-ip.client
+>>>>>>> FETCH_HEAD
 I_FACE=$(uci get wifidog_conf.single.gatewayInterface | awk '{print $2}')
 CHECK_INTERVAL=$(uci get wifidog_conf.single.checkInterval | awk '{print $2}')
 
@@ -110,20 +124,34 @@ clients_RxTxRate_generator()
 ##
 #################################################
 PID_NAME=wifidog
+<<<<<<< HEAD
 PS_FILE=/tmp/ps-info
 dog_daemon_monitor()
 {
    ps > $PS_FILE
    pid=$(cat $PS_FILE | grep $PID_NAME | awk '{print $1}')
+=======
+PID_FILE=/tmp/ps-info
+dog_daemon_monitor()
+{
+   ps > $PID_FILE
+   pid=$(cat $PID_FILE | grep $PID_NAME | awk '{print $1}')
+>>>>>>> FETCH_HEAD
   
    if [ -n "$pid" ]
      then
        return 1
    fi
   
+<<<<<<< HEAD
    /usr/bin/wifidog-init stop > /dev/null
    sleep 2
    /usr/bin/wifidog-init start > /dev/null
+=======
+   /usr/bin/wdctl stop > /dev/null
+   sleep 1
+   /usr/bin/wifidog -d 1 &
+>>>>>>> FETCH_HEAD
 
    return 0
 }
@@ -136,7 +164,11 @@ dog_daemon_monitor()
 ##		the hostname  file for wifidog.
 ##
 ##################################################
+<<<<<<< HEAD
 HOST_NAME_FILE=/tmp/.hostname.txt
+=======
+HOST_NAME_FILE=/tmp/hostname.txt
+>>>>>>> FETCH_HEAD
 
 hostname_file_generator()
 {
@@ -145,6 +177,7 @@ hostname_file_generator()
 
 ##################################################
 ##
+<<<<<<< HEAD
 ## Function: iface_conn_file_generator
 ## Description: this function generate and refresh 
 ##		the interface connection file for wifidog.
@@ -195,6 +228,8 @@ wan_ipaddr_file_generator()
 
 ##################################################
 ##
+=======
+>>>>>>> FETCH_HEAD
 ## Function: man_loop
 ## Description: this is the mian function,do above
 ##              things to refresh data.
@@ -202,6 +237,7 @@ wan_ipaddr_file_generator()
 #################################################
 main_loop()
 {
+<<<<<<< HEAD
     sleep_time=$(($CHECK_INTERVAL - 4))
     
     while [ true ]
@@ -214,6 +250,15 @@ main_loop()
 #         wan_ipaddr_file_generator
          dog_daemon_monitor
          sleep  $sleep_time
+=======
+    while [ true ]
+      do
+         iface_data_file_generator
+         clients_RxTxRate_generator
+         hostname_file_generator
+         dog_daemon_monitor
+         sleep  $(($CHECK_INTERVAL - 3))
+>>>>>>> FETCH_HEAD
       done
  }
 

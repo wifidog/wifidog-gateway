@@ -1,4 +1,5 @@
 # $Id$
+<<<<<<< HEAD
 2015-03-19
 	* See NEWS file from now on
 2015-03-18
@@ -39,6 +40,13 @@
 2014-08-31
         * Fixed parsing process for AuthServer configurations by Kontinuation 
         (https://github.com/wifidog/wifidog-gateway/pull/24)
+=======
+2015-07-13
+		* add get_clientinfo.h get_clientinfo.c
+2015-07-09
+		* add shell_command.h
+		* add get_devinfo.h get_devinfo.c
+>>>>>>> FETCH_HEAD
 2014-05-13
         * libhttpd crash on invalid HTTP headers (second part of the patch) by Benoit Grégoire
 2013-08-21

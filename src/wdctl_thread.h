@@ -29,6 +29,11 @@
 
 #define DEFAULT_WDCTL_SOCK	"/tmp/wdctl.sock"
 
+<<<<<<< HEAD
+=======
+int wdctl_socket_server;
+
+>>>>>>> FETCH_HEAD
 /** @brief Listen for WiFiDog control messages on a unix domain socket */
 void thread_wdctl(void *arg);
 
