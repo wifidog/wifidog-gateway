@@ -33,7 +33,8 @@ extern pthread_mutex_t client_list_mutex;
 static t_devinfo devinfo;
 static t_cpuuse cpuuse;
 
-static char apmac[DEV_MAC_ADDR_LEN];
+static char apmac[DEV_MAC_ADDR_LEN] = {0};
+static char apwanip[DEV_WAN_IP_LEN] = {0};
 
 //extern char *dev_extern_iface;
 
@@ -49,17 +50,17 @@ t_devinfo *get_devinfo(void)
 
 	if(get_devssid(devinfo.gw_ssid))
 	{
-		debug(LOG_ERR,"MyDEBUG:get ssid error!");
+		debug(LOG_ERR,"ERR:get ssid error!");
 	}
 
 	if(get_dogversion(devinfo.dog_version))
 	{
-		debug(LOG_ERR,"MyDEBUG: get_dogversion error!");
+		debug(LOG_ERR,"ERR: get_dogversion error!");
 	}
 
 	if(get_wanip(devinfo.wan_ip))
 	{
-		debug(LOG_ERR,"MyDEBUG: get_wanip error!\n");
+		debug(LOG_ERR,"ERR: get_wanip error!\n");
 	}
 
 	devinfo.cur_conn = get_curconn();
@@ -69,12 +70,12 @@ t_devinfo *get_devinfo(void)
 
 	if(get_wanbps(&devinfo.go_speed,&devinfo.come_speed))
 	{
-		debug(LOG_ERR,"MyDEBUG: get_speed error!");
+		debug(LOG_ERR,"ERR: get_speed error!");
 	}
 
 	if(get_trafficCount(get_dev_extern_iface(),&devinfo.incoming,&devinfo.outgoing,NULL,NULL))
 	{
-		debug(LOG_ERR,"MyDEBUG: get_traffic error!\n");
+		debug(LOG_ERR,"ERR: get_traffic error!\n");
 	}
 
 	return &devinfo;
@@ -132,6 +133,38 @@ int get_dogversion(char *dogversion)
 int get_wanip(char *wanip)
 {
 	FILE *fp;
+
+	if(0 == strlen(apwanip)){
+		fp = popen(CMD_GET_WAN_IP,"r");
+		if(NULL == fp){
+			debug(LOG_ERR,"get_wanip error!");
+			if(NULL != wanip)
+			    sprintf(wanip,"%s","0.0.0.0");
+			return -1;
+		}
+		fread(apwanip,DEV_WAN_IP_LEN - 1,1,fp);
+		pclose(fp);
+
+		int i = DEV_WAN_IP_LEN - 1;
+		for(;i >= 0;i--){
+			if(0x0a == apwanip[i]){
+				apwanip[i] = 0;
+				break;
+			}
+		}
+
+	}else{
+		if(NULL != wanip)
+		    sprintf(wanip,"%s",apwanip);
+	}
+
+	return 0;
+}
+
+/**
+int get_wanip(char *wanip)
+{
+	FILE *fp;
 	memset(wanip,0,DEV_WAN_IP_LEN);
 	fp = popen(CMD_GET_WAN_IP,"r");
 	if(NULL == fp)
@@ -155,7 +188,7 @@ int get_wanip(char *wanip)
 
 	return 0;
 }
-
+*****/
 
 
 /* @breif get ap mac address,based on uci command.
@@ -230,6 +263,33 @@ int get_curconn(void)
  * @RETURN_VALUE:the number of connected client
  * GaomingPan lonely-test:no
  * */
+
+int get_devconn(void)
+{
+	FILE *fp;
+	char  info_buf[512],
+	      num_buf[10];
+	char *ptr = NULL;
+	s_config *conf = config_get_config();
+
+	fp = fopen(IFACE_CONN_FILE,"r");
+	if(NULL == fp){
+		debug(LOG_ERR,"ERROR fopen error, at get_devconn().");
+		return -1;
+	}
+    if(0 == fread(info_buf,1,512,fp)){
+    	fclose(fp);
+    	return 0;
+    }
+    fclose(fp);
+    ptr = strstr(info_buf,conf->gw_interface);
+    if(NULL == ptr)
+    	return 0;
+    sscanf(ptr,"%s* %d",num_buf);
+    return (atoi(num_buf));
+}
+
+/****
 int get_devconn(void)
 {
 	FILE *fp;
@@ -255,13 +315,82 @@ int get_devconn(void)
     pclose(fp);
     return (atoi(buf));
 }
-
+********/
 
 /* @breif get cpu use infomation,based on shell command.
  * @PARAMETER:[int type] CPU_USER,CPU_SYS,CPU_NIC,CPU_IDLE,CPU_IO,CPU_IRQ,CPU_SIRQ,CPU_LOAD
  * @RETURN_VALUE:the number of current percent of CPU use.
  * GaomingPan lonely-test:yes
  * */
+
+int get_cpuuse(int type)
+{
+	int use,
+	    i;
+	FILE *fp;
+
+	for(i = 0;i < 15;i++)
+	  memset(cpuuse.use_info[i],0,8);
+
+	fp = fopen(CPU_USE_INFO_FILE,"r");
+	if(NULL == fp){
+		debug(LOG_ERR,"fopen error,at get_cpuuse(...) !");
+		return -1;
+	}
+	fscanf(fp,"%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
+	       cpuuse.use_info[0],cpuuse.use_info[1],cpuuse.use_info[2],
+	       cpuuse.use_info[3],cpuuse.use_info[4],cpuuse.use_info[5],
+	       cpuuse.use_info[6],cpuuse.use_info[7],cpuuse.use_info[8],
+	       cpuuse.use_info[9],cpuuse.use_info[10],cpuuse.use_info[11],
+	       cpuuse.use_info[12],cpuuse.use_info[13],cpuuse.use_info[14]
+	      );
+	fclose(fp);
+
+//	for(;i<15;i++)
+//	  printf("cpuuse.use_info[%d]:%s\n",i,cpuuse.use_info[i]);
+
+	switch(type){
+	 case CPU_USER:
+	   cpuuse.use_info[CPU_USER][strlen(cpuuse.use_info[CPU_USER])-1] = 0;
+	   use = atoi(cpuuse.use_info[CPU_USER]);
+	   break;
+	 case CPU_SYS:
+	   cpuuse.use_info[CPU_SYS][strlen(cpuuse.use_info[CPU_SYS])-1] = 0;
+	   use = atoi(cpuuse.use_info[CPU_SYS]);
+	   break;
+	 case CPU_NIC:
+	   cpuuse.use_info[CPU_NIC][strlen(cpuuse.use_info[CPU_NIC])-1] = 0;
+	   use = atoi(cpuuse.use_info[CPU_NIC]);
+	   break;
+	 case CPU_IDLE:
+	   cpuuse.use_info[CPU_IDLE][strlen(cpuuse.use_info[CPU_IDLE])-1] = 0;
+	   use = atoi(cpuuse.use_info[CPU_IDLE]);
+	   break;
+	   case CPU_LOAD:
+	   cpuuse.use_info[CPU_IDLE][strlen(cpuuse.use_info[CPU_IDLE])-1] = 0;
+	   use = 100 - atoi(cpuuse.use_info[CPU_IDLE]);
+	   break;
+	 case CPU_IO:
+	   cpuuse.use_info[CPU_IDLE][strlen(cpuuse.use_info[CPU_IO])-1] = 0;
+	   use = atoi(cpuuse.use_info[CPU_IO]);
+	   break;
+	 case CPU_IRQ:
+	   cpuuse.use_info[CPU_IRQ][strlen(cpuuse.use_info[CPU_IRQ])-1] = 0;
+	   use = atoi(cpuuse.use_info[CPU_IRQ]);
+	   break;
+	 case CPU_SIRQ:
+	   cpuuse.use_info[CPU_SIRQ][strlen(cpuuse.use_info[CPU_SIRQ])-1] = 0;
+	   use = atoi(cpuuse.use_info[CPU_SIRQ]);
+	   break;
+	  default:
+	    use = -1;
+	    break;
+	}
+
+	return use;
+}
+
+/*****
 int get_cpuuse(int type)
 {
 	char num[4];
@@ -331,7 +460,7 @@ int get_cpuuse(int type)
 
 	return use;
 }
-
+********************************************/
 
 /* @breif get wan interface traffic.
  * @PARAMETER:[long *outgo,long *income],the pointer for save outgo-data and income-data.

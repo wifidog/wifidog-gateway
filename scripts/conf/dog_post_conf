@@ -1,7 +1,7 @@
 
 config  dog_post 'url'
-        option  'info_url'              'http://108.108.108.7:8080/WiFiAuth/wifidog/result'
-        option  'normal_url'            'http://108.108.108.7:8080/WiFiAuth/wifidog/result'
+        option  'info_url'              'http://108.108.108.7:8080/ReWiFiAuth/wifidog/result'
+        option  'normal_url'            'http://108.108.108.7:8080/ReWiFiAuth/wifidog/result'
 
 config dog_post 'rmflag'
         option  'info_rmflag'           'result'

@@ -14,8 +14,9 @@
 #define DEV_WAN_IP_LEN       16
 #define DEV_IFNAME_LEN       11
 
-#define IFACE_DATA_FILE   "/tmp/iface-data"
-
+#define IFACE_DATA_FILE   "/tmp/.iface-data"
+#define IFACE_CONN_FILE   "/tmp/.iface_conn"
+#define CPU_USE_INFO_FILE "/tmp/.cpu_use_info"
 
 #define	CPU_USER     1
 #define	CPU_SYS      3
