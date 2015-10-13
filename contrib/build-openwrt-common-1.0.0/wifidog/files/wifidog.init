@@ -1,0 +1,25 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006 OpenWrt.org
+START=65
+EXTRA_COMMANDS="status"
+EXTRA_HELP="        status Print the status of the service"
+
+start() {
+
+	/usr/bin/wifidog-init start
+        sleep 2
+        /usr/bin/DOG_monitor  &
+}
+
+stop() {
+        rst=`ps | grep DOG_monitor | cut -d "r" -f 1`
+        if [ -n "$rst" ]; then
+            kill -9 $rst
+        fi
+        sleep 1
+	/usr/bin/wifidog-init stop
+}
+
+status() {
+	/usr/bin/wifidog-init status
+}
