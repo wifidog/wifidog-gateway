@@ -13,9 +13,9 @@
 #define  CLIENT_MAC_ADDRESS_LEN   18
 #define  CLIENT_IP_ADDRESS_LEN    16
 
-#define  UP_SPEED_FILE             "/tmp/client.up.speed"
-#define  DOWN_SPEED_FILE           "/tmp/client.down.speed"
-#define  HOST_NAME_FILE            "/tmp/hostname.txt"
+#define  UP_SPEED_FILE             "/tmp/.client.up.speed"
+#define  DOWN_SPEED_FILE           "/tmp/.client.down.speed"
+#define  HOST_NAME_FILE            "/tmp/.hostname.txt"
 
 
 /*@breif the sturct for client_info list
@@ -86,15 +86,22 @@ t_clientinfo * get_client_info_by_mac(const char *mac);
 t_clientinfo * get_client_info_by_ip(const char *ip);
 
 
+/* @breif find the element from the client_info list by ip.
+ * @ip,the pointer point to by client's ip.
+ * @@mac,the pointer point to by client's mac.
+ * GaomingPan lonely-test:yes
+ * */
 long get_online_time(const char *ip,const char *mac);
 
 
 
-
+/*@breif get a flage string
+ * */
 char *get_client_auth_flag();
 
 
-
+/*@breif set a flage string
+ * */
 void set_client_auth_flag();
 
 

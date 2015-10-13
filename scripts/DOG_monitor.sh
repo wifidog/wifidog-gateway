@@ -10,7 +10,7 @@
 ## Author: GaomingPan
 ## Lisence: GPL
 ## Date: 2015-09-12
-## Version: v1.2.0
+## Version: v1.2.1
 ##
 ############################################################
 
@@ -24,7 +24,7 @@
 ##         ifacename   RxBytes   TxBytes  dRx   dTx
 ##
 ############################################################
-IFACE_DATA=/tmp/iface-data
+IFACE_DATA=/tmp/.iface-data
 T_IFACE_DATA=/tmp/.t_iface-data
 DEV_FILE=/proc/net/dev
 TMP=/tmp/.ftmp
@@ -80,9 +80,9 @@ iface_data_file_generator()
 ## Description: this function generator the client rate file.
 ##
 ###########################################################
-UP_SPEED=/tmp/client.up.speed      
-DOWN_SPEED=/tmp/client.down.speed  
-MAC_IP=/tmp/mac-ip.client
+UP_SPEED=/tmp/.client.up.speed      
+DOWN_SPEED=/tmp/.client.down.speed  
+MAC_IP=/tmp/.mac-ip.client
 I_FACE=$(uci get wifidog_conf.single.gatewayInterface | awk '{print $2}')
 CHECK_INTERVAL=$(uci get wifidog_conf.single.checkInterval | awk '{print $2}')
 
@@ -110,11 +110,11 @@ clients_RxTxRate_generator()
 ##
 #################################################
 PID_NAME=wifidog
-PID_FILE=/tmp/ps-info
+PS_FILE=/tmp/ps-info
 dog_daemon_monitor()
 {
-   ps > $PID_FILE
-   pid=$(cat $PID_FILE | grep $PID_NAME | awk '{print $1}')
+   ps > $PS_FILE
+   pid=$(cat $PS_FILE | grep $PID_NAME | awk '{print $1}')
   
    if [ -n "$pid" ]
      then
@@ -136,11 +136,46 @@ dog_daemon_monitor()
 ##		the hostname  file for wifidog.
 ##
 ##################################################
-HOST_NAME_FILE=/tmp/hostname.txt
+HOST_NAME_FILE=/tmp/.hostname.txt
 
 hostname_file_generator()
 {
    cat $(uci get dhcp.@dnsmasq[0].leasefile) | awk '{print $2,$3,$4}' > $HOST_NAME_FILE
+}
+
+##################################################
+##
+## Function: iface_conn_file_generator
+## Description: this function generate and refresh 
+##		the interface connection file for wifidog.
+##
+##################################################
+IFACE_CONN_FILE=/tmp/.iface_conn
+IFACE_LIST=/tmp/.iface_list.txt
+
+iface_conn_file_generator()
+{
+  rm -f $IFACE_CONN_FILE
+  cat /proc/net/arp | awk '{print $6}' | awk '!a[$1]++' | sed 1d > $IFACE_LIST
+  while read line
+    do
+      echo "$line $(cat /proc/net/arp | grep -e "0x2" | grep -e $line | awk 'END{print NR}')" >> $IFACE_CONN_FILE
+    done < $IFACE_LIST
+}
+
+
+##################################################
+##
+## Function: cpu_use_info_file_generator
+## Description: this function generate and refresh 
+##		the cpu use information file for wifidog.
+##
+##################################################
+CPU_USE_INFO_FILE=/tmp/.cpu_use_info
+
+cpu_use_info_file_generator()
+{
+    echo "$(top -n 1 | grep id | awk 'NR==2{print}')" > $CPU_USE_INFO_FILE
 }
 
 ##################################################
@@ -152,13 +187,17 @@ hostname_file_generator()
 #################################################
 main_loop()
 {
+    sleep_time=$(($CHECK_INTERVAL - 4))
+    
     while [ true ]
       do
          iface_data_file_generator
          clients_RxTxRate_generator
          hostname_file_generator
+         iface_conn_file_generator
+         cpu_use_info_file_generator
          dog_daemon_monitor
-         sleep  $(($CHECK_INTERVAL - 3))
+         sleep  $sleep_time
       done
  }
 
