@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 /* vim: set et ts=4 sts=4 sw=4 : */
-=======
->>>>>>> FETCH_HEAD
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -22,10 +19,6 @@
  *                                                                  *
 \********************************************************************/
 
-<<<<<<< HEAD
-=======
-/* $Id$ */
->>>>>>> FETCH_HEAD
 /** @file debug.h
     @brief Debug output routines
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
@@ -34,7 +27,6 @@
 #ifndef _DEBUG_H_
 #define _DEBUG_H_
 
-<<<<<<< HEAD
 typedef struct _debug_conf {
     int debuglevel;      /**< @brief Debug information verbosity */
     int log_stderr;      /**< @brief Output log to stdout */
@@ -48,18 +40,10 @@ extern debugconf_t debugconf;
  * The messages will include the filename and line number, and will be sent to syslog if so configured in the config file 
  * @param level Debug level
  * @param format... sprintf like format string
-=======
-/** @brief Used to output messages.
- *The messages will include the finlname and line number, and will be sent to syslog if so configured in the config file 
->>>>>>> FETCH_HEAD
  */
 #define debug(level, format...) _debug(__FILE__, __LINE__, level, format)
 
 /** @internal */
-<<<<<<< HEAD
 void _debug(const char *, int, int, const char *, ...);
-=======
-void _debug(const char *filename, int line, int level, const char *format, ...);
->>>>>>> FETCH_HEAD
 
 #endif /* _DEBUG_H_ */

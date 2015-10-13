@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 /* vim: set sw=4 ts=4 sts=4 et : */
-=======
->>>>>>> FETCH_HEAD
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *

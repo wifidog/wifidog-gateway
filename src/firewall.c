@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 /* vim: set et sw=4 ts=4 sts=4 : */
-=======
->>>>>>> FETCH_HEAD
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -22,12 +19,6 @@
  *                                                                  *
  \********************************************************************/
 
-<<<<<<< HEAD
-=======
-/*
- * $Id$
- */
->>>>>>> FETCH_HEAD
 /** @internal
   @file firewall.c
   @brief Firewall update functions
@@ -44,11 +35,6 @@
 #include <pthread.h>
 #include <sys/wait.h>
 #include <sys/types.h>
-<<<<<<< HEAD
-=======
-//#include <sys/unistd.h>
-#include <unistd.h>
->>>>>>> FETCH_HEAD
 
 #include <string.h>
 
@@ -57,34 +43,12 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <sys/uio.h>
-<<<<<<< HEAD
 #include <netdb.h>
 #include <sys/time.h>
 
 #include "httpd.h"
 #include "safe.h"
 #include "util.h"
-=======
-#include <fcntl.h>
-#include <netdb.h>
-#include <sys/time.h>
-
-#ifdef __linux__
-#include <net/ethernet.h>
-#include <netinet/ip.h>
-#include <netinet/ip_icmp.h>
-#include <netpacket/packet.h>
-#endif
-
-#if defined(__NetBSD__)
-#include <netinet/in_systm.h>
-#include <netinet/ip.h>
-#include <netinet/ip_icmp.h>
-#endif
-
-#include "httpd.h"
-#include "safe.h"
->>>>>>> FETCH_HEAD
 #include "debug.h"
 #include "conf.h"
 #include "firewall.h"
@@ -92,7 +56,6 @@
 #include "auth.h"
 #include "centralserver.h"
 #include "client_list.h"
-<<<<<<< HEAD
 #include "commandline.h"
 
 static int _fw_deny_raw(const char *, const char *, const int);
@@ -137,33 +100,6 @@ fw_allow_host(const char *host)
     debug(LOG_DEBUG, "Allowing %s", host);
 
     return iptables_fw_access_host(FW_ACCESS_ALLOW, host);
-=======
-
-#include "get_clientinfo.h"
-
-
-extern pthread_mutex_t client_list_mutex;
-
-/* from commandline.c */
-extern pid_t restart_orig_pid;
-
-
-
-/**
- * Allow a client access through the firewall by adding a rule in the firewall to MARK the user's packets with the proper
- * rule by providing his IP and MAC address
- * @param ip IP address to allow
- * @param mac MAC address to allow
- * @param fw_connection_state fw_connection_state Tag
- * @return Return code of the command
- */
-int
-fw_allow(const char *ip, const char *mac, int fw_connection_state)
-{
-    debug(LOG_DEBUG, "Allowing %s %s with fw_connection_state %d", ip, mac, fw_connection_state);
-
-    return iptables_fw_access(FW_ACCESS_ALLOW, ip, mac, fw_connection_state);
->>>>>>> FETCH_HEAD
 }
 
 /**
@@ -174,7 +110,6 @@ fw_allow(const char *ip, const char *mac, int fw_connection_state)
  * @return Return code of the command
  */
 int
-<<<<<<< HEAD
 fw_deny(t_client * client)
 {
     int fw_connection_state = client->fw_connection_state;
@@ -213,19 +148,11 @@ fw_set_authup(void)
     debug(LOG_DEBUG, "Marking auth server up again");
 
     return iptables_fw_auth_reachable();
-=======
-fw_deny(const char *ip, const char *mac, int fw_connection_state)
-{
-    debug(LOG_DEBUG, "Denying %s %s with fw_connection_state %d", ip, mac, fw_connection_state);
-
-    return iptables_fw_access(FW_ACCESS_DENY, ip, mac, fw_connection_state);
->>>>>>> FETCH_HEAD
 }
 
 /* XXX DCY */
 /**
  * Get an IP's MAC address from the ARP cache.
-<<<<<<< HEAD
  * Go through all the entries in config->arp_table_path until we find the
  * requested IP address and return the MAC address bound to it.
  * @todo Make this function portable (using shell scripts?)
@@ -240,26 +167,10 @@ arp_get(const char *req_ip)
     s_config *config = config_get_config();
 
     if (!(proc = fopen(config->arp_table_path, "r"))) {
-=======
- * Go through all the entries in /proc/net/arp until we find the requested
- * IP address and return the MAC address bound to it.
- * @todo Make this function portable (using shell scripts?)
- */
-char           *
-arp_get(const char *req_ip)
-{
-    FILE           *proc;
-	 char ip[16];
-	 char mac[18];
-	 char * reply = NULL;
-
-    if (!(proc = fopen("/proc/net/arp", "r"))) {
->>>>>>> FETCH_HEAD
         return NULL;
     }
 
     /* Skip first line */
-<<<<<<< HEAD
     while (!feof(proc) && fgetc(proc) != '\n') ;
 
     /* Find ip, copy mac in reply */
@@ -269,17 +180,6 @@ arp_get(const char *req_ip)
             reply = safe_strdup(mac);
             break;
         }
-=======
-	 while (!feof(proc) && fgetc(proc) != '\n');
-
-	 /* Find ip, copy mac in reply */
-	 reply = NULL;
-    while (!feof(proc) && (fscanf(proc, " %15[0-9.] %*s %*s %17[A-Fa-f0-9:] %*s %*s", ip, mac) == 2)) {
-		  if (strcmp(ip, req_ip) == 0) {
-				reply = safe_strdup(mac);
-				break;
-		  }
->>>>>>> FETCH_HEAD
     }
 
     fclose(proc);
@@ -292,32 +192,17 @@ arp_get(const char *req_ip)
 int
 fw_init(void)
 {
-<<<<<<< HEAD
     int result = 0;
     int new_fw_state;
     t_client *client = NULL;
 
     if (!init_icmp_socket()) {
-=======
-    int flags, oneopt = 1, zeroopt = 0;
-	 int result = 0;
-	 t_client * client = NULL;
-
-    debug(LOG_INFO, "Creating ICMP socket");
-    if ((icmp_fd = socket (AF_INET, SOCK_RAW, IPPROTO_ICMP)) == -1 ||
-            (flags = fcntl(icmp_fd, F_GETFL, 0)) == -1 ||
-             fcntl(icmp_fd, F_SETFL, flags | O_NONBLOCK) == -1 ||
-             setsockopt(icmp_fd, SOL_SOCKET, SO_RCVBUF, &oneopt, sizeof(oneopt)) ||
-             setsockopt(icmp_fd, SOL_SOCKET, SO_DONTROUTE, &zeroopt, sizeof(zeroopt)) == -1) {
-        debug(LOG_ERR, "Cannot create ICMP raw socket.");
->>>>>>> FETCH_HEAD
         return 0;
     }
 
     debug(LOG_INFO, "Initializing Firewall");
     result = iptables_fw_init();
 
-<<<<<<< HEAD
     if (restart_orig_pid) {
         debug(LOG_INFO, "Restoring firewall rules for clients inherited from parent");
         LOCK_CLIENT_LIST();
@@ -332,20 +217,6 @@ fw_init(void)
     }
 
     return result;
-=======
-	 if (restart_orig_pid) {
-		 debug(LOG_INFO, "Restoring firewall rules for clients inherited from parent");
-		 LOCK_CLIENT_LIST();
-		 client = client_get_first_client();
-		 while (client) {
-			 fw_allow(client->ip, client->mac, client->fw_connection_state);
-			 client = client->next;
-		 }
-		 UNLOCK_CLIENT_LIST();
-	 }
-
-	 return result;
->>>>>>> FETCH_HEAD
 }
 
 /** Remove all auth server firewall whitelist rules
@@ -353,13 +224,8 @@ fw_init(void)
 void
 fw_clear_authservers(void)
 {
-<<<<<<< HEAD
     debug(LOG_INFO, "Clearing the authservers list");
     iptables_fw_clear_authservers();
-=======
-	debug(LOG_INFO, "Clearing the authservers list");
-	iptables_fw_clear_authservers();
->>>>>>> FETCH_HEAD
 }
 
 /** Add the necessary firewall rules to whitelist the authservers
@@ -367,13 +233,8 @@ fw_clear_authservers(void)
 void
 fw_set_authservers(void)
 {
-<<<<<<< HEAD
     debug(LOG_INFO, "Setting the authservers list");
     iptables_fw_set_authservers();
-=======
-	debug(LOG_INFO, "Setting the authservers list");
-	iptables_fw_set_authservers();
->>>>>>> FETCH_HEAD
 }
 
 /** Remove the firewall rules
@@ -383,15 +244,7 @@ fw_set_authservers(void)
 int
 fw_destroy(void)
 {
-<<<<<<< HEAD
     close_icmp_socket();
-=======
-    if (icmp_fd != 0) {
-        debug(LOG_INFO, "Closing ICMP socket");
-        close(icmp_fd);
-    }
-
->>>>>>> FETCH_HEAD
     debug(LOG_INFO, "Removing Firewall rules");
     return iptables_fw_destroy();
 }
@@ -402,22 +255,14 @@ fw_destroy(void)
 void
 fw_sync_with_authserver(void)
 {
-<<<<<<< HEAD
     t_authresponse authresponse;
     t_client *p1, *p2, *worklist, *tmp;
-=======
-    t_authresponse  authresponse;
-    char            *token, *ip, *mac;
-    t_client        *p1, *p2;
-    unsigned long long	    incoming, outgoing;
->>>>>>> FETCH_HEAD
     s_config *config = config_get_config();
 
     if (-1 == iptables_fw_counters_update()) {
         debug(LOG_ERR, "Could not get counters from firewall!");
         return;
     }
-<<<<<<< HEAD
 
     LOCK_CLIENT_LIST();
 
@@ -432,26 +277,10 @@ fw_sync_with_authserver(void)
     for (p1 = p2 = worklist; NULL != p1; p1 = p2) {
         p2 = p1->next;
 
-=======
-    set_client_auth_flag();
-    LOCK_CLIENT_LIST();
-
-    for (p1 = p2 = client_get_first_client(); NULL != p1; p1 = p2) {
-        p2 = p1->next;
-
-        ip = safe_strdup(p1->ip);
-        token = safe_strdup(p1->token);
-        mac = safe_strdup(p1->mac);
-	    outgoing = p1->counters.outgoing;
-	    incoming = p1->counters.incoming;
-
-	    UNLOCK_CLIENT_LIST();
->>>>>>> FETCH_HEAD
         /* Ping the client, if he responds it'll keep activity on the link.
          * However, if the firewall blocks it, it will not help.  The suggested
          * way to deal witht his is to keep the DHCP lease time extremely
          * short:  Shorter than config->checkinterval * config->clienttimeout */
-<<<<<<< HEAD
         icmp_ping(p1->ip);
         /* Update the counters on the remote server only if we have an auth server */
         if (config->auth_servers != NULL) {
@@ -554,174 +383,4 @@ fw_sync_with_authserver(void)
     }
 
     client_list_destroy(worklist);
-=======
-        icmp_ping(ip);
-        /* Update the counters on the remote server only if we have an auth server */
-        if (config->auth_servers != NULL) {
-            auth_server_request(&authresponse, REQUEST_TYPE_COUNTERS, ip, mac, token, incoming, outgoing);
-        }
-	    LOCK_CLIENT_LIST();
-
-        if (!(p1 = client_list_find(ip, mac))) {
-            debug(LOG_ERR, "Node %s was freed while being re-validated!", ip);
-        } else {
-        	time_t	current_time=time(NULL);
-        	debug(LOG_INFO, "Checking client %s for timeout:  Last updated %ld (%ld seconds ago), timeout delay %ld seconds, current time %ld, ",
-                        p1->ip, p1->counters.last_updated, current_time-p1->counters.last_updated, config->checkinterval * config->clienttimeout, current_time);
-            if (p1->counters.last_updated +
-				(config->checkinterval * config->clienttimeout)
-				<= current_time) {
-                /* Timing out user */
-                debug(LOG_INFO, "%s - Inactive for more than %ld seconds, removing client and denying in firewall",
-                        p1->ip, config->checkinterval * config->clienttimeout);
-                fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
-                client_list_delete(p1);
-
-                /* Advertise the logout if we have an auth server */
-                if (config->auth_servers != NULL) {
-					UNLOCK_CLIENT_LIST();
-					auth_server_request(&authresponse, REQUEST_TYPE_LOGOUT, ip, mac, token, 0, 0);
-					LOCK_CLIENT_LIST();
-                }
-            } else {
-                /*
-                 * This handles any change in
-                 * the status this allows us
-                 * to change the status of a
-                 * user while he's connected
-                 *
-                 * Only run if we have an auth server
-                 * configured!
-                 */
-                if (config->auth_servers != NULL) {
-                    switch (authresponse.authcode) {
-                        case AUTH_DENIED:
-                            debug(LOG_NOTICE, "%s - Denied. Removing client and firewall rules", p1->ip);
-                            fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
-                            client_list_delete(p1);
-                            break;
-
-                        case AUTH_VALIDATION_FAILED:
-                            debug(LOG_NOTICE, "%s - Validation timeout, now denied. Removing client and firewall rules", p1->ip);
-                            fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
-                            client_list_delete(p1);
-                            break;
-
-                        case AUTH_ALLOWED:
-                            if (p1->fw_connection_state != FW_MARK_KNOWN) {
-                                debug(LOG_INFO, "%s - Access has changed to allowed, refreshing firewall and clearing counters", p1->ip);
-                                //WHY did we deny, then allow!?!? benoitg 2007-06-21
-                                //fw_deny(p1->ip, p1->mac, p1->fw_connection_state);
-
-                                if (p1->fw_connection_state != FW_MARK_PROBATION) {
-                                     p1->counters.incoming = p1->counters.outgoing = 0;
-                                }
-                                else {
-                                	//We don't want to clear counters if the user was in validation, it probably already transmitted data..
-                                    debug(LOG_INFO, "%s - Skipped clearing counters after all, the user was previously in validation", p1->ip);
-                                }
-                                p1->fw_connection_state = FW_MARK_KNOWN;
-                                fw_allow(p1->ip, p1->mac, p1->fw_connection_state);
-                            }
-                            break;
-
-                        case AUTH_VALIDATION:
-                            /*
-                             * Do nothing, user
-                             * is in validation
-                             * period
-                             */
-                            debug(LOG_INFO, "%s - User in validation period", p1->ip);
-                            break;
-
-                              case AUTH_ERROR:
-                                    debug(LOG_WARNING, "Error communicating with auth server - leaving %s as-is for now", p1->ip);
-                                    break;
-
-                        default:
-                            debug(LOG_ERR, "I do not know about authentication code %d", authresponse.authcode);
-                            break;
-                    }
-                }
-            }
-        }
-
-        free(token);
-        free(ip);
-        free(mac);
-    }
-    UNLOCK_CLIENT_LIST();
-}
-
-void
-icmp_ping(const char *host)
-{
-	struct sockaddr_in saddr;
-#if defined(__linux__) || defined(__NetBSD__)
-	struct {
-		struct ip ip;
-		struct icmp icmp;
-	} packet;
-#endif
-	unsigned int i, j;
-	int opt = 2000;
-	unsigned short id = rand16();
-
-	memset(&saddr, 0, sizeof(saddr));
-	saddr.sin_family = AF_INET;
-	inet_aton(host, &saddr.sin_addr);
-#if defined(HAVE_SOCKADDR_SA_LEN) || defined(__NetBSD__)
-	saddr.sin_len = sizeof(struct sockaddr_in);
-#endif
-
-#if defined(__linux__) || defined(__NetBSD__)
-	memset(&packet.icmp, 0, sizeof(packet.icmp));
-	packet.icmp.icmp_type = ICMP_ECHO;
-	packet.icmp.icmp_id = id;
-
-	for (j = 0, i = 0; i < sizeof(struct icmp) / 2; i++)
-		j += ((unsigned short *)&packet.icmp)[i];
-
-	while (j >> 16)
-		j = (j & 0xffff) + (j >> 16);
-
-	packet.icmp.icmp_cksum = (j == 0xffff) ? j : ~j;
-
-	if (setsockopt(icmp_fd, SOL_SOCKET, SO_RCVBUF, &opt, sizeof(opt)) == -1)
-		debug(LOG_ERR, "setsockopt(): %s", strerror(errno));
-
-	if (sendto(icmp_fd, (char *)&packet.icmp, sizeof(struct icmp), 0,
-	           (const struct sockaddr *)&saddr, sizeof(saddr)) == -1)
-		debug(LOG_ERR, "sendto(): %s", strerror(errno));
-
-	opt = 1;
-	if (setsockopt(icmp_fd, SOL_SOCKET, SO_RCVBUF, &opt, sizeof(opt)) == -1)
-		debug(LOG_ERR, "setsockopt(): %s", strerror(errno));
-#endif
-
-	return;
-}
-
-unsigned short rand16(void) {
-  static int been_seeded = 0;
-
-  if (!been_seeded) {
-    unsigned int seed = 0;
-    struct timeval now;
-
-    /* not a very good seed but what the heck, it needs to be quickly acquired */
-    gettimeofday(&now, NULL);
-    seed = now.tv_sec ^ now.tv_usec ^ (getpid() << 16);
-
-    srand(seed);
-    been_seeded = 1;
-    }
-
-    /* Some rand() implementations have less randomness in low bits
-     * than in high bits, so we only pay attention to the high ones.
-     * But most implementations don't touch the high bit, so we
-     * ignore that one.
-     **/
-      return( (unsigned short) (rand() >> 15) );
->>>>>>> FETCH_HEAD
 }

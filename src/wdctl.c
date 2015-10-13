@@ -40,11 +40,7 @@
 
 #include "wdctl.h"
 
-<<<<<<< HEAD
 static s_config config;
-=======
-s_config config;
->>>>>>> FETCH_HEAD
 
 static void usage(void);
 static void init_config(void);
@@ -64,7 +60,6 @@ static void wdctl_restart(void);
 static void
 usage(void)
 {
-<<<<<<< HEAD
     fprintf(stdout, "Usage: wdctl [options] command [arguments]\n");
     fprintf(stdout, "\n");
     fprintf(stdout, "options:\n");
@@ -77,20 +72,6 @@ usage(void)
     fprintf(stdout, "  stop              Stop the running wifidog\n");
     fprintf(stdout, "  restart           Re-start the running wifidog (without disconnecting active users!)\n");
     fprintf(stdout, "\n");
-=======
-    printf("Usage: wdctl [options] command [arguments]\n");
-    printf("\n");
-    printf("options:\n");
-    printf("  -s <path>         Path to the socket\n");
-    printf("  -h                Print usage\n");
-    printf("\n");
-    printf("commands:\n");
-    printf("  reset [mac|ip]    Reset the specified mac or ip connection\n");
-    printf("  status            Obtain the status of wifidog\n");
-    printf("  stop              Stop the running wifidog\n");
-    printf("  restart           Re-start the running wifidog (without disconnecting active users!)\n");
-    printf("\n");
->>>>>>> FETCH_HEAD
 }
 
 /** @internal
@@ -101,13 +82,8 @@ static void
 init_config(void)
 {
 
-<<<<<<< HEAD
     config.socket = strdup(DEFAULT_SOCK);
     config.command = WDCTL_UNDEF;
-=======
-	config.socket = strdup(DEFAULT_SOCK);
-	config.command = WDCTL_UNDEF;
->>>>>>> FETCH_HEAD
 }
 
 /** @internal
@@ -121,7 +97,6 @@ parse_commandline(int argc, char **argv)
     int c;
 
     while (-1 != (c = getopt(argc, argv, "s:h"))) {
-<<<<<<< HEAD
         switch (c) {
         case 'h':
             usage();
@@ -139,30 +114,10 @@ parse_commandline(int argc, char **argv)
             usage();
             exit(1);
             break;
-=======
-        switch(c) {
-            case 'h':
-                usage();
-                exit(1);
-                break;
-
-            case 's':
-                if (optarg) {
-		    free(config.socket);
-		    config.socket = strdup(optarg);
-                }
-                break;
-
-            default:
-                usage();
-                exit(1);
-                break;
->>>>>>> FETCH_HEAD
         }
     }
 
     if ((argc - optind) <= 0) {
-<<<<<<< HEAD
         usage();
         exit(1);
     }
@@ -185,39 +140,12 @@ parse_commandline(int argc, char **argv)
         fprintf(stderr, "wdctl: Error: Invalid command \"%s\"\n", *(argv + optind));
         usage();
         exit(1);
-=======
-	    usage();
-	    exit(1);
-    }
-
-    if (strcmp(*(argv + optind), "status") == 0) {
-	    config.command = WDCTL_STATUS;
-    } else if (strcmp(*(argv + optind), "stop") == 0) {
-	    config.command = WDCTL_STOP;
-    } else if (strcmp(*(argv + optind), "reset") == 0) {
-	    config.command = WDCTL_KILL;
-	    if ((argc - (optind + 1)) <= 0) {
-		    fprintf(stderr, "wdctl: Error: You must specify an IP "
-				    "or a Mac address to reset\n");
-		    usage();
-		    exit(1);
-	    }
-	    config.param = strdup(*(argv + optind + 1));
-    } else if (strcmp(*(argv + optind), "restart") == 0) {
-	    config.command = WDCTL_RESTART;
-    }
-	 else {
-	    fprintf(stderr, "wdctl: Error: Invalid command \"%s\"\n", *(argv + optind));
-	    usage();
-	    exit(1);
->>>>>>> FETCH_HEAD
     }
 }
 
 static int
 connect_to_server(const char *sock_name)
 {
-<<<<<<< HEAD
     int sock;
     struct sockaddr_un sa_un;
 
@@ -237,30 +165,11 @@ connect_to_server(const char *sock_name)
     }
 
     return sock;
-=======
-	int sock;
-	struct sockaddr_un	sa_un;
-	
-	/* Connect to socket */
-	sock = socket(AF_UNIX, SOCK_STREAM, 0);
-	memset(&sa_un, 0, sizeof(sa_un));
-	sa_un.sun_family = AF_UNIX;
-	strncpy(sa_un.sun_path, sock_name, (sizeof(sa_un.sun_path) - 1));
-
-	if (connect(sock, (struct sockaddr *)&sa_un, 
-			strlen(sa_un.sun_path) + sizeof(sa_un.sun_family))) {
-		fprintf(stderr, "wdctl: wifidog probably not started (Error: %s)\n", strerror(errno));
-		exit(1);
-	}
-
-	return sock;
->>>>>>> FETCH_HEAD
 }
 
 static size_t
 send_request(int sock, const char *request)
 {
-<<<<<<< HEAD
     size_t len;
     ssize_t written;
 
@@ -275,29 +184,11 @@ send_request(int sock, const char *request)
     }
 
     return len;
-=======
-	size_t	len;
-        ssize_t written;
-		
-	len = 0;
-	while (len != strlen(request)) {
-		written = write(sock, (request + len), strlen(request) - len);
-		if (written == -1) {
-			fprintf(stderr, "Write to wifidog failed: %s\n",
-					strerror(errno));
-			exit(1);
-		}
-		len += written;
-	}
-
-	return len;
->>>>>>> FETCH_HEAD
 }
 
 static void
 wdctl_status(void)
 {
-<<<<<<< HEAD
     int sock;
     char buffer[4096];
     char request[16];
@@ -317,32 +208,11 @@ wdctl_status(void)
 
     shutdown(sock, 2);
     close(sock);
-=======
-	int	sock;
-	char	buffer[4096];
-	char	request[16];
-	int	len;
-
-	sock = connect_to_server(config.socket);
-		
-	strncpy(request, "status\r\n\r\n", 15);
-
-	len = send_request(sock, request);
-	
-	while ((len = read(sock, buffer, sizeof(buffer))) > 0) {
-		buffer[len] = '\0';
-		printf("%s", buffer);
-	}
-
-	shutdown(sock, 2);
-	close(sock);
->>>>>>> FETCH_HEAD
 }
 
 static void
 wdctl_stop(void)
 {
-<<<<<<< HEAD
     int sock;
     char buffer[4096];
     char request[16];
@@ -361,32 +231,11 @@ wdctl_stop(void)
 
     shutdown(sock, 2);
     close(sock);
-=======
-	int	sock;
-	char	buffer[4096];
-	char	request[16];
-	int	len;
-
-	sock = connect_to_server(config.socket);
-		
-	strncpy(request, "stop\r\n\r\n", 15);
-
-	len = send_request(sock, request);
-	
-	while ((len = read(sock, buffer, sizeof(buffer))) > 0) {
-		buffer[len] = '\0';
-		printf("%s", buffer);
-	}
-
-	shutdown(sock, 2);
-	close(sock);
->>>>>>> FETCH_HEAD
 }
 
 void
 wdctl_reset(void)
 {
-<<<<<<< HEAD
     int sock;
     char buffer[4096];
     char request[64];
@@ -417,46 +266,11 @@ wdctl_reset(void)
 
     shutdown(sock, 2);
     close(sock);
-=======
-	int	sock;
-	char	buffer[4096];
-	char	request[64];
-	size_t	len;
-	int	rlen;
-
-	sock = connect_to_server(config.socket);
-		
-	strncpy(request, "reset ", 64);
-	strncat(request, config.param, (64 - strlen(request)));
-	strncat(request, "\r\n\r\n", (64 - strlen(request)));
-
-	len = send_request(sock, request);
-	
-	len = 0;
-	memset(buffer, 0, sizeof(buffer));
-	while ((len < sizeof(buffer)) && ((rlen = read(sock, (buffer + len),
-				(sizeof(buffer) - len))) > 0)){
-		len += rlen;
-	}
-
-	if (strcmp(buffer, "Yes") == 0) {
-		printf("Connection %s successfully reset.\n", config.param);
-	} else if (strcmp(buffer, "No") == 0) {
-		printf("Connection %s was not active.\n", config.param);
-	} else {
-		fprintf(stderr, "wdctl: Error: WiFiDog sent an abnormal "
-				"reply.\n");
-	}
-
-	shutdown(sock, 2);
-	close(sock);
->>>>>>> FETCH_HEAD
 }
 
 static void
 wdctl_restart(void)
 {
-<<<<<<< HEAD
     int sock;
     char buffer[4096];
     char request[16];
@@ -475,33 +289,12 @@ wdctl_restart(void)
 
     shutdown(sock, 2);
     close(sock);
-=======
-	int	sock;
-	char	buffer[4096];
-	char	request[16];
-	int	len;
-
-	sock = connect_to_server(config.socket);
-		
-	strncpy(request, "restart\r\n\r\n", 15);
-
-	len = send_request(sock, request);
-	
-	while ((len = read(sock, buffer, sizeof(buffer))) > 0) {
-		buffer[len] = '\0';
-		printf("%s", buffer);
-	}
-
-	shutdown(sock, 2);
-	close(sock);
->>>>>>> FETCH_HEAD
 }
 
 int
 main(int argc, char **argv)
 {
 
-<<<<<<< HEAD
     /* Init configuration */
     init_config();
     parse_commandline(argc, argv);
@@ -530,34 +323,4 @@ main(int argc, char **argv)
         break;
     }
     exit(0);
-=======
-	/* Init configuration */
-	init_config();
-	parse_commandline(argc, argv);
-
-	switch(config.command) {
-	case WDCTL_STATUS:
-		wdctl_status();
-		break;
-	
-	case WDCTL_STOP:
-		wdctl_stop();
-		break;
-
-	case WDCTL_KILL:
-		wdctl_reset();
-		break;
-		
-	case WDCTL_RESTART:
-		wdctl_restart();
-		break;
-
-	default:
-		/* XXX NEVER REACHED */
-		fprintf(stderr, "Oops\n");
-		exit(1);
-		break;
-	}
-	exit(0);
->>>>>>> FETCH_HEAD
 }

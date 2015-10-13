@@ -18,18 +18,11 @@ AC_PROG_CXX
 
 AC_SUBST(BUILDROOT)
 
-<<<<<<< HEAD
 # we use Semantic Versioning x.y.z tag for release, docs: http://semver.org/
 WIFIDOG_MAJOR_VERSION=1
 WIFIDOG_MINOR_VERSION=2
 WIFIDOG_MICRO_VERSION=1
 WIFIDOG_VERSION=$WIFIDOG_MAJOR_VERSION.$WIFIDOG_MINOR_VERSION.$WIFIDOG_MICRO_VERSION
-=======
-WIFIDOG_MAJOR_VERSION=1
-WIFIDOG_MINOR_VERSION=1
-WIFIDOG_MICRO_VERSION=5
-WIFIDOG_VERSION=20140822-v1.0.0
->>>>>>> FETCH_HEAD
 
 AC_SUBST(WIFIDOG_MAJOR_VERSION)
 AC_SUBST(WIFIDOG_MINOR_VERSION)
@@ -92,7 +85,6 @@ AC_SUBST(enable_latex_docs)
 # Acutally perform the doxygen check
 BB_ENABLE_DOXYGEN
 
-<<<<<<< HEAD
 # Enable cyassl?
 AC_DEFUN([BB_CYASSL],
 [
@@ -138,8 +130,6 @@ BB_CYASSL
 
 
 
-=======
->>>>>>> FETCH_HEAD
 # check for pthread
 AC_CHECK_HEADER(pthread.h, , AC_MSG_ERROR(You need the pthread headers) )
 AC_CHECK_LIB(pthread, pthread_create, , AC_MSG_ERROR(You need the pthread library) )
@@ -153,11 +143,7 @@ echo "libhttpd dependencies check complete"
 
 AC_OUTPUT( 		Makefile 
 	   		wifidog.spec
-<<<<<<< HEAD
 			wifidog-msg.html
-=======
-                        wifidog-msg.html
->>>>>>> FETCH_HEAD
 			src/Makefile
 			libhttpd/Makefile
 			doc/Makefile

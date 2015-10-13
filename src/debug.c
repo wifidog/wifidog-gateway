@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 /* vim: set et ts=4 sts=4 sw=4 : */
-=======
->>>>>>> FETCH_HEAD
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -22,10 +19,6 @@
  *                                                                  *
 \********************************************************************/
 
-<<<<<<< HEAD
-=======
-/* $Id$ */
->>>>>>> FETCH_HEAD
 /** @file debug.c
     @brief Debug output routines
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
@@ -37,7 +30,6 @@
 #include <stdarg.h>
 #include <time.h>
 #include <unistd.h>
-<<<<<<< HEAD
 #include <signal.h>
 
 #include "debug.h"
@@ -48,10 +40,6 @@ debugconf_t debugconf = {
     .log_syslog = 0,
     .syslog_facility = 0
 };
-=======
-
-#include "conf.h"
->>>>>>> FETCH_HEAD
 
 /** @internal
 Do not use directly, use the debug macro */
@@ -60,7 +48,6 @@ _debug(const char *filename, int line, int level, const char *format, ...)
 {
     char buf[28];
     va_list vlist;
-<<<<<<< HEAD
     time_t ts;
     sigset_t block_chld;
 
@@ -74,23 +61,10 @@ _debug(const char *filename, int line, int level, const char *format, ...)
         if (level <= LOG_WARNING) {
             fprintf(stderr, "[%d][%.24s][%u](%s:%d) ", level, ctime_r(&ts, buf), getpid(),
                 filename, line);
-=======
-    s_config *config = config_get_config();
-    time_t ts;
-
-    time(&ts);
-
-    if (config->debuglevel >= level) {
-
-        if (level <= LOG_WARNING) {
-            fprintf(stderr, "[%d][%.24s][%u](%s:%d) ", level, ctime_r(&ts, buf), getpid(),
-			    filename, line);
->>>>>>> FETCH_HEAD
             va_start(vlist, format);
             vfprintf(stderr, format, vlist);
             va_end(vlist);
             fputc('\n', stderr);
-<<<<<<< HEAD
         } else if (debugconf.log_stderr) {
             fprintf(stderr, "[%d][%.24s][%u](%s:%d) ", level, ctime_r(&ts, buf), getpid(),
                 filename, line);
@@ -102,32 +76,12 @@ _debug(const char *filename, int line, int level, const char *format, ...)
 
         if (debugconf.log_syslog) {
             openlog("wifidog", LOG_PID, debugconf.syslog_facility);
-=======
-        } else if (!config->daemon) {
-            fprintf(stdout, "[%d][%.24s][%u](%s:%d) ", level, ctime_r(&ts, buf), getpid(),
-			    filename, line);
-            va_start(vlist, format);
-            vfprintf(stdout, format, vlist);
-            va_end(vlist);
-            fputc('\n', stdout);
-            fflush(stdout);
-        }
-
-        if (config->log_syslog) {
-            openlog("wifidog", LOG_PID, config->syslog_facility);
->>>>>>> FETCH_HEAD
             va_start(vlist, format);
             vsyslog(level, format, vlist);
             va_end(vlist);
             closelog();
         }
-<<<<<<< HEAD
         
         sigprocmask(SIG_UNBLOCK, &block_chld, NULL);
     }
 }
-=======
-    }
-}
-
->>>>>>> FETCH_HEAD

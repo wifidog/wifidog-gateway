@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 /* vim: set et sw=4 ts=4 sts=4 : */
-=======
->>>>>>> FETCH_HEAD
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -32,10 +29,7 @@
 #define _AUTH_H_
 
 #include "httpd.h"
-<<<<<<< HEAD
 #include "client_list.h"
-=======
->>>>>>> FETCH_HEAD
 
 /**
  * @brief Authentication codes returned by auth server.
@@ -59,11 +53,8 @@ typedef struct _t_authresponse {
     t_authcode authcode; /**< Authentication code returned by the server */
 } t_authresponse;
 
-<<<<<<< HEAD
 /** @brief Logout a client and report to auth server. */
 void logout_client(t_client *);
-=======
->>>>>>> FETCH_HEAD
 
 /** @brief Authenticate a single client against the central server */
 void authenticate_client(request *);

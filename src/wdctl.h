@@ -36,14 +36,8 @@
 #define WDCTL_RESTART	4
 
 typedef struct {
-<<<<<<< HEAD
     char *socket;
     int command;
     char *param;
-=======
-	char	*socket;
-	int	command;
-	char	*param;
->>>>>>> FETCH_HEAD
 } s_config;
 #endif

@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 /* vim: set et sw=4 ts=4 sts=4 : */
-=======
->>>>>>> FETCH_HEAD
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -31,7 +28,6 @@
 #ifndef _FIREWALL_H_
 #define _FIREWALL_H_
 
-<<<<<<< HEAD
 #include "client_list.h"
 
 /** Used by fw_iptables.c */
@@ -41,15 +37,6 @@ typedef enum _t_fw_marks {
 			    @todo: VERIFY THAT THIS IS ACCURATE*/
     FW_MARK_KNOWN = 2,  /**< @brief The client is known to the firewall */
     FW_MARK_AUTH_IS_DOWN = 253, /**< @brief The auth servers are down */
-=======
-int icmp_fd;
-
-/** Used by fw_iptables.c */
-typedef enum _t_fw_marks {
-    FW_MARK_PROBATION = 1, /**< @brief The client is in probation period and must be authenticated 
-			    @todo: VERIFY THAT THIS IS ACCURATE*/
-    FW_MARK_KNOWN = 2,  /**< @brief The client is known to the firewall */ 
->>>>>>> FETCH_HEAD
     FW_MARK_LOCKED = 254 /**< @brief The client has been locked out */
 } t_fw_marks;
 
@@ -66,7 +53,6 @@ void fw_set_authservers(void);
 int fw_destroy(void);
 
 /** @brief Allow a user through the firewall*/
-<<<<<<< HEAD
 int fw_allow(t_client *, int);
 
 /** @brief Allow a host through the firewall*/
@@ -80,29 +66,11 @@ int fw_set_authdown(void);
 
 /** @brief Remove passthrough for clients when auth server is up */
 int fw_set_authup(void);
-=======
-int fw_allow(const char *ip, const char *mac, int profile);
-
-/** @brief Deny a client access through the firewall*/
-int fw_deny(const char *ip, const char *mac, int profile);
->>>>>>> FETCH_HEAD
 
 /** @brief Refreshes the entire client list */
 void fw_sync_with_authserver(void);
 
 /** @brief Get an IP's MAC address from the ARP cache.*/
-<<<<<<< HEAD
 char *arp_get(const char *);
 
 #endif                          /* _FIREWALL_H_ */
-=======
-char *arp_get(const char *req_ip);
-
-/** @brief ICMP Ping an IP */
-void icmp_ping(const char *host);
-
-/** @brief cheap random */
-unsigned short rand16(void);
-
-#endif /* _FIREWALL_H_ */
->>>>>>> FETCH_HEAD

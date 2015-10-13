@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 /* vim: set et ts=4 sts=4 sw=4 : */
-=======
->>>>>>> FETCH_HEAD
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -22,30 +19,20 @@
  *                                                                  *
  \********************************************************************/
 
-<<<<<<< HEAD
-=======
-/*
- * $Id$
- */
->>>>>>> FETCH_HEAD
 /**
   @file safe.c
   @brief Safe versions of stdlib/string functions that error out and exit if memory allocation fails
   @author Copyright (C) 2005 Mina Naguib <mina@ilesansfil.org>
  */
 
-<<<<<<< HEAD
 /* Enable vasprintf */
 #define _GNU_SOURCE
-=======
->>>>>>> FETCH_HEAD
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-<<<<<<< HEAD
 #include <syslog.h>
 
 #include "safe.h"
@@ -208,80 +195,3 @@ safe_fork(void)
 
     return result;
 }
-=======
-
-#include "httpd.h"
-#include "safe.h"
-#include "debug.h"
-#include <syslog.h>
-
-/* From gateway.c */
-extern httpd * webserver;
-
-void * safe_malloc (size_t size) {
-	void * retval = NULL;
-	retval = malloc(size);
-	if (!retval) {
-		debug(LOG_CRIT, "Failed to malloc %d bytes of memory: %s.  Bailing out", size, strerror(errno));
-		exit(1);
-	}
-	return (retval);
-}
-
-char * safe_strdup(const char *s) {
-	char * retval = NULL;
-	if (!s) {
-		debug(LOG_CRIT, "safe_strdup called with NULL which would have crashed strdup. Bailing out");
-		exit(1);
-	}
-	retval = strdup(s);
-	if (!retval) {
-		debug(LOG_CRIT, "Failed to duplicate a string: %s.  Bailing out", strerror(errno));
-		exit(1);
-	}
-	return (retval);
-}
-
-int safe_asprintf(char **strp, const char *fmt, ...) {
-	va_list ap;
-	int retval;
-
-	va_start(ap, fmt);
-	retval = safe_vasprintf(strp, fmt, ap);
-	va_end(ap);
-
-	return (retval);
-}
-
-int safe_vasprintf(char **strp, const char *fmt, va_list ap) {
-	int retval;
-
-	retval = vasprintf(strp, fmt, ap);
-
-	if (retval == -1) {
-		debug(LOG_CRIT, "Failed to vasprintf: %s.  Bailing out", strerror(errno));
-		exit (1);
-	}
-	return (retval);
-}
-
-pid_t safe_fork(void) {
-	pid_t result;
-	result = fork();
-
-	if (result == -1) {
-		debug(LOG_CRIT, "Failed to fork: %s.  Bailing out", strerror(errno));
-		exit (1);
-	}
-	else if (result == 0) {
-		/* I'm the child - do some cleanup */
-		if (webserver) {
-			close(webserver->serverSock);
-			webserver = NULL;
-		}
-	}
-
-	return result;
-}
-
->>>>>>> FETCH_HEAD

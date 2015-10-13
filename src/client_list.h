@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 /* vim: set et sw=4 ts=4 sts=4 : */
-=======
->>>>>>> FETCH_HEAD
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -31,7 +28,6 @@
 #ifndef _CLIENT_LIST_H_
 #define _CLIENT_LIST_H_
 
-<<<<<<< HEAD
 /** Global mutex to protect access to the client list */
 extern pthread_mutex_t client_list_mutex;
 
@@ -46,21 +42,10 @@ typedef struct _t_counters {
     unsigned long long incoming_delta;                    /**< @brief Incoming data after last report*/
     unsigned long long outgoing_delta;                    /**< @brief Outgoing data after last report*/
     time_t last_updated;        /**< @brief Last update of the counters */
-=======
-/** Counters struct for a client's bandwidth usage (in bytes)
- */
-typedef struct _t_counters {
-    unsigned long long	incoming;	/**< @brief Incoming data total*/
-    unsigned long long	outgoing;	/**< @brief Outgoing data total*/
-    unsigned long long	incoming_history;	/**< @brief Incoming data before wifidog restarted*/
-    unsigned long long	outgoing_history;	/**< @brief Outgoing data before wifidog restarted*/
-    time_t	last_updated;	/**< @brief Last update of the counters */
->>>>>>> FETCH_HEAD
 } t_counters;
 
 /** Client node for the connected client linked list.
  */
-<<<<<<< HEAD
 typedef struct _t_client {
     struct _t_client *next;             /**< @brief Pointer to the next client */
     unsigned long long id;           /**< @brief Unique ID per client */
@@ -80,36 +65,11 @@ typedef struct _t_client {
 t_client *client_get_new(void);
 
 /** @brief Get the first element of the list of connected clients */
-=======
-typedef struct	_t_client {
-  struct	_t_client *next;        /**< @brief Pointer to the next client */
-	char	*ip;			/**< @brief Client Ip address */
-	char	*mac;			/**< @brief Client Mac address */
-	char	*token;			/**< @brief Client token */
-	unsigned int fw_connection_state; /**< @brief Connection state in the
-						     firewall */
-	int	fd;			/**< @brief Client HTTP socket (valid only
-					     during login before one of the
-					     _http_* function is called */
-	t_counters	counters;	/**< @brief Counters for input/output of
-					     the client. */
-
-	/*@breif:record the element create time
-	 * GaomingPan
-	 * */
-	time_t  record_time;
-
-} t_client;
-
-/** @brief Get the first element of the list of connected clients
- */
->>>>>>> FETCH_HEAD
 t_client *client_get_first_client(void);
 
 /** @brief Initializes the client list */
 void client_list_init(void);
 
-<<<<<<< HEAD
 /** @brief Insert client at head of list */
 void client_list_insert_client(t_client *);
 
@@ -149,26 +109,6 @@ void client_list_remove(t_client *);
 
 /** @brief Free memory associated with a client */
 void client_free_node(t_client *);
-=======
-/** @brief Adds a new client to the connections list */
-t_client *client_list_append(const char *ip, const char *mac, const char *token);
-
-/** @brief Finds a client by its IP and MAC */
-t_client *client_list_find(const char *ip, const char *mac);
-
-/** @brief Finds a client only by its IP */
-t_client *client_list_find_by_ip(const char *ip); /* needed by fw_iptables.c, auth.c 
-					     * and wdctl_thread.c */
-
-/** @brief Finds a client only by its Mac */
-t_client *client_list_find_by_mac(const char *mac); /* needed by wdctl_thread.c */
-
-/** @brief Finds a client by its token */
-t_client *client_list_find_by_token(const char *token);
-
-/** @brief Deletes a client from the connections list */
-void client_list_delete(t_client *client);
->>>>>>> FETCH_HEAD
 
 #define LOCK_CLIENT_LIST() do { \
 	debug(LOG_DEBUG, "Locking client list"); \
@@ -182,8 +122,4 @@ void client_list_delete(t_client *client);
 	debug(LOG_DEBUG, "Client list unlocked"); \
 } while (0)
 
-<<<<<<< HEAD
 #endif                          /* _CLIENT_LIST_H_ */
-=======
-#endif /* _CLIENT_LIST_H_ */
->>>>>>> FETCH_HEAD
