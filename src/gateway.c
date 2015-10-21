@@ -423,8 +423,9 @@ main_loop(void)
     }
 
 	/**
-	 * Init some parameters,command result send url,
+	 * initialize some parameters,command result send url,
 	 * device key and mac address.
+	 * Added by GaomingPan.
 	 * */
 	if(0 != init_post_http_url_config() ){
 		debug(LOG_WARNING, "Warning: Failed to initialize init_post_http_url_config");

@@ -10,9 +10,18 @@
 ## Author: GaomingPan
 ## Lisence: GPL
 ## Date: 2015-09-12
-## Version: v1.2.1
+## Version: v1.2.7
 ##
 ############################################################
+
+###############################################
+##
+## wifidog execute file and contorl files.
+##
+###############################################
+WIFI_DOG_BIN=/usr/bin/wifidog
+WIFI_DOG_INIT=/usr/bin/wifidog-init
+WIFI_DOG_WDCTL=/usr/bin/wdctl
 
 ############################################################
 ##
@@ -86,20 +95,45 @@ MAC_IP=/tmp/.mac-ip.client
 I_FACE=$(uci get wifidog_conf.single.gatewayInterface | awk '{print $2}')
 CHECK_INTERVAL=$(uci get wifidog_conf.single.checkInterval | awk '{print $2}')
 
+# if the chain is already exists,
+# first all shuld delete them.
+chain_check()
+{
+   iptables -w -nvx -L FORWARD | grep DOWNLOAD | awk '{print $9}' > $MAC_IP
+   while read line;do iptables -w -D FORWARD -d $line -j DOWNLOAD;done < $MAC_IP
+   
+   read line < $MAC_IP
+   if [ -n "$line" ]
+     then
+       iptables -w -X DOWNLOAD
+   fi
+   
+   iptables -w -nvx -L FORWARD | grep UPLOAD | awk '{print $8}' > $MAC_IP
+   while read line;do iptables -w -D FORWARD -s $line -j UPLOAD;done < $MAC_IP
+   
+   read line < $MAC_IP
+   if [ -n "$line" ]
+     then
+       iptables -w -X UPLOAD
+   fi   
+}
+
 clients_RxTxRate_generator()
 {
+    chain_check
+    
     cat /proc/net/arp | grep : | grep $I_FACE | grep -v 00:00:00:00:00:00| awk '{print $1}' > $MAC_IP  
-    iptables -N UPLOAD  
-    iptables -N DOWNLOAD  
-    while read line;do iptables -I FORWARD 1 -s $line -j UPLOAD;done < $MAC_IP     
-    while read line;do iptables -I FORWARD 1 -d $line -j DOWNLOAD;done < $MAC_IP   
+    iptables -w -N UPLOAD  
+    iptables -w -N DOWNLOAD  
+    while read line;do iptables -w -I FORWARD 1 -s $line -j UPLOAD;done < $MAC_IP     
+    while read line;do iptables -w -I FORWARD 1 -d $line -j DOWNLOAD;done < $MAC_IP   
     sleep 1  
-    iptables -nvx -L FORWARD | grep DOWNLOAD | awk '{print $9,$2}' | sort -n -r > $DOWN_SPEED   
-    iptables -nvx -L FORWARD | grep UPLOAD | awk '{print $8,$2}' | sort -n -r > $UP_SPEED   
-    while read line;do iptables -D FORWARD -s $line -j UPLOAD;done < $MAC_IP     
-    while read line;do iptables -D FORWARD -d $line -j DOWNLOAD;done < $MAC_IP   
-    iptables -X UPLOAD   
-    iptables -X DOWNLOAD
+    iptables -w -nvx -L FORWARD | grep DOWNLOAD | awk '{print $9,$2}' | sort -n -r > $DOWN_SPEED   
+    iptables -w -nvx -L FORWARD | grep UPLOAD | awk '{print $8,$2}' | sort -n -r > $UP_SPEED   
+    while read line;do iptables -w -D FORWARD -s $line -j UPLOAD;done < $MAC_IP     
+    while read line;do iptables -w -D FORWARD -d $line -j DOWNLOAD;done < $MAC_IP   
+    iptables -w -X UPLOAD   
+    iptables -w -X DOWNLOAD
 }
 
 ##################################################
@@ -121,9 +155,9 @@ dog_daemon_monitor()
        return 1
    fi
   
-   /usr/bin/wifidog-init stop > /dev/null
+   $WIFI_DOG_INIT stop > /dev/null
    sleep 2
-   /usr/bin/wifidog-init start > /dev/null
+   $WIFI_DOG_INIT start > /dev/null
 
    return 0
 }
@@ -175,7 +209,7 @@ CPU_USE_INFO_FILE=/tmp/.cpu_use_info
 
 cpu_use_info_file_generator()
 {
-    echo "$(top -n 1 | grep id | awk 'NR==2{print}')" > $CPU_USE_INFO_FILE
+    echo "$(top -n 1 | awk 'NR==2{print}')" > $CPU_USE_INFO_FILE
 }
 
 
@@ -193,6 +227,38 @@ wan_ipaddr_file_generator()
     echo "$(ifconfig | grep $(uci get network.wan.ifname) -A 2 | grep addr | sed 1d | awk '{print $2}' | awk -F ":" '{print $2}')" > $WAN_IPADDR_FILE
 }
 
+
+##################################################
+##
+## Function: stop_and_start_dog_monitor
+## Description: this function STOP the wifidog and 
+##		wifidog monitor process(DOG_monitor).
+##
+##################################################
+STOP_START_FLAG_FILE=/tmp/.is_stop_or_start_deamon
+
+stop_and_start_dog_monitor()
+{
+  flag=$(cat $STOP_START_FLAG_FILE)
+  is_stop=1
+  
+  while [ $flag -eq 1 ]
+  do
+  
+    if [ $is_stop -eq 1 ] 
+      then
+       $WIFI_DOG_INIT stop > /dev/null
+       sleep 3
+       is_stop=0
+    fi
+    
+    sleep 10
+    flag=$(cat $STOP_START_FLAG_FILE)
+    
+  done
+  
+}
+
 ##################################################
 ##
 ## Function: man_loop
@@ -202,7 +268,8 @@ wan_ipaddr_file_generator()
 #################################################
 main_loop()
 {
-    sleep_time=$(($CHECK_INTERVAL - 4))
+   echo "$(uci get dog_alive.@dog_alive[0].is_alive)" > $STOP_START_FLAG_FILE
+   sleep_time=$(($CHECK_INTERVAL - 4))
     
     while [ true ]
       do
@@ -214,6 +281,7 @@ main_loop()
          wan_ipaddr_file_generator
          dog_daemon_monitor
          sleep  $sleep_time
+         stop_and_start_dog_monitor
       done
  }
 

@@ -19,7 +19,7 @@ config	'wifidog_conf'	'single'
 
 
 config	'wifidog_conf'	'authServer'
-	option		'hostname'		'Hostname 222.85.149.5'
+	option		'hostname'		'Hostname wifi.xiao8web.com'
 	option		'sslAvailable'		'# SSLAvailable (Optional;Default: no;Possible values:yes,no)'
 	option		'sslPort'		'# SSLPort (Optional;Default:443)'
 	option		'httpPort'		'HTTPPort 12347'

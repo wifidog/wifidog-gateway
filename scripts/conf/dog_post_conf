@@ -1,7 +1,9 @@
 
 config  dog_post 'url'
-        option  'info_url'              'http://222.85.149.5/WiFiAuth/wifidog/result'
-        option  'normal_url'            'http://222.85.149.5/WiFiAuth/wifidog/result'
+#        option  'info_url'              'http://wifi.xiao8web.com:12347/WiFiAuth/wifidog/result'
+#        option  'normal_url'            'http://wifi.xiao8web.com:12347/WiFiAuth/wifidog/result'
+        option  'info_url'              'http://118.118.118.180:8080/WiFiAuth/wifidog/result'
+        option  'normal_url'            'http://118.118.118.180:8080/WiFiAuth/wifidog/result'
 
 config dog_post 'rmflag'
         option  'info_rmflag'           'result'

@@ -62,7 +62,9 @@
 #define  GET_SETTINGS_INFO_CMD          "GET_settings"
 #define  SETTINGS_INFO_FILE             "/tmp/.routersettings"
 #define  NORMAL_CMD_RESULT_FILE         "/tmp/.normal_cmd_result"
-#define  BUILE_NORMAL_CMD_RESULT_SHELL  "result=\"\";while read line;do result=\"\\\"$result$line\\\",\";done < "NORMAL_CMD_RESULT_FILE";result=${result%,};echo $result"
+
+#define  BUILE_NORMAL_CMD_RESULT_SHELL  "sed -i \"s/\\\"/ /g\" "NORMAL_CMD_RESULT_FILE "; echo \"[\" > /tmp/.normal.arr;while read line;do echo \"\\\"$line\\\"\", >> /tmp/.normal.arr;done < "NORMAL_CMD_RESULT_FILE";result=\"$(cat /tmp/.normal.arr)\";result=\"${result%,}]\";echo $result"
+
 #define  CMD_GET_WAN_IP                 "uci -P/var/state get network.wan.ipaddr"
 #define  CMD_GET_AP_MAC                 "uci get network.lan.macaddr" //"uci -P/var/state get network.lan.macaddr"
 #define  CMD_GET_WIRELESS_SSID          "uci get wireless.@wifi-iface[0].ssid"
@@ -107,6 +109,8 @@ static char apwanip[DEV_WAN_IP_LEN] = {0};
 
 
 /**
+ * @brief this function collect the gateway device information.
+ * @returnValue a type pointer of t_devinfo
  * */
 t_devinfo *get_devinfo(void)
 {
@@ -151,10 +155,10 @@ t_devinfo *get_devinfo(void)
 	return &devinfo;
 }
 
-/* @breif get wireless ssid,based on uci command.
- * @PARAMETER: [char *ssid]:the char pointer for save the ssid.
- * @RETURN_VALUE: zero is success,others is failed.
- * GaomingPan lonely-test:yes
+/**
+ * @brief get wireless ssid,based on uci command.
+ * @param ssid: the char pointer for save the ssid.
+ * @return value: zero is success,others is failed.
  * */
 int get_devssid(char *ssid)
 {
@@ -183,10 +187,10 @@ int get_devssid(char *ssid)
 }
 
 
-/* @breif get wifidog version
- * @PARAMETER:[char *dogversion]:the char pointer for save the version
- * @RETURN_VALUE:always return zero
- * GaomingPan lonely-test:no
+/**
+ * @breif get wifidog version
+ * @param dogversion:the char pointer for save the version
+ * @return value:always return zero
  * */
 int get_dogversion(char *dogversion)
 {
@@ -195,10 +199,10 @@ int get_dogversion(char *dogversion)
 	return 0;
 }
 
-/* @breif get wan interface ip,based on uci command.
- * @PARAMETER:[char *wanip]:the char pointer for save the wan ip
- * @RETURN_VALUE:always zero is success,others is failed.
- * GaomingPan lonely-test:yes
+/**
+ * @breif get wan interface ip,based on uci command.
+ * @param wanip:the char pointer for save the wan ip
+ * @return value:always zero is success,others is failed.
  * */
 int get_wanip(char *wanip)
 {
@@ -249,10 +253,10 @@ int get_wanip(char *wanip)
 	return 0;
 }
 
-/* @breif get ap mac address,based on uci command.
- * @PARAMETER:[char *apmac]:the char pointer for save the mac
- * @RETURN_VALUE:always zero is success,others is failed.
- * GaomingPan lonely-test:yes
+/**
+ * @breif get ap mac address,based on uci command.
+ * @param apmac:the char pointer for save the mac
+ * @return value:zero is success,others is failed.
  * */
 int get_apmac(char *mac)
 {
@@ -286,10 +290,9 @@ int get_apmac(char *mac)
 }
 
 
-/* @breif get number of client
- * @PARAMETER:none
- * @RETURN_VALUE:the number of current connected client
- * GaomingPan lonely-test:no
+/**
+ * @breif get number of client it in the client list
+ * @return value:the number of current connected client
  * */
 int get_curconn(void)
 {
@@ -315,10 +318,9 @@ int get_curconn(void)
 }
 
 
-/* @breif get number of client who connect to the device
- * @PARAMETER:none
- * @RETURN_VALUE:the number of connected client
- * GaomingPan lonely-test:no
+/**
+ * @breif get number of client who connect to the device
+ * @return value:the number of connected client
  * */
 int get_devconn(void)
 {
@@ -335,21 +337,24 @@ int get_devconn(void)
 	}
     if(0 == fread(info_buf,1,512,fp)){
     	fclose(fp);
+    	debug(LOG_WARNING,"Warning: read device conn error.");
     	return 0;
     }
     fclose(fp);
     ptr = strstr(info_buf,conf->gw_interface);
-    if(NULL == ptr)
+    if(NULL == ptr){
+    	debug(LOG_WARNING,"Warning: strstr(info_buf,conf->gw_interface) return is NULL");
     	return 0;
-    sscanf(ptr,"%s* %s",num_buf);
+    }
+    sscanf(ptr,"%*s %s",num_buf);
     return (atoi(num_buf));
 }
 
 
-/* @breif get cpu use infomation,based on shell command.
- * @PARAMETER:[int type] CPU_USER,CPU_SYS,CPU_NIC,CPU_IDLE,CPU_IO,CPU_IRQ,CPU_SIRQ,CPU_LOAD
- * @RETURN_VALUE:the number of current percent of CPU use.
- * GaomingPan lonely-test:yes
+/**
+ * @breif get cpu use infomation,based on shell command
+ * @param type: CPU_USER,CPU_SYS,CPU_NIC,CPU_IDLE,CPU_IO,CPU_IRQ,CPU_SIRQ,CPU_LOAD
+ * @return value:the number of current percent of CPU use.
  * */
 int get_cpuuse(int type)
 {
@@ -418,12 +423,15 @@ int get_cpuuse(int type)
 	return use;
 }
 
-/* @breif get wan interface traffic.
- * @PARAMETER:[long *outgo,long *income],the pointer for save outgo-data and income-data.
- * @RETURN_VALUE:zero is success,others is error.
- * GaomingPan lonely-test:yes
+/**
+ * @breif get wan interface traffic,based on shell command.
+ * @param iface_name: interface name
+ * @param income: interface incoming
+ * @param outgo: interface outgoing
+ * @param rx_rate: interface RX rate
+ * @param tx_rate: interface TX rate
+ * @return value:zero is success,others is error
  * */
-
 int get_trafficCount(char *iface_name,unsigned long long *income,unsigned long long *outgo,unsigned int *rx_rate,unsigned int *tx_rate)
 {
 	FILE *fp;
@@ -497,11 +505,11 @@ ERR:
 	return ret;
 }
 
-/* @breif get wan interface speed,based on shell command.
- * @PARAMETER:[int *go,int *come],the pointer for save outgo speed and income speed.
- * @RETURN_VALUE:zero is success,others is error.
- * @NOTE: this function will take a one second to wait data update,so,it's just waste time.
- * GaomingPan lonely-test:yes
+/**
+ * @breif get wan interface speed,based on shell command.
+ * @param go:the pointer for save out rate
+ * @param come:the pointer for save income rate.
+ * @return value:zero is success,others is error.
  * */
 int get_wanbps(unsigned int *go,unsigned int *come)
 {
@@ -541,14 +549,13 @@ int get_wanbps(unsigned int *go,unsigned int *come)
 static t_clientinfo *first_client_info = NULL;
 static char client_auth_flag[7] = {0};
 
-/* @breif get client host name,income speed and outgo speed,based on shell command.
+/**
+ * @breif get client host name,income speed and outgo speed,based on shell command.
  *        this functions take at least 1 second to run,because of execute the shell
  *        command have to sleep 1 second to collect client speed.
- * @PARAMETER:void
- * @RETURN_VALUE:zero is success,others is error.
- * @Note: after this function be called and you got some clients information,you should
+ * @return value: zero is success,others is error.
+ * @Note: after this function be called and you get some clients information,you should
  *        call clean_client_info() function to clean up,just like the fopen() and fclose().
- * GaomingPan lonely-test:yes
  * */
 int collect_client_info()
 {
@@ -676,15 +683,14 @@ int collect_client_info()
 }
 
 
-/* @breif get unknown host name client's income speed and outgo speed,based on shell command.
+/**
+ * @breif get unknown host name client's income speed and outgo speed,based on shell command.
  *        this functions take at least 1 second to run,because of execute the shell
  *        command have to sleep 1 second to collect client speed.
- * @PARAMETER:[char *client_ip] the unknown host name client's ip
- *            [int *go_speed] the pointer for client's outgoing speed to store.
- *            [int *come_speed] the pointer for client's incoming speed to store.
- * @RETURN_VALUE:zero is success,others is error.
- * @Note: none
- * GaomingPan lonely-test:yes
+ * @param client_ip: the unknown host name client's ip.
+ * @param go_speed: the pointer for client's outgoing speed to store.
+ * @param come_speed: the pointer for client's incoming speed to store.
+ * @return value: zero is success,others is error.
  * */
 int get_unknown_client_speed(const char *client_ip,int *go_speed,int *come_speed)
 {
@@ -759,12 +765,10 @@ int get_unknown_client_speed(const char *client_ip,int *go_speed,int *come_speed
 	return 0;
 }
 
-/* @breif After the function collect_client_info() called,should call this function to
+/**
+ *  @breif After the function collect_client_info() called,should call this function to
  *        clean up.
- * @PARAMETER:void
- * @RETURN_VALUE:void
- * @Note: function collect_client_info() and this function just like the fopen() and fclose().
- * GaomingPan lonely-test:yes
+ * @return value: the count number of clean
  * */
 int clean_client_info()
 {
@@ -786,11 +790,11 @@ int clean_client_info()
 
 
 
-/* @breif find the element from the client_info list by mac.
- * @PARAMETER:[const char *mac],the pointer point to by mac.
- * @RETURN_VALUE:success return the t_clientinfo pointer that point to target element,
+/**
+ * @breif find the element from the client_info list by mac.
+ * @param mac: the pointer point to by mac.
+ * @return value: success return the t_clientinfo pointer that point to target element,
  *               fail return the NULL.
- * GaomingPan lonely-test:yes
  * */
 t_clientinfo * get_client_info_by_mac(const char *mac)
 {
@@ -807,11 +811,11 @@ t_clientinfo * get_client_info_by_mac(const char *mac)
 
 
 
-/* @breif find the element from the client_info list by ip.
- * @PARAMETER:[const char *ip],the pointer point to by ip.
- * @RETURN_VALUE:success return the t_clientinfo pointer that point to target element,
+/**
+ * @breif find the element from the client_info list by ip.
+ * @param ip: the pointer point to by ip.
+ * @return value: success return the t_clientinfo pointer that point to target element,
  *               fail return the NULL.
- * GaomingPan lonely-test:yes
  * */
 t_clientinfo * get_client_info_by_ip(const char *ip)
 {
@@ -827,10 +831,10 @@ t_clientinfo * get_client_info_by_ip(const char *ip)
 }
 
 
-/* @breif find the element from the client_info list by ip.
- * @ip,the pointer point to by client's ip.
- * @@mac,the pointer point to by client's mac.
- * GaomingPan lonely-test:yes
+/**
+ * @breif find the element from the client_info list by ip.
+ * @param ip: the pointer point to by client's ip.
+ * @param mac: the pointer point to by client's mac.
  * */
 long get_online_time(const char *ip,const char *mac)
 {
@@ -842,14 +846,16 @@ long get_online_time(const char *ip,const char *mac)
 	return online_time;
 }
 
-/*@breif get a flage string
+/*
+ * @breif get a flage string
  * */
 char *get_client_auth_flag()
 {
 	return client_auth_flag;
 }
 
-/*@breif set a flage string
+/*
+ * @breif set a flage string
  * */
 void set_client_auth_flag()
 {
@@ -939,11 +945,9 @@ int post_get_info_execut_output(char *cmd_output_path)
 	char output[MAX_CMD_EXECUT_OUT_LEN];
 	FILE *fp;
 	sprintf(output,"wget --post-data=\"$(cat %s)\" %s \n rm  -f ./%s",cmd_output_path,info_http_url,info_rmflag);
-	//printf("\npath:%s\nurl:%s\nrmflag:%s\n\n",cmd_output_path,info_http_url,info_rmflag);
 	fp = popen(output,"r");
 	if(NULL == fp){
 		debug(LOG_WARNING,"popen error,at int post_get_info_execut_output(char *cmd_output_path,char *http_url,char * rm_flag)");
-		//printf("Warning: popen error,at int post_get_info_execut_output(char *cmd_output_path,char *http_url,char * rm_flag)\n");
 		return -1;
 	}
 	pclose(fp);
@@ -957,13 +961,19 @@ int post_normal_execut_output(char *gw_id, char *cmd_id)
 	char output[MAX_CMD_EXECUT_OUT_LEN];
 	FILE *fp;
 
-	sprintf(output,"wget --post-data=\"{\\\"gw_id\\\":\\\"%s\\\",\\\"cmd_id\\\":\\\"%s\\\",\\\"type\\\":\\\"default\\\",\\\"message\\\":[$(%s)]}\"  %s \n rm ./%s", \
-			gw_id,cmd_id,BUILE_NORMAL_CMD_RESULT_SHELL,normal_http_url,normal_rmflag);
+	sprintf(output,"wget --post-data=\"{\\\"gw_id\\\":\\\"%s\\\","
+			                          "\\\"cmd_id\\\":\\\"%s\\\","
+			                          "\\\"type\\\":\\\"normal\\\","
+			                          "\\\"message\\\":$(%s)}\"  %s \n rm ./%s",
+				                       gw_id,cmd_id,
+									   BUILE_NORMAL_CMD_RESULT_SHELL,
+									   normal_http_url,
+									   normal_rmflag
+		   );
 	debug(LOG_INFO,"output_normal:--> %s",output);
 	fp = popen(output,"r");
 	if(NULL == fp){
 		debug(LOG_WARNING,"popen error,at int post_nomal_execut_output(char *post_data,char *http_url,char *rm_flag)");
-		//printf("Warning: popen error,at int post_nomal_execut_output(char *post_data,char *http_url,char *rm_flag)\n");
 		return -1;
 	}
 	pclose(fp);
@@ -988,18 +998,21 @@ char *get_shell_command(char *cmdptr)
 
 int excute_shell_command(char *gw_id,char *shellcmd)
 {
-	char cmd_id[20],
-		 get_info_cmd[30],
-		 normal_cmd[MAX_CMD_EXECUT_OUT_LEN];
+	FILE *fp;
+
+	char cmd_id[512],
+		 get_info_cmd[512],
+		 normal_cmd[MAX_CMD_EXECUT_OUT_LEN],
+		 cmdresult[1024];
+
 	char *pos_id,
 		 *pos_cmd;
+
 	int   is_get_info = 0;
-	FILE *fp;
-	char cmdresult[1024];
 
 	memset(cmdresult,0,1024);
-	memset(cmd_id,0,20);
-	memset(get_info_cmd,0,30);
+	memset(cmd_id,0,512);
+	memset(get_info_cmd,0,512);
 
 	pos_id = shellcmd;
 	pos_cmd = strstr(shellcmd,"|");
@@ -1010,14 +1023,18 @@ int excute_shell_command(char *gw_id,char *shellcmd)
 
 	snprintf(get_info_cmd,30,"%s",pos_cmd);
 
-	is_get_info = strcmp(get_info_cmd,GET_SETTINGS_INFO_CMD);
+	is_get_info = strcmp(get_info_cmd,GET_SETTINGS_INFO_CMD";");
 
 	debug(LOG_INFO,"cmd_id:%s,get_inf_cmd:%s,is_get_info cmp:%d",cmd_id,get_info_cmd,is_get_info);
 
 	if(0 == is_get_info){
-		sprintf(get_info_cmd,"%s %s %s",get_info_cmd,gw_id,cmd_id);
+		get_info_cmd[strlen(get_info_cmd) - 1] = 0;// delete the semicolon it at the tail
+		sprintf(get_info_cmd,"%s %s %s",get_info_cmd,gw_id,cmd_id);/* add gw_id and cmd_id to the command as
+		                                                               the parameter of the command */
 		fp = popen(get_info_cmd,"r");
 	}else{
+		/* if the command is a normal command,just do it.
+		 * */
 	  sprintf(normal_cmd,"RESULT=\"$(%s)\";echo \"$RESULT\" > "NORMAL_CMD_RESULT_FILE,pos_cmd);
 	  fp = popen(normal_cmd,"r");
 	}
@@ -1026,12 +1043,10 @@ int excute_shell_command(char *gw_id,char *shellcmd)
 
 	if(NULL == fp){
 		debug(LOG_WARNING,"excute_shell_command popen error....");
-		//printf("excute_shell_command popen error....\n");
 		return -1;
 	}
-	//fread(cmdresult,1024,1,fp);
+
 	pclose(fp);
-	//printf("\n\ncmd result:\n %s\n\n",cmdresult);
 
 	if(0 == is_get_info){
 		post_get_info_execut_output(SETTINGS_INFO_FILE);
@@ -1042,6 +1057,7 @@ int excute_shell_command(char *gw_id,char *shellcmd)
 	}
 	return 0;
 }
+
 
 
 /**

@@ -40,7 +40,6 @@
 #include "httpd.h"
 #include "http.h"
 #include "safe.h"
-#include "conf.h"
 #include "debug.h"
 #include "auth.h"
 #include "centralserver.h"
@@ -49,6 +48,7 @@
 #include "client_list.h"
 #include "util.h"
 #include "wd_util.h"
+#include "conf.h"
 
 #include "extend_util.h"
 

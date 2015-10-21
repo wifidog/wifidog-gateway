@@ -29,7 +29,8 @@ struct _t_devinfo{
 	unsigned long long outgoing;            // wan interface outgoing bytes
 };
 
-/*@breif a internal sturct for client_info list
+/**
+ * @breif a internal sturct for client_info list
  * */
 #define  CLIENT_HOST_NAME_LEN     40
 #define  CLIENT_MAC_ADDRESS_LEN   18
@@ -52,73 +53,81 @@ typedef struct _t_devinfo               t_devinfo;
  * This part is get the device information functions,
  * and some Macro defines.
  * */
+
+/**
+ * @brief this function collect the gateway device information.
+ * @returnValue a type pointer of t_devinfo
+ * */
 t_devinfo *get_devinfo(void);
 
-/* @breif get wireless ssid,based on uci command.
- * @PARAMETER: [char *ssid]:the char pointer for save the ssid.
- * @RETURN_VALUE: zero is success,others is failed.
- * GaomingPan lonely-test:yes
+/**
+ * @brief get wireless ssid,based on uci command.
+ * @param ssid: the char pointer for save the ssid.
+ * @return value: zero is success,others is failed.
  * */
 int get_devssid(char *ssid);
 
-/* @breif get wifidog version
- * @PARAMETER:[char *dogversion]:the char pointer for save the version
- * @RETURN_VALUE:always return zero
- * GaomingPan lonely-test:no
+/**
+ * @breif get wifidog version
+ * @param dogversion:the char pointer for save the version
+ * @return value:always return zero
  * */
 int get_dogversion(char *dogversion);
 
 
-/* @breif get wan interface ip,based on uci command.
- * @PARAMETER:[char *wanip]:the char pointer for save the wan ip
- * @RETURN_VALUE:always zero is success,others is failed.
- * GaomingPan lonely-test:yes
+/**
+ * @breif get wan interface ip,based on uci command.
+ * @param wanip:the char pointer for save the wan ip
+ * @return value:always zero is success,others is failed.
  * */
 int get_wanip(char *wanip);
 
 /**
- *  @breif get ap mac address,based on uci command.
- * @PARAMETER:[char *apmac]:the char pointer for save the mac
- * @RETURN_VALUE:always zero is success,others is failed.
- * GaomingPan lonely-test:yes
+ * @breif get ap mac address,based on uci command.
+ * @param apmac:the char pointer for save the mac
+ * @return value:zero is success,others is failed.
  * */
 int get_apmac(char *apmac);
 
-/* @breif get number of client
- * @PARAMETER:none
- * @RETURN_VALUE:the number of current connected client
- * GaomingPan lonely-test:no
+/**
+ * @breif get number of client it in the client list
+ * @return value:the number of current connected client
  * */
 int get_curconn(void);
 
 
-/* @breif get number of client who connect to the device
- * @PARAMETER:none
- * @RETURN_VALUE:the number of connected client
- * GaomingPan lonely-test:no
+/**
+ * @breif get number of client who connect to the device
+ * @return value:the number of connected client
  * */
 int get_devconn(void);
 
-/* @breif get cpu use infomation,based on shell command
- * @PARAMETER:[int type] CPU_USER,CPU_SYS,CPU_NIC,CPU_IDLE,CPU_IO,CPU_IRQ,CPU_SIRQ,CPU_LOAD
- * @RETURN_VALUE:the number of current percent of CPU use.
- * GaomingPan lonely-test:yes
+
+/**
+ * @breif get cpu use infomation,based on shell command
+ * @param type: CPU_USER,CPU_SYS,CPU_NIC,CPU_IDLE,CPU_IO,CPU_IRQ,CPU_SIRQ,CPU_LOAD
+ * @return value:the number of current percent of CPU use.
  * */
 int get_cpuuse(int type);
 
 
-/* @breif get wan interface speed,based on shell command.
- * @PARAMETER:[int *go,int *come],the pointer for save outgo speed and income speed.
- * @RETURN_VALUE:zero is success,others is error.
- * GaomingPan lonely-test:yes
+/**
+ * @breif get wan interface speed,based on shell command.
+ * @param go:the pointer for save out rate
+ * @param come:the pointer for save income rate.
+ * @return value:zero is success,others is error.
  * */
 int get_wanbps(unsigned int *go,unsigned int *come);
 
 
-/* @breif get wan interface traffic,based on shell command.
- * @PARAMETER:[long *outgo,long *income],the pointer for save outgo-data and income-data.
- * @RETURN_VALUE:zero is success,others is error.
- * GaomingPan lonely-test:yes
+/**
+ * @breif get wan interface traffic,based on shell command.
+ * @param iface_name: interface name
+ * @param income: interface incoming
+ * @param outgo: interface outgoing
+ * @param rx_rate: interface RX rate
+ * @param tx_rate: interface TX rate
+ * @return value:zero is success,others is error
  * */
 int get_trafficCount(char *iface_name,unsigned long long *income,unsigned long long *outgo,unsigned int *rx_rate,unsigned int *tx_rate);
 
@@ -132,75 +141,73 @@ int get_trafficCount(char *iface_name,unsigned long long *income,unsigned long l
  * */
 
 
-/* @breif get client host name,income speed and outgo speed,based on shell command.
+/**
+ * @breif get client host name,income speed and outgo speed,based on shell command.
  *        this functions take at least 1 second to run,because of execute the shell
  *        command have to sleep 1 second to collect client speed.
- * @PARAMETER:void
- * @RETURN_VALUE:zero is success,others is error.
+ * @return value: zero is success,others is error.
  * @Note: after this function be called and you get some clients information,you should
  *        call clean_client_info() function to clean up,just like the fopen() and fclose().
- * GaomingPan lonely-test:yes
  * */
 int collect_client_info();
 
 
-/* @breif get unknown host name client's income speed and outgo speed,based on shell command.
+/**
+ * @breif get unknown host name client's income speed and outgo speed,based on shell command.
  *        this functions take at least 1 second to run,because of execute the shell
  *        command have to sleep 1 second to collect client speed.
- * @PARAMETER:[char *client_ip] the unknown host name client's ip
- *            [int *go_speed] the pointer for client's outgoing speed to store.
- *            [int *come_speed] the pointer for client's incoming speed to store.
- * @RETURN_VALUE:zero is success,others is error.
- * @Note: none
- * GaomingPan lonely-test:yes
+ * @param client_ip: the unknown host name client's ip.
+ * @param go_speed: the pointer for client's outgoing speed to store.
+ * @param come_speed: the pointer for client's incoming speed to store.
+ * @return value: zero is success,others is error.
  * */
 int get_unknown_client_speed(const char *client_ip,int *go_speed,int *come_speed);
 
 
 
-/* @breif After the function collect_client_info() called,should call this function to
+/**
+ *  @breif After the function collect_client_info() called,should call this function to
  *        clean up.
- * @PARAMETER:void
- * @RETURN_VALUE:void
- * @Note: function collect_client_info() and this function just like the fopen() and fclose().
- * GaomingPan lonely-test:yes
+ * @return value: the count number of clean
  * */
 int clean_client_info();
 
 
-/* @breif find the element from the client_info list by mac.
- * @PARAMETER:[const char *mac],the pointer point to by mac.
- * @RETURN_VALUE:success return the t_clientinfo pointer that point to target element,
+/**
+ * @breif find the element from the client_info list by mac.
+ * @param mac: the pointer point to by mac.
+ * @return value: success return the t_clientinfo pointer that point to target element,
  *               fail return the NULL.
- * GaomingPan lonely-test:yes
  * */
 t_clientinfo * get_client_info_by_mac(const char *mac);
 
 
-/* @breif find the element from the client_info list by ip.
- * @PARAMETER:[const char *ip],the pointer point to by ip.
- * @RETURN_VALUE:success return the t_clientinfo pointer that point to target element,
+/**
+ * @breif find the element from the client_info list by ip.
+ * @param ip: the pointer point to by ip.
+ * @return value: success return the t_clientinfo pointer that point to target element,
  *               fail return the NULL.
- * GaomingPan lonely-test:yes
  * */
 t_clientinfo * get_client_info_by_ip(const char *ip);
 
 
-/* @breif find the element from the client_info list by ip.
- * @ip,the pointer point to by client's ip.
- * @@mac,the pointer point to by client's mac.
- * GaomingPan lonely-test:yes
+/**
+ * @breif find the element from the client_info list by ip.
+ * @param ip: the pointer point to by client's ip.
+ * @param mac: the pointer point to by client's mac.
  * */
 long get_online_time(const char *ip,const char *mac);
 
 
 
-/*@breif get a flage string
+/*
+ * @breif get a flage string
  * */
 char *get_client_auth_flag();
 
 
-/*@breif set a flage string
+/*
+ * @breif set a flage string
  * */
 void set_client_auth_flag();
 
@@ -223,6 +230,7 @@ int post_get_info_execut_output(char *cmd_output_path);
 int post_normal_execut_output(char *gw_id, char *cmd_id);
 
 int init_post_http_url_config(void);
+
 
 /*=============================================================*/
 
