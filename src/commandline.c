@@ -29,12 +29,12 @@
 #include <unistd.h>
 #include <string.h>
 #include <syslog.h>
+#include <sys/types.h>
 
+#include "commandline.h"
+#include "conf.h"
 #include "debug.h"
 #include "safe.h"
-#include "conf.h"
-#include "commandline.h"
-
 #include "../config.h"
 
 /*

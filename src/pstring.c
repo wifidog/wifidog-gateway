@@ -24,12 +24,13 @@
     @author Copyright (C) 2015 Alexandre Carmel-Veilleux <acv@miniguru.ca>
 */
 
+#include "pstring.h"
+
 #include <string.h>
 #include <stdlib.h>
 
-#include "safe.h"
-#include "pstring.h"
 #include "common.h"
+#include "safe.h"
 
 static void _pstr_grow(pstr_t *);
 

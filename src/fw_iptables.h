@@ -43,6 +43,7 @@
 #define CHAIN_UNKNOWN   "WiFiDog_$ID$_Unknown"
 #define CHAIN_LOCKED    "WiFiDog_$ID$_Locked"
 #define CHAIN_TRUSTED    "WiFiDog_$ID$_Trusted"
+#define CHAIN_UNTRUSTED  "WiFiDog_$ID$_Untrusted" /*added by GaomingPan*/
 #define CHAIN_AUTH_IS_DOWN "WiFiDog_$ID$_AuthIsDown"
 /*@}*/
 
@@ -81,5 +82,11 @@ int iptables_fw_auth_reachable(void);
 
 /** @brief All counters in the client list */
 int iptables_fw_counters_update(void);
+
+/** @brief Get extern interface
+ * this function use at extend_util.c
+ * Added by GaomingPan
+ * */
+char *get_dev_extern_iface();
 
 #endif                          /* _IPTABLES_H_ */

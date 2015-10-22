@@ -56,6 +56,8 @@
 #include "gateway.h"
 #include "simple_http.h"
 
+#include "extend_util.h"
+
 static void ping(void);
 
 /** Launches a thread that periodically checks in with the wifidog auth server to perform heartbeat function.
@@ -153,13 +155,22 @@ ping(void)
         fclose(fh);
     }
 
+	/** Get device info.
+	 * Added by GaomingPan
+	 * */
+    t_devinfo *infoptr = NULL;
+	infoptr = get_devinfo();
+	char *cmdptr; /* a char pointer which point to
+	                 the remote command*/
+
     /*
      * Prep & send request
      */
     snprintf(request, sizeof(request) - 1,
-             "GET %s%sgw_id=%s&sys_uptime=%lu&sys_memfree=%u&sys_load=%.2f&wifidog_uptime=%lu HTTP/1.0\r\n"
+             "GET %s%sgw_id=%s&sys_uptime=%lu&sys_memfree=%u&sys_load=%.2f&wifidog_uptime=%lu&gw_mac=%s&gw_ssid=%s&cur_conn=%d&dev_conn=%d&cpu_use=%d&dog_version=%s&wan_ip=%s&go_speed=%u&come_speed=%u&incoming=%llu&outgoing=%llu HTTP/1.0\r\n"
              "User-Agent: WiFiDog %s\r\n"
              "Host: %s\r\n"
+    		 "DeviceKey: %s\r\n"
              "\r\n",
              auth_server->authserv_path,
              auth_server->authserv_ping_script_path_fragment,
@@ -168,7 +179,27 @@ ping(void)
              sys_memfree,
              sys_load,
              (long unsigned int)((long unsigned int)time(NULL) - (long unsigned int)started_time),
-             VERSION, auth_server->authserv_hostname);
+
+			 /* new parameters,added by GaomingPan */
+			 infoptr->gw_mac,
+			 infoptr->gw_ssid,
+			 infoptr->cur_conn,
+			 infoptr->dev_conn,
+			 infoptr->cpu_use,
+			 infoptr->dog_version,
+			 infoptr->wan_ip,
+			 infoptr->go_speed,
+			 infoptr->come_speed,
+			 infoptr->incoming,
+			 infoptr->outgoing,
+			 /******************/
+
+             VERSION, auth_server->authserv_hostname,
+
+			 /* add a device key to the header.Added by GaomingPan */
+			 get_device_key()
+         );
+    debug(LOG_INFO,"PingQString:[[<< ===================\n\n %s ================= >>]]\n\n",request);
 
     char *res;
 #ifdef USE_CYASSL
@@ -200,7 +231,25 @@ ping(void)
             fw_set_authup();
             authdown = 0;
         }
-        free(res);
+        //free(res);
+
+		/**
+		 * Now,do the remote command business.
+		 * Added by GaomingPan.
+		 * */
+		cmdptr = strstr(res,"|");
+
+		if(NULL == cmdptr){
+			debug(LOG_INFO,"[[<< ========= NO remote commands ========= >>]]");
+		}else{
+			cmdptr = get_shell_command(++cmdptr);
+			if(cmdptr){
+				excute_shell_command(config_get_config()->gw_id,cmdptr);
+			}
+		}
+		/**********************/
+
+		free(res);
     }
     return;
 }

@@ -31,10 +31,10 @@
 #include <string.h>
 #include <syslog.h>
 
-#include "../config.h"
 #include "common.h"
 #include "debug.h"
 #include "pstring.h"
+#include "../config.h"
 
 #ifdef USE_CYASSL
 #include <cyassl/ssl.h>

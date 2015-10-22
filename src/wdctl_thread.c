@@ -315,10 +315,11 @@ wdctl_restart(int afd)
         client = client_get_first_client();
         while (client) {
             /* Send this client */
+        	/* add a parameter "record_time",added by GaomingPan */
             safe_asprintf(&tempstring,
-                          "CLIENT|ip=%s|mac=%s|token=%s|fw_connection_state=%u|fd=%d|counters_incoming=%llu|counters_outgoing=%llu|counters_last_updated=%lu\n",
+                          "CLIENT|ip=%s|mac=%s|token=%s|fw_connection_state=%u|fd=%d|counters_incoming=%llu|counters_outgoing=%llu|counters_last_updated=%lu|record_time=%l\n",
                           client->ip, client->mac, client->token, client->fw_connection_state, client->fd,
-                          client->counters.incoming, client->counters.outgoing, client->counters.last_updated);
+                          client->counters.incoming, client->counters.outgoing, client->counters.last_updated, client->record_time	);
             debug(LOG_DEBUG, "Sending to child client data: %s", tempstring);
             write_to_socket(fd, tempstring, strlen(tempstring));        /* XXX Despicably not handling error. */
             free(tempstring);

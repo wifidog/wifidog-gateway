@@ -25,6 +25,8 @@
   @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
  */
 
+
+
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,19 +41,21 @@
 #include <syslog.h>
 
 #include "httpd.h"
-
-#include "common.h"
-#include "safe.h"
-#include "util.h"
-#include "wd_util.h"
 #include "auth.h"
+#include "common.h"
 #include "conf.h"
 #include "debug.h"
-#include "centralserver.h"
 #include "firewall.h"
+#include "safe.h"
+#include "simple_http.h"
+#include "util.h"
+#include "wd_util.h"
 #include "../config.h"
 
-#include "simple_http.h"
+#include "centralserver.h"
+
+#include "extend_util.h"
+
 
 /** Initiates a transaction with the auth server, either to authenticate or to
  * update the traffic counters at the server
@@ -75,6 +79,19 @@ auth_server_request(t_authresponse * authresponse, const char *request_type, con
     t_auth_serv *auth_server = NULL;
     auth_server = get_auth_server();
 
+
+    /**
+     *  get client's info,
+     * get client's online time,
+     * outgo rate and comin rate.
+     * Added by GaomingPan
+     * */
+    t_clientinfo *client_info = NULL;
+    client_info = get_client_info_by_ip(ip);
+    time_t online_time = get_online_time(ip,mac);
+    int    go_speed,
+	       come_speed;
+
     /* Blanket default is error. */
     authresponse->authcode = AUTH_ERROR;
 
@@ -86,34 +103,129 @@ auth_server_request(t_authresponse * authresponse, const char *request_type, con
 	 */
     memset(buf, 0, sizeof(buf));
     safe_token = httpdUrlEncode(token);
-    if(config -> deltatraffic) {
-           snprintf(buf, (sizeof(buf) - 1),
-             "GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&incomingdelta=%llu&outgoingdelta=%llu&gw_id=%s HTTP/1.0\r\n"
-             "User-Agent: WiFiDog %s\r\n"
-             "Host: %s\r\n"
-             "\r\n",
-             auth_server->authserv_path,
-             auth_server->authserv_auth_script_path_fragment,
-             request_type,
-             ip, mac, safe_token, 
-             incoming, 
-             outgoing, 
-             incoming_delta, 
-             outgoing_delta,
-             config->gw_id, VERSION, auth_server->authserv_hostname);
-    } else {
-            snprintf(buf, (sizeof(buf) - 1),
-             "GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&gw_id=%s HTTP/1.0\r\n"
-             "User-Agent: WiFiDog %s\r\n"
-             "Host: %s\r\n"
-             "\r\n",
-             auth_server->authserv_path,
-             auth_server->authserv_auth_script_path_fragment,
-             request_type,
-             ip,
-             mac, safe_token, incoming, outgoing, config->gw_id, VERSION, auth_server->authserv_hostname);
-        }
+
+    if(client_info){
+        if(config -> deltatraffic) {
+               snprintf(buf, (sizeof(buf) - 1),
+                 "GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&incomingdelta=%llu&outgoingdelta=%llu&gw_id=%s&host_name=%s&go_speed=%d&come_speed=%d&online_time=%ld&flag=%s HTTP/1.0\r\n"
+                 "User-Agent: WiFiDog %s\r\n"
+                 "Host: %s\r\n"
+            	 "DeviceKey: %s\r\n"
+                 "\r\n",
+                 auth_server->authserv_path,
+                 auth_server->authserv_auth_script_path_fragment,
+                 request_type,
+                 ip, mac, safe_token,
+                 incoming,
+                 outgoing,
+                 incoming_delta,
+                 outgoing_delta,
+                 config->gw_id,
+
+				 /* new parameters,added by GaomingPan */
+				 client_info->host_name,
+				 client_info->go_speed,
+				 client_info->come_speed,
+				 online_time,
+				 get_client_auth_flag(),
+				 /**************************************/
+
+				 VERSION, auth_server->authserv_hostname,
+
+				/* add a device key to the header.Added by GaomingPan */
+				get_device_key()
+               );
+        } else {
+                snprintf(buf, (sizeof(buf) - 1),
+                 "GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&gw_id=%s&host_name=%s&go_speed=%d&come_speed=%d&online_time=%ld&flag=%s HTTP/1.0\r\n"
+                 "User-Agent: WiFiDog %s\r\n"
+                 "Host: %s\r\n"
+                 "DeviceKey: %s\r\n"
+                 "\r\n",
+                 auth_server->authserv_path,
+                 auth_server->authserv_auth_script_path_fragment,
+                 request_type,
+                 ip,
+                 mac, safe_token, incoming, outgoing, config->gw_id,
+
+				 /* new parameters,added by GaomingPan */
+				 client_info->host_name,
+				 client_info->go_speed,
+				 client_info->come_speed,
+				 online_time,
+				 get_client_auth_flag(),
+				 /**************************************/
+
+				 VERSION, auth_server->authserv_hostname,
+
+				 /* add a device key to the header.Added by GaomingPan */
+				 get_device_key()
+                );
+            }
+    }else{//if(client_info)
+    	get_unknown_client_speed(ip,&go_speed,&come_speed);
+        if(config -> deltatraffic) {
+               snprintf(buf, (sizeof(buf) - 1),
+                 "GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&incomingdelta=%llu&outgoingdelta=%llu&gw_id=%s&host_name=%s&go_speed=%d&come_speed=%d&online_time=%ld&flag=%s HTTP/1.0\r\n"
+                 "User-Agent: WiFiDog %s\r\n"
+                 "Host: %s\r\n"
+            	 "DeviceKey: %s\r\n"
+                 "\r\n",
+                 auth_server->authserv_path,
+                 auth_server->authserv_auth_script_path_fragment,
+                 request_type,
+                 ip, mac, safe_token,
+                 incoming,
+                 outgoing,
+                 incoming_delta,
+                 outgoing_delta,
+                 config->gw_id,
+
+				 /* new parameters,added by GaomingPan */
+				  "unknown",//client_info->host_name,
+				  go_speed,    //client_info->go_speed,
+				  come_speed,    //client_info->come_speed,
+				  online_time,    //online_time,
+				  get_client_auth_flag(),
+				 /**************************************/
+
+				 VERSION, auth_server->authserv_hostname,
+
+				 /* add a device key to the header.Added by GaomingPan */
+				 get_device_key()
+               );
+        } else {
+                snprintf(buf, (sizeof(buf) - 1),
+                 "GET %s%sstage=%s&ip=%s&mac=%s&token=%s&incoming=%llu&outgoing=%llu&gw_id=%s&host_name=%s&go_speed=%d&come_speed=%d&online_time=%ld&flag=%s HTTP/1.0\r\n"
+                 "User-Agent: WiFiDog %s\r\n"
+                 "Host: %s\r\n"
+                 "DeviceKey: %s\r\n"
+                 "\r\n",
+                 auth_server->authserv_path,
+                 auth_server->authserv_auth_script_path_fragment,
+                 request_type,
+                 ip,
+                 mac, safe_token, incoming, outgoing, config->gw_id,
+
+				 /* new parameters,added by GaomingPan */
+			     "unknown",//client_info->host_name,
+				  go_speed,    //client_info->go_speed,
+				  come_speed,    //client_info->come_speed,
+				  online_time,    //online_time,
+				  get_client_auth_flag(),
+				 /**************************************/
+
+				 VERSION, auth_server->authserv_hostname,
+
+				 /* add a device key to the header.Added by GaomingPan */
+				 get_device_key()
+                );
+            }
+    }//if(client_info)
+
     free(safe_token);
+
+    debug(LOG_INFO, "\n\nSendingQString: [[<<================\n %s ==================>>]]\n\n", buf);
 
     char *res;
 #ifdef USE_CYASSL
