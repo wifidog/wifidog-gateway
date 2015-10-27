@@ -313,15 +313,19 @@ iptables_fw_init(void)
     iptables_do_command("-t mangle -I POSTROUTING 1 -o %s -j " CHAIN_INCOMING, config->gw_interface);
 
     for (p = config->trustedmaclist; p != NULL; p = p->next)
-        iptables_do_command("-t mangle -A " CHAIN_TRUSTED " -m mac --mac-source %s -j MARK --set-mark %d", p->mac,
-                            FW_MARK_KNOWN);
+          iptables_do_command("-t mangle -A " CHAIN_TRUSTED " -m mac --mac-source %s -j MARK --set-mark %d", p->mac,
+                         FW_MARK_KNOWN);
 
     /** Untrusted MAC.
      *  Added by GaomingPan
+     *   1、阻止MAC地址为XX:XX:XX:XX:XX:XX主机的所有通信：
+     *   iptables -A INPUT -m mac --mac-source XX:XX:XX:XX:XX:XX -j DROP
+     *
      *  */
     for (unp = config->untrustedmaclist; unp != NULL; unp = unp->next)
-    	iptables_do_command("-t mangle -A " CHAIN_UNTRUSTED " -m mac --mac-source %s -j MARK --set-mark %d", unp->mac,
-    			FW_MARK_LOCKED);
+    	iptables_do_command("-t mangle -A " CHAIN_UNTRUSTED " -m mac --mac-source %s -j DROP", unp->mac);
+    	//iptables_do_command("-t mangle -A " CHAIN_UNTRUSTED " -m mac --mac-source %s -j MARK --set-mark %d", unp->mac,
+    	//		FW_MARK_LOCKED);
 
     /*
      *

@@ -24,8 +24,8 @@ WIFIDOG_MINOR_VERSION=2
 WIFIDOG_MICRO_VERSION=1
 WIFIDOG_VERSION=$WIFIDOG_MAJOR_VERSION.$WIFIDOG_MINOR_VERSION.$WIFIDOG_MICRO_VERSION
 
-# I  want to use Semantic Beta Versioning like this x.y.z-Beta.x for test my new features.
-WIFIDOG_BETA_VERSION=Beta-1
+# I  want to use Semantic Beta Versioning like this x.y.z-Beta-x for test my new features.
+WIFIDOG_BETA_VERSION=Beta-2
 WIFIDOG_VERSION=$WIFIDOG_VERSION-$WIFIDOG_BETA_VERSION
 
 
