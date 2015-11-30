@@ -2,7 +2,7 @@
  * extend_util.c
  *
  *  Created on: Oct 10, 2015
- *      Author: GaomingPan
+ *      Author: TianyuanPan
  */
 #include "extend_util.h"
 
@@ -1069,7 +1069,7 @@ static char device_key[64] = {0};
 /* @breif get the global device key.the key will be use as auth key
  * @PARAMETER: void
  * @RETURN_VALUE: a none NULL char pointer
- * GaomingPan lonely-test:yes
+ * TianyuanPan lonely-test:yes
  * */
 char * get_device_key()
 {
@@ -1083,7 +1083,7 @@ char * get_device_key()
  * @PARAMETER: void
  * @RETURN_VALUE: success return zero and set the KEY in the device key global array,
  * failed return a none zero number.
- * GaomingPan lonely-test:yes
+ * TianyuanPan lonely-test:yes
  * */
 int init_device_key()
 {

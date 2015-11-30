@@ -5,11 +5,11 @@
 # 
 # Author : GaomingPan
 # Date   : 2015-08-05
-# Version: 1.0.0
+# Version: 1.0.3
 #
 ###############################################################################################################
 
-version="1.0.0"
+version="1.0.3"
 
 WIFI_DOG_CONF_FILE=/etc/wifidog.conf
 WIFI_DOG_CONF=/etc/config/wifidog_conf
@@ -100,7 +100,10 @@ generate_firewallRule_global()
     echo "}" >> $WIFI_DOG_CONF_FILE  
 }
 
-
+generate_PopularServer()
+{
+    echo "PopularServers wifi.xiao8web.com,kernel.org" >> $WIFI_DOG_CONF_FILE
+}
 
 generate_firewallRule_validating_users()
 {
@@ -122,6 +125,13 @@ generate_firewallRule_unknown_users()
     echo "FirewallRuleSet unknown-users {" >> $WIFI_DOG_CONF_FILE
     echo "$(uci get $FIREWALL_RULE_UNKNOWN_USERS | tr "L" "\n")" >> $WIFI_DOG_CONF_FILE 
     echo "}" >> $WIFI_DOG_CONF_FILE  
+}
+
+generate_firewallRule_auth_is_down()
+{
+  echo "FirewallRuleSet auth-is-down {"  >> $WIFI_DOG_CONF_FILE
+  echo "FirewallRule allow to 0.0.0.0/0" >> $WIFI_DOG_CONF_FILE
+  echo "}" >> $WIFI_DOG_CONF_FILE
 }
 
 generate_firewallRule_locked_users()
@@ -160,6 +170,7 @@ generate_wifidog_conf_file()
     generate_authServer
     generate_trustedMACList
     generate_untrustedMACList
+    generate_PopularServer
     generate_whiteList
     generate_blackList
     generate_firewallRule_global
@@ -167,6 +178,7 @@ generate_wifidog_conf_file()
     generate_firewallRule_known_users
     generate_firewallRule_unknown_users
     generate_firewallRule_locked_users
+    generate_firewallRule_auth_is_down
     
     conf_character_check
 }
