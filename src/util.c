@@ -252,7 +252,7 @@ get_ext_iface(void)
         }
         while (!feof(input)) {
             /* XXX scanf(3) is unsafe, risks overrun */
-            if ((fscanf(input, "%15s %15s %*s %*s %*s %*s %*s %*s %*s %*s %*s\n", device, gw) == 2)
+            if ((fscanf(input, "%15s %*s %15s %*s %*s %*s %*s %*s %*s %*s %*s\n", device, gw) == 2)
                 && strcmp(gw, "00000000") == 0) {
                 free(gw);
                 debug(LOG_INFO, "get_ext_iface(): Detected %s as the default interface after trying %d", device, i);
