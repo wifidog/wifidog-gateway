@@ -319,7 +319,7 @@ _connect_auth_server(int level)
         free(h_addr);
 
         if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-            debug(LOG_ERR, "Level %d: Failed to create a new SOCK_STREAM socket: %s", strerror(errno));
+            debug(LOG_ERR, "Level %d: Failed to create a new SOCK_STREAM socket: %s", level, strerror(errno));
             return (-1);
         }
 
