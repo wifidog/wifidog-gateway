@@ -1,0 +1,4 @@
+package	'dog_alive'
+
+config	'dog_alive'
+	 option		is_alive		'0'

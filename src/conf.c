@@ -44,7 +44,7 @@
 #include "http.h"
 #include "auth.h"
 #include "firewall.h"
-#include "config.h"
+#include "../config.h"
 
 #include "util.h"
 
@@ -97,6 +97,7 @@ typedef enum {
     oFirewallRule,
     oFirewallRuleSet,
     oTrustedMACList,
+	oUntrustedMACList,/*Untrusted mac list option,added by GaomingPan*/
     oPopularServers,
     oHtmlMessageFile,
     oProxyPort,
@@ -144,6 +145,7 @@ static const struct {
     "firewallruleset", oFirewallRuleSet}, {
     "firewallrule", oFirewallRule}, {
     "trustedmaclist", oTrustedMACList}, {
+    "untrustedmaclist", oUntrustedMACList},{ /*key word for untrusted mac, added by GaomingPan*/
     "popularservers", oPopularServers}, {
     "htmlmessagefile", oHtmlMessageFile}, {
     "proxyport", oProxyPort}, {
@@ -159,6 +161,7 @@ static void parse_auth_server(FILE *, const char *, int *);
 static int _parse_firewall_rule(const char *, char *);
 static void parse_firewall_ruleset(const char *, FILE *, const char *, int *);
 static void parse_trusted_mac_list(const char *);
+static void parse_untrusted_mac_list(const char *);/*parse untrusted mac list, added by GaomingPan*/
 static void parse_popular_servers(const char *);
 static void validate_popular_servers(void);
 static void add_popular_server(const char *);
@@ -735,6 +738,9 @@ config_read(const char *filename)
                 case oTrustedMACList:
                     parse_trusted_mac_list(p1);
                     break;
+                case oUntrustedMACList:     /*parse untrustd mac list,added by GaomingPan*/
+                    parse_untrusted_mac_list(p1);
+                    break;
                 case oPopularServers:
                     parse_popular_servers(rawarg);
                     break;
@@ -930,6 +936,82 @@ parse_trusted_mac_list(const char *ptr)
                     } else {
                         debug(LOG_ERR,
                               "MAC address [%s] already on trusted list. See option TrustedMACList in wifidog.conf file ",
+                              mac);
+                    }
+                }
+            }
+        }
+    }
+
+    free(ptrcopy);
+
+    free(mac);
+
+}
+
+/** @internal
+ * Parse the untrusted mac list.
+ * Added by GaomingPan,Sun Oct 11,2015
+ */
+static void
+parse_untrusted_mac_list(const char *ptr)
+{
+    char *ptrcopy = NULL;
+    char *possiblemac = NULL;
+    char *mac = NULL;
+    t_untrusted_mac *p = NULL;
+
+    debug(LOG_DEBUG, "Parsing string [%s] for untrusted MAC addresses", ptr);
+
+    mac = safe_malloc(18);
+
+    /* strsep modifies original, so let's make a copy */
+    ptrcopy = safe_strdup(ptr);
+
+    while ((possiblemac = strsep(&ptrcopy, ","))) {
+        /* check for valid format */
+        if (!check_mac_format(possiblemac)) {
+            debug(LOG_ERR,
+                  "[%s] not a valid MAC address to not trust. See option UntrustedMACList in wifidog.conf for correct this mistake.",
+                  possiblemac);
+            free(ptrcopy);
+            free(mac);
+            return;
+        } else {
+            if (sscanf(possiblemac, " %17[A-Fa-f0-9:]", mac) == 1) {
+                /* Copy mac to the list */
+
+                debug(LOG_DEBUG, "Adding MAC address [%s] to untrusted list", mac);
+
+                if (config.untrustedmaclist == NULL) {
+                    config.untrustedmaclist = safe_malloc(sizeof(t_untrusted_mac));
+                    config.untrustedmaclist->mac = safe_strdup(mac);
+                    config.untrustedmaclist->next = NULL;
+                } else {
+                    int skipmac;
+                    /* Advance to the last entry */
+                    p = config.untrustedmaclist;
+                    skipmac = 0;
+                    /* Check before loop to handle case were mac is a duplicate
+                     * of the first and only item in the list so far.
+                     */
+                    if (0 == strcmp(p->mac, mac)) {
+                        skipmac = 1;
+                    }
+                    while (p->next != NULL) {
+                        if (0 == strcmp(p->mac, mac)) {
+                            skipmac = 1;
+                        }
+                        p = p->next;
+                    }
+                    if (!skipmac) {
+                        p->next = safe_malloc(sizeof(t_untrusted_mac));
+                        p = p->next;
+                        p->mac = safe_strdup(mac);
+                        p->next = NULL;
+                    } else {
+                        debug(LOG_ERR,
+                              "MAC address [%s] already on untrusted list. See option UntrustedMACList in wifidog.conf file ",
                               mac);
                     }
                 }

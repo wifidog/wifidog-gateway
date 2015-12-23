@@ -40,7 +40,6 @@
 #include "httpd.h"
 #include "http.h"
 #include "safe.h"
-#include "conf.h"
 #include "debug.h"
 #include "auth.h"
 #include "centralserver.h"
@@ -49,6 +48,9 @@
 #include "client_list.h"
 #include "util.h"
 #include "wd_util.h"
+#include "conf.h"
+
+#include "extend_util.h"
 
 /** Launches a thread that periodically checks if any of the connections has timed out
 @param arg Must contain a pointer to a string containing the IP adress of the client to check to check
@@ -61,8 +63,18 @@ thread_client_timeout_check(const void *arg)
     pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
     pthread_mutex_t cond_mutex = PTHREAD_MUTEX_INITIALIZER;
     struct timespec timeout;
+    int ret = 0;
 
     while (1) {
+        /**
+         * Now,cllecting client's info,will create a
+         * client's info list.
+         * Added by GaomingPan
+         * */
+        ret = collect_client_info();
+        if(ret)
+        	debug(LOG_WARNING,"cllecting client's info ERROR.");
+
         /* Sleep for config.checkinterval seconds... */
         timeout.tv_sec = time(NULL) + config_get_config()->checkinterval;
         timeout.tv_nsec = 0;
@@ -79,6 +91,14 @@ thread_client_timeout_check(const void *arg)
         debug(LOG_DEBUG, "Running fw_counter()");
 
         fw_sync_with_authserver();
+
+        /**
+         * Now,clearing client's info list,
+         * free the memories.
+         * Added by GaomingPan
+         * */
+        ret = clean_client_info();
+        debug(LOG_DEBUG,"free [%d] entry client's info.",ret);
     }
 }
 
@@ -222,7 +242,21 @@ authenticate_client(request * r)
               "adding to firewall and redirecting them to portal", client->token, client->ip, client->mac);
         fw_allow(client, FW_MARK_KNOWN);
         served_this_session++;
-        safe_asprintf(&urlFragment, "%sgw_id=%s", auth_server->authserv_portal_script_path_fragment, config->gw_id);
+
+        /** add parameter:
+         *              gw_address,mac (client's MAC address).
+         *   Added by GaomingPan.
+         * */
+        //safe_asprintf(&urlFragment, "%sgw_id=%s", auth_server->authserv_portal_script_path_fragment, config->gw_id);
+		safe_asprintf(&urlFragment, "%sgw_id=%s&gw_address=%s&mac=%s",
+			auth_server->authserv_portal_script_path_fragment,
+			config->gw_id,
+            config->gw_address,
+            client->mac
+		);
+		/************************************/
+		debug(LOG_INFO,"PortalQString: [[<< ============== \n\n %s ============== >>]]\n\n",urlFragment);
+
         http_send_redirect_to_auth(r, urlFragment, "Redirect to portal");
         free(urlFragment);
         break;

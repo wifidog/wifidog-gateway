@@ -58,6 +58,8 @@
 #include "client_list.h"
 #include "commandline.h"
 
+#include "extend_util.h"
+
 static int _fw_deny_raw(const char *, const char *, const int);
 
 /**
@@ -263,6 +265,9 @@ fw_sync_with_authserver(void)
         debug(LOG_ERR, "Could not get counters from firewall!");
         return;
     }
+
+    /* set a auth flag,added by TianyuanpanPan */
+    set_client_auth_flag();
 
     LOCK_CLIENT_LIST();
 

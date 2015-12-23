@@ -167,6 +167,7 @@ get_status_text()
     time_t uptime = 0;
     unsigned int days = 0, hours = 0, minutes = 0, seconds = 0;
     t_trusted_mac *p;
+    t_untrusted_mac *unp;/* added by GaomingPan */
 
     pstr_cat(pstr, "WiFiDog status\n\n");
 
@@ -224,6 +225,16 @@ get_status_text()
         for (p = config->trustedmaclist; p != NULL; p = p->next) {
             pstr_append_sprintf(pstr, "  %s\n", p->mac);
         }
+    }
+    /** show Untrusted MAC list,
+     * added by GaomingPan
+     * */
+    if (config->untrustedmaclist != NULL) {
+    	pstr_cat(pstr, "\nUntrusted MAC addresses:\n");
+
+    	for (unp = config->untrustedmaclist; unp != NULL; unp = unp->next) {
+    		pstr_append_sprintf(pstr, " %s\n",unp->mac);
+    	}
     }
 
     pstr_cat(pstr, "\nAuthentication servers:\n");

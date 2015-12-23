@@ -57,6 +57,19 @@ static void iptables_load_ruleset(const char *, const char *, const char *);
 Used to supress the error output of the firewall during destruction */
 static int fw_quiet = 0;
 
+
+
+/** @brief Get extern interface
+ * this function use at extend_util.c.
+ * Added by GaomingPan.
+ * */
+static  char dev_extern_iface[64] = {0};
+char *get_dev_extern_iface()
+{
+     return dev_extern_iface;
+}
+
+
 /** @internal
  * @brief Insert $ID$ with the gateway's id in a string.
  *
@@ -248,6 +261,7 @@ iptables_fw_init(void)
     char *ext_interface = NULL;
     int gw_port = 0;
     t_trusted_mac *p;
+    t_untrusted_mac *unp;/*added by GaomingPan*/
     int proxy_port;
     fw_quiet = 0;
     int got_authdown_ruleset = NULL == get_ruleset(FWRULESET_AUTH_IS_DOWN) ? 0 : 1;
@@ -257,8 +271,18 @@ iptables_fw_init(void)
     gw_port = config->gw_port;
     if (config->external_interface) {
         ext_interface = safe_strdup(config->external_interface);
+        /* Added by GaomingPan */
+		//memset(dev_extern_iface,0,64);
+		sprintf(dev_extern_iface,"%s",ext_interface);
+		debug(LOG_INFO, "dev_extern_iface is: %s",dev_extern_iface);
+		/**/
     } else {
         ext_interface = get_ext_iface();
+        /* Added by GaomingPan */
+		//memset(dev_extern_iface,0,64);
+		sprintf(dev_extern_iface,"%s",ext_interface);
+		debug(LOG_INFO, "dev_extern_iface is: %s",dev_extern_iface);
+		/**/
     }
 
     if (ext_interface == NULL) {
@@ -274,6 +298,7 @@ iptables_fw_init(void)
 
     /* Create new chains */
     iptables_do_command("-t mangle -N " CHAIN_TRUSTED);
+    iptables_do_command("-t mangle -N " CHAIN_UNTRUSTED);/* Added by GaomingPan */
     iptables_do_command("-t mangle -N " CHAIN_OUTGOING);
     iptables_do_command("-t mangle -N " CHAIN_INCOMING);
     if (got_authdown_ruleset)
@@ -281,14 +306,26 @@ iptables_fw_init(void)
 
     /* Assign links and rules to these new chains */
     iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " CHAIN_OUTGOING, config->gw_interface);
+    iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " CHAIN_UNTRUSTED, config->gw_interface); /* Added by GaomingPan */
     iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " CHAIN_TRUSTED, config->gw_interface);     //this rule will be inserted before the prior one
     if (got_authdown_ruleset)
         iptables_do_command("-t mangle -I PREROUTING 1 -i %s -j " CHAIN_AUTH_IS_DOWN, config->gw_interface);    //this rule must be last in the chain
     iptables_do_command("-t mangle -I POSTROUTING 1 -o %s -j " CHAIN_INCOMING, config->gw_interface);
 
     for (p = config->trustedmaclist; p != NULL; p = p->next)
-        iptables_do_command("-t mangle -A " CHAIN_TRUSTED " -m mac --mac-source %s -j MARK --set-mark %d", p->mac,
-                            FW_MARK_KNOWN);
+          iptables_do_command("-t mangle -A " CHAIN_TRUSTED " -m mac --mac-source %s -j MARK --set-mark %d", p->mac,
+                         FW_MARK_KNOWN);
+
+    /** Untrusted MAC.
+     *  Added by GaomingPan
+     *   1、阻止MAC地址为XX:XX:XX:XX:XX:XX主机的所有通信：
+     *   iptables -A INPUT -m mac --mac-source XX:XX:XX:XX:XX:XX -j DROP
+     *
+     *  */
+    for (unp = config->untrustedmaclist; unp != NULL; unp = unp->next)
+    	iptables_do_command("-t mangle -A " CHAIN_UNTRUSTED " -m mac --mac-source %s -j DROP", unp->mac);
+    	//iptables_do_command("-t mangle -A " CHAIN_UNTRUSTED " -m mac --mac-source %s -j MARK --set-mark %d", unp->mac,
+    	//		FW_MARK_LOCKED);
 
     /*
      *
@@ -422,16 +459,19 @@ iptables_fw_destroy(void)
      */
     debug(LOG_DEBUG, "Destroying chains in the MANGLE table");
     iptables_fw_destroy_mention("mangle", "PREROUTING", CHAIN_TRUSTED);
+    iptables_fw_destroy_mention("mangle", "PREROUTING", CHAIN_UNTRUSTED);/* Added by untrusted */
     iptables_fw_destroy_mention("mangle", "PREROUTING", CHAIN_OUTGOING);
     if (got_authdown_ruleset)
         iptables_fw_destroy_mention("mangle", "PREROUTING", CHAIN_AUTH_IS_DOWN);
     iptables_fw_destroy_mention("mangle", "POSTROUTING", CHAIN_INCOMING);
     iptables_do_command("-t mangle -F " CHAIN_TRUSTED);
+    iptables_do_command("-t mangle -F " CHAIN_UNTRUSTED); /* Added by GaomingPan */
     iptables_do_command("-t mangle -F " CHAIN_OUTGOING);
     if (got_authdown_ruleset)
         iptables_do_command("-t mangle -F " CHAIN_AUTH_IS_DOWN);
     iptables_do_command("-t mangle -F " CHAIN_INCOMING);
     iptables_do_command("-t mangle -X " CHAIN_TRUSTED);
+    iptables_do_command("-t mangle -X " CHAIN_UNTRUSTED); /* Added by GaomingPan */
     iptables_do_command("-t mangle -X " CHAIN_OUTGOING);
     if (got_authdown_ruleset)
         iptables_do_command("-t mangle -X " CHAIN_AUTH_IS_DOWN);

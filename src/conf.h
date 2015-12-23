@@ -146,6 +146,15 @@ typedef struct _trusted_mac_t {
 } t_trusted_mac;
 
 /**
+ * Untrusted MAC Addresses.
+ * Added by GaomingPan,Sun Oct 11, 2015.
+ * */
+typedef struct _untrusted_mac_t {
+	char *mac;
+	struct _untrusted_mac_t *next;
+} t_untrusted_mac;
+
+/**
  * Popular Servers
  */
 typedef struct _popular_server_t {
@@ -195,6 +204,8 @@ typedef struct {
     auth server for server name indication, the TLS extension */
     t_firewall_ruleset *rulesets;       /**< @brief firewall rules */
     t_trusted_mac *trustedmaclist; /**< @brief list of trusted macs */
+    t_untrusted_mac *untrustedmaclist; /**< @brief list of untrusted macs,
+                                          added by GaomingPan */
     char *arp_table_path; /**< @brief Path to custom ARP table, formatted
         like /proc/net/arp */
     t_popular_server *popular_servers; /**< @brief list of popular servers */

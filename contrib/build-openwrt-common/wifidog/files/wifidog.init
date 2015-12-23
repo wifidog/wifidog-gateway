@@ -1,0 +1,45 @@
+#!/bin/sh /etc/rc.common
+# wifidog start on boot
+#2015-08-12
+#
+
+START=65
+
+EXTRA_COMMANDS="status"
+EXTRA_HELP="        status Print the status of the service"
+
+
+start() {	
+    /usr/bin/dog_conf_generator  &
+    echo "00 04 * * * reboot" > /etc/crontabs/root
+    echo "root" > /etc/crontabs/cron.update
+    sleep 1
+	/usr/bin/wifidog-init start
+	
+#    sleep 1
+#	/usr/bin/white_black_flush   &
+
+    sleep 5
+    /usr/bin/DOG_monitor    &
+}
+
+stop() {
+	/usr/bin/wifidog-init stop
+#	sleep 1
+#	rst=`ps | grep white_black | cut -d "r" -f 1`
+#	if [ -n "$rst" ]; then
+#		kill -9 $rst
+#	fi
+
+	sleep 2
+	rst=`ps | grep DOG_monitor | cut -d "r" -f 1`
+	if [ -n "$rst" ]; then
+		kill -9 $rst
+	fi
+}
+
+status() {
+
+	/usr/bin/wifidog-init status
+}
+

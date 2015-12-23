@@ -1,0 +1,8 @@
+
+config  dog_post 'url'
+        option  'info_url'              'http://auth.octodata.com.cn:8080/WiFiAuth/v1/wifidog/result'
+        option  'normal_url'            'http://auth.octodata.com.cn:8080/WiFiAuth/v1/wifidog/result'
+config dog_post 'rmflag'
+        option  'info_rmflag'           'result'
+        option  'normal_rmflag'         'result'
+

@@ -24,6 +24,8 @@
     @author Copyright (C) 2004 Philippe April <papril777@yahoo.com>
 */
 
+#include "debug.h"
+
 #include <stdio.h>
 #include <errno.h>
 #include <syslog.h>
@@ -32,7 +34,6 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include "debug.h"
 
 debugconf_t debugconf = {
     .debuglevel = LOG_INFO,
