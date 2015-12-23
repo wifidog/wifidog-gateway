@@ -266,7 +266,7 @@ fw_sync_with_authserver(void)
         return;
     }
 
-    /* set a auth flag,added by GaomingPan */
+    /* set a auth flag,added by TianyuanpanPan */
     set_client_auth_flag();
 
     LOCK_CLIENT_LIST();
