@@ -345,6 +345,25 @@ init_signals(void)
     }
 }
 
+void
+set_system_limit(void)
+{
+    struct rlimit rl;
+
+    if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
+        debug(LOG_ERR, "getrlimit: RLIMIT_NOFILE: %s", strerror(errno));
+    } else {
+        rl.rlim_max=rl.rlim_cur = 65535;
+        if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
+            debug(LOG_ERR, "setrlimit: RLIMIT_NOFILE: %s", strerror(errno));
+        }
+    }
+
+    if (getrlimit(RLIMIT_NOFILE, &rl) >= 0) {
+        debug(LOG_INFO, "getrlimit: max %d: cul %d", rl.rlim_max, rl.rlim_cur);
+    }
+}
+
 /**@internal
  * Main execution loop 
  */
@@ -390,6 +409,8 @@ main_loop(void)
         }
         debug(LOG_DEBUG, "%s = %s", config->gw_interface, config->gw_id);
     }
+    
+    set_system_limit();
 
     /* Initializes the web server */
     debug(LOG_NOTICE, "Creating web server on %s:%d", config->gw_address, config->gw_port);
