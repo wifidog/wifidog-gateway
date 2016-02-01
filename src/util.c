@@ -174,11 +174,13 @@ get_iface_ip(const char *ifname)
     u_int32_t ip;
 
     /* Create a socket */
-    if ((sockd = socket(AF_INET, SOCK_RAW, htons(0x8086))) < 0) {
+    if ((sockd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         debug(LOG_ERR, "socket(): %s", strerror(errno));
         return NULL;
     }
 
+     /* I want to get an IPv4 IP address */
+    if_data.ifr_addr.sa_family = AF_INET;
     /* Get IP of internal interface */
     strncpy(if_data.ifr_name, ifname, 15);
     if_data.ifr_name[15] = '\0';
