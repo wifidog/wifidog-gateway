@@ -397,7 +397,6 @@ main_loop(void)
         debug(LOG_ERR, "Could not create web server: %s", strerror(errno));
         exit(1);
     }
-    register_fd_cleanup_on_fork(webserver->serverSock);
 
     debug(LOG_DEBUG, "Assigning callbacks to web server");
     httpdAddCContent(webserver, "/", "wifidog", 0, NULL, http_callback_wifidog);

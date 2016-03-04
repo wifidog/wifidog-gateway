@@ -262,6 +262,11 @@ int port;
         free(new);
         return (NULL);
     }
+    if (fcntl(sock, F_SETFD, FD_CLOEXEC) < 0) {
+        close(sock);
+        free(new);
+        return (NULL);
+    }
 #	ifdef SO_REUSEADDR
     opt = 1;
     if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(int)) < 0) {
