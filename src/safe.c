@@ -42,12 +42,8 @@
 static void cleanup_fds(void);
 
 /** List of fd's to close on fork. */
-typedef struct _fd_list {
-    int fd;                 /**< @brief file descriptor */
-    struct _fd_list *next;  /**< @brief linked list pointer */
-} fd_list_t;
-
-static fd_list_t *fd_list = NULL;
+typedef int fd_list_t;
+static fd_list_t fd_list[MAX_FD_CLEANUP];
 
 /** Clean up all the registered fds. Frees the list as it goes.
  * XXX This should only be run by CHILD processes.
@@ -55,12 +51,13 @@ static fd_list_t *fd_list = NULL;
 static void
 cleanup_fds(void)
 {
-    fd_list_t *entry;
+    unsigned int i;
 
-    while (NULL != (entry = fd_list)) {
-        close(entry->fd);
-        fd_list = entry->next;
-        free(entry);
+    for (i = 0; i < sizeof(fd_list) / sizeof(int); i++) {
+        if (fd_list[i]) {
+            close(fd_list[i]);
+            fd_list[i] = 0;
+        }
     }
 }
 
@@ -70,11 +67,18 @@ cleanup_fds(void)
 void
 register_fd_cleanup_on_fork(const int fd)
 {
-    fd_list_t *entry = safe_malloc(sizeof(fd_list_t));
-
-    entry->fd = fd;
-    entry->next = fd_list;
-    fd_list = entry;
+    unsigned int i;
+    for (i = 0; i < sizeof(fd_list) / sizeof(int); i++) {
+        if (!fd_list[i]) {
+            break;
+        }
+    }
+    if (MAX_FD_CLEANUP == i) {
+       debug(LOG_CRIT, "Trying to register more than %d fds for cleanup on fork",
+             MAX_FD_CLEANUP);
+       exit(1);
+    }
+    fd_list[i] = fd;
 }
 
 /** Allocate zero-filled ram or die.
