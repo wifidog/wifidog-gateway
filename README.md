@@ -9,7 +9,7 @@ free hotspot while still preventing abuse of their Internet connection.
 
 More information and the old issue tracker can be found on
 [dev.wifidog.org][homepage].
-Nowadays, development happens on [github][GitHub].
+Nowadays, development happens on [GitHub][github].
 
 
 ## WifiDog Gateway ##
@@ -31,11 +31,11 @@ client and server is available as a [flow diagram][flowdia].
 
 ## Install ##
 
-See the [faq][FAQ].
+See the [FAQ][faq].
 
 ## Contributing ##
 
-See [devdoc][README.developers.txt].
+See [README.developers.txt][devdoc].
 
 
 ## License ##
