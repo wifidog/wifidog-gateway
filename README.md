@@ -47,4 +47,4 @@ by its respective owners. See COPYING for details.
 [protov1]: http://dev.wifidog.org/wiki/doc/developer/WiFiDogProtocol_V1
 [flowdia]: http://dev.wifidog.org/wiki/doc/developer/FlowDiagram
 [devdoc]: src/README.developers.txt
-[faq]: src/FAQ
+[faq]: FAQ
