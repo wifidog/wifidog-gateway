@@ -32,6 +32,8 @@
 #include <sys/types.h>          /* For fork */
 #include <unistd.h>             /* For fork */
 
+#define MAX_FD_CLEANUP 16
+
 /** Register an fd for auto-cleanup on fork() */
 void register_fd_cleanup_on_fork(const int);
 
