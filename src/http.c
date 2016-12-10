@@ -237,7 +237,7 @@ http_send_redirect(request * r, const char *url, const char *text)
     /* Re-direct them to auth server */
     debug(LOG_DEBUG, "Redirecting client browser to %s", url);
     httpdSetResponse(r, "511 Network Authentication Required");
-    safe_asprintf(&message, "The maintainers of this network need you to signin. Please <a href='%s'>click here</a>.", url);
+    safe_asprintf(&message, "<meta http-equiv='refresh' content='0; url=%s'>The maintainers of this network need you to sign in. Please <a href='%s'>click here</a>.", url, url);
     send_http_page(r, text ? text : "Redirection to message", message);
     free(message);
 }
