@@ -199,8 +199,8 @@ authenticate_client(request * r)
               "Got DENIED from central server authenticating token %s from %s at %s - deleting from firewall and redirecting them to denied message",
               client->token, client->ip, client->mac);
         fw_deny(client);
-        safe_asprintf(&urlFragment, "%smessage=%s",
-                      auth_server->authserv_msg_script_path_fragment, GATEWAY_MESSAGE_DENIED);
+        safe_asprintf(&urlFragment, "%smessage=%s&token=%s",
+                      auth_server->authserv_msg_script_path_fragment, GATEWAY_MESSAGE_DENIED, client->token);
         http_send_redirect_to_auth(r, urlFragment, "Redirect to denied message");
         free(urlFragment);
         break;
@@ -210,8 +210,8 @@ authenticate_client(request * r)
         debug(LOG_INFO, "Got VALIDATION from central server authenticating token %s from %s at %s"
               "- adding to firewall and redirecting them to activate message", client->token, client->ip, client->mac);
         fw_allow(client, FW_MARK_PROBATION);
-        safe_asprintf(&urlFragment, "%smessage=%s",
-                      auth_server->authserv_msg_script_path_fragment, GATEWAY_MESSAGE_ACTIVATE_ACCOUNT);
+        safe_asprintf(&urlFragment, "%smessage=%s&token=%s",
+                      auth_server->authserv_msg_script_path_fragment, GATEWAY_MESSAGE_ACTIVATE_ACCOUNT, client->token);
         http_send_redirect_to_auth(r, urlFragment, "Redirect to activate message");
         free(urlFragment);
         break;
@@ -222,7 +222,8 @@ authenticate_client(request * r)
               "adding to firewall and redirecting them to portal", client->token, client->ip, client->mac);
         fw_allow(client, FW_MARK_KNOWN);
         served_this_session++;
-        safe_asprintf(&urlFragment, "%sgw_id=%s", auth_server->authserv_portal_script_path_fragment, config->gw_id);
+        safe_asprintf(&urlFragment, "%sgw_id=%s&token=%s", auth_server->authserv_portal_script_path_fragment,
+                      config->gw_id, client->token);
         http_send_redirect_to_auth(r, urlFragment, "Redirect to portal");
         free(urlFragment);
         break;
@@ -231,8 +232,9 @@ authenticate_client(request * r)
         /* Client had X minutes to validate account by email and didn't = too late */
         debug(LOG_INFO, "Got VALIDATION_FAILED from central server authenticating token %s from %s at %s "
               "- redirecting them to failed_validation message", client->token, client->ip, client->mac);
-        safe_asprintf(&urlFragment, "%smessage=%s",
-                      auth_server->authserv_msg_script_path_fragment, GATEWAY_MESSAGE_ACCOUNT_VALIDATION_FAILED);
+        safe_asprintf(&urlFragment, "%smessage=%s&token=%s",
+                      auth_server->authserv_msg_script_path_fragment, GATEWAY_MESSAGE_ACCOUNT_VALIDATION_FAILED,
+                      client->token);
         http_send_redirect_to_auth(r, urlFragment, "Redirect to failed validation message");
         free(urlFragment);
         break;
