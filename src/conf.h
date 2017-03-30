@@ -225,6 +225,9 @@ void mark_auth_server_bad(t_auth_serv *);
 t_firewall_rule *get_ruleset(const char *);
 
 
+/** @brief Parse a string to see if it is valid MAC address format. */
+int check_mac_format(char *);
+
 #define LOCK_CONFIG() do { \
 	debug(LOG_DEBUG, "Locking config"); \
 	pthread_mutex_lock(&config_mutex); \
