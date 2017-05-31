@@ -93,7 +93,7 @@ parse_commandline(int argc, char **argv)
     i = 0;
     restartargv[i++] = safe_strdup(argv[0]);
 
-    while (-1 != (c = getopt(argc, argv, "c:hfd:sw:vx:i:a:"))) {
+    while (-1 != (c = getopt(argc, argv, "c:hfd:sw:vx:i:a:p:"))) {
 
         skiponrestart = 0;
 
