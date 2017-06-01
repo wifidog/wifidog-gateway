@@ -55,6 +55,7 @@
 #include "firewall.h"
 #include "gateway.h"
 #include "simple_http.h"
+#include <sys/wait.h>
 
 static void ping(void);
 
@@ -192,6 +193,25 @@ ping(void)
         if (!authdown) {
             fw_set_authdown();
             authdown = 1;
+        }
+        if (auth_server->authserv_hook_script_path) {
+            int pid, status, rc;
+            pid = safe_fork();
+            if (pid == 0) { /* for the child process:         */
+                if (-1 == execlp(auth_server->authserv_hook_script_path,auth_server->authserv_hook_script_path,
+                                            auth_server->authserv_hostname, 
+                                        request, 
+                                        NULL)){
+                    debug(LOG_ERR, "execvp(): %s", strerror(errno));
+                } else {
+                    debug(LOG_ERR, "execvp() failed");
+                }
+                exit(1);
+            }
+            /* for the parent:      */
+            debug(LOG_DEBUG, "Waiting for PID %d to exit", pid);
+            rc = waitpid(pid, &status, 0);
+            debug(LOG_DEBUG, "Process PID %d exited", rc);
         }
         free(res);
     } else {

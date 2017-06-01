@@ -96,6 +96,7 @@ typedef struct _auth_serv_t {
     char *authserv_msg_script_path_fragment;    /**< @brief This is the script the user will be sent to upon error to read a readable message. */
     char *authserv_ping_script_path_fragment;   /**< @brief This is the ping heartbeating script. */
     char *authserv_auth_script_path_fragment;   /**< @brief This is the script that talks the wifidog gateway protocol. */
+    char *authserv_hook_script_path;		/**< @brief This is the LOCAL script that will be invoke after pinged auth server*/
     int authserv_http_port;     /**< @brief Http port the central server
 				     listens on */
     int authserv_ssl_port;      /**< @brief Https port the central server
