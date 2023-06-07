@@ -149,6 +149,8 @@ int action;
         cur = cur->next;
     } else {
         cur = (httpAcl *) malloc(sizeof(httpAcl));
+        if (cur == NULL)
+            return (NULL);
         acl = cur;
     }
 

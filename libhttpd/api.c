@@ -168,6 +168,8 @@ httpdAddVariable(request * r, const char *name, const char *value)
     while (*name == ' ' || *name == '\t')
         name++;
     newVar = malloc(sizeof(httpVar));
+    if (newVar == NULL)
+        return (NULL);
     bzero(newVar, sizeof(httpVar));
     newVar->name = strdup(name);
     newVar->value = strdup(value);
@@ -215,6 +217,8 @@ int port;
     else
         new->host = strdup(host);
     new->content = (httpDir *) malloc(sizeof(httpDir));
+    if (new->content == NULL)
+        return (NULL);
     bzero(new->content, sizeof(httpDir));
     new->content->name = strdup("");
 
