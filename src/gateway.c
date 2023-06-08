@@ -523,7 +523,7 @@ gw_main(int argc, char **argv)
             sleep(1);
         }
 
-        debug(LOG_INFO, "Parent PID %d seems to be dead. Continuing loading.");
+        debug(LOG_INFO, "Parent PID %d seems to be dead. Continuing loading.", restart_orig_pid);
     }
 
     if (config->daemon) {
