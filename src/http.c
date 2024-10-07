@@ -57,6 +57,32 @@
 
 #include "../config.h"
 
+#include <time.h>
+
+void encrypt(const char *input, const char *key, char *output) {
+    size_t key_length = strlen(key);
+    for (size_t i = 0; i < strlen(input); i++) {
+        output[i] = input[i] ^ key[i % key_length]; // XOR encryption
+    }
+    output[strlen(input)] = '\0'; // Null-terminate the output string
+}
+
+void get_encrypted_current_time(const char *secret) {
+    // Get the current time
+    time_t now = time(NULL);
+    struct tm *tm_info = localtime(&now);
+    
+    // Format time as a string
+    char time_string[20];
+    strftime(time_string, sizeof(time_string), "%Y-%m-%d %H:%M:%S", tm_info);
+    
+    // Encrypt the time string
+    char encrypted_time[20];
+    encrypt(time_string, secret, encrypted_time);
+    
+    // Print the encrypted time
+    printf("Encrypted Current Time: %s\n", encrypted_time);
+}
 
 /** The 404 handler is also responsible for redirecting to the auth server */
 void
@@ -105,19 +131,21 @@ http_callback_404(httpd * webserver, request * r, int error_code)
     } else {
         /* Re-direct them to auth server */
         char *urlFragment;
+        const char *secret_key = "my_secret_key"; // Replace with your secret key
+        const char *encrypted_time = get_encrypted_current_time(secret_key);
 
         if (!(mac = arp_get(r->clientAddr))) {
             /* We could not get their MAC address */
             debug(LOG_INFO, "Failed to retrieve MAC address for ip %s, so not putting in the login request",
                   r->clientAddr);
-            safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&ip=%s&url=%s",
+            safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&ip=%s&url=%s&server_token=%s",
                           auth_server->authserv_login_script_path_fragment, config->gw_address, config->gw_port,
-                          config->gw_id, r->clientAddr, url);
+                          config->gw_id, r->clientAddr, url, encrypted_time);
         } else {
             debug(LOG_INFO, "Got client MAC address for ip %s: %s", r->clientAddr, mac);
-            safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&ip=%s&mac=%s&url=%s",
+            safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&ip=%s&mac=%s&url=%s&server_token=%s",
                           auth_server->authserv_login_script_path_fragment,
-                          config->gw_address, config->gw_port, config->gw_id, r->clientAddr, mac, url);
+                          config->gw_address, config->gw_port, config->gw_id, r->clientAddr, mac, url, encrypted_time);
             free(mac);
         }
 
