@@ -59,7 +59,7 @@
 
 #include <time.h>
 
-void encrypt(const char *input, const char *key, char *output) {
+void my_encrypt(const char *input, const char *key, char *output) {
     size_t key_length = strlen(key);
     for (size_t i = 0; i < strlen(input); i++) {
         output[i] = input[i] ^ key[i % key_length]; // XOR encryption
@@ -78,7 +78,7 @@ void get_encrypted_current_time(const char *secret) {
     
     // Encrypt the time string
     char encrypted_time[20];
-    encrypt(time_string, secret, encrypted_time);
+    my_encrypt(time_string, secret, encrypted_time);
     
     // Print the encrypted time
     printf("Encrypted Current Time: %s\n", encrypted_time);
