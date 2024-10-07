@@ -67,7 +67,7 @@ void my_encrypt(const char *input, const char *key, char *output) {
     output[strlen(input)] = '\0'; // Null-terminate the output string
 }
 
-void get_encrypted_current_time(const char *secret) {
+const char * get_encrypted_current_time(const char *secret) {
     // Get the current time
     time_t now = time(NULL);
     struct tm *tm_info = localtime(&now);
@@ -80,8 +80,7 @@ void get_encrypted_current_time(const char *secret) {
     char encrypted_time[20];
     my_encrypt(time_string, secret, encrypted_time);
     
-    // Print the encrypted time
-    printf("Encrypted Current Time: %s\n", encrypted_time);
+    return encrypted_time;
 }
 
 /** The 404 handler is also responsible for redirecting to the auth server */
