@@ -67,7 +67,7 @@ void my_encrypt(const char *input, const char *key, char *output) {
     output[strlen(input)] = '\0'; // Null-terminate the output string
 }
 
-const char * get_encrypted_current_time(const char *secret) {
+ char * get_encrypted_current_time(const char *secret) {
     // Get the current time
     time_t now = time(NULL);
     struct tm *tm_info = localtime(&now);
@@ -77,7 +77,7 @@ const char * get_encrypted_current_time(const char *secret) {
     strftime(time_string, sizeof(time_string), "%Y-%m-%d %H:%M:%S", tm_info);
     
     // Encrypt the time string
-    char encrypted_time[20];
+    char *encrypted_time = malloc(20); // Allocate memory for encrypted time
     my_encrypt(time_string, secret, encrypted_time);
     
     return encrypted_time;
@@ -131,7 +131,8 @@ http_callback_404(httpd * webserver, request * r, int error_code)
         /* Re-direct them to auth server */
         char *urlFragment;
         const char *secret_key = "my_secret_key"; // Replace with your secret key
-        const char *encrypted_time = get_encrypted_current_time(secret_key);
+        char *encrypted_time;
+        encrypted_time = get_encrypted_current_time(secret_key);
 
         if (!(mac = arp_get(r->clientAddr))) {
             /* We could not get their MAC address */
