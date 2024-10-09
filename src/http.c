@@ -74,7 +74,7 @@ void my_encrypt(const char *input, const char *key, char *output) {
 
     // Get the current time
     time_t now = time(NULL);
-    struct tm *tm_info = gmtime(&now);
+    struct tm *tm_info = localtime(&now);
     
     // Format time as a string
     char time_string[20];
