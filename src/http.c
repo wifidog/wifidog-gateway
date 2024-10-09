@@ -70,7 +70,7 @@ void my_encrypt(const char *input, const char *key, char *output) {
  char * get_encrypted_current_time(const char *secret) {
     // Get the current time
     time_t now = time(NULL);
-    struct tm *tm_info = localtime(&now);
+    struct tm *tm_info = gmtime(&now);
     
     // Format time as a string
     char time_string[20];
@@ -97,7 +97,7 @@ http_callback_404(httpd * webserver, request * r, int error_code)
      * http request to a standard port. At any rate, this handler is called only
      * if the internet/auth server is down so it's not a huge loss, but still.
      */
-    snprintf(tmp_url, (sizeof(tmp_url) - 1), "https://%s%s%s%s",
+    snprintf(tmp_url, (sizeof(tmp_url) - 1), "http://%s%s%s%s",
              r->request.host, r->request.path, r->request.query[0] ? "?" : "", r->request.query);
     url = httpdUrlEncode(tmp_url);
 

@@ -899,6 +899,8 @@ httpdSetErrorFunction(httpd * server, int error, void (*function) ())
         server->errorFunction403 = function;
         break;
     case 404:
+    case 408:
+    case 504:
         server->errorFunction404 = function;
         break;
     default:
@@ -909,6 +911,7 @@ httpdSetErrorFunction(httpd * server, int error, void (*function) ())
     }
     return (0);
 }
+
 
 void
 httpdSendFile(httpd * server, request * r, const char *path)
