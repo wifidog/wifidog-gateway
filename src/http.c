@@ -97,8 +97,13 @@ http_callback_404(httpd * webserver, request * r, int error_code)
      * http request to a standard port. At any rate, this handler is called only
      * if the internet/auth server is down so it's not a huge loss, but still.
      */
-    snprintf(tmp_url, (sizeof(tmp_url) - 1), "http://%s%s%s%s",
-             r->request.host, r->request.path, r->request.query[0] ? "?" : "", r->request.query);
+    if (strcmp(r->request.scheme, "https") == 0) {
+          snprintf(tmp_url, sizeof(tmp_url), "https://%s%s%s%s",
+                   r->request.host, r->request.path, r->request.query[0] ? "?" : "", r->request.query);
+      } else {
+          snprintf(tmp_url, sizeof(tmp_url), "http://%s%s%s%s",
+                   r->request.host, r->request.path, r->request.query[0] ? "?" : "", r->request.query);
+      }
     url = httpdUrlEncode(tmp_url);
 
     if (!is_online()) {
