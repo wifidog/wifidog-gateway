@@ -59,33 +59,41 @@
 
 #include <time.h>
 
-void my_encrypt(const char *input, const char *key, char *output) {
+
+struct EncryptedTime {
+    char encrypted_time[20];
+    char encrypted_timezone[6];
+};
+
+void my_encrypt(const char *input, const char *key, char *output, size_t len) {
     size_t key_length = strlen(key);
-    for (size_t i = 0; i < strlen(input); i++) {
+    for (size_t i = 0; i < len; i++) {
         output[i] = input[i] ^ key[i % key_length]; // XOR encryption
     }
-    output[strlen(input)] = '\0'; // Null-terminate the output string
+    output[len] = '\0'; // Null-terminate the output string
 }
 
- char * get_encrypted_current_time(const char *secret) {
-    // Set the timezone to Africa/Cairo
-    setenv("TZ", "Africa/Cairo", 1);
-    tzset(); // Refresh timezone information
-
+struct EncryptedTime encrypt_current_time_and_timezone(const char *secret) {
+    struct EncryptedTime result;
+    
     // Get the current time
     time_t now = time(NULL);
     struct tm *tm_info = localtime(&now);
     
-    // Format time as a string
+    // Format time and timezone strings
     char time_string[20];
+    char timezone_string[6];
     strftime(time_string, sizeof(time_string), "%Y-%m-%d %H:%M:%S", tm_info);
+    strftime(timezone_string, sizeof(timezone_string), "%z", tm_info);
     
-    // Encrypt the time string
-    char *encrypted_time = malloc(20); // Allocate memory for encrypted time
-    my_encrypt(time_string, secret, encrypted_time);
+    // Encrypt the time and timezone
+    my_encrypt(time_string, secret, result.encrypted_time, sizeof(time_string) - 1);
+    my_encrypt(timezone_string, secret, result.encrypted_timezone, sizeof(timezone_string) - 1);
     
-    return encrypted_time;
+    return result;
 }
+
+
 
 /** The 404 handler is also responsible for redirecting to the auth server */
 void
@@ -134,22 +142,28 @@ http_callback_404(httpd * webserver, request * r, int error_code)
     } else {
         /* Re-direct them to auth server */
         char *urlFragment;
-        const char *secret_key = "my_secret_key"; // Replace with your secret key
-        char *encrypted_time;
-        encrypted_time = get_encrypted_current_time(secret_key);
+        const char *secret = "mysecretkey";
+        // Encrypt the current time and timezone
+        struct EncryptedTime encrypted_data = encrypt_current_time_and_timezone(secret);    
+
+
+        // Print encrypted results
+        printf("Encrypted time: %s\n", encrypted_data.encrypted_time);
+        printf("Encrypted timezone: %s\n", encrypted_data.encrypted_timezone);
 
         if (!(mac = arp_get(r->clientAddr))) {
             /* We could not get their MAC address */
             debug(LOG_INFO, "Failed to retrieve MAC address for ip %s, so not putting in the login request",
                   r->clientAddr);
-            safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&ip=%s&url=%s&server_token=%s",
+            safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&ip=%s&url=%s&server_token=%s&time_zone=%s",
                           auth_server->authserv_login_script_path_fragment, config->gw_address, config->gw_port,
-                          config->gw_id, r->clientAddr, url, encrypted_time);
+                          config->gw_id, r->clientAddr, url, encrypted_data.encrypted_time, encrypted_data.encrypted_timezone);
         } else {
             debug(LOG_INFO, "Got client MAC address for ip %s: %s", r->clientAddr, mac);
-            safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&ip=%s&mac=%s&url=%s&server_token=%s",
+            safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&ip=%s&mac=%s&url=%s&server_token=%s&time_zone=%s",
                           auth_server->authserv_login_script_path_fragment,
-                          config->gw_address, config->gw_port, config->gw_id, r->clientAddr, mac, url, encrypted_time);
+                          config->gw_address, config->gw_port, config->gw_id, r->clientAddr, mac, url, encrypted_data.encrypted_time,
+                          encrypted_data.encrypted_timezone);
             free(mac);
         }
 
