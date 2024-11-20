@@ -10,47 +10,47 @@ if [[ "$BUILD_TYPE" == "normal" ]]; then
     echo "Running Wifidog configure"
     ./configure $@
 
-elif [[ "$BUILD_TYPE" == "cyassl" ]]; then
-    if [[ -z "$CYASSL" ]]; then
-        echo "CYASSL not set."
+elif [[ "$BUILD_TYPE" == "wolfssl" ]]; then
+    if [[ -z "$WOLFSSL" ]]; then
+        echo "WOLFSSL not set."
         exit 1
     fi
     CUR=`pwd`
     mkdir -p dependencies-src || true
     mkdir -p dependencies-installed || true
-    if [[ ! -f dependencies-installed/include/cyassl/ssl.h ]]; then
-        echo "Cached CyaSSL install not found. Installing."
+    if [[ ! -f dependencies-installed/include/wolfssl/ssl.h ]]; then
+        echo "Cached WolfSSL install not found. Installing."
         cd dependencies-src
         # Check if travis cache is there
-        if [[ -f cyassl-${CYASSL}/autogen.sh ]]; then
-            echo "Found cached CyaSSL package"
+        if [[ -f wolfssl-${WOLFSSL}/autogen.sh ]]; then
+            echo "Found cached WolfSSL package"
         else
-            echo "No cache, downloading CyaSSL"
-            wget https://github.com/cyassl/cyassl/archive/v${CYASSL}.tar.gz \
-                -O cyassl-${CYASSL}.tar.gz
-            tar -xzf cyassl-${CYASSL}.tar.gz
+            echo "No cache, downloading WolfSSL"
+            wget https://github.com/wolfSSL/wolfssl/archive/v${WOLFSSL}-stable.tar.gz \
+                -O wolfssl-${WOLFSSL}.tar.gz
+            tar -xzf wolfssl-${WOLFSSL}.tar.gz
         fi
-        cd cyassl-${CYASSL}
-        echo "Content of cyassl-${CYASSL}:"
+        cd wolfssl-${WOLFSSL}
+        echo "Content of wolfssl-${WOLFSSL}:"
         ls
-        echo "Running CyaSSL autogen.sh"
+        echo "Running WolfSSL autogen.sh"
         ./autogen.sh
-        echo "Running CyaSSL configure"
+        echo "Running WolfSSL configure"
         ./configure --prefix="$CUR"/dependencies-installed/ --enable-ecc
         # make will pick up the cached object files - real savings
         # happen here
-        echo "Running CyaSSL make"
+        echo "Running WolfSSL make"
         make
-        echo "Running CyaSSL make install"
+        echo "Running WolfSSL make install"
         make install
         cd "$CUR"
     else
-        echo "Cached CyaSSL install found."
+        echo "Cached WolfSSL install found."
     fi
     echo "Running Wifidog configure"
     export CFLAGS="-I${CUR}/dependencies-installed/include/"
     export LDFLAGS="-L${CUR}/dependencies-installed/lib/"
-    ./configure --enable-cyassl $@
+    ./configure --enable-wolfssl $@
 else
     echo "Unknow BUILD_TYPE $BUILD_TYPE"
     exit 1
