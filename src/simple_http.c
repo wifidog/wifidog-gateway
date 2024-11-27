@@ -28,6 +28,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <unistd.h>
+#include <pthread.h>
 #include <string.h>
 #include <syslog.h>
 
@@ -37,6 +38,7 @@
 #include "pstring.h"
 
 #ifdef USE_CYASSL
+#include <cyassl/options.h>
 #include <cyassl/ssl.h>
 #include "conf.h"
 /* For CYASSL_MAX_ERROR_SZ */
