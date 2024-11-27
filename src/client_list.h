@@ -44,6 +44,15 @@ typedef struct _t_counters {
     time_t last_updated;        /**< @brief Last update of the counters */
 } t_counters;
 
+/** Bandwidth shaping settings struct for a client's bandwidth shaping settings
+ */
+typedef struct _t_bw_settings {
+    unsigned int kbit_max_speed_down;   /**< @brief Maximum download speed
+                                                    (tc - kbit = 1024 bits) */
+    unsigned int kbit_max_speed_up;     /**< @brief Maximum upload speed
+                                                    (tc - kbit = 1024 bits) */
+} t_bw_settings;
+
 /** Client node for the connected client linked list.
  */
 typedef struct _t_client {
@@ -59,6 +68,7 @@ typedef struct _t_client {
 					     _http_* function is called */
     t_counters counters;                /**< @brief Counters for input/output of
 					     the client. */
+    t_bw_settings bw_settings;          /**< @brief Bandwidth shaping settings for client */
 } t_client;
 
 /** @brief Get a new client struct, not added to the list yet */

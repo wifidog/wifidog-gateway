@@ -54,6 +54,7 @@
 #include "centralserver.h"
 #include "util.h"
 #include "wd_util.h"
+#include "bw_shaping.h"
 
 #include "../config.h"
 
@@ -256,6 +257,7 @@ http_callback_auth(httpd * webserver, request * r)
     httpVar *token;
     char *mac;
     httpVar *logout = httpdGetVariableByName(r, "logout");
+    const s_config *config = config_get_config();
 
     if ((token = httpdGetVariableByName(r, "token"))) {
         /* They supplied variable "token" */
@@ -269,7 +271,11 @@ http_callback_auth(httpd * webserver, request * r)
 
             if ((client = client_list_find(r->clientAddr, mac)) == NULL) {
                 debug(LOG_DEBUG, "New client for %s", r->clientAddr);
-                client_list_add(r->clientAddr, mac, token->value);
+                client = client_list_add(r->clientAddr, mac, token->value);
+
+                if (config->bw_shaping) {
+                    bw_shaping_client_setup(client, r);
+                }
             } else if (logout) {
                 logout_client(client);
             } else {

@@ -57,6 +57,7 @@
 #include "centralserver.h"
 #include "client_list.h"
 #include "commandline.h"
+#include "bw_shaping.h"
 
 static int _fw_deny_raw(const char *, const char *, const int);
 
@@ -73,12 +74,17 @@ fw_allow(t_client * client, int new_fw_connection_state)
 {
     int result;
     int old_state = client->fw_connection_state;
+    s_config *config = config_get_config();
 
     debug(LOG_DEBUG, "Allowing %s %s with fw_connection_state %d", client->ip, client->mac, new_fw_connection_state);
     client->fw_connection_state = new_fw_connection_state;
 
     /* Grant first */
     result = iptables_fw_access(FW_ACCESS_ALLOW, client->ip, client->mac, new_fw_connection_state);
+
+    if (config->bw_shaping) {
+        bw_shaping_add(client);
+    }
 
     /* Deny after if needed. */
     if (old_state != FW_MARK_NONE) {
@@ -112,6 +118,12 @@ fw_allow_host(const char *host)
 int
 fw_deny(t_client * client)
 {
+    s_config *config = config_get_config();
+    if (config->bw_shaping) {
+       debug(LOG_DEBUG, "Removing bandwidth shaping for %s", client->ip);
+       bw_shaping_remove(client);
+    }
+
     int fw_connection_state = client->fw_connection_state;
     debug(LOG_DEBUG, "Denying %s %s with fw_connection_state %d", client->ip, client->mac, client->fw_connection_state);
 
@@ -195,6 +207,7 @@ fw_init(void)
     int result = 0;
     int new_fw_state;
     t_client *client = NULL;
+    s_config *config = config_get_config();
 
     if (!init_icmp_socket()) {
         return 0;
@@ -202,6 +215,11 @@ fw_init(void)
 
     debug(LOG_INFO, "Initializing Firewall");
     result = iptables_fw_init();
+
+    if (config->bw_shaping) {
+        debug(LOG_INFO, "Initializing Bandwidth Shaping");
+        bw_shaping_init();
+    }
 
     if (restart_orig_pid) {
         debug(LOG_INFO, "Restoring firewall rules for clients inherited from parent");
@@ -244,6 +262,13 @@ fw_set_authservers(void)
 int
 fw_destroy(void)
 {
+    s_config *config = config_get_config();
+
+    if (config->bw_shaping) {
+        debug(LOG_INFO, "Removing Bandwidth Shaping settings");
+        bw_shaping_destroy();
+    }
+
     close_icmp_socket();
     debug(LOG_INFO, "Removing Firewall rules");
     return iptables_fw_destroy();

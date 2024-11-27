@@ -28,6 +28,8 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+#include <stdint.h>
+
 /*@{*/
 /** Defines */
 
@@ -68,6 +70,13 @@
 #define DEFAULT_DELTATRAFFIC 0    /* 0 means: Enable peer verification */
 #define DEFAULT_ARPTABLE "/proc/net/arp"
 #define DEFAULT_AUTHSERVSSLSNI 0  /* 0 means: Disable SNI */
+#define DEFAULT_BWSHAPING 0 /* 0 means: Disable bandwidth shaping */
+#define DEFAULT_BWSHAPING_GW_LIMIT 0 /* 0 means: Disable bandwidth shaping gateway speed limit */
+#define DEFAULT_BWSHAPING_IFB_IFACE "ifb0"
+#define DEFAULT_BWSHAPING_GW_IFACE_TXQUEUELEN 200
+#define DEFAULT_BWSHAPING_GW_MAX_DOWN 102400 /* 100 Mbps */
+#define DEFAULT_BWSHAPING_GW_MAX_UP   102400 /* 100 Mbps */
+
 /*@}*/
 
 /*@{*/
@@ -198,6 +207,25 @@ typedef struct {
     char *arp_table_path; /**< @brief Path to custom ARP table, formatted
         like /proc/net/arp */
     t_popular_server *popular_servers; /**< @brief list of popular servers */
+    int bw_shaping; /**< @brief boolean, whether to enable bandwidth shaping */
+    int bw_shaping_gw_limit; /**< @brief boolean, whether to enable bandwidth
+                                  shaping for gateway interface with the speed
+                                  that settup from gw_max_{down,up} */
+    char *bw_shaping_ifb_interface; /**< @brief IFB interface (helper)
+                                         for upload shaping */
+    uint32_t bw_shaping_gw_interface_txqueuelen; /**< @brief Gateway interface txqueuelen */
+    uint32_t bw_shaping_gw_max_down; /**< @brief Default gateway bandwidth
+                                          shaping maximum download speed
+                                          default: 100 Mbps */
+    uint32_t bw_shaping_gw_max_up;   /**< @brief Default gateway bandwidth
+                                          shaping maximum upload speed
+                                          default: 100 Mbps */
+    uint32_t bw_shaping_def_max_down; /**< @brief Default client bandwidth
+                                           shaping maximum download speed
+                                           0: means no shaping */
+    uint32_t bw_shaping_def_max_up;   /**< @brief Default client bandwidth
+                                           shaping maximum upload speed
+                                           0: means no shaping */
 } s_config;
 
 /** @brief Get the current gateway configuration */
