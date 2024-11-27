@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/file.h>
+#include <poll.h>
 #endif
 
 #include "config.h"
@@ -46,25 +47,24 @@ int len;
 #if defined(_WIN32)
     return (recv(sock, buf, len, 0));
 #else
-    /*return( read(sock, buf, len)); */
-    /* XXX Select based IO */
+	/*return( read(sock, buf, len));*/
+	/* XXX Poll based IO */
 
-    int nfds;
-    fd_set readfds;
+    int ret;
+    struct pollfd readfds[1];
     struct timeval timeout;
 
-    FD_ZERO(&readfds);
-    FD_SET(sock, &readfds);
-    timeout.tv_sec = 10;
-    timeout.tv_usec = 0;
-    nfds = sock + 1;
+    readfds[0].fd = sock;
+    readfds[0].events = POLLIN;
+    readfds[0].revents = 0;
 
-    nfds = select(nfds, &readfds, NULL, NULL, &timeout);
-
-    if (nfds > 0) {
+	ret = poll(readfds, 1, 10 * 1000);
+	
+    if ( (ret > 0) && (readfds[0].revents & POLLIN) ) {
         return (read(sock, buf, len));
     }
-    return (nfds);
+
+    return (ret);
 #endif
 }
 
