@@ -330,38 +330,80 @@ http_callback_disconnect(httpd * webserver, request * r)
     return;
 }
 
-void
-send_http_page(request * r, const char *title, const char *message)
+/** @brief http template page read only once
+ */
+static char*
+get_http_page()
 {
-    s_config *config = config_get_config();
-    char *buffer;
     struct stat stat_info;
     int fd;
     ssize_t written;
+    s_config *config = config_get_config();
+
+    static struct {
+        char    buff[10240];
+        int     len;
+        int     loaded;
+    } page = {
+        .len = 0,
+        .loaded = 0,
+    };
+
+    if(page.loaded) {
+        if((page.len > 0)) {
+            return safe_strdup(page.buff);
+        } else {
+            debug(LOG_CRIT, "HTML has loaded, but return size 0, maybe file %s can not find",
+                  config->htmlmsgfile);
+            return NULL;
+        }
+    }
 
     fd = open(config->htmlmsgfile, O_RDONLY);
     if (fd == -1) {
-        debug(LOG_CRIT, "Failed to open HTML message file %s: %s", config->htmlmsgfile, strerror(errno));
-        return;
+        page.loaded = 1;
+        page.len= -1;
+
+        return NULL;
     }
 
     if (fstat(fd, &stat_info) == -1) {
         debug(LOG_CRIT, "Failed to stat HTML message file: %s", strerror(errno));
         close(fd);
-        return;
+
+        page.loaded = 1;
+        page.len= -1;
+
+        return NULL;
     }
-    // Cast from long to unsigned int
-    buffer = (char *)safe_malloc((size_t) stat_info.st_size + 1);
-    written = read(fd, buffer, (size_t) stat_info.st_size);
+
+    written = read(fd, page.buff, (size_t) stat_info.st_size);
     if (written == -1) {
         debug(LOG_CRIT, "Failed to read HTML message file: %s", strerror(errno));
-        free(buffer);
         close(fd);
-        return;
-    }
-    close(fd);
 
-    buffer[written] = 0;
+        page.loaded = 1;
+        page.len= -1;
+        return NULL;
+    }
+
+    page.buff[written] = 0;
+    page.len= written;
+
+    close(fd);
+    return safe_strdup(page.buff);
+}
+
+void
+send_http_page(request * r, const char *title, const char *message)
+{
+    // read http page from memory direct, only load once
+    char *buffer = get_http_page();
+    s_config *config = config_get_config();
+
+    if(!buffer)
+        return;
+
     httpdAddVariable(r, "title", title);
     httpdAddVariable(r, "message", message);
     httpdAddVariable(r, "nodeID", config->gw_id);
